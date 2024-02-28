@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
 export default function Sorter() {
-  return <div></div>;
+  return <div>Sortr</div>;
 }
