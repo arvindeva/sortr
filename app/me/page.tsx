@@ -19,7 +19,7 @@ export default async function ProfilePage() {
       title: sortrsTable.title,
     })
     .from(sortrsTable)
-    .where(eq(sortrsTable.userId, `${session.user.id}`))
+    .where(eq(sortrsTable.userId, session.user.id))
   console.log(result)
 
   return (
@@ -27,11 +27,15 @@ export default async function ProfilePage() {
       <h1 className="text-4xl">{session.user.name}</h1>
       <div>
         <h2 className="text-2xl">Your posts</h2>
-        {result && (
+        {result.length > 0 ? (
           <div>
             {result.map((sortr) => {
               return <div key={sortr.id}>{sortr.title}</div>
             })}
+          </div>
+        ) : (
+          <div>
+            <p>You don&apos;t have a sortr yet.</p>
           </div>
         )}
         <Link href="/create">
