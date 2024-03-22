@@ -53,7 +53,6 @@ export default function CreateSortrForm({
               <FormControl>
                 <Input placeholder="Sortr title" {...field} />
               </FormControl>
-              <FormDescription>This the title of your sortr.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

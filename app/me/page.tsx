@@ -12,7 +12,7 @@ export default async function ProfilePage() {
   }
 
   return (
-    <main>
+    <main className="space-y-8 max-w-screen-xl mx-auto">
       <h1 className="text-4xl">{session.user.name}</h1>
       <div>
         <h2 className="text-2xl">Your posts</h2>
