@@ -17,8 +17,8 @@ import {
 import { Input } from '@/components/ui/input'
 
 const formSchema = z.object({
-  title: z.string().min(3, {
-    message: 'Username must be at least 2 characters.',
+  title: z.string().min(2, {
+    message: 'title must be at least 2 characters.',
   }),
 })
 
