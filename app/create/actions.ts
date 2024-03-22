@@ -28,7 +28,7 @@ export async function createSortr({ title }: CreateSortrSchema) {
     })
   } catch (error) {
     return {
-      message: 'Database Error: Failed to Create Sortr',
+      message: 'Internal server error: failed to create sortr',
     }
   }
 
