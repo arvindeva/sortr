@@ -2,6 +2,8 @@ import { auth, signOut } from '@/auth'
 import SignoutButton from '@/components/ui/sign-out-button'
 import { redirect } from 'next/navigation'
 
+import CreateSortrForm from './create-sortr-form'
+
 export default async function ProfilePage() {
   const session = await auth()
 
@@ -17,6 +19,8 @@ export default async function ProfilePage() {
         <p>Looks like you don&apos;t have any posts...</p>
       </div>
       <h2 className="text-2xl">Create posts</h2>
+
+      <CreateSortrForm user={session.user} />
       <SignoutButton
         signOut={async () => {
           'use server'
