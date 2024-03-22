@@ -1,4 +1,5 @@
 import { auth, signOut } from '@/auth'
+import SignoutButton from '@/components/ui/sign-out-button'
 import { redirect } from 'next/navigation'
 
 export default async function ProfilePage() {
@@ -8,5 +9,15 @@ export default async function ProfilePage() {
     redirect('/api/auth/signin?callbackUrl=/me')
   }
 
-  return <h1 className="text-4xl">{session.user.id}</h1>
+  return (
+    <div>
+      <h1 className="text-4xl">{session.user.id}</h1>
+      <SignoutButton
+        signOut={async () => {
+          'use server'
+          await signOut({ redirectTo: '/' })
+        }}
+      />
+    </div>
+  )
 }
