@@ -1,8 +1,6 @@
 'use client'
 
 import { createSortr } from './actions'
-import { useAction } from 'next-safe-action/hooks'
-import { createSortrSchema, type CreateSortrSchema } from './actions'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -11,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -30,7 +27,6 @@ export default function CreateSortrForm({
 }: {
   user: { name?: string | null; image?: string | null }
 }) {
-  const { execute, result, status } = useAction(createSortr)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,8 +34,10 @@ export default function CreateSortrForm({
     },
   })
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log('submitting values: ', values)
+  async function onSubmit({ title }: z.infer<typeof formSchema>) {
+    console.log('submitting title: ', title)
+    const result = await createSortr({ title })
+    console.log(result)
   }
   return (
     <Form {...form}>

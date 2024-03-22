@@ -1,22 +1,21 @@
 'use server'
 
 import { z } from 'zod'
-import { action } from '@/lib/safe-action'
 import { db } from '@/db'
 import { sortrs as sortrsTable } from '@/db/schema/sortrs'
 
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
 
-export const createSortrSchema = z.object({
+const createSortrSchema = z.object({
   title: z.string(),
 })
 
-export type CreateSortrSchema = z.infer<typeof createSortrSchema>
-export const createSortr = action(createSortrSchema, _createSortr)
+type CreateSortrSchema = z.infer<typeof createSortrSchema>
 
-async function _createSortr({ title }: CreateSortrSchema) {
+export async function createSortr({ title }: CreateSortrSchema) {
   const session = await auth()
+  console.log('here')
 
   if (!session) {
     return { message: 'not authenticated' }
