@@ -20,13 +20,12 @@ export default async function ProfilePage() {
     })
     .from(sortrsTable)
     .where(eq(sortrsTable.userId, session.user.id))
-  console.log(result)
 
   return (
     <main className="space-y-8 max-w-screen-xl mx-auto">
-      <h1 className="text-4xl">{session.user.name}</h1>
+      <h1 className="text-4xl font-bold">{session.user.name}</h1>
       <div>
-        <h2 className="text-2xl">Your posts</h2>
+        <h2 className="text-2xl font-semibold">Your posts</h2>
         {result.length > 0 ? (
           <div>
             {result.map((sortr) => {

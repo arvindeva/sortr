@@ -23,11 +23,7 @@ const formSchema = z.object({
   }),
 })
 
-export default function CreateSortrForm({
-  user,
-}: {
-  user: { name?: string | null; image?: string | null }
-}) {
+export default function CreateSortrForm() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
 
   const form = useForm<z.infer<typeof formSchema>>({
