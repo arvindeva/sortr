@@ -6,6 +6,7 @@ import { sortrs as sortrsTable } from '@/db/schema/sortrs'
 
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
 const createSortrSchema = z.object({
   title: z.string(),
@@ -29,4 +30,5 @@ export async function createSortr({ title }: CreateSortrSchema) {
   })
 
   revalidatePath('/me')
+  redirect('/me')
 }

@@ -3,11 +3,11 @@ import { redirect } from 'next/navigation'
 
 import CreateSortrForm from './create-sortr-form'
 
-export default async function ProfilePage() {
+export default async function CreatePage() {
   const session = await auth()
 
   if (!session?.user) {
-    redirect('/api/auth/signin?callbackUrl=/me')
+    redirect('/api/auth/signin?callbackUrl=/create')
   }
 
   return (
