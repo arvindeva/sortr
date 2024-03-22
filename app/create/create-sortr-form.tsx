@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { createSortr } from './actions'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -27,6 +28,8 @@ export default function CreateSortrForm({
 }: {
   user: { name?: string | null; image?: string | null }
 }) {
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -35,10 +38,13 @@ export default function CreateSortrForm({
   })
 
   async function onSubmit({ title }: z.infer<typeof formSchema>) {
-    console.log('submitting title: ', title)
-    const result = await createSortr({ title })
-    console.log(result)
+    setErrorMessage(null)
+    const error = await createSortr({ title })
+    if (error) {
+      setErrorMessage(error.message)
+    }
   }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -55,6 +61,9 @@ export default function CreateSortrForm({
             </FormItem>
           )}
         />
+        {errorMessage && (
+          <p className="text-red-600 font-semibold">{errorMessage}</p>
+        )}
         <Button type="submit">Submit</Button>
       </form>
     </Form>

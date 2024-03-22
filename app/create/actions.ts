@@ -16,18 +16,21 @@ type CreateSortrSchema = z.infer<typeof createSortrSchema>
 
 export async function createSortr({ title }: CreateSortrSchema) {
   const session = await auth()
-  console.log('here')
 
   if (!session) {
     return { message: 'not authenticated' }
   }
-  if (title.length < 2) {
-    return { message: 'title is too short' }
+
+  try {
+    await db.insert(sortrsTable).values({
+      title,
+      userId: session.user.id,
+    })
+  } catch (error) {
+    return {
+      message: 'Database Error: Failed to Create Sortr',
+    }
   }
-  await db.insert(sortrsTable).values({
-    title,
-    userId: session.user.id,
-  })
 
   revalidatePath('/me')
   redirect('/me')
