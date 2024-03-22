@@ -21,7 +21,7 @@ export async function createSortr({ title }: CreateSortrSchema) {
   if (!session) {
     return { message: 'not authenticated' }
   }
-  if (title.length < 3) {
+  if (title.length < 2) {
     return { message: 'title is too short' }
   }
   await db.insert(sortrsTable).values({
