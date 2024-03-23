@@ -22,7 +22,7 @@ export default async function ProfilePage() {
     .where(eq(sortrsTable.userId, session.user.id))
 
   return (
-    <main className="space-y-8 max-w-screen-xl mx-auto">
+    <main className="space-y-8 max-w-screen-xl mx-auto my-8">
       <h1 className="text-4xl font-bold">{session.user.name}</h1>
       <div>
         <h2 className="text-2xl font-semibold">Your posts</h2>

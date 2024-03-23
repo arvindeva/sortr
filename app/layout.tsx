@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import '@/app/globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ModeToggle } from '@/components/ui/mode-toggle'
+import Navbar from '@/components/ui/navbar'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ModeToggle />
+          <Navbar />
           {children}
         </ThemeProvider>
       </body>
