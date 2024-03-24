@@ -4,7 +4,7 @@ import SignoutButton from '@/components/ui/sign-out-button'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { db, eq } from '@/db'
-import { sortrs as sortrsTable } from '@/db/schema/sortrs'
+import { sorters as sortersTable } from '@/db/schema/sorters'
 
 export default async function ProfilePage() {
   const session = await auth()
@@ -15,30 +15,30 @@ export default async function ProfilePage() {
 
   const result = await db
     .select({
-      id: sortrsTable.id,
-      title: sortrsTable.title,
+      id: sortersTable.id,
+      title: sortersTable.title,
     })
-    .from(sortrsTable)
-    .where(eq(sortrsTable.userId, session.user.id))
+    .from(sortersTable)
+    .where(eq(sortersTable.userId, session.user.id))
 
   return (
     <main className="space-y-8 max-w-screen-xl mx-auto my-8">
       <h1 className="text-4xl font-bold">{session.user.name}</h1>
       <div>
-        <h2 className="text-2xl font-semibold">Your posts</h2>
+        <h2 className="text-2xl font-semibold">Your sorters</h2>
         {result.length > 0 ? (
           <div>
-            {result.map((sortr) => {
-              return <div key={sortr.id}>{sortr.title}</div>
+            {result.map((sorter) => {
+              return <div key={sorter.id}>{sorter.title}</div>
             })}
           </div>
         ) : (
           <div>
-            <p>You don&apos;t have a sortr yet.</p>
+            <p>You don&apos;t have a sorter yet.</p>
           </div>
         )}
         <Link href="/create">
-          <Button>Create a sortr</Button>
+          <Button>Create a sorter</Button>
         </Link>
       </div>
 

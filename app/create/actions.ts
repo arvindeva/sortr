@@ -2,18 +2,18 @@
 
 import { z } from 'zod'
 import { db } from '@/db'
-import { sortrs as sortrsTable } from '@/db/schema/sortrs'
+import { sorters as sortersTable } from '@/db/schema/sorters'
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-const createSortrSchema = z.object({
+const createSorterSchema = z.object({
   title: z.string(),
 })
 
-type CreateSortrSchema = z.infer<typeof createSortrSchema>
+type CreateSorterSchema = z.infer<typeof createSorterSchema>
 
-export async function createSortr({ title }: CreateSortrSchema) {
+export async function createSorter({ title }: CreateSorterSchema) {
   const session = await auth()
 
   if (!session) {
@@ -21,13 +21,13 @@ export async function createSortr({ title }: CreateSortrSchema) {
   }
 
   try {
-    await db.insert(sortrsTable).values({
+    await db.insert(sortersTable).values({
       title,
       userId: session.user.id,
     })
   } catch (error) {
     return {
-      message: 'Internal server error: failed to create sortr',
+      message: 'Internal server error: failed to create sorter',
     }
   }
 

@@ -14,7 +14,7 @@ export default async function Navbar() {
       <div className="flex flex-row justify-between items-center max-w-screen-xl mx-auto py-2">
         <div className="">
           <Link href="/">
-            <h1 className="text-2xl font-semibold">Sortr</h1>
+            <h1 className="text-2xl font-semibold">Sortr.io</h1>
           </Link>
         </div>
         <div className="flex flex-row items-center space-x-4">

@@ -1,22 +1,22 @@
 import { db } from '@/db'
 
-import { sortrs as sortrsTable } from '@/db/schema/sortrs'
+import { sorters as sortersTable } from '@/db/schema/sorters'
 export default async function Home() {
   const result = await db
     .select({
-      id: sortrsTable.id,
-      title: sortrsTable.title,
+      id: sortersTable.id,
+      title: sortersTable.title,
     })
-    .from(sortrsTable)
+    .from(sortersTable)
 
   return (
     <main className="max-w-screen-xl my-8 mx-auto">
-      <h1 className="text-2xl font-semibold">Sortr</h1>
+      <h1 className="text-2xl font-semibold">Sortr.io</h1>
       <h2 className="text-lg font-semibold">All sorters</h2>
       {result.length > 0 ? (
         <div>
-          {result.map((sortr) => {
-            return <div key={sortr.id}>{sortr.title}</div>
+          {result.map((sorter) => {
+            return <div key={sorter.id}>{sorter.title}</div>
           })}
         </div>
       ) : (
