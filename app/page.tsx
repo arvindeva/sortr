@@ -1,6 +1,7 @@
 import { db } from '@/db'
 
 import { sorters as sortersTable } from '@/db/schema/sorters'
+import Link from 'next/link'
 export default async function Home() {
   const result = await db
     .select({
@@ -16,7 +17,11 @@ export default async function Home() {
       {result.length > 0 ? (
         <div>
           {result.map((sorter) => {
-            return <div key={sorter.id}>{sorter.title}</div>
+            return (
+              <div key={sorter.id}>
+                <Link href={`/sorter/${sorter.id}`}>{sorter.title}</Link>
+              </div>
+            )
           })}
         </div>
       ) : (

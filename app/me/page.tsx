@@ -29,7 +29,11 @@ export default async function ProfilePage() {
         {result.length > 0 ? (
           <div>
             {result.map((sorter) => {
-              return <div key={sorter.id}>{sorter.title}</div>
+              return (
+                <div key={sorter.id}>
+                  <Link href={`/sorter/${sorter.id}`}>{sorter.title}</Link>
+                </div>
+              )
             })}
           </div>
         ) : (
