@@ -11,7 +11,7 @@ export default async function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex flex-row justify-between items-center max-w-screen-xl mx-auto py-3 px-4">
+      <div className="flex flex-row justify-between items-center content-width mx-auto py-3 px-4">
         <div className="">
           <Link href="/" className="text-4xl font-black uppercase">
             Sortr

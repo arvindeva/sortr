@@ -2,6 +2,14 @@ import { db } from '@/db'
 
 import { sorters as sortersTable } from '@/db/schema/sorters'
 import Link from 'next/link'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 export default async function Home() {
   const result = await db
     .select({
@@ -25,12 +33,19 @@ export default async function Home() {
       <section>
         <h2 className="text-2xl font-semibold mb-4">All sorters</h2>
         {result.length > 0 ? (
-          <div>
+          <div className="grid  sm:grid-cols-2  lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {result.map((sorter) => {
               return (
-                <div key={sorter.id}>
-                  <Link href={`/sorter/${sorter.id}`}>{sorter.title}</Link>
-                </div>
+                <Link href={`/sorter/${sorter.id}`} key={sorter.id}>
+                  <Card key={sorter.id}>
+                    <CardHeader>
+                      <CardTitle>{sorter.title}</CardTitle>
+                      <CardDescription>
+                        Sorter description goes here
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                </Link>
               )
             })}
           </div>

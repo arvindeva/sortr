@@ -56,7 +56,10 @@
   body {
     @apply bg-background text-foreground;
   }
+  .content-width {
+    @apply max-w-screen-2xl;
+  }
   .page-content {
-    @apply max-w-screen-xl mx-auto my-8 px-4 space-y-8;
+    @apply max-w-screen-2xl mx-auto my-8 px-4 space-y-8;
   }
 }

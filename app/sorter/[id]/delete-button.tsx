@@ -21,7 +21,7 @@ export default function DeleteButton({ id }: DeleteButtonProps) {
       {errorMessage && (
         <p className="text-red text-lg">Failed to delete Sorter</p>
       )}
-      <Button variant="secondary" size="sm" onClick={onDelete}>
+      <Button variant="destructive" size="sm" onClick={onDelete}>
         Delete Sorter
       </Button>
     </div>
