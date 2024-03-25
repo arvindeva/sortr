@@ -23,8 +23,8 @@ export default async function SorterPage({
   const sorter = result[0]
 
   return (
-    <main className="max-w-screen-xl my-8 mx-auto">
-      <h1 className="text-2xl font-semibold">{sorter.title}</h1>
+    <main className="page-content">
+      <h1 className="text-4xl font-bold">{sorter.title}</h1>
     </main>
   )
 }

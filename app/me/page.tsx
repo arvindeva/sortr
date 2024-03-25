@@ -1,10 +1,10 @@
 import { auth, signOut } from '@/auth'
 import { Button } from '@/components/ui/button'
-import SignoutButton from '@/components/ui/sign-out-button'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { db, eq } from '@/db'
 import { sorters as sortersTable } from '@/db/schema/sorters'
+import SignoutButton from '@/components/ui/sign-out-button'
 
 export default async function ProfilePage() {
   const session = await auth()
@@ -22,10 +22,18 @@ export default async function ProfilePage() {
     .where(eq(sortersTable.userId, session.user.id))
 
   return (
-    <main className="space-y-8 max-w-screen-xl mx-auto my-8">
-      <h1 className="text-4xl font-bold">{session.user.name}</h1>
+    <main className="page-content">
+      <div className="lg:flex lg:flex-row lg:items-center lg:space-x-4">
+        <h1 className="text-4xl font-bold mb-2">{session.user.name}</h1>
+        <SignoutButton
+          signOut={async () => {
+            'use server'
+            await signOut({ redirectTo: '/' })
+          }}
+        />
+      </div>
       <div>
-        <h2 className="text-2xl font-semibold">Your sorters</h2>
+        <h2 className="text-2xl font-semibold mb-4">Created Sorters</h2>
         {result.length > 0 ? (
           <div>
             {result.map((sorter) => {
@@ -41,17 +49,12 @@ export default async function ProfilePage() {
             <p>You don&apos;t have a sorter yet.</p>
           </div>
         )}
+      </div>
+      <div>
         <Link href="/create">
           <Button>Create a sorter</Button>
         </Link>
       </div>
-
-      <SignoutButton
-        signOut={async () => {
-          'use server'
-          await signOut({ redirectTo: '/' })
-        }}
-      />
     </main>
   )
 }

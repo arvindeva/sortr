@@ -1,7 +1,6 @@
 import { ModeToggle } from './mode-toggle'
-import { auth, signOut } from '@/auth'
+import { auth } from '@/auth'
 import { Button } from '@/components/ui/button'
-import SignoutButton from '@/components/ui/sign-out-button'
 import Link from 'next/link'
 
 export default async function Navbar() {
@@ -11,27 +10,22 @@ export default async function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex flex-row justify-between items-center max-w-screen-xl mx-auto py-2">
+      <div className="flex flex-row justify-between items-center max-w-screen-xl mx-auto py-3 px-4">
         <div className="">
-          <Link href="/">
-            <h1 className="text-2xl font-semibold">Sortr.io</h1>
+          <Link href="/" className="text-4xl font-black uppercase">
+            Sortr
           </Link>
         </div>
         <div className="flex flex-row items-center space-x-4">
           <ul className="text-muted-foreground">
-            <li>
-              <Link href="/me">Profile</Link>
-            </li>
+            {authed && (
+              <li>
+                <Link href="/me">Profile</Link>
+              </li>
+            )}
           </ul>
           <ModeToggle />
-          {authed ? (
-            <SignoutButton
-              signOut={async () => {
-                'use server'
-                await signOut({ redirectTo: '/' })
-              }}
-            />
-          ) : (
+          {!authed && (
             <Link href="/api/auth/signin">
               <Button>Sign in</Button>
             </Link>

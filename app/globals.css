@@ -56,5 +56,7 @@
   body {
     @apply bg-background text-foreground;
   }
+  .page-content {
+    @apply max-w-screen-xl mx-auto my-8 px-4 space-y-8;
+  }
 }
-

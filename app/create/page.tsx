@@ -11,8 +11,8 @@ export default async function CreatePage() {
   }
 
   return (
-    <main className="space-y-8 max-w-screen-xl mx-auto my-8">
-      <h1 className="text-4xl font-semibold">Create new sorter</h1>
+    <main className="page-content">
+      <h1 className="text-4xl font-bold">Create new sorter</h1>
       <CreateSorterForm />
     </main>
   )
