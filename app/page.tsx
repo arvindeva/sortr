@@ -21,7 +21,7 @@ export default async function Home() {
   return (
     <main className="page-content">
       <section>
-        <h1 className="text-4xl font-bold mb-4">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-4">
           Create a Sorter for Anything
         </h1>
         <p className="text-muted-foreground">
@@ -31,7 +31,7 @@ export default async function Home() {
         </p>
       </section>
       <section>
-        <h2 className="text-2xl font-semibold mb-4">All sorters</h2>
+        <h2 className="text-3xl font-semibold mb-4">All sorters</h2>
         {result.length > 0 ? (
           <div className="grid  sm:grid-cols-2  lg:grid-cols-3 gap-4">
             {result.map((sorter) => {
