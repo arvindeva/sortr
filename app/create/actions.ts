@@ -32,5 +32,6 @@ export async function createSorter({ title }: CreateSorterSchema) {
   }
 
   revalidatePath('/me')
+  revalidatePath('/')
   redirect('/me')
 }

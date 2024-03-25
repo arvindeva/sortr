@@ -2,6 +2,7 @@ import { ModeToggle } from './mode-toggle'
 import { auth } from '@/auth'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import SignInButton from './sign-in-button'
 
 export default async function Navbar() {
   const session = await auth()
@@ -25,11 +26,7 @@ export default async function Navbar() {
             )}
           </ul>
           <ModeToggle />
-          {!authed && (
-            <Link href="/api/auth/signin">
-              <Button>Sign in</Button>
-            </Link>
-          )}
+          {!authed && <SignInButton />}
         </div>
       </div>
     </header>
