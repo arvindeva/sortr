@@ -33,11 +33,14 @@ export default async function Home() {
       <section>
         <h2 className="text-2xl font-semibold mb-4">All sorters</h2>
         {result.length > 0 ? (
-          <div className="grid  sm:grid-cols-2  lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid  sm:grid-cols-2  lg:grid-cols-3 gap-4">
             {result.map((sorter) => {
               return (
                 <Link href={`/sorter/${sorter.id}`} key={sorter.id}>
-                  <Card key={sorter.id}>
+                  <Card
+                    key={sorter.id}
+                    className="min-h-48 hover:border-red-600 transition duration-100 ease-in"
+                  >
                     <CardHeader>
                       <CardTitle>{sorter.title}</CardTitle>
                       <CardDescription>
