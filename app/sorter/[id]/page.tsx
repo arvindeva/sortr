@@ -3,6 +3,8 @@ import { auth } from '@/auth'
 import { sorters as sortersTable } from '@/db/schema/sorters'
 import { notFound } from 'next/navigation'
 import DeleteButton from './delete-button'
+import Filter from './filter'
+import { Button } from '@/components/ui/button'
 
 export default async function SorterPage({
   params,
@@ -30,6 +32,8 @@ export default async function SorterPage({
   return (
     <main className="page-content">
       <h1 className="text-4xl font-bold">{sorter.title}</h1>
+      <Button>Begin sorting!</Button>
+      <Filter />
       {owner && <DeleteButton id={sorter.id} />}
     </main>
   )

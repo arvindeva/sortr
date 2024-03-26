@@ -17,11 +17,11 @@ export default async function Navbar() {
             SORTR
           </Link>
         </div>
-        <div className="flex flex-row items-center space-x-4">
+        <div className="flex flex-row items-center space-x-8">
           <ul className="text-muted-foreground">
             {authed && (
               <li>
-                <Link href="/me">Profile</Link>
+                <Link href="/me">My Account</Link>
               </li>
             )}
           </ul>
