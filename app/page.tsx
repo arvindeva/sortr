@@ -39,7 +39,7 @@ export default async function Home() {
                 <Link href={`/sorter/${sorter.id}`} key={sorter.id}>
                   <Card
                     key={sorter.id}
-                    className="min-h-48 hover:border-red-600 transition duration-100 ease-in"
+                    className="min-h-48 hover:border-primary"
                   >
                     <CardHeader>
                       <CardTitle>{sorter.title}</CardTitle>

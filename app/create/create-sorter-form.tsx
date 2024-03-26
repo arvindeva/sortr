@@ -1,6 +1,6 @@
 'use client'
 
-import * as React from 'react'
+import { useState } from 'react'
 import { createSorter } from './actions'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -24,8 +24,8 @@ const formSchema = z.object({
 })
 
 export default function CreateSorterForm() {
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
-
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [status, setStatus] = useState<'idle' | 'loading'>('idle')
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -35,10 +35,12 @@ export default function CreateSorterForm() {
 
   async function onSubmit({ title }: z.infer<typeof formSchema>) {
     setErrorMessage(null)
+    setStatus('loading')
     const error = await createSorter({ title })
     if (error) {
       setErrorMessage(error.message)
     }
+    setStatus('idle')
   }
 
   return (
@@ -60,7 +62,10 @@ export default function CreateSorterForm() {
         {errorMessage && (
           <p className="text-red-600 font-semibold">{errorMessage}</p>
         )}
-        <Button type="submit">Submit</Button>
+        <Button type="submit" disabled={status === 'loading'}>
+          {status === 'idle' && 'Create sorter'}
+          {status === 'loading' && 'Creating...'}
+        </Button>
       </form>
     </Form>
   )
