@@ -26,6 +26,7 @@ export async function createSorter({ title }: CreateSorterSchema) {
       userId: session.user.id,
     })
   } catch (error) {
+    console.log(error)
     return {
       message: 'Internal server error: failed to create sorter',
     }
