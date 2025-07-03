@@ -1,11 +1,11 @@
 "use client";
 import { signIn, useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export default function SignInPage() {
+function SignInContent() {
     const params = useSearchParams();
     const error = params.get("error");
     const { data: session } = useSession();
@@ -72,5 +72,13 @@ export default function SignInPage() {
                 </Button>
             </div>
         </div>
+    );
+}
+
+export default function SignInPage() {
+    return (
+        <Suspense fallback={<div className="flex justify-center items-center mt-20">Loading...</div>}>
+            <SignInContent />
+        </Suspense>
     );
 }
