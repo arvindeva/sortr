@@ -3,7 +3,7 @@ import EmailProvider from "next-auth/providers/email";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/db"; // Make sure this matches your Drizzle client import
 
-export const authOptions = {
+const authOptions = {
     providers: [
         EmailProvider({
             server: process.env.EMAIL_SERVER!,
