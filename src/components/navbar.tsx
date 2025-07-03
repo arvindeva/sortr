@@ -1,5 +1,5 @@
 "use client"
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LoginButton } from "@/components/login-button"
 import { ModeToggle } from "@/components/mode-toggle"

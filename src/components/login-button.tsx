@@ -3,7 +3,11 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 
 export function LoginButton() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
+
+    if (status === "loading") {
+        return <Button disabled>Loading...</Button>;
+    }
 
     if (session) {
         return (
@@ -12,6 +16,6 @@ export function LoginButton() {
     }
 
     return (
-        <Button onClick={() => signIn("email")}>Login with Email</Button>
+        <Button onClick={() => signIn()}>Login with Email</Button>
     );
 }
