@@ -1,13 +1,15 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { user } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { user, sorters } from "@/db/schema";
+import { eq, desc } from "drizzle-orm";
+import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface UserProfilePageProps {
-  params: {
+  params: Promise<{
     username: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
+  }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 async function getUserByUsername(username: string) {
@@ -20,13 +22,33 @@ async function getUserByUsername(username: string) {
   return users[0] || null;
 }
 
+async function getUserSorters(userId: string) {
+  const userSorters = await db
+    .select({
+      id: sorters.id,
+      title: sorters.title,
+      description: sorters.description,
+      category: sorters.category,
+      createdAt: sorters.createdAt,
+      completionCount: sorters.completionCount,
+      viewCount: sorters.viewCount,
+    })
+    .from(sorters)
+    .where(eq(sorters.userId, userId))
+    .orderBy(desc(sorters.createdAt));
+
+  return userSorters;
+}
+
 export default async function UserProfilePage({ params }: UserProfilePageProps) {
-  const { username } = params;
+  const { username } = await params;
   const userData = await getUserByUsername(username);
 
   if (!userData) {
     notFound();
   }
+
+  const userSorters = await getUserSorters(userData.id);
 
   const userSince = new Date(userData.emailVerified || new Date()).toLocaleDateString('en-US', {
     month: 'long',
@@ -53,10 +75,51 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
 
       {/* Sorters Section */}
       <div>
-        <h2 className="text-2xl font-bold mb-4">Sorters</h2>
-        <div className="text-gray-500 italic">
-          No sorters created yet.
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Sorters ({userSorters.length})</h2>
         </div>
+        
+        {userSorters.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg mb-4">No sorters created yet.</p>
+            <p className="text-gray-400">Start creating sorters to share with others!</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {userSorters.map((sorter) => (
+              <Link key={sorter.id} href={`/sorter/${sorter.id}`}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="text-lg leading-6">{sorter.title}</CardTitle>
+                      {sorter.category && (
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-600 flex-shrink-0 ml-2">
+                          {sorter.category}
+                        </span>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {sorter.description && (
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                        {sorter.description}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>
+                        {new Date(sorter.createdAt).toLocaleDateString()}
+                      </span>
+                      <div className="flex gap-3">
+                        <span>{sorter.viewCount} views</span>
+                        <span>{sorter.completionCount} completions</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

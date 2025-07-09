@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
 export function Navbar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   const { data: userData } = useQuery({
     queryKey: ["user", session?.user?.email],
@@ -26,7 +26,30 @@ export function Navbar() {
         sortr
       </Link>
       <div className="flex items-center gap-2">
-        {session ? (
+        {/* Create button - always visible */}
+        {status === "loading" ? (
+          <Button size="sm" variant="default" disabled>
+            Create
+          </Button>
+        ) : session ? (
+          <Link href="/create">
+            <Button size="sm" variant="default">
+              Create
+            </Button>
+          </Link>
+        ) : (
+          <Link href="/auth/signin">
+            <Button size="sm" variant="default">
+              Create
+            </Button>
+          </Link>
+        )}
+        
+        {status === "loading" ? (
+          <Button size="sm" variant="ghost" disabled>
+            Loading...
+          </Button>
+        ) : session ? (
           <div className="flex items-center gap-2">
             {userData?.username ? (
               <Link href={`/user/${userData.username}`}>

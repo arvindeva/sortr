@@ -42,3 +42,25 @@ export const verificationToken = pgTable("verificationToken", {
   token: text("token").notNull().primaryKey(),
   expires: timestamp("expires", { mode: "date" }).notNull(),
 });
+
+export const sorters = pgTable("sorters", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  category: text("category"),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  completionCount: integer("completionCount").default(0).notNull(),
+  viewCount: integer("viewCount").default(0).notNull(),
+});
+
+export const sorterItems = pgTable("sorterItems", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sorterId: uuid("sorterId")
+    .notNull()
+    .references(() => sorters.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  imageUrl: text("imageUrl"),
+});
