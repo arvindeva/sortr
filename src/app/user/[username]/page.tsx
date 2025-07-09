@@ -7,6 +7,7 @@ interface UserProfilePageProps {
   params: {
     username: string;
   };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 async function getUserByUsername(username: string) {
