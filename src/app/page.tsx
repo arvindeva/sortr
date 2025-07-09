@@ -1,11 +1,8 @@
-import { Navbar } from "@/components/navbar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export default function Home() {
   return (
-    <>
-      <Navbar />
-      <main className="flex flex-col items-center px-4 py-10 min-h-[calc(100vh-64px)]">
+    <main className="flex flex-col items-center px-4 py-10 min-h-[calc(100vh-64px)]">
         <section className="max-w-xl text-center mb-10">
           <h1 className="text-4xl font-bold mb-4">Welcome to sortr.io</h1>
           <p className="text-lg text-muted-foreground">
@@ -48,6 +45,5 @@ export default function Home() {
           </div>
         </section>
       </main>
-    </>
   );
 }

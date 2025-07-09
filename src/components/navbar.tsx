@@ -3,17 +3,42 @@ import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LoginButton } from "@/components/login-button"
 import { ModeToggle } from "@/components/mode-toggle"
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 
 export function Navbar() {
   const { data: session } = useSession();
 
+  const { data: userData } = useQuery({
+    queryKey: ["user", session?.user?.email],
+    queryFn: async () => {
+      if (!session?.user?.email) return null;
+      const response = await fetch(`/api/user?email=${encodeURIComponent(session.user.email)}`);
+      if (!response.ok) throw new Error("Failed to fetch user");
+      return response.json();
+    },
+    enabled: !!session?.user?.email,
+  });
+
   return (
     <nav className="w-full flex items-center justify-between px-6 py-4 border-b bg-background/90 sticky top-0 z-30">
-      <div className="text-3xl font-bold tracking-tight">sortr</div>
+      <Link href="/" className="text-3xl font-bold tracking-tight hover:opacity-80 transition-opacity">
+        sortr
+      </Link>
       <div className="flex items-center gap-2">
         {session ? (
           <div className="flex items-center gap-2">
-            <span className="text-sm">Hi, {session.user?.name || session.user?.email || "User"}</span>
+            {userData?.username ? (
+              <Link href={`/user/${userData.username}`}>
+                <Button size="sm" variant="ghost">
+                  Profile
+                </Button>
+              </Link>
+            ) : (
+              <Button size="sm" variant="ghost" disabled>
+                Profile
+              </Button>
+            )}
             <Button size="sm" variant="outline" onClick={() => signOut()}>
               Logout
             </Button>
