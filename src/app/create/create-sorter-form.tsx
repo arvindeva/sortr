@@ -2,74 +2,64 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Plus, X } from "lucide-react";
-
-interface SorterItem {
-  id: string;
-  title: string;
-}
+import { createSorterFormSchema, type CreateSorterFormInput } from "@/lib/validations";
 
 export default function CreateSorterForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Form state
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [items, setItems] = useState<SorterItem[]>([
-    { id: "1", title: "" },
-    { id: "2", title: "" },
-  ]);
+  const form = useForm<CreateSorterFormInput>({
+    resolver: zodResolver(createSorterFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      category: "",
+      items: [
+        { title: "" },
+        { title: "" }
+      ]
+    }
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items"
+  });
 
   // Add new item
   const addItem = () => {
-    const newId = Date.now().toString();
-    setItems([...items, { id: newId, title: "" }]);
+    append({ title: "" });
   };
 
   // Remove item
-  const removeItem = (id: string) => {
-    if (items.length > 2) {
-      setItems(items.filter(item => item.id !== id));
+  const removeItem = (index: number) => {
+    if (fields.length > 2) {
+      remove(index);
     }
   };
 
-  // Update item title
-  const updateItem = (id: string, title: string) => {
-    setItems(items.map(item =>
-      item.id === id ? { ...item, title } : item
-    ));
-  };
-
   // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: CreateSorterFormInput) => {
     setIsLoading(true);
 
     try {
-      // Filter out empty items
-      const validItems = items.filter(item => item.title.trim());
-
-      if (validItems.length < 2) {
-        alert("Please add at least 2 items");
-        setIsLoading(false);
-        return;
-      }
-
       const response = await fetch("/api/sorters", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          title: title.trim(),
-          description: description.trim() || undefined,
-          category: category.trim() || undefined,
-          items: validItems.map(item => ({ title: item.title.trim() })),
+          title: data.title.trim(),
+          description: data.description?.trim() || undefined,
+          category: data.category?.trim() || undefined,
+          items: data.items.map(item => ({ title: item.title.trim() })),
         }),
       });
 
@@ -78,10 +68,10 @@ export default function CreateSorterForm() {
         throw new Error(error.error || "Failed to create sorter");
       }
 
-      const data = await response.json();
+      const result = await response.json();
 
-      // Redirect to sorter page (we'll create this later)
-      router.push(`/sorter/${data.sorter.id}`);
+      // Redirect to sorter page
+      router.push(`/sorter/${result.sorter.id}`);
     } catch (error) {
       console.error("Error creating sorter:", error);
       alert(error instanceof Error ? error.message : "Failed to create sorter");
@@ -96,122 +86,149 @@ export default function CreateSorterForm() {
         <CardTitle>Sorter Details</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Info */}
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium mb-2">
-                Title *
-              </label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g., Best Marvel Movies"
-                required
-                maxLength={100}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Basic Info */}
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Best Marvel Movies"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <textarea
+                        placeholder="Describe what you're ranking..."
+                        className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <select
+                        className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                        {...field}
+                      >
+                        <option value="">Select a category</option>
+                        <option value="Movies">Movies</option>
+                        <option value="Music">Music</option>
+                        <option value="Video Games">Video Games</option>
+                        <option value="TV Shows">TV Shows</option>
+                        <option value="Books">Books</option>
+                        <option value="Food">Food</option>
+                        <option value="Sports">Sports</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
 
+            {/* Items */}
             <div>
-              <label htmlFor="description" className="block text-sm font-medium mb-2">
-                Description
-              </label>
-              <textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe what you're ranking..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                rows={3}
-                maxLength={500}
-              />
+              <div className="flex items-center justify-between mb-4">
+                <FormLabel>Items to Rank *</FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addItem}
+                  className="flex items-center gap-1"
+                >
+                  <Plus size={16} />
+                  Add Item
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                {fields.map((field, index) => (
+                  <FormField
+                    key={field.id}
+                    control={form.control}
+                    name={`items.${index}.title`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input
+                              placeholder={`Item ${index + 1}`}
+                              {...field}
+                            />
+                          </FormControl>
+                          {fields.length > 2 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeItem(index)}
+                              className="flex-shrink-0"
+                            >
+                              <X size={16} />
+                            </Button>
+                          )}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+              {form.formState.errors.items?.root && (
+                <p className="text-sm text-destructive mt-2">
+                  {form.formState.errors.items.root.message}
+                </p>
+              )}
+              <p className="text-sm text-muted-foreground mt-2">
+                Add at least 2 items to create your sorter
+              </p>
             </div>
 
-            <div>
-              <label htmlFor="category" className="block text-sm font-medium mb-2">
-                Category
-              </label>
-              <select
-                id="category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select a category</option>
-                <option value="Movies">Movies</option>
-                <option value="Music">Music</option>
-                <option value="Video Games">Video Games</option>
-                <option value="TV Shows">TV Shows</option>
-                <option value="Books">Books</option>
-                <option value="Food">Food</option>
-                <option value="Sports">Sports</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Items */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <label className="block text-sm font-medium">
-                Items to Rank *
-              </label>
+            {/* Submit */}
+            <div className="flex gap-4">
+              <Button type="submit" disabled={isLoading} className="flex-1">
+                {isLoading ? "Creating..." : "Create Sorter"}
+              </Button>
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
-                onClick={addItem}
-                className="flex items-center gap-1"
+                onClick={() => router.back()}
+                disabled={isLoading}
               >
-                <Plus size={16} />
-                Add Item
+                Cancel
               </Button>
             </div>
-
-            <div className="space-y-2">
-              {items.map((item, index) => (
-                <div key={item.id} className="flex items-center gap-2">
-                  <Input
-                    value={item.title}
-                    onChange={(e) => updateItem(item.id, e.target.value)}
-                    placeholder={`Item ${index + 1}`}
-                    maxLength={100}
-                  />
-                  {items.length > 2 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeItem(item.id)}
-                      className="flex-shrink-0"
-                    >
-                      <X size={16} />
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-            <p className="text-sm text-gray-500 mt-2">
-              Add at least 2 items to create your sorter
-            </p>
-          </div>
-
-          {/* Submit */}
-          <div className="flex gap-4">
-            <Button type="submit" disabled={isLoading} className="flex-1">
-              {isLoading ? "Creating..." : "Create Sorter"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.back()}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

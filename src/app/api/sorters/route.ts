@@ -4,21 +4,7 @@ import { db } from "@/db";
 import { sorters, sorterItems, user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-
-const createSorterSchema = z.object({
-  title: z.string().min(1, "Title is required").max(100, "Title too long"),
-  description: z.string().max(500, "Description too long").optional(),
-  category: z.string().max(50, "Category too long").optional(),
-  items: z
-    .array(
-      z.object({
-        title: z.string().min(1, "Item title is required").max(100, "Item title too long"),
-        imageUrl: z.string().url("Invalid URL").optional(),
-      })
-    )
-    .min(2, "At least 2 items are required")
-    .max(50, "Too many items (max 50)"),
-});
+import { createSorterSchema } from "@/lib/validations";
 
 export async function POST(request: NextRequest) {
   try {
@@ -70,9 +56,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { 
-          error: "Validation error", 
-          details: error.errors 
+        {
+          error: "Validation error",
+          details: error.errors
         },
         { status: 400 }
       );
