@@ -159,7 +159,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
         <Link href={`/sorter/${sorter.id}/sort`}>
           <Button size="lg" className="mb-8">
             <Play className="mr-2" size={20} />
-            Start Sorting ({items.length} items)
+            Sort now
           </Button>
         </Link>
       </div>

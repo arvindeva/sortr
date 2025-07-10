@@ -23,24 +23,24 @@ export function Navbar() {
   return (
     <nav className="w-full flex items-center justify-between px-6 py-4 border-b bg-background/90 sticky top-0 z-30">
       <Link href="/" className="text-3xl font-bold tracking-tight hover:opacity-80 transition-opacity">
-        sortr
+        sortr.io
       </Link>
       <div className="flex items-center gap-2">
         {/* Create button - always visible */}
         {status === "loading" ? (
           <Button size="sm" variant="default" disabled>
-            Create
+            Create a Sorter
           </Button>
         ) : session ? (
           <Link href="/create">
             <Button size="sm" variant="default">
-              Create
+              Create a Sorter
             </Button>
           </Link>
         ) : (
           <Link href="/auth/signin">
             <Button size="sm" variant="default">
-              Create
+              Create a Sorter
             </Button>
           </Link>
         )}

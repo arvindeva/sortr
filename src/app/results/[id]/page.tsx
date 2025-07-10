@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Trophy, Share2, RotateCcw } from "lucide-react";
+import { ArrowLeft, Trophy, Share2, RotateCcw, Play } from "lucide-react";
 
 interface ResultsPageProps {
   params: Promise<{
@@ -24,6 +24,7 @@ interface ResultData {
     id: string;
     rankings: RankedItem[];
     createdAt: Date;
+    username: string;
   };
   sorter: {
     id: string;
@@ -31,19 +32,22 @@ interface ResultData {
     description: string;
     category: string;
     creatorUsername: string;
+    createdAt: Date;
   };
 }
 
 async function getResultData(resultId: string): Promise<ResultData | null> {
-  // Get the sorting result
+  // Get the sorting result with username
   const resultData = await db
     .select({
       id: sortingResults.id,
       rankings: sortingResults.rankings,
       createdAt: sortingResults.createdAt,
       sorterId: sortingResults.sorterId,
+      username: user.username,
     })
     .from(sortingResults)
+    .leftJoin(user, eq(sortingResults.userId, user.id))
     .where(eq(sortingResults.id, resultId))
     .limit(1);
 
@@ -61,6 +65,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       description: sorters.description,
       category: sorters.category,
       creatorUsername: user.username,
+      createdAt: sorters.createdAt,
     })
     .from(sorters)
     .leftJoin(user, eq(sorters.userId, user.id))
@@ -85,6 +90,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       id: result.id,
       rankings,
       createdAt: result.createdAt,
+      username: result.username || "Anonymous",
     },
     sorter: {
       id: sorterData[0].id,
@@ -92,6 +98,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       description: sorterData[0].description || "",
       category: sorterData[0].category || "",
       creatorUsername: sorterData[0].creatorUsername || "Unknown User",
+      createdAt: sorterData[0].createdAt,
     },
   };
 }
@@ -110,60 +117,78 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Header */}
       <div className="mb-8">
-        <Link href={`/sorter/${sorter.id}`}>
-          <Button variant="ghost" className="mb-4">
-            <ArrowLeft className="mr-2" size={16} />
-            Back to Sorter
-          </Button>
-        </Link>
-        
-        <div className="flex items-start justify-between mb-4">
+        {/* Main Header: "[sorter name] \n sorted by [username]" */}
+        <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <Trophy className="text-yellow-500" size={24} />
-              <h1 className="text-3xl font-bold">Results</h1>
+            <div>
+              <h1 className="text-3xl font-bold mb-2">{sorter.title}</h1>
+              <p className="text-lg text-muted-foreground">
+                sorted by{" "}
+                <Link href={`/user/${result.username}`} className="font-medium text-blue-600 hover:underline">
+                  {result.username}
+                </Link>
+                {" "}at {new Date(result.createdAt).toLocaleDateString('en-US', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                })}
+              </p>
             </div>
-            <h2 className="text-xl text-muted-foreground mb-2">{sorter.title}</h2>
-            <p className="text-sm text-muted-foreground">
-              Completed on {new Date(result.createdAt).toLocaleDateString()} at{" "}
-              {new Date(result.createdAt).toLocaleTimeString()}
-            </p>
           </div>
-          
+
           <div className="flex gap-2">
             <Button variant="outline" size="sm">
               <Share2 className="mr-2" size={16} />
               Share
             </Button>
             <Link href={`/sorter/${sorter.id}/sort`}>
-              <Button variant="outline" size="sm">
-                <RotateCcw className="mr-2" size={16} />
-                Sort Again
+              <Button size="sm">
+                <Play className="mr-2" size={16} />
+                Sort now
               </Button>
             </Link>
           </div>
         </div>
 
-        {/* Sorter Info */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <span>by {sorter.creatorUsername}</span>
-          {sorter.category && (
-            <>
-              <span>•</span>
-              <span className="bg-muted px-2 py-1 rounded-full text-xs">
-                {sorter.category}
-              </span>
-            </>
-          )}
-        </div>
       </div>
 
-      {/* Rankings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Ranking ({result.rankings.length} items)</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* Two Column Layout */}
+      <div className="grid md:grid-cols-3 gap-8">
+        {/* Mobile: Info Card (shows first on mobile) */}
+        <div className="md:hidden mb-6">
+          <Link href={`/sorter/${sorter.id}`} className="block">
+            <Card className="hover:shadow-md transition-shadow hover:border-primary/50">
+              <CardContent className="px-4 py-3">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h3 className="font-medium text-lg mb-1">{sorter.title}</h3>
+                  <p className="text-sm text-muted-foreground">by {sorter.creatorUsername}</p>
+                </div>
+                <span className="text-muted-foreground text-xs">
+                  Created at {new Date(sorter.createdAt).toLocaleDateString('en-US', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                  })}
+                </span>
+              </div>
+
+              {/* Category */}
+              {sorter.category && (
+                <div>
+                  <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                    {sorter.category}
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          </Link>
+        </div>
+
+        {/* Left Column - Rankings (spans 2 columns on desktop) */}
+        <div className="md:col-span-2">
+          <h2 className="text-xl font-bold mb-4">Rankings</h2>
           <div className="space-y-3">
             {result.rankings.map((item, index) => (
               <div
@@ -214,15 +239,48 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Right Column - Sorter Info (desktop only) */}
+        <div className="hidden md:block">
+          <Link href={`/sorter/${sorter.id}`} className="block">
+            <Card className="hover:shadow-md transition-shadow hover:border-primary/50">
+              <CardContent>
+              <div className="mb-3">
+                <h3 className="font-medium text-lg mb-1">{sorter.title}</h3>
+                <p className="text-sm text-muted-foreground">by {sorter.creatorUsername}</p>
+              </div>
+
+              <div className="mb-3">
+                <span className="text-muted-foreground text-xs">
+                  Created at {new Date(sorter.createdAt).toLocaleDateString('en-US', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                  })}
+                </span>
+              </div>
+
+              {/* Category */}
+              {sorter.category && (
+                <div>
+                  <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                    {sorter.category}
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          </Link>
+        </div>
+      </div>
 
       {/* Actions */}
       <div className="mt-8 flex justify-center gap-4">
         <Link href={`/sorter/${sorter.id}/sort`}>
           <Button>
-            <RotateCcw className="mr-2" size={16} />
-            Sort Again
+            <Play className="mr-2" size={16} />
+            Sort now
           </Button>
         </Link>
         <Link href={`/sorter/${sorter.id}`}>

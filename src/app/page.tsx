@@ -1,48 +1,73 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { db } from "@/db";
+import { sorters, user } from "@/db/schema";
+import { eq, desc } from "drizzle-orm";
+import Link from "next/link";
 
-export default function Home() {
+async function getPopularSorters() {
+  const popularSorters = await db
+    .select({
+      id: sorters.id,
+      title: sorters.title,
+      category: sorters.category,
+      completionCount: sorters.completionCount,
+      viewCount: sorters.viewCount,
+      creatorUsername: user.username,
+    })
+    .from(sorters)
+    .leftJoin(user, eq(sorters.userId, user.id))
+    .orderBy(desc(sorters.completionCount))
+    .limit(10);
+
+  return popularSorters;
+}
+
+export default async function Home() {
+  const popularSorters = await getPopularSorters();
+
   return (
     <main className="flex flex-col items-center px-4 py-10 min-h-[calc(100vh-64px)]">
         <section className="max-w-xl text-center mb-10">
-          <h1 className="text-4xl font-bold mb-4">Welcome to sortr.io</h1>
+          <h1 className="text-4xl font-bold mb-4">sortr.io</h1>
           <p className="text-lg text-muted-foreground">
-            Create and share ranked lists for anything—albums, movies, characters, and more. Powered by simple pairwise comparison.
+            Create and share ranked lists for anything—albums, movies, characters, and more. Powered by merge sort.
           </p>
         </section>
         <section className="w-full max-w-2xl">
-          <h2 className="text-2xl font-semibold mb-6">Featured Sorters</h2>
-          <div className="grid gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>MCU Movies</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <span className="text-sm text-muted-foreground">
-                  23 items &bull; by <b>MarvelFan</b>
-                </span>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Best Touhou Characters</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <span className="text-sm text-muted-foreground">
-                  100+ items &bull; by <b>touhoulover</b>
-                </span>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Top 20 JRPG Soundtracks</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <span className="text-sm text-muted-foreground">
-                  20 items &bull; by <b>rpgenthusiast</b>
-                </span>
-              </CardContent>
-            </Card>
-          </div>
+          <h2 className="text-2xl font-semibold mb-6">Popular Sorters</h2>
+          {popularSorters.length === 0 ? (
+            <p className="text-muted-foreground italic text-center">No sorters available yet.</p>
+          ) : (
+            <div className="grid gap-6">
+              {popularSorters.map((sorter) => (
+                <Link key={sorter.id} href={`/sorter/${sorter.id}`}>
+                  <Card className="hover:shadow-md transition-shadow hover:border-primary/50">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <CardTitle className="flex-1">{sorter.title}</CardTitle>
+                        {sorter.category && (
+                          <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                            {sorter.category}
+                          </span>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <span>
+                          by <b>{sorter.creatorUsername || "Unknown User"}</b>
+                        </span>
+                        <div className="flex items-center gap-4">
+                          <span>{sorter.completionCount} completions</span>
+                          <span>{sorter.viewCount} views</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
       </main>
   );
