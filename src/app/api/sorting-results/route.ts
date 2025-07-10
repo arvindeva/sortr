@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { sortingResults, sorters } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current session (optional - works for anonymous users too)
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     const userId = session?.user?.id || null;
 
     // Save the sorting result

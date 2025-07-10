@@ -1,10 +1,9 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { sorters, sorterItems, user } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { sorters, sorterItems, sortingResults, user } from "@/db/schema";
+import { eq, sql, desc } from "drizzle-orm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Play, User, Calendar, Eye, Trophy } from "lucide-react";
 
 interface SorterPageProps {
@@ -59,9 +58,43 @@ async function getSorterWithItems(sorterId: string) {
   };
 }
 
+async function getRecentResults(sorterId: string) {
+  const recentResults = await db
+    .select({
+      id: sortingResults.id,
+      rankings: sortingResults.rankings,
+      createdAt: sortingResults.createdAt,
+      username: user.username,
+    })
+    .from(sortingResults)
+    .leftJoin(user, eq(sortingResults.userId, user.id))
+    .where(eq(sortingResults.sorterId, sorterId))
+    .orderBy(desc(sortingResults.createdAt))
+    .limit(10);
+
+  return recentResults.map(result => {
+    let rankings = [];
+    try {
+      rankings = JSON.parse(result.rankings);
+    } catch (error) {
+      console.error("Failed to parse rankings:", error);
+    }
+
+    return {
+      id: result.id,
+      username: result.username || "Anonymous",
+      top3: rankings.slice(0, 3),
+      createdAt: result.createdAt,
+    };
+  });
+}
+
 export default async function SorterPage({ params }: SorterPageProps) {
   const { id } = await params;
-  const data = await getSorterWithItems(id);
+  const [data, recentResults] = await Promise.all([
+    getSorterWithItems(id),
+    getRecentResults(id)
+  ]);
 
   if (!data) {
     notFound();
@@ -131,40 +164,96 @@ export default async function SorterPage({ params }: SorterPageProps) {
         </Link>
       </div>
 
-      {/* Items Preview */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Items to Rank ({items.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* Two Column Layout */}
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Left Column - Items to Rank */}
+        <div>
+          <h2 className="text-xl font-bold mb-4">Items to Rank ({items.length})</h2>
           {items.length === 0 ? (
             <p className="text-muted-foreground italic">No items found for this sorter.</p>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="space-y-3">
               {items.map((item) => (
-                <div key={item.id} className="text-center">
+                <div key={item.id} className="flex items-center gap-3">
+                  {/* Thumbnail */}
                   {item.imageUrl ? (
-                    <div className="aspect-square bg-gray-100 rounded-lg mb-2 flex items-center justify-center">
+                    <div className="w-12 h-12 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
                       <img
                         src={item.imageUrl}
                         alt={item.title}
-                        className="max-w-full max-h-full object-contain rounded-lg"
+                        className="w-full h-full object-cover"
                       />
                     </div>
                   ) : (
-                    <div className="aspect-square bg-gray-100 rounded-lg mb-2 flex items-center justify-center">
-                      <span className="text-muted-foreground text-sm">No image</span>
+                    <div className="w-12 h-12 bg-muted rounded-lg flex-shrink-0 flex items-center justify-center">
+                      <span className="text-muted-foreground text-xs">No img</span>
                     </div>
                   )}
-                  <p className="text-sm font-medium text-foreground line-clamp-2">
-                    {item.title}
-                  </p>
+                  {/* Item Name */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {item.title}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Right Column - Recent Results */}
+        <div>
+          <h2 className="text-xl font-bold mb-4">Recent Results ({recentResults.length})</h2>
+          {recentResults.length === 0 ? (
+            <p className="text-muted-foreground italic">No results yet. Be the first to complete this sorter!</p>
+          ) : (
+            <div className="space-y-4">
+              {recentResults.map((result) => (
+                <Link key={result.id} href={`/results/${result.id}`} className="block">
+                  <div className="bg-card text-card-foreground rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow hover:border-primary/50 px-6 py-4">
+                    {/* Username and Date */}
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-medium text-sm">{result.username}</span>
+                      <span className="text-muted-foreground text-xs">
+                        {new Date(result.createdAt).toLocaleDateString('en-US', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                    
+                    {/* Top 3 Results */}
+                    <div className="space-y-2">
+                      {result.top3.map((item: any, index: number) => (
+                        <div key={item.id || index} className="flex items-center gap-2 text-sm">
+                          <span className="w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                            {index + 1}
+                          </span>
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {item.imageUrl ? (
+                              <div className="w-6 h-6 bg-muted rounded overflow-hidden flex-shrink-0">
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-6 h-6 bg-muted rounded flex-shrink-0"></div>
+                            )}
+                            <span className="truncate text-muted-foreground">{item.title}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

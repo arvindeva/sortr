@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Trophy } from "lucide-react";
+import { ArrowLeft, Trophy, Undo2, RotateCcw } from "lucide-react";
 import { SortItem } from "@/lib/sorting";
 
 interface SorterData {
@@ -33,16 +33,28 @@ function getComparisonKey(itemA: SortItem, itemB: SortItem): string {
   return [itemA.id, itemB.id].sort().join(',');
 }
 
+interface SortState {
+  userChoices: Map<string, string>;
+  comparisonCount: number;
+}
+
 // Real-time merge sort that asks for comparisons as needed
 class InteractiveMergeSort {
   private userChoices = new Map<string, string>();
   private comparisonCount = 0;
   private totalComparisons = 0;
+  private stateHistory: SortState[] = [];
   private onProgressUpdate?: (completed: number, total: number) => void;
+  private onSaveProgress?: () => void;
+  private onRestartRequested?: () => void;
 
-  constructor(savedChoices?: Map<string, string>) {
+  constructor(savedChoices?: Map<string, string>, savedComparisonCount = 0, savedStateHistory?: SortState[]) {
     if (savedChoices) {
       this.userChoices = new Map(savedChoices);
+    }
+    this.comparisonCount = savedComparisonCount;
+    if (savedStateHistory) {
+      this.stateHistory = savedStateHistory;
     }
   }
 
@@ -50,10 +62,59 @@ class InteractiveMergeSort {
     this.onProgressUpdate = callback;
   }
 
+  setSaveCallback(callback: () => void) {
+    this.onSaveProgress = callback;
+  }
+
+  setRestartCallback(callback: () => void) {
+    this.onRestartRequested = callback;
+  }
+
+  private saveStateSnapshot() {
+    this.stateHistory.push({
+      userChoices: new Map(this.userChoices),
+      comparisonCount: this.comparisonCount,
+    });
+  }
+
+  canUndo(): boolean {
+    return this.stateHistory.length > 0;
+  }
+
+  undo(): boolean {
+    if (this.stateHistory.length === 0) return false;
+    
+    const previousState = this.stateHistory.pop()!;
+    this.userChoices = previousState.userChoices;
+    this.comparisonCount = previousState.comparisonCount;
+    
+    // Update progress
+    this.onProgressUpdate?.(this.comparisonCount, this.totalComparisons);
+    this.onSaveProgress?.();
+    
+    // Request restart of sorting from current state
+    this.onRestartRequested?.();
+    
+    return true;
+  }
+
+  reset() {
+    this.userChoices.clear();
+    this.comparisonCount = 0;
+    this.stateHistory = [];
+    
+    // Update progress
+    this.onProgressUpdate?.(0, this.totalComparisons);
+    this.onSaveProgress?.();
+    
+    // Request restart of sorting from beginning
+    this.onRestartRequested?.();
+  }
+
   async sort(items: SortItem[], onNeedComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>): Promise<SortItem[]> {
     // Calculate total comparisons needed by simulating the sort first
     this.totalComparisons = this.simulateSort(items);
-    this.onProgressUpdate?.(0, this.totalComparisons);
+    this.onProgressUpdate?.(this.comparisonCount, this.totalComparisons);
     
     return await this.mergeSort(items, onNeedComparison);
   }
@@ -120,9 +181,14 @@ class InteractiveMergeSort {
       if (!winner) {
         // Need user input for this comparison
         winner = await onNeedComparison(leftItem, rightItem);
+        
+        // Save state snapshot AFTER the comparison is made
+        this.saveStateSnapshot();
+        
         this.comparisonCount++;
         this.onProgressUpdate?.(this.comparisonCount, this.totalComparisons);
         this.userChoices.set(key, winner);
+        this.onSaveProgress?.(); // Save progress after updating count
       }
 
       if (winner === leftItem.id) {
@@ -154,6 +220,10 @@ class InteractiveMergeSort {
   getUserChoices(): Map<string, string> {
     return this.userChoices;
   }
+
+  getStateHistory(): SortState[] {
+    return this.stateHistory;
+  }
 }
 
 export default function SortPage() {
@@ -166,8 +236,10 @@ export default function SortPage() {
   const [saving, setSaving] = useState(false);
   const [completedComparisons, setCompletedComparisons] = useState(0);
   const [totalComparisons, setTotalComparisons] = useState(0);
+  const [canUndo, setCanUndo] = useState(false);
   const sorterRef = useRef<InteractiveMergeSort | null>(null);
   const resolveComparisonRef = useRef<((winnerId: string) => void) | null>(null);
+  const isRestartingRef = useRef(false);
 
   // Fetch sorter data with TanStack Query
   const { data: sorterData, isLoading, error } = useQuery({
@@ -176,37 +248,86 @@ export default function SortPage() {
     retry: 1,
   });
 
+
   // Initialize sorting when data loads
   useEffect(() => {
     if (sorterData && !sorting && !sorterRef.current) {
       // Check for saved progress
       const savedState = localStorage.getItem(`sorting-progress-${sorterId}`);
       let savedChoices: Map<string, string> | undefined;
+      let savedComparisonCount = 0;
+      let savedStateHistory: SortState[] | undefined;
       
       if (savedState) {
         try {
           const parsed = JSON.parse(savedState);
           savedChoices = new Map(parsed.userChoicesArray || []);
-          setCompletedComparisons(parsed.completedComparisons || 0);
+          savedComparisonCount = parsed.completedComparisons || 0;
+          
+          // Restore state history if available
+          if (parsed.stateHistoryArray) {
+            savedStateHistory = parsed.stateHistoryArray.map((historyState: any) => ({
+              userChoices: new Map(historyState.userChoicesArray || []),
+              comparisonCount: historyState.comparisonCount || 0,
+            }));
+          }
+          
+          setCompletedComparisons(savedComparisonCount);
         } catch (error) {
           console.error("Failed to parse saved state:", error);
         }
       }
 
-      sorterRef.current = new InteractiveMergeSort(savedChoices);
+      sorterRef.current = new InteractiveMergeSort(savedChoices, savedComparisonCount, savedStateHistory);
       
       // Set up progress tracking
       sorterRef.current.setProgressCallback((completed, total) => {
         setCompletedComparisons(completed);
         setTotalComparisons(total);
+        setCanUndo(sorterRef.current?.canUndo() || false);
+      });
+
+      // Set up save callback
+      sorterRef.current.setSaveCallback(() => {
+        if (sorterRef.current) {
+          const stateToSave = {
+            userChoicesArray: Array.from(sorterRef.current.getUserChoices().entries()),
+            completedComparisons: sorterRef.current.getComparisonCount(),
+            stateHistoryArray: sorterRef.current.getStateHistory().map(state => ({
+              userChoicesArray: Array.from(state.userChoices.entries()),
+              comparisonCount: state.comparisonCount,
+            })),
+          };
+          localStorage.setItem(`sorting-progress-${sorterId}`, JSON.stringify(stateToSave));
+        }
+      });
+
+      // Set up restart callback
+      sorterRef.current.setRestartCallback(() => {
+        isRestartingRef.current = true;
+        
+        // Don't clear comparison immediately - let the new sort set it
+        setSorting(false);
+        
+        // Force restart after state updates
+        setTimeout(() => {
+          if (isRestartingRef.current) {
+            isRestartingRef.current = false;
+            startSorting();
+          }
+        }, 50);
       });
       
       startSorting();
     }
-  }, [sorterData, sorting]);
+  }, [sorterData]);
 
   const startSorting = useCallback(async () => {
-    if (!sorterData || !sorterRef.current || sorting) return;
+    if (!sorterData || !sorterRef.current) return;
+    
+    if (sorting) {
+      return;
+    }
 
     setSorting(true);
 
@@ -250,20 +371,30 @@ export default function SortPage() {
   const handleChoice = useCallback((winnerId: string) => {
     if (resolveComparisonRef.current) {
       setCurrentComparison(null);
-      
-      // Save progress (comparison count is tracked by the sorter class)
-      if (sorterRef.current) {
-        const stateToSave = {
-          userChoicesArray: Array.from(sorterRef.current.getUserChoices().entries()),
-          completedComparisons: sorterRef.current.getComparisonCount(),
-        };
-        localStorage.setItem(`sorting-progress-${sorterId}`, JSON.stringify(stateToSave));
-      }
-      
       resolveComparisonRef.current(winnerId);
       resolveComparisonRef.current = null;
     }
-  }, [sorterId]);
+  }, []);
+
+  const handleUndo = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (sorterRef.current && sorterRef.current.canUndo()) {
+      // Don't clear current comparison - let the restart handle it
+      // Clear any pending resolve function
+      resolveComparisonRef.current = null;
+      // Then call undo
+      sorterRef.current.undo();
+    }
+  }, []);
+
+  const handleReset = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (sorterRef.current) {
+      sorterRef.current.reset();
+    }
+  }, []);
 
   if (isLoading) {
     return (
@@ -340,6 +471,30 @@ export default function SortPage() {
             <span>{progress}% complete</span>
           </div>
           <Progress value={progress} className="w-full" />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 mt-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleUndo}
+            disabled={!canUndo}
+          >
+            <Undo2 className="mr-2" size={16} />
+            Undo
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleReset}
+            disabled={completedComparisons === 0}
+          >
+            <RotateCcw className="mr-2" size={16} />
+            Reset
+          </Button>
         </div>
       </div>
 
