@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
 import { sorters, sorterItems, user } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,12 @@ interface SorterPageProps {
 }
 
 async function getSorterWithItems(sorterId: string) {
+  // Increment view count
+  await db
+    .update(sorters)
+    .set({ viewCount: sql`${sorters.viewCount} + 1` })
+    .where(eq(sorters.id, sorterId));
+
   // Get sorter data with creator info
   const sorterData = await db
     .select({
@@ -73,7 +79,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
             {sorter.description && (
               <p className="text-muted-foreground text-lg mb-4">{sorter.description}</p>
             )}
-            
+
             {/* Category Badge */}
             {sorter.category && (
               <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
@@ -89,7 +95,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
             <User size={16} />
             <span>by</span>
             {sorter.creatorUsername ? (
-              <Link 
+              <Link
                 href={`/user/${sorter.creatorUsername}`}
                 className="font-medium text-blue-600 hover:underline"
               >
@@ -99,17 +105,17 @@ export default async function SorterPage({ params }: SorterPageProps) {
               <span className="font-medium">Unknown User</span>
             )}
           </div>
-          
+
           <div className="flex items-center gap-1">
             <Calendar size={16} />
             <span>{new Date(sorter.createdAt).toLocaleDateString()}</span>
           </div>
-          
+
           <div className="flex items-center gap-1">
             <Eye size={16} />
             <span>{sorter.viewCount} views</span>
           </div>
-          
+
           <div className="flex items-center gap-1">
             <Trophy size={16} />
             <span>{sorter.completionCount} completions</span>
