@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,12 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Camera } from "lucide-react";
 import { createSorterFormSchema, type CreateSorterFormInput } from "@/lib/validations";
 
 export default function CreateSorterForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [itemImages, setItemImages] = useState<(string | null)[]>([]);
+  const [showEnterHint, setShowEnterHint] = useState(false);
+  const [hasUsedEnterShortcut, setHasUsedEnterShortcut] = useState(false);
 
   const form = useForm<CreateSorterFormInput>({
     resolver: zodResolver(createSorterFormSchema),
@@ -33,15 +36,105 @@ export default function CreateSorterForm() {
     name: "items"
   });
 
+  // Initialize images array to match fields length
+  useEffect(() => {
+    if (itemImages.length !== fields.length) {
+      setItemImages(Array(fields.length).fill(null));
+    }
+  }, [fields.length, itemImages.length]);
+
   // Add new item
   const addItem = () => {
     append({ title: "" });
+    // Add null image slot for new item
+    setItemImages(prev => [...prev, null]);
   };
 
   // Remove item
   const removeItem = (index: number) => {
     if (fields.length > 2) {
       remove(index);
+      // Remove corresponding image
+      setItemImages(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  // Handle Enter key in item inputs
+  const handleItemKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'Enter' && !e.isComposing) {
+      e.preventDefault(); // Prevent form submission
+      
+      // Mark that user has used the Enter shortcut
+      setHasUsedEnterShortcut(true);
+      setShowEnterHint(false);
+      
+      // Add new item after current one
+      const newIndex = index + 1;
+      append({ title: "" });
+      // Insert null image slot at the correct position
+      setItemImages(prev => {
+        const newImages = [...prev];
+        newImages.splice(newIndex, 0, null);
+        return newImages;
+      });
+      
+      // Focus the new input after a short delay to allow DOM update
+      setTimeout(() => {
+        const newInput = document.querySelector(`input[name="items.${newIndex}.title"]`) as HTMLInputElement;
+        if (newInput) {
+          newInput.focus();
+        }
+      }, 0);
+    }
+  };
+
+  // Handle auto-detection when typing in last field
+  const handleItemChange = (value: string, index: number, onChange: (value: string) => void) => {
+    // Update the field value first
+    onChange(value);
+    
+    // Check if this is the last field and user just started typing (went from empty to non-empty)
+    const isLastField = index === fields.length - 1;
+    const wasEmpty = !form.getValues(`items.${index}.title`);
+    const isNowNonEmpty = value.trim().length > 0;
+    
+    if (isLastField && wasEmpty && isNowNonEmpty) {
+      // Add a new empty field
+      append({ title: "" });
+      // Add null image slot for new item
+      setItemImages(prev => [...prev, null]);
+    }
+  };
+
+  // Handle image upload (placeholder for now)
+  const handleImageUpload = (index: number) => {
+    // Create file input element
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        // Create preview URL
+        const imageUrl = URL.createObjectURL(file);
+        setItemImages(prev => {
+          const newImages = [...prev];
+          newImages[index] = imageUrl;
+          return newImages;
+        });
+      }
+    };
+    input.click();
+  };
+
+  // Handle focus on item inputs to show hint
+  const handleItemFocus = () => {
+    if (!hasUsedEnterShortcut && !showEnterHint) {
+      setShowEnterHint(true);
+      // Auto-hide hint after 4 seconds
+      setTimeout(() => {
+        setShowEnterHint(false);
+      }, 4000);
     }
   };
 
@@ -134,7 +227,7 @@ export default function CreateSorterForm() {
                     <FormLabel>Category</FormLabel>
                     <FormControl>
                       <select
-                        className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-card text-card-foreground"
                         {...field}
                       >
                         <option value="">Select a category</option>
@@ -179,12 +272,43 @@ export default function CreateSorterForm() {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center gap-2">
+                          {/* Thumbnail Preview */}
+                          {itemImages[index] && (
+                            <div 
+                              className="flex-shrink-0 w-10 h-10 rounded border overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => handleImageUpload(index)}
+                              title="Click to change image"
+                            >
+                              <img
+                                src={itemImages[index]!}
+                                alt={`Preview for ${field.value || `Item ${index + 1}`}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          
                           <FormControl>
                             <Input
                               placeholder={`Item ${index + 1}`}
+                              onKeyDown={(e) => handleItemKeyDown(e, index)}
+                              onFocus={handleItemFocus}
                               {...field}
+                              onChange={(e) => handleItemChange(e.target.value, index, field.onChange)}
                             />
                           </FormControl>
+                          
+                          {/* Image Upload Button */}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleImageUpload(index)}
+                            className={`flex-shrink-0 ${itemImages[index] ? 'bg-primary/10 border-primary/20' : ''}`}
+                            title={itemImages[index] ? "Change image" : "Add image for this item"}
+                          >
+                            <Camera size={16} className={itemImages[index] ? 'text-primary' : ''} />
+                          </Button>
+                          
                           {fields.length > 2 && (
                             <Button
                               type="button"
@@ -192,6 +316,7 @@ export default function CreateSorterForm() {
                               size="sm"
                               onClick={() => removeItem(index)}
                               className="flex-shrink-0"
+                              title="Remove this item"
                             >
                               <X size={16} />
                             </Button>
@@ -208,9 +333,20 @@ export default function CreateSorterForm() {
                   {form.formState.errors.items.root.message}
                 </p>
               )}
-              <p className="text-sm text-muted-foreground mt-2">
-                Add at least 2 items to create your sorter
-              </p>
+              <div className="text-sm text-muted-foreground mt-2 space-y-1">
+                <p>Add at least 2 items to create your sorter</p>
+                <p className="text-xs">💡 Tip: Press Enter while typing to quickly add more items</p>
+                
+                {/* Contextual Enter Hint */}
+                {showEnterHint && !hasUsedEnterShortcut && (
+                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2 mt-3 animate-in fade-in duration-300">
+                    <p className="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-1">
+                      <span>⌨️</span>
+                      Press Enter to add another item
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Submit */}
