@@ -37,7 +37,8 @@ function getComparisonKey(itemA: SortItem, itemB: SortItem): string {
 class InteractiveMergeSort {
   private userChoices = new Map<string, string>();
   private comparisonCount = 0;
-  private pendingComparison: ((winner: string) => void) | null = null;
+  private totalComparisons = 0;
+  private onProgressUpdate?: (completed: number, total: number) => void;
 
   constructor(savedChoices?: Map<string, string>) {
     if (savedChoices) {
@@ -45,8 +46,52 @@ class InteractiveMergeSort {
     }
   }
 
+  setProgressCallback(callback: (completed: number, total: number) => void) {
+    this.onProgressUpdate = callback;
+  }
+
   async sort(items: SortItem[], onNeedComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>): Promise<SortItem[]> {
+    // Calculate total comparisons needed by simulating the sort first
+    this.totalComparisons = this.simulateSort(items);
+    this.onProgressUpdate?.(0, this.totalComparisons);
+    
     return await this.mergeSort(items, onNeedComparison);
+  }
+
+  private simulateSort(items: SortItem[]): number {
+    // Calculate total potential merges needed (like charasort's totalBattles)
+    let totalMerges = 0;
+    
+    const calculateMerges = (length: number): number => {
+      if (length <= 1) return 0;
+      
+      const mid = Math.floor(length / 2);
+      const leftLength = mid;
+      const rightLength = length - mid;
+      
+      // Add merges needed for this level (minimum of left and right lengths)
+      totalMerges += Math.min(leftLength, rightLength);
+      
+      // Recursively calculate for sublists
+      calculateMerges(leftLength);
+      calculateMerges(rightLength);
+      
+      return totalMerges;
+    };
+    
+    calculateMerges(items.length);
+    
+    // Subtract comparisons we already know
+    let knownComparisons = 0;
+    for (let i = 0; i < items.length; i++) {
+      for (let j = i + 1; j < items.length; j++) {
+        if (this.userChoices.get(getComparisonKey(items[i], items[j]))) {
+          knownComparisons++;
+        }
+      }
+    }
+    
+    return Math.max(1, totalMerges - Math.floor(knownComparisons * 0.3));
   }
 
   private async mergeSort(items: SortItem[], onNeedComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>): Promise<SortItem[]> {
@@ -74,8 +119,9 @@ class InteractiveMergeSort {
       
       if (!winner) {
         // Need user input for this comparison
-        this.comparisonCount++;
         winner = await onNeedComparison(leftItem, rightItem);
+        this.comparisonCount++;
+        this.onProgressUpdate?.(this.comparisonCount, this.totalComparisons);
         this.userChoices.set(key, winner);
       }
 
@@ -119,7 +165,7 @@ export default function SortPage() {
   const [sorting, setSorting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [completedComparisons, setCompletedComparisons] = useState(0);
-  const [estimatedTotal, setEstimatedTotal] = useState(0);
+  const [totalComparisons, setTotalComparisons] = useState(0);
   const sorterRef = useRef<InteractiveMergeSort | null>(null);
   const resolveComparisonRef = useRef<((winnerId: string) => void) | null>(null);
 
@@ -148,7 +194,13 @@ export default function SortPage() {
       }
 
       sorterRef.current = new InteractiveMergeSort(savedChoices);
-      setEstimatedTotal(Math.ceil(sorterData.items.length * Math.log2(sorterData.items.length)));
+      
+      // Set up progress tracking
+      sorterRef.current.setProgressCallback((completed, total) => {
+        setCompletedComparisons(completed);
+        setTotalComparisons(total);
+      });
+      
       startSorting();
     }
   }, [sorterData, sorting]);
@@ -197,15 +249,13 @@ export default function SortPage() {
 
   const handleChoice = useCallback((winnerId: string) => {
     if (resolveComparisonRef.current) {
-      const newCount = completedComparisons + 1;
-      setCompletedComparisons(newCount);
       setCurrentComparison(null);
       
-      // Save progress
+      // Save progress (comparison count is tracked by the sorter class)
       if (sorterRef.current) {
         const stateToSave = {
           userChoicesArray: Array.from(sorterRef.current.getUserChoices().entries()),
-          completedComparisons: newCount,
+          completedComparisons: sorterRef.current.getComparisonCount(),
         };
         localStorage.setItem(`sorting-progress-${sorterId}`, JSON.stringify(stateToSave));
       }
@@ -213,7 +263,7 @@ export default function SortPage() {
       resolveComparisonRef.current(winnerId);
       resolveComparisonRef.current = null;
     }
-  }, [completedComparisons, sorterId]);
+  }, [sorterId]);
 
   if (isLoading) {
     return (
@@ -260,7 +310,8 @@ export default function SortPage() {
     );
   }
 
-  const progress = estimatedTotal > 0 ? Math.round((completedComparisons / estimatedTotal) * 100) : 0;
+  // Calculate progress based on actual comparisons needed (like charasort)
+  const progress = totalComparisons > 0 ? Math.min(99, Math.floor((completedComparisons / totalComparisons) * 100)) : 0;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -284,7 +335,7 @@ export default function SortPage() {
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>
-              Comparison {completedComparisons + 1} of ~{estimatedTotal}
+              {completedComparisons} comparisons completed
             </span>
             <span>{progress}% complete</span>
           </div>
