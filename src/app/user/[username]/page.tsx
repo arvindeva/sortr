@@ -61,7 +61,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
       <div className="flex items-center space-x-6 mb-8">
         {/* Avatar Placeholder */}
         <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center">
-          <span className="text-gray-600 text-2xl font-bold">
+          <span className="text-muted-foreground text-2xl font-bold">
             {userData.username?.charAt(0).toUpperCase()}
           </span>
         </div>
@@ -69,7 +69,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
         {/* User Info */}
         <div>
           <h1 className="text-3xl font-bold mb-2">{userData.username}</h1>
-          <p className="text-gray-600">User since {userSince}</p>
+          <p className="text-muted-foreground">User since {userSince}</p>
         </div>
       </div>
 
@@ -81,8 +81,8 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
         
         {userSorters.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg mb-4">No sorters created yet.</p>
-            <p className="text-gray-400">Start creating sorters to share with others!</p>
+            <p className="text-muted-foreground text-lg mb-4">No sorters created yet.</p>
+            <p className="text-muted-foreground">Start creating sorters to share with others!</p>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -93,7 +93,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                     <div className="flex items-start justify-between">
                       <CardTitle className="text-lg leading-6">{sorter.title}</CardTitle>
                       {sorter.category && (
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-600 flex-shrink-0 ml-2">
+                        <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground flex-shrink-0 ml-2">
                           {sorter.category}
                         </span>
                       )}
@@ -101,11 +101,11 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                   </CardHeader>
                   <CardContent>
                     {sorter.description && (
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
                         {sorter.description}
                       </p>
                     )}
-                    <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>
                         {new Date(sorter.createdAt).toLocaleDateString()}
                       </span>

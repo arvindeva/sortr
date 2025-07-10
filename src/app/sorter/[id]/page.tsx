@@ -71,7 +71,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
           <div className="flex-1">
             <h1 className="text-4xl font-bold mb-2">{sorter.title}</h1>
             {sorter.description && (
-              <p className="text-gray-600 text-lg mb-4">{sorter.description}</p>
+              <p className="text-muted-foreground text-lg mb-4">{sorter.description}</p>
             )}
             
             {/* Category Badge */}
@@ -84,7 +84,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
         </div>
 
         {/* Creator and Stats Info */}
-        <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 mb-6">
+        <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground mb-6">
           <div className="flex items-center gap-1">
             <User size={16} />
             <span>by</span>
@@ -130,7 +130,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
         </CardHeader>
         <CardContent>
           {items.length === 0 ? (
-            <p className="text-gray-500 italic">No items found for this sorter.</p>
+            <p className="text-muted-foreground italic">No items found for this sorter.</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {items.map((item) => (
@@ -145,10 +145,10 @@ export default async function SorterPage({ params }: SorterPageProps) {
                     </div>
                   ) : (
                     <div className="aspect-square bg-gray-100 rounded-lg mb-2 flex items-center justify-center">
-                      <span className="text-gray-400 text-sm">No image</span>
+                      <span className="text-muted-foreground text-sm">No image</span>
                     </div>
                   )}
-                  <p className="text-sm font-medium text-gray-900 line-clamp-2">
+                  <p className="text-sm font-medium text-foreground line-clamp-2">
                     {item.title}
                   </p>
                 </div>
