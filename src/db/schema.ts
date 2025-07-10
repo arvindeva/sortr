@@ -64,3 +64,13 @@ export const sorterItems = pgTable("sorterItems", {
   title: text("title").notNull(),
   imageUrl: text("imageUrl"),
 });
+
+export const sortingResults = pgTable("sortingResults", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sorterId: uuid("sorterId")
+    .notNull()
+    .references(() => sorters.id, { onDelete: "cascade" }),
+  userId: uuid("userId").references(() => user.id, { onDelete: "set null" }), // optional - for anonymous users
+  rankings: text("rankings").notNull(), // JSON string of ranked items
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});

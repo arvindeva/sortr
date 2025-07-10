@@ -123,10 +123,12 @@ export default async function SorterPage({ params }: SorterPageProps) {
         </div>
 
         {/* Start Sorting Button */}
-        <Button size="lg" className="mb-8">
-          <Play className="mr-2" size={20} />
-          Start Sorting ({items.length} items)
-        </Button>
+        <Link href={`/sorter/${sorter.id}/sort`}>
+          <Button size="lg" className="mb-8">
+            <Play className="mr-2" size={20} />
+            Start Sorting ({items.length} items)
+          </Button>
+        </Link>
       </div>
 
       {/* Items Preview */}

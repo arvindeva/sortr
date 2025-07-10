@@ -64,6 +64,8 @@ sortr is a web app for creating and sharing ranked lists through pairwise compar
 - Tailwind CSS with CSS variables for theming
 - Lucide React for icons
 - clsx + tailwind-merge utility pattern for conditional classes
+- **Data Fetching**: Use TanStack Query instead of useEffect for API calls when possible
+- **State Management**: Prefer TanStack Query for server state, React state for UI state
 
 ### Environment Variables
 Requires configuration for:
