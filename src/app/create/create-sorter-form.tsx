@@ -15,7 +15,7 @@ interface SorterItem {
 export default function CreateSorterForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -40,7 +40,7 @@ export default function CreateSorterForm() {
 
   // Update item title
   const updateItem = (id: string, title: string) => {
-    setItems(items.map(item => 
+    setItems(items.map(item =>
       item.id === id ? { ...item, title } : item
     ));
   };
@@ -53,7 +53,7 @@ export default function CreateSorterForm() {
     try {
       // Filter out empty items
       const validItems = items.filter(item => item.title.trim());
-      
+
       if (validItems.length < 2) {
         alert("Please add at least 2 items");
         setIsLoading(false);
@@ -79,7 +79,7 @@ export default function CreateSorterForm() {
       }
 
       const data = await response.json();
-      
+
       // Redirect to sorter page (we'll create this later)
       router.push(`/sorter/${data.sorter.id}`);
     } catch (error) {
