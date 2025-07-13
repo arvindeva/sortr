@@ -88,7 +88,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {userSorters.map((sorter) => (
               <Link key={sorter.id} href={`/sorter/${sorter.id}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <Card className="hover:shadow-md hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200 hover:border-primary/50 cursor-pointer">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <CardTitle className="text-lg leading-6">{sorter.title}</CardTitle>

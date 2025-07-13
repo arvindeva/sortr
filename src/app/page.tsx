@@ -28,7 +28,7 @@ export default async function Home() {
   return (
     <main className="flex flex-col items-center px-4 py-10 min-h-[calc(100vh-64px)]">
         <section className="max-w-xl text-center mb-10">
-          <h1 className="text-4xl font-bold mb-4">sortr.io</h1>
+          <h1 className="text-6xl font-bold mb-4 tracking-wide">sortr</h1>
           <p className="text-lg text-muted-foreground">
             Create and share ranked lists for anything—albums, movies, characters, and more. Powered by merge sort.
           </p>
@@ -41,7 +41,7 @@ export default async function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {popularSorters.map((sorter) => (
                 <Link key={sorter.id} href={`/sorter/${sorter.id}`}>
-                  <Card className="hover:shadow-md transition-shadow hover:border-primary/50">
+                  <Card className="hover:shadow-md hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200 hover:border-primary/50">
                     <CardHeader>
                       <div className="flex-1">
                         <CardTitle className="text-xl">{sorter.title}</CardTitle>

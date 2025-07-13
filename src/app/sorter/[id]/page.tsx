@@ -130,7 +130,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
             {sorter.creatorUsername ? (
               <Link
                 href={`/user/${sorter.creatorUsername}`}
-                className="font-medium text-blue-600 hover:underline"
+                className="font-semibold text-foreground hover:underline"
               >
                 {sorter.creatorUsername}
               </Link>
@@ -157,8 +157,8 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
         {/* Start Sorting Button */}
         <Link href={`/sorter/${sorter.id}/sort`}>
-          <Button size="lg" className="mb-8">
-            <Play className="mr-2" size={20} />
+          <Button size="lg" className="mb-8 hover:scale-105 transition-transform duration-200">
+            <Play className="mr-2 transition-transform duration-200 group-hover:translate-x-1" size={20} />
             Sort now
           </Button>
         </Link>
@@ -210,7 +210,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
             <div className="space-y-4">
               {recentResults.map((result) => (
                 <Link key={result.id} href={`/results/${result.id}`} className="block">
-                  <div className="bg-card text-card-foreground rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow hover:border-primary/50 px-6 py-4">
+                  <div className="bg-card text-card-foreground rounded-xl border border-border shadow-sm hover:shadow-md hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200 hover:border-primary/50 px-6 py-4">
                     {/* Username and Date */}
                     <div className="flex items-center justify-between mb-3">
                       <span className="font-medium text-sm">{result.username}</span>
