@@ -124,7 +124,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
               <h1 className="text-3xl font-bold mb-2">{sorter.title}</h1>
               <p className="text-lg text-muted-foreground">
                 sorted by{" "}
-                <Link href={`/user/${result.username}`} className="font-medium text-blue-600 hover:underline">
+                <Link href={`/user/${result.username}`} className="font-semibold text-foreground hover:underline">
                   {result.username}
                 </Link>
                 {" "}at {new Date(result.createdAt).toLocaleDateString('en-US', {
@@ -157,7 +157,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         {/* Mobile: Info Card (shows first on mobile) */}
         <div className="md:hidden mb-6">
           <Link href={`/sorter/${sorter.id}`} className="block">
-            <Card className="hover:shadow-md transition-shadow hover:border-primary/50">
+            <Card className="hover:shadow-md hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200 hover:border-primary/50">
               <CardContent className="px-4 py-3">
               <div className="flex items-start justify-between mb-3">
                 <div>
@@ -193,7 +193,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             {result.rankings.map((item, index) => (
               <div
                 key={item.id}
-                className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg"
+                className="flex items-center gap-4 p-4 bg-card border rounded-lg"
               >
                 {/* Rank */}
                 <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
@@ -243,8 +243,9 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
         {/* Right Column - Sorter Info (desktop only) */}
         <div className="hidden md:block">
+          <h2 className="text-xl font-bold mb-4">Sorter Info</h2>
           <Link href={`/sorter/${sorter.id}`} className="block">
-            <Card className="hover:shadow-md transition-shadow hover:border-primary/50">
+            <Card className="hover:shadow-md hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200 hover:border-primary/50">
               <CardContent>
               <div className="mb-3">
                 <h3 className="font-medium text-lg mb-1">{sorter.title}</h3>
