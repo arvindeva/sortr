@@ -38,29 +38,29 @@ export default async function Home() {
           {popularSorters.length === 0 ? (
             <p className="text-muted-foreground italic text-center">No sorters available yet.</p>
           ) : (
-            <div className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {popularSorters.map((sorter) => (
                 <Link key={sorter.id} href={`/sorter/${sorter.id}`}>
                   <Card className="hover:shadow-md transition-shadow hover:border-primary/50">
                     <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <CardTitle className="flex-1">{sorter.title}</CardTitle>
+                      <div className="flex-1">
+                        <CardTitle className="text-xl">{sorter.title}</CardTitle>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          by <b>{sorter.creatorUsername || "Unknown User"}</b>
+                        </p>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <div className="flex items-center gap-4">
+                          <span>{sorter.completionCount} completions</span>
+                          <span>{sorter.viewCount} views</span>
+                        </div>
                         {sorter.category && (
                           <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
                             {sorter.category}
                           </span>
                         )}
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>
-                          by <b>{sorter.creatorUsername || "Unknown User"}</b>
-                        </span>
-                        <div className="flex items-center gap-4">
-                          <span>{sorter.completionCount} completions</span>
-                          <span>{sorter.viewCount} views</span>
-                        </div>
                       </div>
                     </CardContent>
                   </Card>

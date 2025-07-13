@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
+import { ProgressProvider } from "@/components/progress-provider";
 
 import "./globals.css";
 
@@ -34,6 +35,7 @@ export default function RootLayout({
           <Navbar />
           {children}
         </Providers>
+        <ProgressProvider />
       </body>
     </html>
   );

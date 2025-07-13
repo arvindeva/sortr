@@ -61,7 +61,7 @@ export default function CreateSorterForm() {
 
   // Handle Enter key in item inputs
   const handleItemKeyDown = (e: React.KeyboardEvent, index: number) => {
-    if (e.key === 'Enter' && !e.isComposing) {
+    if (e.key === 'Enter' && !(e.nativeEvent as CompositionEvent).isComposing) {
       e.preventDefault(); // Prevent form submission
       
       // Mark that user has used the Enter shortcut
