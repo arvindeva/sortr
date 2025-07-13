@@ -24,7 +24,7 @@ export function Navbar() {
   });
 
   return (
-    <nav className="w-full flex items-center justify-between px-6 py-4 border-b bg-background/90 sticky top-0 z-30">
+    <nav className="w-full flex items-center justify-between px-6 py-4 border-b bg-card sticky top-0 z-30">
       <Link href="/" className="text-3xl font-bold tracking-wide hover:tracking-wider hover:scale-105 hover:text-primary transition-all duration-300 ease-out hover:drop-shadow-sm">
         sortr
       </Link>
@@ -93,8 +93,16 @@ export function Navbar() {
         </Button>
       </div>
 
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 md:hidden z-20"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Mobile Menu */}
-      <div className={`absolute top-full left-0 right-0 bg-background/95 backdrop-blur-sm border-b md:hidden transition-all duration-300 ease-out ${mobileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
+      <div className={`absolute top-full left-0 right-0 bg-card border-b md:hidden transition-all duration-300 ease-out z-30 ${mobileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
         <div className="flex flex-col p-4 gap-3">
           {/* Create button */}
           {status === "loading" ? (
