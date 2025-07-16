@@ -4,6 +4,7 @@ import { sorters, sorterItems, sortingResults, user } from "@/db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Play, User, Calendar, Eye, Trophy } from "lucide-react";
 
 interface SorterPageProps {
@@ -115,9 +116,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
             {/* Category Badge */}
             {sorter.category && (
-              <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+              <Badge>
                 {sorter.category}
-              </span>
+              </Badge>
             )}
           </div>
         </div>

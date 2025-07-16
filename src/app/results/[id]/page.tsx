@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Trophy, Share2, RotateCcw, Play } from "lucide-react";
 
 interface ResultsPageProps {
@@ -251,9 +252,9 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
               {/* Category */}
               {sorter.category && (
                 <div>
-                  <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                  <Badge>
                     {sorter.category}
-                  </span>
+                  </Badge>
                 </div>
               )}
             </CardContent>

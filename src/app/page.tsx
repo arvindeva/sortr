@@ -1,4 +1,5 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -28,14 +29,14 @@ export default async function Home() {
   const popularSorters = await getPopularSorters();
 
   return (
-    <main className="flex flex-col items-center px-4 py-10 min-h-[calc(100vh-64px)]">
-        <section className="max-w-xl text-center mb-10">
+    <main className="container mx-auto px-4 py-10 max-w-4xl min-h-[calc(100vh-64px)]">
+        <section className="max-w-xl mx-auto text-center mb-10">
           <h1 className="text-6xl font-bold mb-4 tracking-wide">sortr</h1>
           <p className="text-lg text-muted-foreground">
             Create and share ranked lists for anything—albums, movies, characters, and more. Powered by merge sort.
           </p>
         </section>
-        <section className="w-full max-w-2xl">
+        <section className="w-full">
           <h2 className="text-2xl font-semibold mb-6">Popular Sorters</h2>
           {popularSorters.length === 0 ? (
             <p className="text-muted-foreground italic text-center">No sorters available yet.</p>
@@ -59,9 +60,9 @@ export default async function Home() {
                           <span>{sorter.viewCount} views</span>
                         </div>
                         {sorter.category && (
-                          <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                          <Badge>
                             {sorter.category}
-                          </span>
+                          </Badge>
                         )}
                       </div>
                     </CardContent>

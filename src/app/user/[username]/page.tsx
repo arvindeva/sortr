@@ -4,6 +4,7 @@ import { user, sorters } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 // Cache statically but revalidate on-demand when completion counts change
 
@@ -94,9 +95,9 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                   <CardHeader className="pb-3 h-28 flex flex-col justify-start">
                     <CardTitle className="text-lg leading-relaxed line-clamp-2 mb-3">{sorter.title}</CardTitle>
                     {sorter.category && (
-                      <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 w-fit">
+                      <Badge>
                         {sorter.category}
-                      </span>
+                      </Badge>
                     )}
                   </CardHeader>
                   <CardContent>
