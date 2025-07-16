@@ -346,8 +346,8 @@ export default function SortPage() {
               </div>
             ) : (
               <div className="flex aspect-square items-center justify-center bg-gray-100 md:mx-auto md:h-64 md:w-64 md:rounded-lg">
-                <span className="text-muted-foreground text-xs md:text-sm">
-                  No image
+                <span className="text-muted-foreground text-lg md:text-4xl font-bold">
+                  {currentComparison.itemA.title.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
@@ -373,8 +373,8 @@ export default function SortPage() {
               </div>
             ) : (
               <div className="flex aspect-square items-center justify-center bg-gray-100 md:mx-auto md:h-64 md:w-64 md:rounded-lg">
-                <span className="text-muted-foreground text-xs md:text-sm">
-                  No image
+                <span className="text-muted-foreground text-lg md:text-4xl font-bold">
+                  {currentComparison.itemB.title.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}

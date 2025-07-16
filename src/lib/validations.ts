@@ -46,6 +46,15 @@ export const createSorterFormSchema = createSorterSchema
       .min(2, "At least 2 items are required"),
   });
 
+// Sign-in validation schema
+export const signInSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+});
+
 // Type exports
 export type CreateSorterInput = z.infer<typeof createSorterSchema>;
 export type CreateSorterFormInput = z.infer<typeof createSorterFormSchema>;
+export type SignInInput = z.infer<typeof signInSchema>;

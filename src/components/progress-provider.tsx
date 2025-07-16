@@ -24,6 +24,16 @@ export function ProgressProvider() {
       const link = target.closest("a");
 
       if (link && link.href && link.href !== window.location.href) {
+        // Don't show progress for links that open in new tabs
+        if (link.target === "_blank" || link.target === "_top" || link.target === "_parent") {
+          return;
+        }
+
+        // Don't show progress for new tab keyboard shortcuts
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) {
+          return;
+        }
+
         setProgress(10);
 
         // Quick progress animation

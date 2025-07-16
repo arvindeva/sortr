@@ -6,7 +6,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Trophy, Share2, RotateCcw, Play } from "lucide-react";
+import { ArrowLeft, Trophy, RotateCcw, Play } from "lucide-react";
+import { ShareButton } from "@/components/share-button";
 
 interface ResultsPageProps {
   params: Promise<{
@@ -147,10 +148,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             </div>
 
             <div className="hidden gap-2 md:flex">
-              <Button variant="outline" size="sm">
-                <Share2 className="mr-2" size={16} />
-                Share
-              </Button>
+              <ShareButton size="sm" />
               <Link href={`/sorter/${sorter.id}/sort`}>
                 <Button size="sm">
                   <Play className="mr-2" size={16} />
@@ -162,10 +160,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
           {/* Mobile buttons - shown under title section */}
           <div className="flex gap-2 md:hidden">
-            <Button variant="outline" size="sm">
-              <Share2 className="mr-2" size={16} />
-              Share
-            </Button>
+            <ShareButton size="sm" />
             <Link href={`/sorter/${sorter.id}/sort`}>
               <Button size="sm">
                 <Play className="mr-2" size={16} />
@@ -188,13 +183,33 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 className="bg-card flex items-center gap-4 rounded-lg border p-4"
               >
                 {/* Rank */}
-                <div className="bg-primary text-primary-foreground flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold">
+                <div
+                  className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-4 text-sm font-bold ${
+                    index === 0
+                      ? "border-yellow-500 bg-yellow-50 text-yellow-700"
+                      : index === 1
+                        ? "border-gray-400 bg-gray-50 text-gray-700"
+                        : index === 2
+                          ? "border-amber-600 bg-amber-50 text-amber-700"
+                          : "bg-primary text-primary-foreground"
+                  }`}
+                >
                   {index + 1}
                 </div>
 
                 {/* Image */}
                 {item.imageUrl ? (
-                  <div className="bg-muted h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg">
+                  <div
+                    className={`bg-muted h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-4 ${
+                      index === 0
+                        ? "border-yellow-500"
+                        : index === 1
+                          ? "border-gray-400"
+                          : index === 2
+                            ? "border-amber-600"
+                            : "border-transparent"
+                    }`}
+                  >
                     <img
                       src={item.imageUrl}
                       alt={item.title}
@@ -202,9 +217,19 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                     />
                   </div>
                 ) : (
-                  <div className="bg-muted flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg">
-                    <span className="text-muted-foreground text-xs">
-                      No image
+                  <div
+                    className={`flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg border-4 bg-gray-100 ${
+                      index === 0
+                        ? "border-yellow-500"
+                        : index === 1
+                          ? "border-gray-400"
+                          : index === 2
+                            ? "border-amber-600"
+                            : "border-transparent"
+                    }`}
+                  >
+                    <span className="text-muted-foreground text-sm font-bold">
+                      {item.title.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )}
@@ -213,23 +238,6 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 <div className="flex-1">
                   <h3 className="font-medium">{item.title}</h3>
                 </div>
-
-                {/* Medal for top 3 */}
-                {index === 0 && (
-                  <div className="text-yellow-500">
-                    <Trophy size={20} />
-                  </div>
-                )}
-                {index === 1 && (
-                  <div className="text-gray-400">
-                    <Trophy size={18} />
-                  </div>
-                )}
-                {index === 2 && (
-                  <div className="text-amber-600">
-                    <Trophy size={16} />
-                  </div>
-                )}
               </div>
             ))}
           </div>

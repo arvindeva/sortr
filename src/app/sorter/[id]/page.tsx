@@ -194,9 +194,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
                       />
                     </div>
                   ) : (
-                    <div className="bg-muted flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg">
-                      <span className="text-muted-foreground text-xs">
-                        No img
+                    <div className="bg-gray-100 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg">
+                      <span className="text-muted-foreground text-xs font-bold">
+                        {item.title.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
@@ -254,7 +254,13 @@ export default async function SorterPage({ params }: SorterPageProps) {
                           key={item.id || index}
                           className="flex items-center gap-2 text-sm"
                         >
-                          <span className="bg-primary text-primary-foreground flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold">
+                          <span className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold border-2 ${
+                            index === 0 
+                              ? 'border-yellow-500 bg-yellow-50 text-yellow-700' 
+                              : index === 1 
+                              ? 'border-gray-400 bg-gray-50 text-gray-700' 
+                              : 'border-amber-600 bg-amber-50 text-amber-700'
+                          }`}>
                             {index + 1}
                           </span>
                           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -267,7 +273,11 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                 />
                               </div>
                             ) : (
-                              <div className="bg-muted h-6 w-6 flex-shrink-0 rounded"></div>
+                              <div className="bg-gray-100 h-6 w-6 flex-shrink-0 rounded flex items-center justify-center">
+                                <span className="text-muted-foreground text-xs font-bold">
+                                  {item.title.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
                             )}
                             <span className="text-muted-foreground truncate">
                               {item.title}
