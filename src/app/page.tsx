@@ -4,6 +4,8 @@ import { sorters, user } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 
+// Cache statically but revalidate on-demand when completion counts change
+
 async function getPopularSorters() {
   const popularSorters = await db
     .select({

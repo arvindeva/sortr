@@ -4,6 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,6 +33,14 @@ export async function POST(request: NextRequest) {
       .update(sorters)
       .set({ completionCount: sql`${sorters.completionCount} + 1` })
       .where(eq(sorters.id, sorterId));
+
+    // Invalidate pages that show completion counts
+    revalidatePath('/'); // Homepage popular sorters
+    revalidatePath(`/sorter/${sorterId}`); // Individual sorter page
+    
+    // Also invalidate any user profile pages that might show this sorter
+    // Note: We could be more specific if we had the creator's username
+    revalidatePath('/user/[username]', 'page');
 
     return Response.json({ 
       resultId: result[0].id,

@@ -5,6 +5,8 @@ import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+// Cache statically but revalidate on-demand when completion counts change
+
 interface UserProfilePageProps {
   params: Promise<{
     username: string;
