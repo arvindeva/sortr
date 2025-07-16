@@ -287,9 +287,9 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             {/* Category */}
             {sorter.category && (
               <div>
-                <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                <Badge>
                   {sorter.category}
-                </span>
+                </Badge>
               </div>
             )}
           </CardContent>

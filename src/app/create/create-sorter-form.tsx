@@ -6,7 +6,6 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Plus, X, Camera } from "lucide-react";
 import { createSorterFormSchema, type CreateSorterFormInput } from "@/lib/validations";
@@ -174,13 +173,12 @@ export default function CreateSorterForm() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Sorter Details</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <div>
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold">Sorter Details</h2>
+      </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Basic Info */}
             <div className="space-y-4">
               <FormField
@@ -227,10 +225,10 @@ export default function CreateSorterForm() {
                     <FormLabel>Category</FormLabel>
                     <FormControl>
                       <select
-                        className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-card text-card-foreground"
+                        className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-background text-foreground [&>option[value='']]:text-muted-foreground"
                         {...field}
                       >
-                        <option value="">Select a category</option>
+                        <option value="" className="text-muted-foreground">Select a category</option>
                         <option value="Movies">Movies</option>
                         <option value="Music">Music</option>
                         <option value="Video Games">Video Games</option>
@@ -365,7 +363,6 @@ export default function CreateSorterForm() {
             </div>
           </form>
         </Form>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
