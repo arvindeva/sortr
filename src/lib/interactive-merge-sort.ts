@@ -49,6 +49,11 @@ export class InteractiveMergeSort {
       userChoices: new Map(this.userChoices),
       comparisonCount: this.comparisonCount,
     });
+    
+    // Keep only the last 3 states to prevent memory issues
+    if (this.stateHistory.length > 3) {
+      this.stateHistory.shift();
+    }
   }
 
   canUndo(): boolean {

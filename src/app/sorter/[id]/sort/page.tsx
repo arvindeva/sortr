@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Trophy, Undo2, RotateCcw } from "lucide-react";
 import { SortItem } from "@/lib/sorting";
 import { InteractiveMergeSort, SortState } from "@/lib/interactive-merge-sort";
+import LZString from "lz-string";
 
 interface SorterData {
   sorter: {
@@ -70,21 +71,25 @@ export default function SortPage() {
 
       if (savedState) {
         try {
-          const parsed = JSON.parse(savedState);
-          savedChoices = new Map(parsed.userChoicesArray || []);
-          savedComparisonCount = parsed.completedComparisons || 0;
+          // Decompress the saved state
+          const decompressed = LZString.decompressFromEncodedURIComponent(savedState);
+          if (decompressed) {
+            const parsed = JSON.parse(decompressed);
+            savedChoices = new Map(parsed.userChoicesArray || []);
+            savedComparisonCount = parsed.completedComparisons || 0;
 
-          // Restore state history if available
-          if (parsed.stateHistoryArray) {
-            savedStateHistory = parsed.stateHistoryArray.map(
-              (historyState: any) => ({
-                userChoices: new Map(historyState.userChoicesArray || []),
-                comparisonCount: historyState.comparisonCount || 0,
-              }),
-            );
+            // Restore state history if available
+            if (parsed.stateHistoryArray) {
+              savedStateHistory = parsed.stateHistoryArray.map(
+                (historyState: any) => ({
+                  userChoices: new Map(historyState.userChoicesArray || []),
+                  comparisonCount: historyState.comparisonCount || 0,
+                }),
+              );
+            }
+
+            setCompletedComparisons(savedComparisonCount);
           }
-
-          setCompletedComparisons(savedComparisonCount);
         } catch (error) {
           console.error("Failed to parse saved state:", error);
         }
@@ -118,9 +123,12 @@ export default function SortPage() {
                 comparisonCount: state.comparisonCount,
               })),
           };
+          
+          // Compress the state before saving
+          const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(stateToSave));
           localStorage.setItem(
             `sorting-progress-${sorterId}`,
-            JSON.stringify(stateToSave),
+            compressed,
           );
         }
       });

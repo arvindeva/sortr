@@ -184,14 +184,14 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
               >
                 {/* Rank */}
                 <div
-                  className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-4 text-sm font-bold ${
+                  className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${
                     index === 0
-                      ? "border-yellow-500 bg-yellow-50 text-yellow-700"
+                      ? "border-4 border-yellow-500 bg-yellow-50 text-yellow-700"
                       : index === 1
-                        ? "border-gray-400 bg-gray-50 text-gray-700"
+                        ? "border-4 border-gray-400 bg-gray-50 text-gray-700"
                         : index === 2
-                          ? "border-amber-600 bg-amber-50 text-amber-700"
-                          : "bg-primary text-primary-foreground"
+                          ? "border-4 border-amber-600 bg-amber-50 text-amber-700"
+                          : "border border-gray-600 bg-transparent text-gray-600"
                   }`}
                 >
                   {index + 1}
