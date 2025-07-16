@@ -33,14 +33,14 @@ function shuffleArray<T>(array: T[]): T[] {
 
 // Create comparison key for caching results
 function getComparisonKey(itemA: SortItem, itemB: SortItem): string {
-  return [itemA.id, itemB.id].sort().join(',');
+  return [itemA.id, itemB.id].sort().join(",");
 }
 
 // Get user preference from cache
 function getUserPreference(
-  itemA: SortItem, 
-  itemB: SortItem, 
-  userChoices: Map<string, string>
+  itemA: SortItem,
+  itemB: SortItem,
+  userChoices: Map<string, string>,
 ): string | null {
   const key = getComparisonKey(itemA, itemB);
   return userChoices.get(key) || null;
@@ -50,13 +50,21 @@ function getUserPreference(
 async function mergeSortWithComparisons(
   items: SortItem[],
   userChoices: Map<string, string>,
-  onNeedComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>
+  onNeedComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>,
 ): Promise<SortItem[]> {
   if (items.length <= 1) return items;
 
   const mid = Math.floor(items.length / 2);
-  const left = await mergeSortWithComparisons(items.slice(0, mid), userChoices, onNeedComparison);
-  const right = await mergeSortWithComparisons(items.slice(mid), userChoices, onNeedComparison);
+  const left = await mergeSortWithComparisons(
+    items.slice(0, mid),
+    userChoices,
+    onNeedComparison,
+  );
+  const right = await mergeSortWithComparisons(
+    items.slice(mid),
+    userChoices,
+    onNeedComparison,
+  );
 
   return await merge(left, right, userChoices, onNeedComparison);
 }
@@ -66,7 +74,7 @@ async function merge(
   left: SortItem[],
   right: SortItem[],
   userChoices: Map<string, string>,
-  onNeedComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>
+  onNeedComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>,
 ): Promise<SortItem[]> {
   const result: SortItem[] = [];
   let leftIndex = 0;
@@ -78,7 +86,7 @@ async function merge(
 
     // Check if we already know the preference
     let winner = getUserPreference(leftItem, rightItem, userChoices);
-    
+
     if (!winner) {
       // Need user input for this comparison
       winner = await onNeedComparison(leftItem, rightItem);
@@ -119,7 +127,7 @@ function estimateComparisons(n: number): number {
 export function initializeSorting(items: SortItem[]): SortingState {
   const shuffledItems = shuffleArray([...items]);
   const totalComparisons = estimateComparisons(items.length);
-  
+
   return {
     items: shuffledItems,
     pendingComparisons: [],
@@ -144,13 +152,13 @@ export function startSorting(state: SortingState): SortingState {
 // Process a user choice and continue sorting
 export function processChoice(
   state: SortingState,
-  winnerId: string
+  winnerId: string,
 ): SortingState {
   if (!state.currentComparison) return state;
 
   const { itemA, itemB } = state.currentComparison;
   const key = getComparisonKey(itemA, itemB);
-  
+
   // Store the user's choice
   const newUserChoices = new Map(state.userChoices);
   newUserChoices.set(key, winnerId);
@@ -164,7 +172,9 @@ export function processChoice(
 }
 
 // Get current comparison (this will be managed by the sorting process)
-export function getCurrentComparison(state: SortingState): ComparisonPair | null {
+export function getCurrentComparison(
+  state: SortingState,
+): ComparisonPair | null {
   return state.currentComparison;
 }
 
@@ -172,7 +182,7 @@ export function getCurrentComparison(state: SortingState): ComparisonPair | null
 export function needsComparison(
   itemA: SortItem,
   itemB: SortItem,
-  userChoices: Map<string, string>
+  userChoices: Map<string, string>,
 ): boolean {
   return !getUserPreference(itemA, itemB, userChoices);
 }
@@ -181,7 +191,7 @@ export function needsComparison(
 export function setCurrentComparison(
   state: SortingState,
   itemA: SortItem,
-  itemB: SortItem
+  itemB: SortItem,
 ): SortingState {
   return {
     ...state,
@@ -192,7 +202,7 @@ export function setCurrentComparison(
 // Complete the sorting process
 export function completeSorting(
   state: SortingState,
-  finalRankings: SortItem[]
+  finalRankings: SortItem[],
 ): SortingState {
   return {
     ...state,
@@ -210,7 +220,9 @@ export function getFinalRankings(state: SortingState): SortItem[] {
 // Get progress percentage
 export function getProgress(state: SortingState): number {
   if (state.totalComparisons === 0) return 100;
-  return Math.round((state.completedComparisons / state.totalComparisons) * 100);
+  return Math.round(
+    (state.completedComparisons / state.totalComparisons) * 100,
+  );
 }
 
 // Export the merge sort function for use in components

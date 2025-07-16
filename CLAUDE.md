@@ -5,23 +5,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ### Development
+
 - `npm run dev` - Start development server with Turbopack
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 
 ### Database
+
 - `npx drizzle-kit generate` - Generate database migrations
 - `npx drizzle-kit migrate` - Run database migrations
 - `npx drizzle-kit studio` - Open Drizzle Studio for database management
 
 ### Environment Setup
+
 - Copy `.env.example` to `.env` and configure required environment variables
 - `npm install` - Install dependencies
 
 ## Architecture
 
 ### Tech Stack
+
 - **Framework**: Next.js 15 with App Router
 - **Styling**: Tailwind CSS with shadcn/ui components
 - **Database**: PostgreSQL with Drizzle ORM (Railway hosted)
@@ -30,6 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Theme**: next-themes for dark/light mode
 
 ### Project Structure
+
 - `src/app/` - Next.js App Router pages and layouts
   - `src/app/api/` - API routes (auth, sorters, user)
   - `src/app/auth/` - Authentication pages (signin, error)
@@ -42,6 +47,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `src/lib/` - Utility functions and shared logic
 
 ### Key Components
+
 - **Layout**: Root layout with theme provider and font configuration
 - **Navbar**: Navigation with login button and theme toggle
 - **Theme System**: Complete dark/light/system theme switching using next-themes
@@ -50,7 +56,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Database Schema**: Users, sorters, sorter items, and NextAuth tables
 
 ### Application Purpose
+
 sortr is a web app for creating and sharing ranked lists through pairwise comparison. Users can:
+
 - Create sortable lists ("Sorters") with custom items and images
 - Rank items using pairwise comparison UI
 - Save progress locally without account requirement
@@ -58,6 +66,7 @@ sortr is a web app for creating and sharing ranked lists through pairwise compar
 - Share results pages
 
 ### Code Conventions
+
 - Uses TypeScript with strict mode
 - Path aliases configured: `@/*` maps to `./src/*`
 - shadcn/ui component aliases: `@/components`, `@/lib/utils`, `@/components/ui`
@@ -68,7 +77,9 @@ sortr is a web app for creating and sharing ranked lists through pairwise compar
 - **State Management**: Prefer TanStack Query for server state, React state for UI state
 
 ### Environment Variables
+
 Requires configuration for:
+
 - `DATABASE_URL` - PostgreSQL database connection string
 - `NEXTAUTH_URL` - Application URL for NextAuth.js
 - `NEXTAUTH_SECRET` - Secret key for NextAuth.js

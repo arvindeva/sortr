@@ -8,7 +8,10 @@ export async function GET(request: NextRequest) {
   const email = searchParams.get("email");
 
   if (!email) {
-    return NextResponse.json({ error: "Email parameter is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Email parameter is required" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -32,6 +35,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(users[0]);
   } catch (error) {
     console.error("Error fetching user:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

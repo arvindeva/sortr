@@ -9,9 +9,12 @@ import { revalidatePath } from "next/cache";
 export async function POST(request: NextRequest) {
   try {
     const { sorterId, rankings } = await request.json();
-    
+
     if (!sorterId || !rankings) {
-      return Response.json({ error: "Missing required fields" }, { status: 400 });
+      return Response.json(
+        { error: "Missing required fields" },
+        { status: 400 },
+      );
     }
 
     // Get current session (optional - works for anonymous users too)
@@ -35,22 +38,25 @@ export async function POST(request: NextRequest) {
       .where(eq(sorters.id, sorterId));
 
     // Invalidate pages that show completion counts
-    revalidatePath('/'); // Homepage popular sorters
+    revalidatePath("/"); // Homepage popular sorters
     revalidatePath(`/sorter/${sorterId}`); // Individual sorter page
-    
+
     // Also invalidate any user profile pages that might show this sorter
     // Note: We could be more specific if we had the creator's username
-    revalidatePath('/user/[username]', 'page');
+    revalidatePath("/user/[username]", "page");
 
-    return Response.json({ 
+    return Response.json({
       resultId: result[0].id,
-      success: true 
+      success: true,
     });
   } catch (error) {
     console.error("Error saving sorting results:", error);
-    return Response.json({ 
-      error: "Failed to save results",
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+    return Response.json(
+      {
+        error: "Failed to save results",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    );
   }
 }

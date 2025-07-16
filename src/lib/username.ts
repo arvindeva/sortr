@@ -1,7 +1,11 @@
-import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator';
-import { db } from '@/db';
-import { user } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import {
+  uniqueNamesGenerator,
+  adjectives,
+  animals,
+} from "unique-names-generator";
+import { db } from "@/db";
+import { user } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export async function generateUniqueUsername(): Promise<string> {
   let username: string;
@@ -11,8 +15,8 @@ export async function generateUniqueUsername(): Promise<string> {
   do {
     username = uniqueNamesGenerator({
       dictionaries: [adjectives, adjectives, animals],
-      separator: '',
-      style: 'capital',
+      separator: "",
+      style: "capital",
       length: 3,
     });
 
@@ -29,12 +33,13 @@ export async function generateUniqueUsername(): Promise<string> {
     attempts++;
   } while (attempts < maxAttempts);
 
-  username = uniqueNamesGenerator({
-    dictionaries: [adjectives, adjectives, animals],
-    separator: '',
-    style: 'capital',
-    length: 3,
-  }) + Math.floor(Math.random() * 1000);
+  username =
+    uniqueNamesGenerator({
+      dictionaries: [adjectives, adjectives, animals],
+      separator: "",
+      style: "capital",
+      length: 3,
+    }) + Math.floor(Math.random() * 1000);
 
   return username;
 }

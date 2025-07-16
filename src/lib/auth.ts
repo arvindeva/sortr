@@ -40,7 +40,10 @@ export const authOptions: NextAuthOptions = {
       if (!newUser.username) {
         try {
           const username = await generateUniqueUsername();
-          await db.update(user).set({ username }).where(eq(user.id, newUser.id));
+          await db
+            .update(user)
+            .set({ username })
+            .where(eq(user.id, newUser.id));
         } catch (error) {
           console.error("Failed to generate username:", error);
         }

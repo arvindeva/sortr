@@ -1,8 +1,8 @@
-"use client"
+"use client";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { LoginButton } from "@/components/login-button"
-import { ModeToggle } from "@/components/mode-toggle"
+import { LoginButton } from "@/components/login-button";
+import { ModeToggle } from "@/components/mode-toggle";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Menu, X } from "lucide-react";
@@ -16,7 +16,9 @@ export function Navbar() {
     queryKey: ["user", session?.user?.email],
     queryFn: async () => {
       if (!session?.user?.email) return null;
-      const response = await fetch(`/api/user?email=${encodeURIComponent(session.user.email)}`);
+      const response = await fetch(
+        `/api/user?email=${encodeURIComponent(session.user.email)}`,
+      );
       if (!response.ok) throw new Error("Failed to fetch user");
       return response.json();
     },
@@ -24,13 +26,16 @@ export function Navbar() {
   });
 
   return (
-    <nav className="w-full flex items-center justify-between px-6 py-4 border-b bg-card sticky top-0 z-30">
-      <Link href="/" className="text-3xl font-bold tracking-wide hover:tracking-wider hover:scale-105 hover:text-primary transition-all duration-300 ease-out hover:drop-shadow-sm">
+    <nav className="bg-card sticky top-0 z-30 flex w-full items-center justify-between border-b px-6 py-4">
+      <Link
+        href="/"
+        className="hover:text-primary text-3xl font-bold tracking-wide transition-all duration-300 ease-out hover:scale-105 hover:tracking-wider hover:drop-shadow-sm"
+      >
         sortr
       </Link>
-      
+
       {/* Desktop Navigation */}
-      <div className="hidden md:flex items-center gap-2">
+      <div className="hidden items-center gap-2 md:flex">
         {/* Create button - always visible */}
         {status === "loading" ? (
           <Button size="sm" variant="default" disabled>
@@ -39,20 +44,34 @@ export function Navbar() {
           </Button>
         ) : session ? (
           <Link href="/create">
-            <Button size="sm" variant="default" className="hover:scale-105 transition-transform duration-200 group">
-              <Plus className="mr-1 transition-transform duration-200 group-hover:rotate-90" size={16} />
+            <Button
+              size="sm"
+              variant="default"
+              className="group transition-transform duration-200 hover:scale-105"
+            >
+              <Plus
+                className="mr-1 transition-transform duration-200 group-hover:rotate-90"
+                size={16}
+              />
               Create a Sorter
             </Button>
           </Link>
         ) : (
           <Link href="/auth/signin">
-            <Button size="sm" variant="default" className="hover:scale-105 transition-transform duration-200 group">
-              <Plus className="mr-1 transition-transform duration-200 group-hover:rotate-90" size={16} />
+            <Button
+              size="sm"
+              variant="default"
+              className="group transition-transform duration-200 hover:scale-105"
+            >
+              <Plus
+                className="mr-1 transition-transform duration-200 group-hover:rotate-90"
+                size={16}
+              />
               Create a Sorter
             </Button>
           </Link>
         )}
-        
+
         {status === "loading" ? (
           <Button size="sm" variant="ghost" disabled>
             Loading...
@@ -81,7 +100,7 @@ export function Navbar() {
       </div>
 
       {/* Mobile Menu Button */}
-      <div className="md:hidden flex items-center gap-2">
+      <div className="flex items-center gap-2 md:hidden">
         <ModeToggle />
         <Button
           variant="ghost"
@@ -95,15 +114,17 @@ export function Navbar() {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 md:hidden z-20"
+        <div
+          className="fixed inset-0 z-20 bg-black/50 md:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
       {/* Mobile Menu */}
-      <div className={`absolute top-full left-0 right-0 bg-card border-b md:hidden transition-all duration-300 ease-out z-30 ${mobileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
-        <div className="flex flex-col p-4 gap-3">
+      <div
+        className={`bg-card absolute top-full right-0 left-0 z-30 border-b transition-all duration-300 ease-out md:hidden ${mobileMenuOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
+      >
+        <div className="flex flex-col gap-3 p-4">
           {/* Create button */}
           {status === "loading" ? (
             <Button variant="default" disabled className="w-full">
@@ -125,7 +146,7 @@ export function Navbar() {
               </Button>
             </Link>
           )}
-          
+
           {/* Auth buttons */}
           {status === "loading" ? (
             <Button variant="ghost" disabled className="w-full">
@@ -134,7 +155,10 @@ export function Navbar() {
           ) : session ? (
             <>
               {userData?.username ? (
-                <Link href={`/user/${userData.username}`} onClick={() => setMobileMenuOpen(false)}>
+                <Link
+                  href={`/user/${userData.username}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   <Button variant="ghost" className="w-full">
                     Profile
                   </Button>
@@ -144,8 +168,8 @@ export function Navbar() {
                   Profile
                 </Button>
               )}
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   signOut();
                   setMobileMenuOpen(false);

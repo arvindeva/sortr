@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         sorterId: newSorter.id,
         title: item.title,
         imageUrl: item.imageUrl || null,
-      }))
+      })),
     );
 
     return NextResponse.json({
@@ -58,16 +58,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Validation error",
-          details: error.errors
+          details: error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error("Error creating sorter:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

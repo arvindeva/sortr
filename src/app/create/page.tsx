@@ -11,9 +11,9 @@ export default async function CreatePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <div className="container mx-auto max-w-2xl px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Create New Sorter</h1>
+        <h1 className="mb-2 text-3xl font-bold">Create New Sorter</h1>
         <p className="text-muted-foreground">
           Create a new sorter for others to rank and compare items.
         </p>

@@ -30,7 +30,8 @@ function SignInContent() {
   // Customize which errors show. Only show real errors, not old/false ones.
   let errorMessage = null;
   if (error === "EmailSignin") {
-    errorMessage = "Sorry, we couldn't send the magic link. Please check your email or try again later.";
+    errorMessage =
+      "Sorry, we couldn't send the magic link. Please check your email or try again later.";
   } else if (error === "OAuthAccountNotLinked") {
     errorMessage = "This email is already linked to a different provider.";
   }
@@ -38,18 +39,22 @@ function SignInContent() {
 
   if (session?.user) {
     return (
-      <div className="flex flex-col items-center mt-20">
-        <p className="mb-4">You are already signed in as <strong>{session.user.email}</strong></p>
-        <a href="/" className="text-blue-600 hover:underline">Go to home</a>
+      <div className="mt-20 flex flex-col items-center">
+        <p className="mb-4">
+          You are already signed in as <strong>{session.user.email}</strong>
+        </p>
+        <a href="/" className="text-blue-600 hover:underline">
+          Go to home
+        </a>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center mt-20">
-      <h1 className="text-3xl font-bold mb-6">Sign In to Sortr</h1>
+    <div className="mt-20 flex flex-col items-center">
+      <h1 className="mb-6 text-3xl font-bold">Sign In to Sortr</h1>
       {errorMessage && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-300 text-red-700 rounded">
+        <div className="mb-4 rounded border border-red-300 bg-red-100 p-4 text-red-700">
           {errorMessage}
         </div>
       )}
@@ -77,7 +82,11 @@ function SignInContent() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center mt-20">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="mt-20 flex items-center justify-center">Loading...</div>
+      }
+    >
       <SignInContent />
     </Suspense>
   );

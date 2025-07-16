@@ -18,13 +18,13 @@ export interface EfficientSortState {
 }
 
 function getComparisonKey(itemA: SortItem, itemB: SortItem): string {
-  return [itemA.id, itemB.id].sort().join(',');
+  return [itemA.id, itemB.id].sort().join(",");
 }
 
 function getUserPreference(
-  itemA: SortItem, 
-  itemB: SortItem, 
-  userChoices: Map<string, string>
+  itemA: SortItem,
+  itemB: SortItem,
+  userChoices: Map<string, string>,
 ): string | null {
   const key = getComparisonKey(itemA, itemB);
   return userChoices.get(key) || null;
@@ -33,13 +33,16 @@ function getUserPreference(
 class MergeSortController {
   private items: SortItem[];
   private userChoices: Map<string, string>;
-  private onNeedComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>;
+  private onNeedComparison: (
+    itemA: SortItem,
+    itemB: SortItem,
+  ) => Promise<string>;
   private comparisonCount = 0;
 
   constructor(
-    items: SortItem[], 
+    items: SortItem[],
     userChoices: Map<string, string>,
-    onNeedComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>
+    onNeedComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>,
   ) {
     this.items = items;
     this.userChoices = userChoices;
@@ -60,7 +63,10 @@ class MergeSortController {
     return await this.merge(left, right);
   }
 
-  private async merge(left: SortItem[], right: SortItem[]): Promise<SortItem[]> {
+  private async merge(
+    left: SortItem[],
+    right: SortItem[],
+  ): Promise<SortItem[]> {
     const result: SortItem[] = [];
     let leftIndex = 0;
     let rightIndex = 0;
@@ -68,10 +74,10 @@ class MergeSortController {
     while (leftIndex < left.length && rightIndex < right.length) {
       const leftItem = left[leftIndex];
       const rightItem = right[rightIndex];
-      
+
       // Check if we already know the preference
       let winner = getUserPreference(leftItem, rightItem, this.userChoices);
-      
+
       if (!winner) {
         // Need user input for this comparison
         this.comparisonCount++;
@@ -110,8 +116,9 @@ class MergeSortController {
 
 export function initializeEfficientSort(items: SortItem[]): EfficientSortState {
   // Estimate total comparisons (this is just an estimate)
-  const estimatedComparisons = items.length <= 1 ? 0 : Math.ceil(items.length * Math.log2(items.length));
-  
+  const estimatedComparisons =
+    items.length <= 1 ? 0 : Math.ceil(items.length * Math.log2(items.length));
+
   return {
     items,
     userChoices: new Map(),
@@ -125,8 +132,12 @@ export function initializeEfficientSort(items: SortItem[]): EfficientSortState {
 
 export function startEfficientSort(
   state: EfficientSortState,
-  onComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>
+  onComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>,
 ): Promise<SortItem[]> {
-  const controller = new MergeSortController(state.items, state.userChoices, onComparison);
+  const controller = new MergeSortController(
+    state.items,
+    state.userChoices,
+    onComparison,
+  );
   return controller.sort();
 }

@@ -10,12 +10,8 @@ export function LoginButton() {
   }
 
   if (session) {
-    return (
-      <Button onClick={() => signOut()}>Logout</Button>
-    );
+    return <Button onClick={() => signOut()}>Logout</Button>;
   }
 
-  return (
-    <Button onClick={() => signIn()}>Login with Email</Button>
-  );
+  return <Button onClick={() => signIn()}>Login with Email</Button>;
 }

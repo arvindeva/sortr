@@ -34,6 +34,7 @@ Built with Next.js (App Router), Drizzle ORM, PostgreSQL, and Cloudinary for ima
 ## Getting Started
 
 1. **Install dependencies**
+
    ```bash
    npm install
    ```
@@ -46,11 +47,13 @@ Built with Next.js (App Router), Drizzle ORM, PostgreSQL, and Cloudinary for ima
    - Cloudinary (optional, for image uploads)
 
 3. **Run database migrations**
+
    ```bash
    npx drizzle-kit migrate
    ```
 
 4. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -62,5 +65,5 @@ Built with Next.js (App Router), Drizzle ORM, PostgreSQL, and Cloudinary for ima
 ## Database Management
 
 - `npx drizzle-kit generate` - Generate new migrations
-- `npx drizzle-kit migrate` - Run migrations  
+- `npx drizzle-kit migrate` - Run migrations
 - `npx drizzle-kit studio` - Open Drizzle Studio

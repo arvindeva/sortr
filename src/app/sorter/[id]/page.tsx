@@ -73,7 +73,7 @@ async function getRecentResults(sorterId: string) {
     .orderBy(desc(sortingResults.createdAt))
     .limit(10);
 
-  return recentResults.map(result => {
+  return recentResults.map((result) => {
     let rankings = [];
     try {
       rankings = JSON.parse(result.rankings);
@@ -94,7 +94,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
   const { id } = await params;
   const [data, recentResults] = await Promise.all([
     getSorterWithItems(id),
-    getRecentResults(id)
+    getRecentResults(id),
   ]);
 
   if (!data) {
@@ -104,34 +104,32 @@ export default async function SorterPage({ params }: SorterPageProps) {
   const { sorter, items } = data;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto max-w-4xl px-4 py-8">
       {/* Sorter Header */}
       <div className="mb-8">
-        <div className="flex items-start justify-between mb-4">
+        <div className="mb-4 flex items-start justify-between">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold mb-2">{sorter.title}</h1>
+            <h1 className="mb-2 text-2xl font-bold">{sorter.title}</h1>
             {sorter.description && (
-              <p className="text-muted-foreground text-lg mb-4">{sorter.description}</p>
+              <p className="text-muted-foreground mb-4 text-lg">
+                {sorter.description}
+              </p>
             )}
 
             {/* Category Badge */}
-            {sorter.category && (
-              <Badge>
-                {sorter.category}
-              </Badge>
-            )}
+            {sorter.category && <Badge>{sorter.category}</Badge>}
           </div>
         </div>
 
         {/* Creator and Stats Info */}
-        <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground mb-6">
+        <div className="text-muted-foreground mb-6 flex flex-wrap items-center gap-6 text-sm">
           <div className="flex items-center gap-1">
             <User size={16} />
             <span>by</span>
             {sorter.creatorUsername ? (
               <Link
                 href={`/user/${sorter.creatorUsername}`}
-                className="font-semibold text-foreground hover:underline"
+                className="text-foreground font-semibold hover:underline"
               >
                 {sorter.creatorUsername}
               </Link>
@@ -158,41 +156,53 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
         {/* Start Sorting Button */}
         <Link href={`/sorter/${sorter.id}/sort`}>
-          <Button size="lg" className="mb-8 hover:scale-105 transition-transform duration-200">
-            <Play className="mr-2 transition-transform duration-200 group-hover:translate-x-1" size={20} />
+          <Button
+            size="lg"
+            className="mb-8 transition-transform duration-200 hover:scale-105"
+          >
+            <Play
+              className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
+              size={20}
+            />
             Sort now
           </Button>
         </Link>
       </div>
 
       {/* Two Column Layout */}
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid gap-8 md:grid-cols-2">
         {/* Left Column - Items to Rank */}
         <div>
-          <h2 className="text-xl font-bold mb-4">Items to Rank ({items.length})</h2>
+          <h2 className="mb-4 text-xl font-bold">
+            Items to Rank ({items.length})
+          </h2>
           {items.length === 0 ? (
-            <p className="text-muted-foreground italic">No items found for this sorter.</p>
+            <p className="text-muted-foreground italic">
+              No items found for this sorter.
+            </p>
           ) : (
             <div className="space-y-3">
               {items.map((item) => (
                 <div key={item.id} className="flex items-center gap-3">
                   {/* Thumbnail */}
                   {item.imageUrl ? (
-                    <div className="w-12 h-12 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
+                    <div className="bg-muted h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
                       <img
                         src={item.imageUrl}
                         alt={item.title}
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                       />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 bg-muted rounded-lg flex-shrink-0 flex items-center justify-center">
-                      <span className="text-muted-foreground text-xs">No img</span>
+                    <div className="bg-muted flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg">
+                      <span className="text-muted-foreground text-xs">
+                        No img
+                      </span>
                     </div>
                   )}
                   {/* Item Name */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-foreground truncate text-sm font-medium">
                       {item.title}
                     </p>
                   </div>
@@ -204,46 +214,64 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
         {/* Right Column - Recent Results */}
         <div>
-          <h2 className="text-xl font-bold mb-4">Recent Results ({recentResults.length})</h2>
+          <h2 className="mb-4 text-xl font-bold">
+            Recent Results ({recentResults.length})
+          </h2>
           {recentResults.length === 0 ? (
-            <p className="text-muted-foreground italic">No results yet. Be the first to complete this sorter!</p>
+            <p className="text-muted-foreground italic">
+              No results yet. Be the first to complete this sorter!
+            </p>
           ) : (
             <div className="space-y-4">
               {recentResults.map((result) => (
-                <Link key={result.id} href={`/results/${result.id}`} className="block">
-                  <div className="bg-card text-card-foreground rounded-xl border border-border shadow-sm hover:shadow-md hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200 hover:border-primary/50 px-6 py-4">
+                <Link
+                  key={result.id}
+                  href={`/results/${result.id}`}
+                  className="block"
+                >
+                  <div className="bg-card text-card-foreground border-border hover:border-primary/50 rounded-xl border px-6 py-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md">
                     {/* Username and Date */}
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-medium text-sm">{result.username}</span>
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-sm font-medium">
+                        {result.username}
+                      </span>
                       <span className="text-muted-foreground text-xs">
-                        {new Date(result.createdAt).toLocaleDateString('en-US', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
+                        {new Date(result.createdAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          },
+                        )}
                       </span>
                     </div>
-                    
+
                     {/* Top 3 Results */}
                     <div className="space-y-2">
                       {result.top3.map((item: any, index: number) => (
-                        <div key={item.id || index} className="flex items-center gap-2 text-sm">
-                          <span className="w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                        <div
+                          key={item.id || index}
+                          className="flex items-center gap-2 text-sm"
+                        >
+                          <span className="bg-primary text-primary-foreground flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold">
                             {index + 1}
                           </span>
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <div className="flex min-w-0 flex-1 items-center gap-2">
                             {item.imageUrl ? (
-                              <div className="w-6 h-6 bg-muted rounded overflow-hidden flex-shrink-0">
+                              <div className="bg-muted h-6 w-6 flex-shrink-0 overflow-hidden rounded">
                                 <img
                                   src={item.imageUrl}
                                   alt={item.title}
-                                  className="w-full h-full object-cover"
+                                  className="h-full w-full object-cover"
                                 />
                               </div>
                             ) : (
-                              <div className="w-6 h-6 bg-muted rounded flex-shrink-0"></div>
+                              <div className="bg-muted h-6 w-6 flex-shrink-0 rounded"></div>
                             )}
-                            <span className="truncate text-muted-foreground">{item.title}</span>
+                            <span className="text-muted-foreground truncate">
+                              {item.title}
+                            </span>
                           </div>
                         </div>
                       ))}
