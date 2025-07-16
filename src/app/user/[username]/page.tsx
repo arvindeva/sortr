@@ -68,7 +68,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
         
         {/* User Info */}
         <div>
-          <h1 className="text-3xl font-bold mb-2">{userData.username}</h1>
+          <h1 className="text-2xl font-bold mb-2">{userData.username}</h1>
           <p className="text-muted-foreground">User since {userSince}</p>
         </div>
       </div>
@@ -88,23 +88,16 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {userSorters.map((sorter) => (
               <Link key={sorter.id} href={`/sorter/${sorter.id}`}>
-                <Card className="hover:shadow-md hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200 hover:border-primary/50 cursor-pointer">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="text-lg leading-6">{sorter.title}</CardTitle>
-                      {sorter.category && (
-                        <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground flex-shrink-0 ml-2">
-                          {sorter.category}
-                        </span>
-                      )}
-                    </div>
+                <Card className="hover:shadow-md hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200 hover:border-primary/50 cursor-pointer min-h-[180px] flex flex-col">
+                  <CardHeader className="pb-3 h-28 flex flex-col justify-start">
+                    <CardTitle className="text-lg leading-relaxed line-clamp-2 mb-3">{sorter.title}</CardTitle>
+                    {sorter.category && (
+                      <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 w-fit">
+                        {sorter.category}
+                      </span>
+                    )}
                   </CardHeader>
                   <CardContent>
-                    {sorter.description && (
-                      <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                        {sorter.description}
-                      </p>
-                    )}
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>
                         {new Date(sorter.createdAt).toLocaleDateString()}

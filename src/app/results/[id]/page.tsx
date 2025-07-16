@@ -118,25 +118,43 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       {/* Header */}
       <div className="mb-8">
         {/* Main Header: "[sorter name] \n sorted by [username]" */}
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex-1">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">{sorter.title}</h1>
-              <p className="text-lg text-muted-foreground">
-                sorted by{" "}
-                <Link href={`/user/${result.username}`} className="font-semibold text-foreground hover:underline">
-                  {result.username}
+        <div className="mb-6">
+          <div className="flex items-start justify-between mb-4 md:mb-0">
+            <div className="flex-1">
+              <div>
+                <Link href={`/sorter/${sorter.id}`}>
+                  <h1 className="text-2xl font-bold mb-2 hover:underline cursor-pointer">{sorter.title}</h1>
                 </Link>
-                {" "}at {new Date(result.createdAt).toLocaleDateString('en-US', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric'
-                })}
-              </p>
+                <p className="text-muted-foreground">
+                  sorted by{" "}
+                  <Link href={`/user/${result.username}`} className="font-semibold text-foreground hover:underline">
+                    {result.username}
+                  </Link>
+                  {" "}at {new Date(result.createdAt).toLocaleDateString('en-US', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                  })}
+                </p>
+              </div>
+            </div>
+
+            <div className="hidden md:flex gap-2">
+              <Button variant="outline" size="sm">
+                <Share2 className="mr-2" size={16} />
+                Share
+              </Button>
+              <Link href={`/sorter/${sorter.id}/sort`}>
+                <Button size="sm">
+                  <Play className="mr-2" size={16} />
+                  Sort now
+                </Button>
+              </Link>
             </div>
           </div>
 
-          <div className="flex gap-2">
+          {/* Mobile buttons - shown under title section */}
+          <div className="flex gap-2 md:hidden">
             <Button variant="outline" size="sm">
               <Share2 className="mr-2" size={16} />
               Share
@@ -154,38 +172,6 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
       {/* Two Column Layout */}
       <div className="grid md:grid-cols-3 gap-8">
-        {/* Mobile: Info Card (shows first on mobile) */}
-        <div className="md:hidden mb-6">
-          <Link href={`/sorter/${sorter.id}`} className="block">
-            <Card className="hover:shadow-md hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200 hover:border-primary/50">
-              <CardContent className="px-4 py-3">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-medium text-lg mb-1">{sorter.title}</h3>
-                  <p className="text-sm text-muted-foreground">by {sorter.creatorUsername}</p>
-                </div>
-                <span className="text-muted-foreground text-xs">
-                  Created at {new Date(sorter.createdAt).toLocaleDateString('en-US', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric'
-                  })}
-                </span>
-              </div>
-
-              {/* Category */}
-              {sorter.category && (
-                <div>
-                  <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                    {sorter.category}
-                  </span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          </Link>
-        </div>
-
         {/* Left Column - Rankings (spans 2 columns on desktop) */}
         <div className="md:col-span-2">
           <h2 className="text-xl font-bold mb-4">Rankings</h2>
@@ -274,6 +260,40 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           </Card>
           </Link>
         </div>
+      </div>
+
+      {/* Mobile: Info Card (shows at bottom on mobile) */}
+      <div className="md:hidden mt-8">
+        <h2 className="text-xl font-bold mb-4">Sorter Info</h2>
+        <Link href={`/sorter/${sorter.id}`} className="block">
+          <Card className="hover:shadow-md hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200 hover:border-primary/50">
+            <CardContent className="px-4 py-3">
+            <div className="mb-3">
+              <h3 className="font-medium text-lg mb-1">{sorter.title}</h3>
+              <p className="text-sm text-muted-foreground">by {sorter.creatorUsername}</p>
+            </div>
+
+            <div className="mb-3">
+              <span className="text-muted-foreground text-xs">
+                Created at {new Date(sorter.createdAt).toLocaleDateString('en-US', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                })}
+              </span>
+            </div>
+
+            {/* Category */}
+            {sorter.category && (
+              <div>
+                <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                  {sorter.category}
+                </span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        </Link>
       </div>
 
       {/* Actions */}

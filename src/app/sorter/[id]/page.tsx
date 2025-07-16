@@ -108,7 +108,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
       <div className="mb-8">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold mb-2">{sorter.title}</h1>
+            <h1 className="text-2xl font-bold mb-2">{sorter.title}</h1>
             {sorter.description && (
               <p className="text-muted-foreground text-lg mb-4">{sorter.description}</p>
             )}

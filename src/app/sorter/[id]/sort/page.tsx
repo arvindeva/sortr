@@ -445,121 +445,97 @@ export default function SortPage() {
   const progress = totalComparisons > 0 ? Math.min(99, Math.floor((completedComparisons / totalComparisons) * 100)) : 0;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-0 md:px-4 py-8 max-w-4xl">
       {/* Header */}
-      <div className="mb-8">
-        <Button
-          variant="ghost"
-          onClick={() => router.push(`/sorter/${sorterId}`)}
-          className="mb-4"
-        >
-          <ArrowLeft className="mr-2" size={16} />
-          Back to Sorter
-        </Button>
+      <div className="mb-6 px-2 md:px-0">
+        <h1 className="text-2xl mb-2"><span className="font-normal text-muted-foreground">Sorting:</span> <span className="font-bold">{sorterData.sorter.title}</span></h1>
         
-        <h1 className="text-3xl font-bold mb-2">Sorting: {sorterData.sorter.title}</h1>
-        <p className="text-muted-foreground mb-4">
-          Choose your preferred option from each pair
-        </p>
-        
-        {/* Progress */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>
-              {completedComparisons} comparisons completed
-            </span>
-            <span>{progress}% complete</span>
+        {/* Progress and Actions - Compact */}
+        <div className="space-y-3">
+          <div className="flex justify-between items-center text-sm text-muted-foreground">
+            <span>{completedComparisons} comparisons • {progress}% complete</span>
+            <div className="flex gap-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleUndo}
+                disabled={!canUndo}
+                className="h-7 px-2 text-xs"
+              >
+                <Undo2 className="mr-1" size={12} />
+                Undo
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                disabled={completedComparisons === 0}
+                className="h-7 px-2 text-xs"
+              >
+                <RotateCcw className="mr-1" size={12} />
+                Reset
+              </Button>
+            </div>
           </div>
-          <Progress value={progress} className="w-full" />
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2 mt-4">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleUndo}
-            disabled={!canUndo}
-          >
-            <Undo2 className="mr-2" size={16} />
-            Undo
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleReset}
-            disabled={completedComparisons === 0}
-          >
-            <RotateCcw className="mr-2" size={16} />
-            Reset
-          </Button>
+          <Progress value={progress} className="w-full h-2" />
         </div>
       </div>
 
       {/* Comparison Cards */}
-      <div className="grid md:grid-cols-2 gap-6 relative">
+      <div className="grid grid-cols-2 gap-2 md:gap-4 relative px-0 md:px-0">
         {/* Item A */}
         <Card 
-          className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary/50"
+          className="cursor-pointer hover:shadow-md hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200 border-2 hover:border-primary/50 md:w-fit md:mx-auto h-full"
           onClick={() => handleChoice(currentComparison.itemA.id)}
         >
-          <CardContent className="p-6 text-center">
+          <CardContent className="p-0 md:px-6 md:py-1 text-center flex flex-col">
+            <h3 className="text-sm md:text-lg font-semibold py-1 px-2 md:p-0 md:mb-1">{currentComparison.itemA.title}</h3>
             {currentComparison.itemA.imageUrl ? (
-              <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+              <div className="aspect-square md:w-64 md:h-64 md:mx-auto bg-gray-100 md:rounded-lg flex items-center justify-center overflow-hidden">
                 <img
                   src={currentComparison.itemA.imageUrl}
                   alt={currentComparison.itemA.title}
-                  className="max-w-full max-h-full object-contain"
+                  className="w-full h-full object-cover md:max-w-full md:max-h-full md:object-contain"
                 />
               </div>
             ) : (
-              <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center">
-                <span className="text-muted-foreground text-sm">No image</span>
+              <div className="aspect-square md:w-64 md:h-64 md:mx-auto bg-gray-100 md:rounded-lg flex items-center justify-center">
+                <span className="text-muted-foreground text-xs md:text-sm">No image</span>
               </div>
             )}
-            <h3 className="text-lg font-semibold">{currentComparison.itemA.title}</h3>
-            <p className="text-sm text-muted-foreground mt-2">Click to choose this option</p>
           </CardContent>
         </Card>
 
         {/* Item B */}
         <Card 
-          className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary/50"
+          className="cursor-pointer hover:shadow-md hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200 border-2 hover:border-primary/50 md:w-fit md:mx-auto h-full"
           onClick={() => handleChoice(currentComparison.itemB.id)}
         >
-          <CardContent className="p-6 text-center">
+          <CardContent className="p-0 md:px-6 md:py-1 text-center flex flex-col">
+            <h3 className="text-sm md:text-lg font-semibold py-1 px-2 md:p-0 md:mb-1">{currentComparison.itemB.title}</h3>
             {currentComparison.itemB.imageUrl ? (
-              <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+              <div className="aspect-square md:w-64 md:h-64 md:mx-auto bg-gray-100 md:rounded-lg flex items-center justify-center overflow-hidden">
                 <img
                   src={currentComparison.itemB.imageUrl}
                   alt={currentComparison.itemB.title}
-                  className="max-w-full max-h-full object-contain"
+                  className="w-full h-full object-cover md:max-w-full md:max-h-full md:object-contain"
                 />
               </div>
             ) : (
-              <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center">
-                <span className="text-muted-foreground text-sm">No image</span>
+              <div className="aspect-square md:w-64 md:h-64 md:mx-auto bg-gray-100 md:rounded-lg flex items-center justify-center">
+                <span className="text-muted-foreground text-xs md:text-sm">No image</span>
               </div>
             )}
-            <h3 className="text-lg font-semibold">{currentComparison.itemB.title}</h3>
-            <p className="text-sm text-muted-foreground mt-2">Click to choose this option</p>
           </CardContent>
         </Card>
 
-        {/* VS Divider - positioned absolutely for desktop */}
+        {/* VS Divider - desktop only */}
         <div className="hidden md:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
           <div className="bg-background border rounded-full px-4 py-2 shadow-md">
-            <span className="font-bold text-muted-foreground">VS</span>
+            <span className="font-bold text-muted-foreground text-sm">VS</span>
           </div>
-        </div>
-      </div>
-
-      {/* Mobile VS Divider */}
-      <div className="md:hidden flex items-center justify-center py-4">
-        <div className="bg-muted rounded-full px-4 py-2">
-          <span className="font-bold text-muted-foreground">VS</span>
         </div>
       </div>
     </div>
