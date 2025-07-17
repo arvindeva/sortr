@@ -12,6 +12,7 @@ async function getPopularSorters() {
     .select({
       id: sorters.id,
       title: sorters.title,
+      slug: sorters.slug,
       category: sorters.category,
       completionCount: sorters.completionCount,
       viewCount: sorters.viewCount,
@@ -46,7 +47,7 @@ export default async function Home() {
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {popularSorters.map((sorter) => (
-              <Link key={sorter.id} href={`/sorter/${sorter.id}`}>
+              <Link key={sorter.id} href={`/sorter/${sorter.slug}`}>
                 <Card className="hover:border-primary/50 transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md">
                   <CardHeader>
                     <div className="flex-1">

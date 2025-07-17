@@ -60,6 +60,7 @@ export const sorters = pgTable("sorters", {
   title: text("title").notNull(),
   description: text("description"),
   category: text("category"),
+  slug: text("slug").notNull().unique(),
   useGroups: boolean("use_groups").default(false).notNull(),
   userId: uuid("userId")
     .notNull()

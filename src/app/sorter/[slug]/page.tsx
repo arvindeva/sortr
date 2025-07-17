@@ -9,7 +9,7 @@ import { Play, User, Calendar, Eye, Trophy } from "lucide-react";
 
 interface SorterPageProps {
   params: Promise<{
-    id: string;
+    slug: string;
   }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
@@ -29,6 +29,7 @@ interface SorterGroup {
 interface Sorter {
   id: string;
   title: string;
+  slug: string;
   description?: string;
   category?: string;
   useGroups: boolean;
@@ -48,17 +49,28 @@ interface SorterData {
 }
 
 async function getSorterWithItems(
-  sorterId: string,
+  sorterSlug: string,
 ): Promise<SorterData | null> {
+  // First get the sorter ID from slug for the view count update
+  const sorterIdQuery = await db
+    .select({ id: sorters.id })
+    .from(sorters)
+    .where(eq(sorters.slug, sorterSlug))
+    .limit(1);
+  
+  if (sorterIdQuery.length === 0) {
+    return null;
+  }
+
   // Increment view count
   await db
     .update(sorters)
     .set({ viewCount: sql`${sorters.viewCount} + 1` })
-    .where(eq(sorters.id, sorterId));
+    .where(eq(sorters.id, sorterIdQuery[0].id));
 
   // Use the API endpoint to get sorter data with groups support
   const response = await fetch(
-    `${process.env.NEXTAUTH_URL}/api/sorters/${sorterId}`,
+    `${process.env.NEXTAUTH_URL}/api/sorters/${sorterSlug}`,
   );
   if (!response.ok) {
     return null;
@@ -100,17 +112,15 @@ async function getRecentResults(sorterId: string) {
 }
 
 export default async function SorterPage({ params }: SorterPageProps) {
-  const { id } = await params;
-  const [data, recentResults] = await Promise.all([
-    getSorterWithItems(id),
-    getRecentResults(id),
-  ]);
+  const { slug } = await params;
+  const data = await getSorterWithItems(slug);
 
   if (!data) {
     notFound();
   }
 
   const { sorter, items, groups } = data;
+  const recentResults = await getRecentResults(sorter.id);
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -165,7 +175,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
         {/* Start Sorting Button */}
         {sorter.useGroups ? (
-          <Link href={`/sorter/${sorter.id}/filters`}>
+          <Link href={`/sorter/${sorter.slug}/filters`}>
             <Button
               size="lg"
               className="mb-8 transition-transform duration-200 hover:scale-105"
@@ -178,7 +188,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
             </Button>
           </Link>
         ) : (
-          <Link href={`/sorter/${sorter.id}/sort`}>
+          <Link href={`/sorter/${sorter.slug}/sort`}>
             <Button
               size="lg"
               className="mb-8 transition-transform duration-200 hover:scale-105"

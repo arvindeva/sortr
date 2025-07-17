@@ -5,7 +5,7 @@ import { sorters, sorterItems, sorterGroups, user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createSorterSchema } from "@/lib/validations";
-import { generateUniqueSlug } from "@/lib/utils";
+import { generateUniqueSlug, generateSorterSlug } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,6 +30,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createSorterSchema.parse(body);
 
+    // Generate slug for sorter
+    const slug = generateSorterSlug(validatedData.title);
+
     // Create sorter
     const [newSorter] = await db
       .insert(sorters)
@@ -37,6 +40,7 @@ export async function POST(request: NextRequest) {
         title: validatedData.title,
         description: validatedData.description || null,
         category: validatedData.category || null,
+        slug: slug,
         useGroups: validatedData.useGroups || false,
         userId: userData[0].id,
       })

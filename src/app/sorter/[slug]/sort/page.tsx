@@ -16,6 +16,7 @@ interface SorterData {
     id: string;
     title: string;
     description: string;
+    slug: string;
     useGroups: boolean;
   };
   items: SortItem[];
@@ -32,8 +33,8 @@ interface ComparisonState {
   itemB: SortItem;
 }
 
-async function fetchSorterData(sorterId: string): Promise<SorterData> {
-  const response = await fetch(`/api/sorters/${sorterId}`);
+async function fetchSorterData(sorterSlug: string): Promise<SorterData> {
+  const response = await fetch(`/api/sorters/${sorterSlug}`);
   if (!response.ok) throw new Error("Failed to fetch sorter");
   return response.json();
 }
@@ -137,7 +138,7 @@ export default function SortPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sorterId = params.id as string;
+  const sorterSlug = params.slug as string;
 
   const [currentComparison, setCurrentComparison] =
     useState<ComparisonState | null>(null);
@@ -148,6 +149,7 @@ export default function SortPage() {
   const [canUndo, setCanUndo] = useState(false);
   const [filteredItems, setFilteredItems] = useState<SortItem[]>([]);
   const [currentGroupSlugs, setCurrentGroupSlugs] = useState<string[]>([]);
+  const [sorterId, setSorterId] = useState<string>('');
   const sorterRef = useRef<InteractiveMergeSort | null>(null);
   const resolveComparisonRef = useRef<((winnerId: string) => void) | null>(
     null,
@@ -160,8 +162,8 @@ export default function SortPage() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["sorter", sorterId],
-    queryFn: () => fetchSorterData(sorterId),
+    queryKey: ["sorter", sorterSlug],
+    queryFn: () => fetchSorterData(sorterSlug),
     retry: 1,
   });
 
@@ -205,8 +207,9 @@ export default function SortPage() {
       
       setFilteredItems(itemsToSort);
       setCurrentGroupSlugs(groupSlugs);
+      setSorterId(sorterData.sorter.id);
     }
-  }, [sorterData, sorterId, router, searchParams]);
+  }, [sorterData, router, searchParams]);
 
   // Initialize sorting when data loads
   useEffect(() => {
@@ -416,7 +419,7 @@ export default function SortPage() {
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <div className="text-center">
           <p className="text-muted-foreground">Failed to load sorter</p>
-          <Button onClick={() => router.push(`/sorter/${sorterId}`)}>
+          <Button onClick={() => router.push(`/sorter/${sorterSlug}`)}>
             Go Back
           </Button>
         </div>

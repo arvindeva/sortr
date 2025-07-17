@@ -30,6 +30,7 @@ async function getUserSorters(userId: string) {
     .select({
       id: sorters.id,
       title: sorters.title,
+      slug: sorters.slug,
       description: sorters.description,
       category: sorters.category,
       createdAt: sorters.createdAt,
@@ -98,7 +99,7 @@ export default async function UserProfilePage({
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {userSorters.map((sorter) => (
-              <Link key={sorter.id} href={`/sorter/${sorter.id}`}>
+              <Link key={sorter.id} href={`/sorter/${sorter.slug}`}>
                 <Card className="hover:border-primary/50 flex min-h-[180px] cursor-pointer flex-col transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md">
                   <CardHeader className="flex h-28 flex-col justify-start pb-3">
                     <CardTitle className="mb-3 line-clamp-2 text-lg leading-relaxed">

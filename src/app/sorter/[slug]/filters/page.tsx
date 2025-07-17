@@ -16,7 +16,7 @@ import Link from "next/link";
 
 interface FilterPageProps {
   params: Promise<{
-    id: string;
+    slug: string;
   }>;
 }
 
@@ -35,6 +35,7 @@ interface Sorter {
   id: string;
   title: string;
   description?: string;
+  slug: string;
   useGroups: boolean;
 }
 
@@ -52,12 +53,14 @@ export default function FilterPage({ params }: FilterPageProps) {
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentSlug, setCurrentSlug] = useState<string>('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { id } = await params;
-        const response = await fetch(`/api/sorters/${id}`);
+        const { slug } = await params;
+        setCurrentSlug(slug);
+        const response = await fetch(`/api/sorters/${slug}`);
 
         if (!response.ok) {
           throw new Error("Failed to fetch sorter data");
@@ -67,7 +70,7 @@ export default function FilterPage({ params }: FilterPageProps) {
 
         if (!data.sorter.useGroups) {
           // Redirect to sort page if not using groups
-          router.push(`/sorter/${id}/sort`);
+          router.push(`/sorter/${slug}/sort`);
           return;
         }
 
@@ -110,7 +113,7 @@ export default function FilterPage({ params }: FilterPageProps) {
 
     // Navigate to sort page with selected groups as URL parameters
     const groupsParam = selectedGroups.join(",");
-    router.push(`/sorter/${sorter?.id}/sort?groups=${groupsParam}`);
+    router.push(`/sorter/${currentSlug}/sort?groups=${groupsParam}`);
   };
 
   if (isLoading) {
@@ -158,7 +161,7 @@ export default function FilterPage({ params }: FilterPageProps) {
       {/* Header */}
       <div className="mb-8">
         <div className="mb-4 flex items-center gap-4">
-          <Link href={`/sorter/${sorter.id}`}>
+          <Link href={`/sorter/${sorter.slug}`}>
             <Button variant="ghost" size="sm">
               <ChevronLeft className="mr-1 h-4 w-4" />
               Back to Sorter

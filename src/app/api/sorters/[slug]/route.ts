@@ -5,10 +5,10 @@ import { NextRequest } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
-    const { id } = await params;
+    const { slug } = await params;
 
     // Get sorter data with creator info
     const sorterData = await db
@@ -17,6 +17,7 @@ export async function GET(
         title: sorters.title,
         description: sorters.description,
         category: sorters.category,
+        slug: sorters.slug,
         useGroups: sorters.useGroups,
         createdAt: sorters.createdAt,
         completionCount: sorters.completionCount,
@@ -26,7 +27,7 @@ export async function GET(
       })
       .from(sorters)
       .leftJoin(user, eq(sorters.userId, user.id))
-      .where(eq(sorters.id, id))
+      .where(eq(sorters.slug, slug))
       .limit(1);
 
     if (sorterData.length === 0) {
@@ -45,7 +46,7 @@ export async function GET(
           createdAt: sorterGroups.createdAt,
         })
         .from(sorterGroups)
-        .where(eq(sorterGroups.sorterId, id));
+        .where(eq(sorterGroups.sorterId, sorter.id));
 
       // Get all items with their group IDs
       const items = await db
@@ -56,12 +57,12 @@ export async function GET(
           groupId: sorterItems.groupId,
         })
         .from(sorterItems)
-        .where(eq(sorterItems.sorterId, id));
+        .where(eq(sorterItems.sorterId, sorter.id));
 
       // Group items by group
-      const groupsWithItems = groups.map(group => ({
+      const groupsWithItems = groups.map((group) => ({
         ...group,
-        items: items.filter(item => item.groupId === group.id),
+        items: items.filter((item) => item.groupId === group.id),
       }));
 
       return Response.json({
@@ -70,7 +71,7 @@ export async function GET(
           user: {
             username: sorter.creatorUsername,
             id: sorter.creatorId,
-          }
+          },
         },
         groups: groupsWithItems,
         items: items, // Also return flat items list for backward compatibility
@@ -84,7 +85,7 @@ export async function GET(
           imageUrl: sorterItems.imageUrl,
         })
         .from(sorterItems)
-        .where(eq(sorterItems.sorterId, id));
+        .where(eq(sorterItems.sorterId, sorter.id));
 
       return Response.json({
         sorter: {
@@ -92,7 +93,7 @@ export async function GET(
           user: {
             username: sorter.creatorUsername,
             id: sorter.creatorId,
-          }
+          },
         },
         items,
       });

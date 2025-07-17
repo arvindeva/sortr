@@ -31,6 +31,7 @@ interface ResultData {
   sorter: {
     id: string;
     title: string;
+    slug: string;
     description: string;
     category: string;
     useGroups: boolean;
@@ -70,6 +71,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     .select({
       id: sorters.id,
       title: sorters.title,
+      slug: sorters.slug,
       description: sorters.description,
       category: sorters.category,
       useGroups: sorters.useGroups,
@@ -125,6 +127,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     sorter: {
       id: sorterData[0].id,
       title: sorterData[0].title,
+      slug: sorterData[0].slug,
       description: sorterData[0].description || "",
       category: sorterData[0].category || "",
       useGroups: sorterData[0].useGroups,
@@ -154,7 +157,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           <div className="mb-4 flex items-start justify-between md:mb-0">
             <div className="flex-1">
               <div>
-                <Link href={`/sorter/${sorter.id}`}>
+                <Link href={`/sorter/${sorter.slug}`}>
                   <h1 className="mb-2 cursor-pointer text-2xl font-bold hover:underline">
                     {sorter.title}
                   </h1>
@@ -179,7 +182,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
             <div className="hidden gap-2 md:flex">
               <ShareButton size="sm" />
-              <Link href={sorter.useGroups ? `/sorter/${sorter.id}/filters` : `/sorter/${sorter.id}/sort`}>
+              <Link href={sorter.useGroups ? `/sorter/${sorter.slug}/filters` : `/sorter/${sorter.slug}/sort`}>
                 <Button size="sm">
                   <Play className="mr-2" size={16} />
                   Sort now
@@ -207,7 +210,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           {/* Mobile buttons - shown under title section */}
           <div className="flex gap-2 md:hidden">
             <ShareButton size="sm" />
-            <Link href={sorter.useGroups ? `/sorter/${sorter.id}/filters` : `/sorter/${sorter.id}/sort`}>
+            <Link href={sorter.useGroups ? `/sorter/${sorter.slug}/filters` : `/sorter/${sorter.slug}/sort`}>
               <Button size="sm">
                 <Play className="mr-2" size={16} />
                 Sort now
@@ -292,7 +295,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         {/* Right Column - Sorter Info (desktop only) */}
         <div className="hidden md:block">
           <h2 className="mb-4 text-xl font-bold">Sorter Info</h2>
-          <Link href={`/sorter/${sorter.id}`} className="block">
+          <Link href={`/sorter/${sorter.slug}`} className="block">
             <Card className="hover:border-primary/50 transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md">
               <CardContent>
                 <div className="mb-3">
@@ -328,7 +331,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       {/* Mobile: Info Card (shows at bottom on mobile) */}
       <div className="mt-8 md:hidden">
         <h2 className="mb-4 text-xl font-bold">Sorter Info</h2>
-        <Link href={`/sorter/${sorter.id}`} className="block">
+        <Link href={`/sorter/${sorter.slug}`} className="block">
           <Card className="hover:border-primary/50 transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md">
             <CardContent className="px-4 py-3">
               <div className="mb-3">
@@ -362,13 +365,13 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
       {/* Actions */}
       <div className="mt-8 flex justify-center gap-4">
-        <Link href={sorter.useGroups ? `/sorter/${sorter.id}/filters` : `/sorter/${sorter.id}/sort`}>
+        <Link href={sorter.useGroups ? `/sorter/${sorter.slug}/filters` : `/sorter/${sorter.slug}/sort`}>
           <Button>
             <Play className="mr-2" size={16} />
             Sort now
           </Button>
         </Link>
-        <Link href={`/sorter/${sorter.id}`}>
+        <Link href={`/sorter/${sorter.slug}`}>
           <Button variant="outline">View Sorter Details</Button>
         </Link>
       </div>

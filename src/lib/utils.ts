@@ -47,3 +47,37 @@ export function generateUniqueSlug(groupName: string, existingSlugs: string[]): 
   
   return uniqueSlug;
 }
+
+/**
+ * Generate a random alphanumeric string
+ * @param length The length of the string to generate
+ * @returns A random alphanumeric string
+ */
+function generateRandomString(length: number): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+/**
+ * Generate a sorter slug with 50-character limit and 5-character suffix
+ * @param title The sorter title
+ * @returns A URL-friendly slug with format: {title-slug-50-chars}-{5-char-suffix}
+ */
+export function generateSorterSlug(title: string): string {
+  // Create base slug and limit to 50 characters
+  let baseSlug = slugify(title);
+  if (baseSlug.length > 50) {
+    baseSlug = baseSlug.substring(0, 50);
+    // Remove trailing hyphen if we cut off mid-word
+    baseSlug = baseSlug.replace(/-$/, '');
+  }
+  
+  // Generate 5-character random suffix
+  const suffix = generateRandomString(5);
+  
+  return `${baseSlug}-${suffix}`;
+}
