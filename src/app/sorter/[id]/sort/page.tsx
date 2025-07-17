@@ -16,8 +16,14 @@ interface SorterData {
     id: string;
     title: string;
     description: string;
+    useGroups: boolean;
   };
   items: SortItem[];
+  groups?: {
+    id: string;
+    name: string;
+    items: SortItem[];
+  }[];
 }
 
 interface ComparisonState {
@@ -43,6 +49,7 @@ export default function SortPage() {
   const [completedComparisons, setCompletedComparisons] = useState(0);
   const [totalComparisons, setTotalComparisons] = useState(0);
   const [canUndo, setCanUndo] = useState(false);
+  const [filteredItems, setFilteredItems] = useState<SortItem[]>([]);
   const sorterRef = useRef<InteractiveMergeSort | null>(null);
   const resolveComparisonRef = useRef<((winnerId: string) => void) | null>(
     null,
@@ -60,9 +67,49 @@ export default function SortPage() {
     retry: 1,
   });
 
+  // Process filtered items when data loads
+  useEffect(() => {
+    if (sorterData) {
+      let itemsToSort = sorterData.items;
+      
+      // If using groups, filter items based on selected groups
+      if (sorterData.sorter.useGroups && sorterData.groups) {
+        const selectedGroups = localStorage.getItem(`sorter_${sorterId}_selectedGroups`);
+        
+        if (selectedGroups) {
+          try {
+            const selectedGroupIds: string[] = JSON.parse(selectedGroups);
+            
+            // If no groups selected, redirect to filters page
+            if (selectedGroupIds.length === 0) {
+              router.push(`/sorter/${sorterId}/filters`);
+              return;
+            }
+            
+            // Filter items to only include those from selected groups
+            itemsToSort = sorterData.groups
+              .filter(group => selectedGroupIds.includes(group.id))
+              .flatMap(group => group.items);
+          } catch (error) {
+            console.error("Failed to parse selected groups:", error);
+            // Redirect to filters page on error
+            router.push(`/sorter/${sorterId}/filters`);
+            return;
+          }
+        } else {
+          // No selection found, redirect to filters
+          router.push(`/sorter/${sorterId}/filters`);
+          return;
+        }
+      }
+      
+      setFilteredItems(itemsToSort);
+    }
+  }, [sorterData, sorterId, router]);
+
   // Initialize sorting when data loads
   useEffect(() => {
-    if (sorterData && !sorting && !sorterRef.current) {
+    if (sorterData && filteredItems.length > 0 && !sorting && !sorterRef.current) {
       // Check for saved progress
       const savedState = localStorage.getItem(`sorting-progress-${sorterId}`);
       let savedChoices: Map<string, string> | undefined;
@@ -151,10 +198,10 @@ export default function SortPage() {
 
       startSorting();
     }
-  }, [sorterData]);
+  }, [sorterData, filteredItems]);
 
   const startSorting = useCallback(async () => {
-    if (!sorterData || !sorterRef.current) return;
+    if (!sorterData || !sorterRef.current || filteredItems.length === 0) return;
 
     if (sorting) {
       return;
@@ -174,18 +221,26 @@ export default function SortPage() {
       };
 
       const result = await sorterRef.current.sort(
-        sorterData.items,
+        filteredItems,
         onNeedComparison,
       );
 
       // Save results
       setSaving(true);
+      // Get selected groups for saving with results
+      const selectedGroups = sorterData.sorter.useGroups 
+        ? localStorage.getItem(`sorter_${sorterId}_selectedGroups`)
+        : null;
+      
+      const selectedGroupIds = selectedGroups ? JSON.parse(selectedGroups) : [];
+
       const response = await fetch("/api/sorting-results", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sorterId,
           rankings: result,
+          selectedGroups: selectedGroupIds,
         }),
       });
 
@@ -193,8 +248,9 @@ export default function SortPage() {
 
       const { resultId } = await response.json();
 
-      // Clear saved progress
+      // Clear saved progress and selected groups
       localStorage.removeItem(`sorting-progress-${sorterId}`);
+      localStorage.removeItem(`sorter_${sorterId}_selectedGroups`);
 
       // Redirect to results page
       router.push(`/results/${resultId}`);
@@ -203,7 +259,7 @@ export default function SortPage() {
       setSorting(false);
       setSaving(false);
     }
-  }, [sorterData, sorting, sorterId, router]);
+  }, [sorterData, filteredItems, sorting, sorterId, router]);
 
   const handleChoice = useCallback((winnerId: string) => {
     if (resolveComparisonRef.current) {

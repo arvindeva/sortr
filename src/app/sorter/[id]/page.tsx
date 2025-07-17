@@ -21,42 +21,14 @@ async function getSorterWithItems(sorterId: string) {
     .set({ viewCount: sql`${sorters.viewCount} + 1` })
     .where(eq(sorters.id, sorterId));
 
-  // Get sorter data with creator info
-  const sorterData = await db
-    .select({
-      id: sorters.id,
-      title: sorters.title,
-      description: sorters.description,
-      category: sorters.category,
-      createdAt: sorters.createdAt,
-      completionCount: sorters.completionCount,
-      viewCount: sorters.viewCount,
-      creatorUsername: user.username,
-      creatorId: user.id,
-    })
-    .from(sorters)
-    .leftJoin(user, eq(sorters.userId, user.id))
-    .where(eq(sorters.id, sorterId))
-    .limit(1);
-
-  if (sorterData.length === 0) {
+  // Use the API endpoint to get sorter data with groups support
+  const response = await fetch(`${process.env.NEXTAUTH_URL}/api/sorters/${sorterId}`);
+  if (!response.ok) {
     return null;
   }
 
-  // Get sorter items
-  const items = await db
-    .select({
-      id: sorterItems.id,
-      title: sorterItems.title,
-      imageUrl: sorterItems.imageUrl,
-    })
-    .from(sorterItems)
-    .where(eq(sorterItems.sorterId, sorterId));
-
-  return {
-    sorter: sorterData[0],
-    items,
-  };
+  const data = await response.json();
+  return data;
 }
 
 async function getRecentResults(sorterId: string) {
@@ -101,7 +73,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
     notFound();
   }
 
-  const { sorter, items } = data;
+  const { sorter, items, groups } = data;
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -155,18 +127,33 @@ export default async function SorterPage({ params }: SorterPageProps) {
         </div>
 
         {/* Start Sorting Button */}
-        <Link href={`/sorter/${sorter.id}/sort`}>
-          <Button
-            size="lg"
-            className="mb-8 transition-transform duration-200 hover:scale-105"
-          >
-            <Play
-              className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
-              size={20}
-            />
-            Sort now
-          </Button>
-        </Link>
+        {sorter.useGroups ? (
+          <Link href={`/sorter/${sorter.id}/filters`}>
+            <Button
+              size="lg"
+              className="mb-8 transition-transform duration-200 hover:scale-105"
+            >
+              <Play
+                className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
+                size={20}
+              />
+              Select Groups to Sort
+            </Button>
+          </Link>
+        ) : (
+          <Link href={`/sorter/${sorter.id}/sort`}>
+            <Button
+              size="lg"
+              className="mb-8 transition-transform duration-200 hover:scale-105"
+            >
+              <Play
+                className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
+                size={20}
+              />
+              Sort now
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Two Column Layout */}
@@ -174,41 +161,93 @@ export default async function SorterPage({ params }: SorterPageProps) {
         {/* Left Column - Items to Rank */}
         <div>
           <h2 className="mb-4 text-xl font-bold">
-            Items to Rank ({items.length})
+            Items to Rank ({items?.length || 0})
           </h2>
-          {items.length === 0 ? (
-            <p className="text-muted-foreground italic">
-              No items found for this sorter.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {items.map((item) => (
-                <div key={item.id} className="flex items-center gap-3">
-                  {/* Thumbnail */}
-                  {item.imageUrl ? (
-                    <div className="bg-muted h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
-                      <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        className="h-full w-full object-cover"
-                      />
+          {sorter.useGroups && groups ? (
+            /* Groups Mode */
+            groups.length === 0 ? (
+              <p className="text-muted-foreground italic">
+                No groups found for this sorter.
+              </p>
+            ) : (
+              <div className="space-y-6">
+                {groups.map((group) => (
+                  <div key={group.id} className="space-y-3">
+                    {/* Group Header */}
+                    <h3 className="text-lg font-semibold text-primary">
+                      {group.name}
+                    </h3>
+                    
+                    {/* Items in Group */}
+                    <div className="ml-4 space-y-2">
+                      {group.items.map((item) => (
+                        <div key={item.id} className="flex items-center gap-3">
+                          {/* Thumbnail */}
+                          {item.imageUrl ? (
+                            <div className="bg-muted h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg">
+                              <img
+                                src={item.imageUrl}
+                                alt={item.title}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="bg-gray-100 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
+                              <span className="text-muted-foreground text-xs font-bold">
+                                {item.title.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Title */}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-foreground truncate text-sm">
+                              {item.title}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ) : (
-                    <div className="bg-gray-100 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg">
-                      <span className="text-muted-foreground text-xs font-bold">
-                        {item.title.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  {/* Item Name */}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-foreground truncate text-sm font-medium">
-                      {item.title}
-                    </p>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
+          ) : (
+            /* Traditional Mode */
+            items?.length === 0 ? (
+              <p className="text-muted-foreground italic">
+                No items found for this sorter.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {items?.map((item) => (
+                  <div key={item.id} className="flex items-center gap-3">
+                    {/* Thumbnail */}
+                    {item.imageUrl ? (
+                      <div className="bg-muted h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="bg-gray-100 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg">
+                        <span className="text-muted-foreground text-xs font-bold">
+                          {item.title.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    {/* Item Name */}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-foreground truncate text-sm font-medium">
+                        {item.title}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           )}
         </div>
 

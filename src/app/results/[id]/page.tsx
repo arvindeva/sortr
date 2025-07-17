@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { sortingResults, sorters, user } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { sortingResults, sorters, user, sorterGroups } from "@/db/schema";
+import { eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,9 +33,14 @@ interface ResultData {
     title: string;
     description: string;
     category: string;
+    useGroups: boolean;
     creatorUsername: string;
     createdAt: Date;
   };
+  selectedGroups?: {
+    id: string;
+    name: string;
+  }[];
 }
 
 async function getResultData(resultId: string): Promise<ResultData | null> {
@@ -44,6 +49,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     .select({
       id: sortingResults.id,
       rankings: sortingResults.rankings,
+      selectedGroups: sortingResults.selectedGroups,
       createdAt: sortingResults.createdAt,
       sorterId: sortingResults.sorterId,
       username: user.username,
@@ -66,6 +72,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       title: sorters.title,
       description: sorters.description,
       category: sorters.category,
+      useGroups: sorters.useGroups,
       creatorUsername: user.username,
       createdAt: sorters.createdAt,
     })
@@ -87,6 +94,27 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     return null;
   }
 
+  // Get selected groups if this result used groups
+  let selectedGroups: { id: string; name: string; }[] = [];
+  if (result.selectedGroups) {
+    try {
+      const selectedGroupIds: string[] = JSON.parse(result.selectedGroups);
+      if (selectedGroupIds.length > 0) {
+        const groupsData = await db
+          .select({
+            id: sorterGroups.id,
+            name: sorterGroups.name,
+          })
+          .from(sorterGroups)
+          .where(inArray(sorterGroups.id, selectedGroupIds));
+        
+        selectedGroups = groupsData;
+      }
+    } catch (error) {
+      console.error("Failed to parse selected groups JSON:", error);
+    }
+  }
+
   return {
     result: {
       id: result.id,
@@ -99,9 +127,11 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       title: sorterData[0].title,
       description: sorterData[0].description || "",
       category: sorterData[0].category || "",
+      useGroups: sorterData[0].useGroups,
       creatorUsername: sorterData[0].creatorUsername || "Unknown User",
       createdAt: sorterData[0].createdAt,
     },
+    selectedGroups: selectedGroups.length > 0 ? selectedGroups : undefined,
   };
 }
 
@@ -113,7 +143,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     notFound();
   }
 
-  const { result, sorter } = data;
+  const { result, sorter, selectedGroups } = data;
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -149,7 +179,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
             <div className="hidden gap-2 md:flex">
               <ShareButton size="sm" />
-              <Link href={`/sorter/${sorter.id}/sort`}>
+              <Link href={sorter.useGroups ? `/sorter/${sorter.id}/filters` : `/sorter/${sorter.id}/sort`}>
                 <Button size="sm">
                   <Play className="mr-2" size={16} />
                   Sort now
@@ -158,10 +188,26 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             </div>
           </div>
 
+          {/* Filter badges - shown if groups were selected */}
+          {selectedGroups && selectedGroups.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground mb-2">
+                Groups sorted: {selectedGroups.length} {selectedGroups.length === 1 ? 'group' : 'groups'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {selectedGroups.map((group) => (
+                  <Badge key={group.id} variant="secondary" className="text-xs">
+                    {group.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Mobile buttons - shown under title section */}
           <div className="flex gap-2 md:hidden">
             <ShareButton size="sm" />
-            <Link href={`/sorter/${sorter.id}/sort`}>
+            <Link href={sorter.useGroups ? `/sorter/${sorter.id}/filters` : `/sorter/${sorter.id}/sort`}>
               <Button size="sm">
                 <Play className="mr-2" size={16} />
                 Sort now
@@ -316,7 +362,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
       {/* Actions */}
       <div className="mt-8 flex justify-center gap-4">
-        <Link href={`/sorter/${sorter.id}/sort`}>
+        <Link href={sorter.useGroups ? `/sorter/${sorter.id}/filters` : `/sorter/${sorter.id}/sort`}>
           <Button>
             <Play className="mr-2" size={16} />
             Sort now

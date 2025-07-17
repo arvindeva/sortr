@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
-import { sorters, sorterItems, user } from "@/db/schema";
+import { sorters, sorterItems, sorterGroups, user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createSorterSchema } from "@/lib/validations";
@@ -36,18 +36,45 @@ export async function POST(request: NextRequest) {
         title: validatedData.title,
         description: validatedData.description || null,
         category: validatedData.category || null,
+        useGroups: validatedData.useGroups || false,
         userId: userData[0].id,
       })
       .returning();
 
-    // Create sorter items
-    await db.insert(sorterItems).values(
-      validatedData.items.map((item) => ({
-        sorterId: newSorter.id,
-        title: item.title,
-        imageUrl: item.imageUrl || null,
-      })),
-    );
+    if (validatedData.useGroups && validatedData.groups) {
+      // Create groups and their items
+      for (const group of validatedData.groups) {
+        const [newGroup] = await db
+          .insert(sorterGroups)
+          .values({
+            sorterId: newSorter.id,
+            name: group.name,
+          })
+          .returning();
+
+        // Create items for this group
+        await db.insert(sorterItems).values(
+          group.items.map((item) => ({
+            sorterId: newSorter.id,
+            groupId: newGroup.id,
+            title: item.title,
+            imageUrl: item.imageUrl || null,
+          })),
+        );
+      }
+    } else {
+      // Create sorter items without groups (traditional mode)
+      if (validatedData.items) {
+        await db.insert(sorterItems).values(
+          validatedData.items.map((item) => ({
+            sorterId: newSorter.id,
+            groupId: null,
+            title: item.title,
+            imageUrl: item.imageUrl || null,
+          })),
+        );
+      }
+    }
 
     return NextResponse.json({
       success: true,

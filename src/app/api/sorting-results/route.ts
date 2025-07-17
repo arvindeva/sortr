@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 
 export async function POST(request: NextRequest) {
   try {
-    const { sorterId, rankings } = await request.json();
+    const { sorterId, rankings, selectedGroups } = await request.json();
 
     if (!sorterId || !rankings) {
       return Response.json(
@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
         sorterId,
         userId,
         rankings: JSON.stringify(rankings),
+        selectedGroups: selectedGroups ? JSON.stringify(selectedGroups) : null,
       })
       .returning({ id: sortingResults.id });
 

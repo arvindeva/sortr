@@ -4,6 +4,7 @@ import {
   text,
   timestamp,
   integer,
+  boolean,
   primaryKey,
 } from "drizzle-orm/pg-core";
 
@@ -59,6 +60,7 @@ export const sorters = pgTable("sorters", {
   title: text("title").notNull(),
   description: text("description"),
   category: text("category"),
+  useGroups: boolean("use_groups").default(false).notNull(),
   userId: uuid("userId")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
@@ -67,11 +69,22 @@ export const sorters = pgTable("sorters", {
   viewCount: integer("viewCount").default(0).notNull(),
 });
 
+export const sorterGroups = pgTable("sorterGroups", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sorterId: uuid("sorterId")
+    .notNull()
+    .references(() => sorters.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export const sorterItems = pgTable("sorterItems", {
   id: uuid("id").defaultRandom().primaryKey(),
   sorterId: uuid("sorterId")
     .notNull()
     .references(() => sorters.id, { onDelete: "cascade" }),
+  groupId: uuid("groupId")
+    .references(() => sorterGroups.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   imageUrl: text("imageUrl"),
 });
@@ -83,5 +96,6 @@ export const sortingResults = pgTable("sortingResults", {
     .references(() => sorters.id, { onDelete: "cascade" }),
   userId: uuid("userId").references(() => user.id, { onDelete: "set null" }), // optional - for anonymous users
   rankings: text("rankings").notNull(), // JSON string of ranked items
+  selectedGroups: text("selectedGroups"), // JSON string of selected group IDs (null if no groups used)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

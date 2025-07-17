@@ -14,158 +14,158 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Plus, X, Camera, ChevronDown } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Plus, X, Camera, ChevronDown, GripVertical } from "lucide-react";
 import {
-  createSorterFormSchema,
-  type CreateSorterFormInput,
+  createSorterSchema,
+  type CreateSorterInput,
 } from "@/lib/validations";
 
 export default function CreateSorterForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [itemImages, setItemImages] = useState<(string | null)[]>([]);
-  const [showEnterHint, setShowEnterHint] = useState(false);
-  const [hasUsedEnterShortcut, setHasUsedEnterShortcut] = useState(false);
 
-  const form = useForm<CreateSorterFormInput>({
-    resolver: zodResolver(createSorterFormSchema),
+  const form = useForm<CreateSorterInput>({
+    resolver: zodResolver(createSorterSchema),
     defaultValues: {
       title: "",
       description: "",
       category: "",
+      useGroups: false,
+      groups: undefined,
       items: [{ title: "" }, { title: "" }],
-    },
+    } as CreateSorterInput,
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const useGroups = form.watch("useGroups");
+  
+  // Initialize groups when switching to filters mode
+  useEffect(() => {
+    if (useGroups) {
+      // Initialize groups if they don't exist
+      if (!form.getValues("groups")) {
+        form.setValue("groups", [
+          {
+            name: "",
+            items: [{ title: "" }, { title: "" }],
+          },
+          {
+            name: "",
+            items: [{ title: "" }, { title: "" }],
+          },
+        ]);
+      }
+      // Clear items array when using groups
+      form.setValue("items", undefined);
+    } else {
+      // Clear groups when not using them
+      form.setValue("groups", undefined);
+      // Initialize items if they don't exist
+      if (!form.getValues("items") || form.getValues("items")?.length === 0) {
+        form.setValue("items", [{ title: "" }, { title: "" }]);
+      }
+    }
+  }, [useGroups, form]);
+  
+
+  // Field arrays for both modes
+  const { fields: groupFields, append: appendGroup, remove: removeGroup } = useFieldArray({
+    control: form.control,
+    name: "groups",
+  });
+
+  const { fields: itemFields, append: appendItem, remove: removeItem } = useFieldArray({
     control: form.control,
     name: "items",
   });
 
-  // Initialize images array to match fields length
-  useEffect(() => {
-    if (itemImages.length !== fields.length) {
-      setItemImages(Array(fields.length).fill(null));
-    }
-  }, [fields.length, itemImages.length]);
-
-  // Add new item
-  const addItem = () => {
-    append({ title: "" });
-    // Add null image slot for new item
-    setItemImages((prev) => [...prev, null]);
+  // Add new group
+  const addGroup = () => {
+    appendGroup({
+      name: "",
+      items: [{ title: "" }, { title: "" }],
+    });
   };
 
-  // Remove item
-  const removeItem = (index: number) => {
-    if (fields.length > 2) {
-      remove(index);
-      // Remove corresponding image
-      setItemImages((prev) => prev.filter((_, i) => i !== index));
+  // Remove group
+  const removeGroupHandler = (index: number) => {
+    if (groupFields.length > 2) {
+      removeGroup(index);
     }
   };
 
-  // Handle Enter key in item inputs
-  const handleItemKeyDown = (e: React.KeyboardEvent, index: number) => {
-    if (e.key === "Enter" && !(e.nativeEvent as any).isComposing) {
-      e.preventDefault(); // Prevent form submission
+  // Add new item to specific group
+  const addItemToGroup = (groupIndex: number) => {
+    const currentItems = form.getValues(`groups.${groupIndex}.items`);
+    form.setValue(`groups.${groupIndex}.items`, [
+      ...currentItems,
+      { title: "" },
+    ]);
+  };
 
-      // Mark that user has used the Enter shortcut
-      setHasUsedEnterShortcut(true);
-      setShowEnterHint(false);
-
-      // Add new item after current one
-      const newIndex = index + 1;
-      append({ title: "" });
-      // Insert null image slot at the correct position
-      setItemImages((prev) => {
-        const newImages = [...prev];
-        newImages.splice(newIndex, 0, null);
-        return newImages;
-      });
-
-      // Focus the new input after a short delay to allow DOM update
-      setTimeout(() => {
-        const newInput = document.querySelector(
-          `input[name="items.${newIndex}.title"]`,
-        ) as HTMLInputElement;
-        if (newInput) {
-          newInput.focus();
-        }
-      }, 0);
+  // Remove item from specific group
+  const removeItemFromGroup = (groupIndex: number, itemIndex: number) => {
+    const currentItems = form.getValues(`groups.${groupIndex}.items`);
+    if (currentItems.length > 1) {
+      form.setValue(
+        `groups.${groupIndex}.items`,
+        currentItems.filter((_, i) => i !== itemIndex)
+      );
     }
   };
 
-  // Handle auto-detection when typing in last field
-  const handleItemChange = (
-    value: string,
-    index: number,
-    onChange: (value: string) => void,
-  ) => {
-    // Update the field value first
-    onChange(value);
-
-    // Check if this is the last field and user just started typing (went from empty to non-empty)
-    const isLastField = index === fields.length - 1;
-    const wasEmpty = !form.getValues(`items.${index}.title`);
-    const isNowNonEmpty = value.trim().length > 0;
-
-    if (isLastField && wasEmpty && isNowNonEmpty) {
-      // Add a new empty field
-      append({ title: "" });
-      // Add null image slot for new item
-      setItemImages((prev) => [...prev, null]);
-    }
+  // Add new item (traditional mode)
+  const addItemHandler = () => {
+    appendItem({ title: "" });
   };
 
-  // Handle image upload (placeholder for now)
-  const handleImageUpload = (index: number) => {
-    // Create file input element
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        // Create preview URL
-        const imageUrl = URL.createObjectURL(file);
-        setItemImages((prev) => {
-          const newImages = [...prev];
-          newImages[index] = imageUrl;
-          return newImages;
-        });
-      }
-    };
-    input.click();
-  };
-
-  // Handle focus on item inputs to show hint
-  const handleItemFocus = () => {
-    if (!hasUsedEnterShortcut && !showEnterHint) {
-      setShowEnterHint(true);
-      // Auto-hide hint after 4 seconds
-      setTimeout(() => {
-        setShowEnterHint(false);
-      }, 4000);
+  // Remove item (traditional mode)
+  const removeItemHandler = (index: number) => {
+    if (itemFields.length > 2) {
+      removeItem(index);
     }
   };
 
   // Handle form submission
-  const onSubmit = async (data: CreateSorterFormInput) => {
+  const onSubmit = async (data: CreateSorterInput) => {
     setIsLoading(true);
 
     try {
+      const payload = {
+        title: data.title.trim(),
+        description: data.description?.trim() || undefined,
+        category: data.category?.trim() || undefined,
+        useGroups: data.useGroups,
+      };
+
+      if (data.useGroups && data.groups) {
+        // Filter out empty groups and items
+        const validGroups = data.groups
+          .filter(group => group.name.trim())
+          .map(group => ({
+            name: group.name.trim(),
+            items: group.items.filter(item => item.title.trim()).map(item => ({
+              title: item.title.trim(),
+            })),
+          }))
+          .filter(group => group.items.length > 0);
+
+        Object.assign(payload, { groups: validGroups });
+      } else {
+        // Traditional mode
+        const validItems = data.items
+          ?.filter(item => item.title.trim())
+          .map(item => ({ title: item.title.trim() })) || [];
+
+        Object.assign(payload, { items: validItems });
+      }
+
       const response = await fetch("/api/sorters", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          title: data.title.trim(),
-          description: data.description?.trim() || undefined,
-          category: data.category?.trim() || undefined,
-          items: data.items.map((item) => ({ title: item.title.trim() })),
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -258,124 +258,189 @@ export default function CreateSorterForm() {
                 </FormItem>
               )}
             />
+
+            {/* Filters Toggle */}
+            <FormField
+              control={form.control}
+              name="useGroups"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Use Filters</FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      Group items into filters for selective sorting
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
           </div>
 
-          {/* Items */}
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <FormLabel>Items to Rank *</FormLabel>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addItem}
-                className="flex items-center gap-1"
-              >
-                <Plus size={16} />
-                Add Item
-              </Button>
-            </div>
+          {/* Items Section */}
+          {useGroups ? (
+            /* Filters Mode */
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <FormLabel>Filters *</FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addGroup}
+                  className="flex items-center gap-1"
+                >
+                  <Plus size={16} />
+                  Add Filter
+                </Button>
+              </div>
 
-            <div className="space-y-2">
-              {fields.map((field, index) => (
-                <FormField
-                  key={field.id}
-                  control={form.control}
-                  name={`items.${index}.title`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center gap-2">
-                        {/* Thumbnail Preview */}
-                        {itemImages[index] && (
-                          <div
-                            className="h-10 w-10 flex-shrink-0 cursor-pointer overflow-hidden rounded border transition-opacity hover:opacity-80"
-                            onClick={() => handleImageUpload(index)}
-                            title="Click to change image"
-                          >
-                            <img
-                              src={itemImages[index]!}
-                              alt={`Preview for ${field.value || `Item ${index + 1}`}`}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
+              <div className="space-y-6">
+                {groupFields.map((groupField, groupIndex) => (
+                  <div key={groupField.id} className="rounded-lg border p-4">
+                    <div className="mb-3 flex items-center gap-2">
+                      <GripVertical className="h-4 w-4 text-muted-foreground" />
+                      <FormField
+                        control={form.control}
+                        name={`groups.${groupIndex}.name`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input
+                                placeholder="Filter name (e.g., Kill em All)"
+                                {...field}
+                                className="font-medium"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
                         )}
-
-                        <FormControl>
-                          <Input
-                            placeholder={`Item ${index + 1}`}
-                            onKeyDown={(e) => handleItemKeyDown(e, index)}
-                            onFocus={handleItemFocus}
-                            {...field}
-                            onChange={(e) =>
-                              handleItemChange(
-                                e.target.value,
-                                index,
-                                field.onChange,
-                              )
-                            }
-                          />
-                        </FormControl>
-
-                        {/* Image Upload Button */}
+                      />
+                      {groupFields.length > 2 && (
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleImageUpload(index)}
-                          className={`flex-shrink-0 ${itemImages[index] ? "bg-primary/10 border-primary/20" : ""}`}
-                          title={
-                            itemImages[index]
-                              ? "Change image"
-                              : "Add image for this item"
-                          }
+                          onClick={() => removeGroupHandler(groupIndex)}
+                          title="Remove filter"
                         >
-                          <Camera
-                            size={16}
-                            className={itemImages[index] ? "text-primary" : ""}
-                          />
+                          <X size={16} />
                         </Button>
+                      )}
+                    </div>
 
-                        {fields.length > 2 && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeItem(index)}
-                            className="flex-shrink-0"
-                            title="Remove this item"
-                          >
-                            <X size={16} />
-                          </Button>
-                        )}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ))}
+                    <div className="ml-6 space-y-2">
+                      {form.watch(`groups.${groupIndex}.items`)?.map((_, itemIndex) => (
+                        <FormField
+                          key={itemIndex}
+                          control={form.control}
+                          name={`groups.${groupIndex}.items.${itemIndex}.title`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="flex items-center gap-2">
+                                <FormControl>
+                                  <Input
+                                    placeholder={`Item ${itemIndex + 1}`}
+                                    {...field}
+                                  />
+                                </FormControl>
+                                {form.watch(`groups.${groupIndex}.items`).length > 1 && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => removeItemFromGroup(groupIndex, itemIndex)}
+                                    title="Remove item"
+                                  >
+                                    <X size={16} />
+                                  </Button>
+                                )}
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      ))}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => addItemToGroup(groupIndex)}
+                        className="mt-2 flex items-center gap-1 text-sm"
+                      >
+                        <Plus size={14} />
+                        Add Item
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="text-muted-foreground mt-4 text-sm">
+                <p>Add at least 2 filters with 1 item each to create your sorter</p>
+              </div>
             </div>
-            {form.formState.errors.items?.root && (
-              <p className="text-destructive mt-2 text-sm">
-                {form.formState.errors.items.root.message}
-              </p>
-            )}
-            <div className="text-muted-foreground mt-2 space-y-1 text-sm">
-              <p>Add at least 2 items to create your sorter</p>
-              <p className="text-xs">
-                💡 Tip: Press Enter while typing to quickly add more items
-              </p>
+          ) : (
+            /* Traditional Mode */
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <FormLabel>Items to Rank *</FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addItemHandler}
+                  className="flex items-center gap-1"
+                >
+                  <Plus size={16} />
+                  Add Item
+                </Button>
+              </div>
 
-              {/* Contextual Enter Hint */}
-              {showEnterHint && !hasUsedEnterShortcut && (
-                <div className="animate-in fade-in mt-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 duration-300 dark:border-blue-800 dark:bg-blue-950/30">
-                  <p className="flex items-center gap-1 text-xs text-blue-700 dark:text-blue-300">
-                    <span>⌨️</span>
-                    Press Enter to add another item
-                  </p>
-                </div>
-              )}
+              <div className="space-y-2">
+                {itemFields.map((field, index) => (
+                  <FormField
+                    key={field.id}
+                    control={form.control}
+                    name={`items.${index}.title`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Input
+                              placeholder={`Item ${index + 1}`}
+                              {...field}
+                            />
+                          </FormControl>
+                          {itemFields.length > 2 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeItemHandler(index)}
+                              title="Remove item"
+                            >
+                              <X size={16} />
+                            </Button>
+                          )}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+              
+              <div className="text-muted-foreground mt-4 text-sm">
+                <p>Add at least 2 items to create your sorter</p>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Submit */}
           <div className="flex gap-4">
