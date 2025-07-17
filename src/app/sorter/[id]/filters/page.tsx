@@ -4,7 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Filter, Play } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  ChevronLeft,
+  Filter,
+  Play,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import Link from "next/link";
 
 interface FilterPageProps {
@@ -16,6 +23,7 @@ interface FilterPageProps {
 interface Group {
   id: string;
   name: string;
+  slug: string;
   items: {
     id: string;
     title: string;
@@ -41,6 +49,7 @@ export default function FilterPage({ params }: FilterPageProps) {
   const [sorter, setSorter] = useState<Sorter | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,7 +75,7 @@ export default function FilterPage({ params }: FilterPageProps) {
         setGroups(data.groups);
 
         // Select all groups by default
-        setSelectedGroups(data.groups.map((group) => group.id));
+        setSelectedGroups(data.groups.map((group) => group.slug));
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -77,8 +86,16 @@ export default function FilterPage({ params }: FilterPageProps) {
     fetchData();
   }, [params, router]);
 
-  const toggleGroup = (groupId: string) => {
+  const toggleGroup = (groupSlug: string) => {
     setSelectedGroups((prev) =>
+      prev.includes(groupSlug)
+        ? prev.filter((slug) => slug !== groupSlug)
+        : [...prev, groupSlug],
+    );
+  };
+
+  const toggleExpanded = (groupId: string) => {
+    setExpandedGroups((prev) =>
       prev.includes(groupId)
         ? prev.filter((id) => id !== groupId)
         : [...prev, groupId],
@@ -91,13 +108,9 @@ export default function FilterPage({ params }: FilterPageProps) {
       return;
     }
 
-    // Store selected groups in localStorage for the sort page
-    localStorage.setItem(
-      `sorter_${sorter?.id}_selectedGroups`,
-      JSON.stringify(selectedGroups),
-    );
-
-    router.push(`/sorter/${sorter?.id}/sort`);
+    // Navigate to sort page with selected groups as URL parameters
+    const groupsParam = selectedGroups.join(",");
+    router.push(`/sorter/${sorter?.id}/sort?groups=${groupsParam}`);
   };
 
   if (isLoading) {
@@ -135,8 +148,8 @@ export default function FilterPage({ params }: FilterPageProps) {
     );
   }
 
-  const totalItems = selectedGroups.reduce((total, groupId) => {
-    const group = groups.find((g) => g.id === groupId);
+  const totalItems = selectedGroups.reduce((total, groupSlug) => {
+    const group = groups.find((g) => g.slug === groupSlug);
     return total + (group?.items.length || 0);
   }, 0);
 
@@ -177,68 +190,81 @@ export default function FilterPage({ params }: FilterPageProps) {
 
       {/* Groups Selection */}
       <div className="mb-8">
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-4">
           {groups.map((group) => {
-            const isSelected = selectedGroups.includes(group.id);
+            const isSelected = selectedGroups.includes(group.slug);
+            const isExpanded = expandedGroups.includes(group.id);
 
             return (
-              <div
-                key={group.id}
-                className={`cursor-pointer rounded-lg border p-4 transition-all ${
-                  isSelected
-                    ? "border-primary bg-primary/5 shadow-sm"
-                    : "border-border hover:border-primary/50"
-                }`}
-                onClick={() => toggleGroup(group.id)}
-              >
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">{group.name}</h3>
-                  <Badge variant={isSelected ? "default" : "secondary"}>
-                    {group.items.length} items
-                  </Badge>
+              <div key={group.id} className="space-y-2">
+                {/* Group Row */}
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id={`group-${group.id}`}
+                    className="border-foreground cursor-pointer"
+                    checked={isSelected}
+                    onCheckedChange={() => toggleGroup(group.slug)}
+                  />
+                  <label
+                    htmlFor={`group-${group.id}`}
+                    className="cursor-pointer font-medium"
+                  >
+                    {group.name}
+                  </label>
+                  <button
+                    onClick={() => toggleExpanded(group.id)}
+                    className="cursor-pointer text-sm text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    {isExpanded
+                      ? `Hide ${group.items.length} items`
+                      : `Show ${group.items.length} items`}
+                  </button>
                 </div>
 
-                <div className="space-y-2">
-                  {group.items.slice(0, 3).map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      {item.imageUrl ? (
-                        <div className="bg-muted h-6 w-6 flex-shrink-0 overflow-hidden rounded">
-                          <img
-                            src={item.imageUrl}
-                            alt={item.title}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-gray-100">
-                          <span className="text-muted-foreground text-xs font-bold">
-                            {item.title.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      <span className="text-muted-foreground truncate">
-                        {item.title}
-                      </span>
-                    </div>
-                  ))}
-
-                  {group.items.length > 3 && (
-                    <div className="text-muted-foreground ml-8 text-xs">
-                      +{group.items.length - 3} more items
-                    </div>
-                  )}
-                </div>
+                {/* Expandable Items List */}
+                {isExpanded && (
+                  <div className="ml-6 space-y-2">
+                    {group.items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        {item.imageUrl ? (
+                          <div className="bg-muted h-6 w-6 flex-shrink-0 overflow-hidden rounded">
+                            <img
+                              src={item.imageUrl}
+                              alt={item.title}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-gray-100">
+                            <span className="text-muted-foreground text-xs font-bold">
+                              {item.title.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <span className="text-muted-foreground truncate">
+                          {item.title}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       </div>
-
+      {selectedGroups.length === 0 && (
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+          <p className="text-sm text-yellow-800">
+            Please select at least one group to start sorting.
+          </p>
+        </div>
+      )}
       {/* Action Buttons */}
-      <div className="flex items-center gap-4">
+      <div className="mt-4 flex items-center gap-4">
         <Button
           onClick={handleStartSorting}
           disabled={selectedGroups.length === 0}
@@ -253,7 +279,7 @@ export default function FilterPage({ params }: FilterPageProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setSelectedGroups(groups.map((g) => g.id))}
+            onClick={() => setSelectedGroups(groups.map((g) => g.slug))}
           >
             Select All
           </Button>
@@ -266,14 +292,6 @@ export default function FilterPage({ params }: FilterPageProps) {
           </Button>
         </div>
       </div>
-
-      {selectedGroups.length === 0 && (
-        <div className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-          <p className="text-sm text-yellow-800">
-            Please select at least one group to start sorting.
-          </p>
-        </div>
-      )}
     </div>
   );
 }

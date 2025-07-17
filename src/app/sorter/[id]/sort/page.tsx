@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +22,7 @@ interface SorterData {
   groups?: {
     id: string;
     name: string;
+    slug: string;
     items: SortItem[];
   }[];
 }
@@ -37,9 +38,105 @@ async function fetchSorterData(sorterId: string): Promise<SorterData> {
   return response.json();
 }
 
+// Generate localStorage key based on sorter ID and selected groups
+function generateProgressKey(sorterId: string, groupSlugs: string[]): string {
+  if (groupSlugs.length === 0) {
+    return `sorting-progress-${sorterId}-all`;
+  }
+  
+  // Sort slugs for consistent key generation
+  const sortedSlugs = groupSlugs.sort().join('-');
+  return `sorting-progress-${sorterId}-${sortedSlugs}`;
+}
+
+// Storage optimization: Convert UUID-based choices to indexed format
+function serializeChoices(items: SortItem[], userChoices: Map<string, string>, stateHistory: any[]): any {
+  // Create item map for UUID to index conversion
+  const itemMap = items.map(item => item.id);
+  const itemToIndex = new Map(itemMap.map((id, index) => [id, index]));
+  
+  // Convert user choices to indexed format
+  const choices: number[][] = [];
+  for (const [key, winnerId] of userChoices.entries()) {
+    const [id1, id2] = key.split(',');
+    const index1 = itemToIndex.get(id1);
+    const index2 = itemToIndex.get(id2);
+    const winnerIndex = itemToIndex.get(winnerId);
+    
+    if (index1 !== undefined && index2 !== undefined && winnerIndex !== undefined) {
+      choices.push([index1, index2, winnerIndex]);
+    }
+  }
+  
+  // Convert state history to indexed format
+  const historyChoices = stateHistory.map(state => {
+    const stateChoices: number[][] = [];
+    for (const [key, winnerId] of state.userChoices.entries()) {
+      const [id1, id2] = key.split(',');
+      const index1 = itemToIndex.get(id1);
+      const index2 = itemToIndex.get(id2);
+      const winnerIndex = itemToIndex.get(winnerId);
+      
+      if (index1 !== undefined && index2 !== undefined && winnerIndex !== undefined) {
+        stateChoices.push([index1, index2, winnerIndex]);
+      }
+    }
+    return {
+      choices: stateChoices,
+      comparisonCount: state.comparisonCount
+    };
+  });
+  
+  return {
+    itemMap,
+    choices,
+    historyChoices
+  };
+}
+
+// Convert indexed format back to UUID-based choices
+function deserializeChoices(serializedData: any): { userChoices: Map<string, string>, stateHistory: any[] } {
+  const { itemMap, choices, historyChoices } = serializedData;
+  
+  // Reconstruct user choices map
+  const userChoices = new Map<string, string>();
+  for (const [index1, index2, winnerIndex] of choices) {
+    const id1 = itemMap[index1];
+    const id2 = itemMap[index2];
+    const winnerId = itemMap[winnerIndex];
+    
+    if (id1 && id2 && winnerId) {
+      const key = [id1, id2].sort().join(',');
+      userChoices.set(key, winnerId);
+    }
+  }
+  
+  // Reconstruct state history
+  const stateHistory = historyChoices.map((historyState: any) => {
+    const stateChoices = new Map<string, string>();
+    for (const [index1, index2, winnerIndex] of historyState.choices) {
+      const id1 = itemMap[index1];
+      const id2 = itemMap[index2];
+      const winnerId = itemMap[winnerIndex];
+      
+      if (id1 && id2 && winnerId) {
+        const key = [id1, id2].sort().join(',');
+        stateChoices.set(key, winnerId);
+      }
+    }
+    return {
+      userChoices: stateChoices,
+      comparisonCount: historyState.comparisonCount
+    };
+  });
+  
+  return { userChoices, stateHistory };
+}
+
 export default function SortPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const sorterId = params.id as string;
 
   const [currentComparison, setCurrentComparison] =
@@ -50,6 +147,7 @@ export default function SortPage() {
   const [totalComparisons, setTotalComparisons] = useState(0);
   const [canUndo, setCanUndo] = useState(false);
   const [filteredItems, setFilteredItems] = useState<SortItem[]>([]);
+  const [currentGroupSlugs, setCurrentGroupSlugs] = useState<string[]>([]);
   const sorterRef = useRef<InteractiveMergeSort | null>(null);
   const resolveComparisonRef = useRef<((winnerId: string) => void) | null>(
     null,
@@ -71,47 +169,51 @@ export default function SortPage() {
   useEffect(() => {
     if (sorterData) {
       let itemsToSort = sorterData.items;
+      let groupSlugs: string[] = [];
       
-      // If using groups, filter items based on selected groups
+      // If using groups, filter items based on selected groups from URL
       if (sorterData.sorter.useGroups && sorterData.groups) {
-        const selectedGroups = localStorage.getItem(`sorter_${sorterId}_selectedGroups`);
+        const groupsParam = searchParams.get('groups');
         
-        if (selectedGroups) {
+        if (groupsParam) {
           try {
-            const selectedGroupIds: string[] = JSON.parse(selectedGroups);
+            const selectedGroupSlugs = groupsParam.split(',').filter(slug => slug.trim());
             
-            // If no groups selected, redirect to filters page
-            if (selectedGroupIds.length === 0) {
-              router.push(`/sorter/${sorterId}/filters`);
-              return;
+            // If no groups selected, default to all items
+            if (selectedGroupSlugs.length === 0) {
+              itemsToSort = sorterData.items;
+              groupSlugs = [];
+            } else {
+              // Filter items to only include those from selected groups
+              itemsToSort = sorterData.groups
+                .filter(group => selectedGroupSlugs.includes(group.slug))
+                .flatMap(group => group.items);
+              groupSlugs = selectedGroupSlugs;
             }
-            
-            // Filter items to only include those from selected groups
-            itemsToSort = sorterData.groups
-              .filter(group => selectedGroupIds.includes(group.id))
-              .flatMap(group => group.items);
           } catch (error) {
             console.error("Failed to parse selected groups:", error);
-            // Redirect to filters page on error
-            router.push(`/sorter/${sorterId}/filters`);
-            return;
+            // On error, default to all items instead of redirecting
+            itemsToSort = sorterData.items;
+            groupSlugs = [];
           }
         } else {
-          // No selection found, redirect to filters
-          router.push(`/sorter/${sorterId}/filters`);
-          return;
+          // No groups param, default to all items
+          itemsToSort = sorterData.items;
+          groupSlugs = [];
         }
       }
       
       setFilteredItems(itemsToSort);
+      setCurrentGroupSlugs(groupSlugs);
     }
-  }, [sorterData, sorterId, router]);
+  }, [sorterData, sorterId, router, searchParams]);
 
   // Initialize sorting when data loads
   useEffect(() => {
     if (sorterData && filteredItems.length > 0 && !sorting && !sorterRef.current) {
-      // Check for saved progress
-      const savedState = localStorage.getItem(`sorting-progress-${sorterId}`);
+      // Check for saved progress using group-specific key
+      const progressKey = generateProgressKey(sorterId, currentGroupSlugs);
+      const savedState = localStorage.getItem(progressKey);
       let savedChoices: Map<string, string> | undefined;
       let savedComparisonCount = 0;
       let savedStateHistory: SortState[] | undefined;
@@ -122,17 +224,26 @@ export default function SortPage() {
           const decompressed = LZString.decompressFromEncodedURIComponent(savedState);
           if (decompressed) {
             const parsed = JSON.parse(decompressed);
-            savedChoices = new Map(parsed.userChoicesArray || []);
             savedComparisonCount = parsed.completedComparisons || 0;
 
-            // Restore state history if available
-            if (parsed.stateHistoryArray) {
-              savedStateHistory = parsed.stateHistoryArray.map(
-                (historyState: any) => ({
-                  userChoices: new Map(historyState.userChoicesArray || []),
-                  comparisonCount: historyState.comparisonCount || 0,
-                }),
-              );
+            // Handle new optimized format
+            if (parsed.optimized) {
+              const { userChoices, stateHistory } = deserializeChoices(parsed);
+              savedChoices = userChoices;
+              savedStateHistory = stateHistory;
+            } else {
+              // Legacy format support
+              savedChoices = new Map(parsed.userChoicesArray || []);
+              
+              // Restore state history if available
+              if (parsed.stateHistoryArray) {
+                savedStateHistory = parsed.stateHistoryArray.map(
+                  (historyState: any) => ({
+                    userChoices: new Map(historyState.userChoicesArray || []),
+                    comparisonCount: historyState.comparisonCount || 0,
+                  }),
+                );
+              }
             }
 
             setCompletedComparisons(savedComparisonCount);
@@ -158,23 +269,24 @@ export default function SortPage() {
       // Set up save callback
       sorterRef.current.setSaveCallback(() => {
         if (sorterRef.current) {
+          // Use optimized serialization
+          const serializedData = serializeChoices(
+            filteredItems,
+            sorterRef.current.getUserChoices(),
+            sorterRef.current.getStateHistory()
+          );
+          
           const stateToSave = {
-            userChoicesArray: Array.from(
-              sorterRef.current.getUserChoices().entries(),
-            ),
+            optimized: true,
             completedComparisons: sorterRef.current.getComparisonCount(),
-            stateHistoryArray: sorterRef.current
-              .getStateHistory()
-              .map((state) => ({
-                userChoicesArray: Array.from(state.userChoices.entries()),
-                comparisonCount: state.comparisonCount,
-              })),
+            ...serializedData
           };
           
           // Compress the state before saving
           const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(stateToSave));
+          const progressKey = generateProgressKey(sorterId, currentGroupSlugs);
           localStorage.setItem(
-            `sorting-progress-${sorterId}`,
+            progressKey,
             compressed,
           );
         }
@@ -198,7 +310,7 @@ export default function SortPage() {
 
       startSorting();
     }
-  }, [sorterData, filteredItems]);
+  }, [sorterData, filteredItems, currentGroupSlugs]);
 
   const startSorting = useCallback(async () => {
     if (!sorterData || !sorterRef.current || filteredItems.length === 0) return;
@@ -248,9 +360,9 @@ export default function SortPage() {
 
       const { resultId } = await response.json();
 
-      // Clear saved progress and selected groups
-      localStorage.removeItem(`sorting-progress-${sorterId}`);
-      localStorage.removeItem(`sorter_${sorterId}_selectedGroups`);
+      // Clear saved progress for this specific group combination
+      const progressKey = generateProgressKey(sorterId, currentGroupSlugs);
+      localStorage.removeItem(progressKey);
 
       // Redirect to results page
       router.push(`/results/${resultId}`);
@@ -259,7 +371,7 @@ export default function SortPage() {
       setSorting(false);
       setSaving(false);
     }
-  }, [sorterData, filteredItems, sorting, sorterId, router]);
+  }, [sorterData, filteredItems, sorting, sorterId, router, currentGroupSlugs]);
 
   const handleChoice = useCallback((winnerId: string) => {
     if (resolveComparisonRef.current) {

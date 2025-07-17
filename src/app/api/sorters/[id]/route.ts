@@ -41,6 +41,7 @@ export async function GET(
         .select({
           id: sorterGroups.id,
           name: sorterGroups.name,
+          slug: sorterGroups.slug,
           createdAt: sorterGroups.createdAt,
         })
         .from(sorterGroups)

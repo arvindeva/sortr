@@ -5,6 +5,7 @@ import { sorters, sorterItems, sorterGroups, user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createSorterSchema } from "@/lib/validations";
+import { generateUniqueSlug } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,13 +43,21 @@ export async function POST(request: NextRequest) {
       .returning();
 
     if (validatedData.useGroups && validatedData.groups) {
+      // Generate unique slugs for all groups
+      const groupNames = validatedData.groups.map(group => group.name);
+      const existingSlugs: string[] = [];
+      
       // Create groups and their items
       for (const group of validatedData.groups) {
+        const slug = generateUniqueSlug(group.name, existingSlugs);
+        existingSlugs.push(slug);
+        
         const [newGroup] = await db
           .insert(sorterGroups)
           .values({
             sorterId: newSorter.id,
             name: group.name,
+            slug: slug,
           })
           .returning();
 

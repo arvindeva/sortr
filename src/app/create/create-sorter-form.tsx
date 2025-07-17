@@ -135,6 +135,13 @@ export default function CreateSorterForm() {
     setIsLoading(true);
 
     try {
+      // Safety check for required fields
+      if (!data.title || !data.title.trim()) {
+        alert("Title is required");
+        setIsLoading(false);
+        return;
+      }
+
       const payload = {
         title: data.title.trim(),
         description: data.description?.trim() || undefined,
@@ -198,7 +205,15 @@ export default function CreateSorterForm() {
         <h2 className="text-xl font-semibold">Sorter Details</h2>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form 
+          onSubmit={form.handleSubmit(onSubmit)} 
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
+              e.preventDefault();
+            }
+          }}
+          className="space-y-6"
+        >
           {/* Basic Info */}
           <div className="space-y-4">
             <FormField

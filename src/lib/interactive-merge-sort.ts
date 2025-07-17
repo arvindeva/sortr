@@ -14,6 +14,7 @@ export class InteractiveMergeSort {
   private comparisonCount = 0;
   private totalComparisons = 0;
   private stateHistory: SortState[] = [];
+  private currentItems: SortItem[] = [];
   private onProgressUpdate?: (completed: number, total: number) => void;
   private onSaveProgress?: () => void;
   private onRestartRequested?: () => void;
@@ -50,8 +51,8 @@ export class InteractiveMergeSort {
       comparisonCount: this.comparisonCount,
     });
     
-    // Keep only the last 3 states to prevent memory issues
-    if (this.stateHistory.length > 3) {
+    // Keep only the last 1 state to prevent storage bloat
+    if (this.stateHistory.length > 1) {
       this.stateHistory.shift();
     }
   }
@@ -94,11 +95,20 @@ export class InteractiveMergeSort {
     items: SortItem[],
     onNeedComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>,
   ): Promise<SortItem[]> {
+    // Store items for recalculation during sorting
+    this.currentItems = items;
+    
     // Calculate total comparisons needed by simulating the sort first
     this.totalComparisons = this.simulateSort(items);
     this.onProgressUpdate?.(this.comparisonCount, this.totalComparisons);
 
     return await this.mergeSort(items, onNeedComparison);
+  }
+
+  private recalculateTotal(): void {
+    if (this.currentItems.length > 0) {
+      this.totalComparisons = this.simulateSort(this.currentItems);
+    }
   }
 
   private simulateSort(items: SortItem[]): number {
@@ -175,8 +185,12 @@ export class InteractiveMergeSort {
         this.saveStateSnapshot();
 
         this.comparisonCount++;
-        this.onProgressUpdate?.(this.comparisonCount, this.totalComparisons);
         this.userChoices.set(key, winner);
+        
+        // Recalculate total comparisons with the new knowledge
+        this.recalculateTotal();
+        
+        this.onProgressUpdate?.(this.comparisonCount, this.totalComparisons);
         this.onSaveProgress?.(); // Save progress after updating count
       }
 

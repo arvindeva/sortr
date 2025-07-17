@@ -132,11 +132,19 @@ Requires configuration for:
 
 - User authentication with email verification
 - Sorter creation with groups and individual items
-- Group filtering interface for selecting which groups to sort
-- Interactive pairwise comparison sorting with progress tracking
-- Undo functionality (last 3 states)
+- Group filtering interface with slug-based URLs and simplified checkbox UI
+- Interactive pairwise comparison sorting with real-time progress tracking and group-specific progress isolation
+- Undo functionality (last 1 state for optimal storage)
 - Results display with sharing capabilities
 - User profiles and sorter management
 - Complete theming system (dark/light/system)
 - Responsive design with mobile support
-- LocalStorage-based progress saving
+- LocalStorage-based progress saving with UUID-to-index optimization (95% storage reduction)
+
+🔄 **Recent Major Optimizations:**
+
+- **Slug-based URL system**: Groups now use friendly URLs with automatic duplicate handling (e.g., "action-movies", "action-movies-2")
+- **Group-specific progress tracking**: Each filter combination maintains separate progress (no more conflicts when switching between different group selections)
+- **Real-time progress calculation**: Progress percentage updates immediately after each choice using dynamic total comparison optimization
+- **Massive storage optimization**: localStorage usage reduced by 95% using UUID-to-index mapping (12,000 chars → 500 chars for 94 comparisons)
+- **Enhanced filters UI**: Simplified checkbox-based interface with collapsible item lists for better usability in dark mode
