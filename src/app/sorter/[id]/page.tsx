@@ -14,7 +14,40 @@ interface SorterPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-async function getSorterWithItems(sorterId: string) {
+interface SorterItem {
+  id: string;
+  title: string;
+  imageUrl?: string;
+}
+
+interface SorterGroup {
+  id: string;
+  name: string;
+  items: SorterItem[];
+}
+
+interface Sorter {
+  id: string;
+  title: string;
+  description?: string;
+  category?: string;
+  useGroups: boolean;
+  userId: string;
+  createdAt: string;
+  completionCount: number;
+  viewCount: number;
+  user: {
+    username: string;
+  };
+}
+
+interface SorterData {
+  sorter: Sorter;
+  items: SorterItem[];
+  groups: SorterGroup[];
+}
+
+async function getSorterWithItems(sorterId: string): Promise<SorterData | null> {
   // Increment view count
   await db
     .update(sorters)
@@ -27,7 +60,7 @@ async function getSorterWithItems(sorterId: string) {
     return null;
   }
 
-  const data = await response.json();
+  const data: SorterData = await response.json();
   return data;
 }
 
