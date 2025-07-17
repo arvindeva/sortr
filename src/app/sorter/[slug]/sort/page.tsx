@@ -264,9 +264,12 @@ export default function SortPage() {
 
       // Set up progress tracking
       sorterRef.current.setProgressCallback((completed, total) => {
-        setCompletedComparisons(completed);
-        setTotalComparisons(total);
-        setCanUndo(sorterRef.current?.canUndo() || false);
+        // Small delay to ensure DOM is ready for animation
+        setTimeout(() => {
+          setCompletedComparisons(completed);
+          setTotalComparisons(total);
+          setCanUndo(sorterRef.current?.canUndo() || false);
+        }, 100);
       });
 
       // Set up save callback
@@ -505,58 +508,68 @@ export default function SortPage() {
       </div>
 
       {/* Comparison Cards */}
-      <div className="relative grid grid-cols-2 gap-2 px-0 md:gap-4 md:px-0">
+      <div className="relative grid grid-cols-2 gap-2 px-0 md:gap-4 md:px-0 items-stretch">
         {/* Item A */}
         <Card
-          className="hover:border-primary/50 h-full cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md md:mx-auto md:w-fit"
+          className="hover:border-primary/50 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md md:mx-auto md:w-80 py-0 gap-0 flex flex-col"
           onClick={() => handleChoice(currentComparison.itemA.id)}
         >
-          <CardContent className="flex flex-col p-0 text-center md:px-6 md:py-1">
-            <h3 className="px-2 py-1 text-sm font-semibold md:mb-1 md:p-0 md:text-lg">
-              {currentComparison.itemA.title}
-            </h3>
+          <CardContent className="p-0 flex flex-col flex-1">
+            {/* Full-width image area */}
             {currentComparison.itemA.imageUrl ? (
-              <div className="flex aspect-square items-center justify-center overflow-hidden bg-gray-100 md:mx-auto md:h-64 md:w-64 md:rounded-lg">
+              <div className="aspect-square w-full overflow-hidden bg-gray-100 rounded-t-xl md:h-64">
                 <img
                   src={currentComparison.itemA.imageUrl}
                   alt={currentComparison.itemA.title}
-                  className="h-full w-full object-cover md:max-h-full md:max-w-full md:object-contain"
+                  className="h-full w-full object-cover"
                 />
               </div>
             ) : (
-              <div className="flex aspect-square items-center justify-center bg-gray-100 md:mx-auto md:h-64 md:w-64 md:rounded-lg">
+              <div className="aspect-square w-full flex items-center justify-center bg-gray-100 rounded-t-xl md:h-64">
                 <span className="text-muted-foreground text-lg md:text-4xl font-bold">
                   {currentComparison.itemA.title.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
+            
+            {/* Text area with minimum height and flex-grow */}
+            <div className="flex min-h-16 items-center justify-center px-4 py-6 text-center flex-1">
+              <h3 className="text-sm font-semibold leading-tight md:text-lg">
+                {currentComparison.itemA.title}
+              </h3>
+            </div>
           </CardContent>
         </Card>
 
         {/* Item B */}
         <Card
-          className="hover:border-primary/50 h-full cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md md:mx-auto md:w-fit"
+          className="hover:border-primary/50 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md md:mx-auto md:w-80 py-0 gap-0 flex flex-col"
           onClick={() => handleChoice(currentComparison.itemB.id)}
         >
-          <CardContent className="flex flex-col p-0 text-center md:px-6 md:py-1">
-            <h3 className="px-2 py-1 text-sm font-semibold md:mb-1 md:p-0 md:text-lg">
-              {currentComparison.itemB.title}
-            </h3>
+          <CardContent className="p-0 flex flex-col flex-1">
+            {/* Full-width image area */}
             {currentComparison.itemB.imageUrl ? (
-              <div className="flex aspect-square items-center justify-center overflow-hidden bg-gray-100 md:mx-auto md:h-64 md:w-64 md:rounded-lg">
+              <div className="aspect-square w-full overflow-hidden bg-gray-100 rounded-t-xl md:h-64">
                 <img
                   src={currentComparison.itemB.imageUrl}
                   alt={currentComparison.itemB.title}
-                  className="h-full w-full object-cover md:max-h-full md:max-w-full md:object-contain"
+                  className="h-full w-full object-cover"
                 />
               </div>
             ) : (
-              <div className="flex aspect-square items-center justify-center bg-gray-100 md:mx-auto md:h-64 md:w-64 md:rounded-lg">
+              <div className="aspect-square w-full flex items-center justify-center bg-gray-100 rounded-t-xl md:h-64">
                 <span className="text-muted-foreground text-lg md:text-4xl font-bold">
                   {currentComparison.itemB.title.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
+            
+            {/* Text area with minimum height and flex-grow */}
+            <div className="flex min-h-16 items-center justify-center px-4 py-6 text-center flex-1">
+              <h3 className="text-sm font-semibold leading-tight md:text-lg">
+                {currentComparison.itemB.title}
+              </h3>
+            </div>
           </CardContent>
         </Card>
 

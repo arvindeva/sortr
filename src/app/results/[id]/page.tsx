@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Trophy, RotateCcw, Play } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
+import { AnimatedRankings } from "@/components/animated-rankings";
 
 interface ResultsPageProps {
   params: Promise<{
@@ -225,71 +226,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         {/* Left Column - Rankings (spans 2 columns on desktop) */}
         <div className="md:col-span-2">
           <h2 className="mb-4 text-xl font-bold">Rankings</h2>
-          <div className="space-y-3">
-            {result.rankings.map((item, index) => (
-              <div
-                key={item.id}
-                className="bg-card flex items-center gap-4 rounded-lg border p-4"
-              >
-                {/* Rank */}
-                <div
-                  className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${
-                    index === 0
-                      ? "border-4 border-yellow-500 bg-yellow-50 text-yellow-700"
-                      : index === 1
-                        ? "border-4 border-gray-400 bg-gray-50 text-gray-700"
-                        : index === 2
-                          ? "border-4 border-amber-600 bg-amber-50 text-amber-700"
-                          : "border border-gray-400 bg-gray-200 text-black"
-                  }`}
-                >
-                  {index + 1}
-                </div>
-
-                {/* Image */}
-                {item.imageUrl ? (
-                  <div
-                    className={`bg-muted h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-4 ${
-                      index === 0
-                        ? "border-yellow-500"
-                        : index === 1
-                          ? "border-gray-400"
-                          : index === 2
-                            ? "border-amber-600"
-                            : "border-transparent"
-                    }`}
-                  >
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div
-                    className={`flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg border-4 bg-gray-100 ${
-                      index === 0
-                        ? "border-yellow-500"
-                        : index === 1
-                          ? "border-gray-400"
-                          : index === 2
-                            ? "border-amber-600"
-                            : "border-transparent"
-                    }`}
-                  >
-                    <span className="text-muted-foreground text-sm font-bold">
-                      {item.title.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-
-                {/* Title */}
-                <div className="flex-1">
-                  <h3 className="font-medium">{item.title}</h3>
-                </div>
-              </div>
-            ))}
-          </div>
+          <AnimatedRankings rankings={result.rankings} />
         </div>
 
         {/* Right Column - Sorter Info (desktop only) */}

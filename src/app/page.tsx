@@ -32,7 +32,7 @@ export default async function Home() {
   return (
     <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-4xl px-4 py-10">
       <section className="mx-auto mb-10 max-w-xl text-center">
-        <h1 className="mb-4 text-6xl font-bold tracking-wide">sortr</h1>
+        <h1 className="mb-4 text-7xl font-bold tracking-wide">sortr</h1>
         <p className="text-muted-foreground text-lg">
           Create and share ranked lists for anything—albums, movies, characters,
           and more. Powered by merge sort.
