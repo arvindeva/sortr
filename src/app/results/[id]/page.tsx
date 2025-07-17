@@ -237,7 +237,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                         ? "border-4 border-gray-400 bg-gray-50 text-gray-700"
                         : index === 2
                           ? "border-4 border-amber-600 bg-amber-50 text-amber-700"
-                          : "border border-gray-600 bg-transparent text-gray-600"
+                          : "border border-gray-400 bg-gray-200 text-black"
                   }`}
                 >
                   {index + 1}

@@ -36,7 +36,6 @@ export const createSorterSchema = z.object({
           .min(1, "Each group must have at least 1 item"),
       }),
     )
-    .min(2, "At least 2 groups are required when using groups")
     .optional(),
   items: z
     .array(
@@ -48,21 +47,29 @@ export const createSorterSchema = z.object({
         imageUrl: z.string().url("Invalid URL").optional(),
       }),
     )
+    .min(2, "At least 2 items are required")
     .optional(),
 })
 .refine(
   (data) => {
     if (data.useGroups) {
-      // If using groups, must have at least 2 groups
-      return data.groups && data.groups.length >= 2;
+      // If using groups, must have at least 2 groups with valid items
+      return data.groups && 
+             data.groups.length >= 2 && 
+             data.groups.every(group => 
+               group.items && 
+               group.items.filter(item => item.title.trim()).length >= 1
+             );
     } else {
-      // If not using groups, must have at least 2 items
-      return data.items && data.items.length >= 2;
+      // If not using groups, must have at least 2 valid items
+      return data.items && 
+             data.items.length >= 2 &&
+             data.items.filter(item => item.title.trim()).length >= 2;
     }
   },
   {
-    message: "Must have at least 2 groups when using groups, or at least 2 items otherwise",
-    path: ["groups"],
+    message: "Must have at least 2 items with names",
+    path: ["root"],
   }
 );
 

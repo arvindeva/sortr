@@ -64,7 +64,13 @@ export async function GET(
       }));
 
       return Response.json({
-        sorter,
+        sorter: {
+          ...sorter,
+          user: {
+            username: sorter.creatorUsername,
+            id: sorter.creatorId,
+          }
+        },
         groups: groupsWithItems,
         items: items, // Also return flat items list for backward compatibility
       });
@@ -80,7 +86,13 @@ export async function GET(
         .where(eq(sorterItems.sorterId, id));
 
       return Response.json({
-        sorter,
+        sorter: {
+          ...sorter,
+          user: {
+            username: sorter.creatorUsername,
+            id: sorter.creatorId,
+          }
+        },
         items,
       });
     }

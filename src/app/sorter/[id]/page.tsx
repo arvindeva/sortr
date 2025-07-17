@@ -47,7 +47,9 @@ interface SorterData {
   groups: SorterGroup[];
 }
 
-async function getSorterWithItems(sorterId: string): Promise<SorterData | null> {
+async function getSorterWithItems(
+  sorterId: string,
+): Promise<SorterData | null> {
   // Increment view count
   await db
     .update(sorters)
@@ -55,7 +57,9 @@ async function getSorterWithItems(sorterId: string): Promise<SorterData | null> 
     .where(eq(sorters.id, sorterId));
 
   // Use the API endpoint to get sorter data with groups support
-  const response = await fetch(`${process.env.NEXTAUTH_URL}/api/sorters/${sorterId}`);
+  const response = await fetch(
+    `${process.env.NEXTAUTH_URL}/api/sorters/${sorterId}`,
+  );
   if (!response.ok) {
     return null;
   }
@@ -170,7 +174,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                 className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
                 size={20}
               />
-              Select Groups to Sort
+              Start Sorting
             </Button>
           </Link>
         ) : (
@@ -207,10 +211,10 @@ export default async function SorterPage({ params }: SorterPageProps) {
                 {groups.map((group) => (
                   <div key={group.id} className="space-y-3">
                     {/* Group Header */}
-                    <h3 className="text-lg font-semibold text-primary">
+                    <h3 className="text-primary text-lg font-semibold">
                       {group.name}
                     </h3>
-                    
+
                     {/* Items in Group */}
                     <div className="ml-4 space-y-2">
                       {group.items.map((item) => (
@@ -225,7 +229,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                               />
                             </div>
                           ) : (
-                            <div className="bg-gray-100 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
+                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
                               <span className="text-muted-foreground text-xs font-bold">
                                 {item.title.charAt(0).toUpperCase()}
                               </span>
@@ -245,42 +249,40 @@ export default async function SorterPage({ params }: SorterPageProps) {
                 ))}
               </div>
             )
+          ) : /* Traditional Mode */
+          items?.length === 0 ? (
+            <p className="text-muted-foreground italic">
+              No items found for this sorter.
+            </p>
           ) : (
-            /* Traditional Mode */
-            items?.length === 0 ? (
-              <p className="text-muted-foreground italic">
-                No items found for this sorter.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {items?.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3">
-                    {/* Thumbnail */}
-                    {item.imageUrl ? (
-                      <div className="bg-muted h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
-                        <img
-                          src={item.imageUrl}
-                          alt={item.title}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="bg-gray-100 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg">
-                        <span className="text-muted-foreground text-xs font-bold">
-                          {item.title.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    {/* Item Name */}
-                    <div className="min-w-0 flex-1">
-                      <p className="text-foreground truncate text-sm font-medium">
-                        {item.title}
-                      </p>
+            <div className="space-y-3">
+              {items?.map((item) => (
+                <div key={item.id} className="flex items-center gap-3">
+                  {/* Thumbnail */}
+                  {item.imageUrl ? (
+                    <div className="bg-muted h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        className="h-full w-full object-cover"
+                      />
                     </div>
+                  ) : (
+                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                      <span className="text-muted-foreground text-xs font-bold">
+                        {item.title.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  {/* Item Name */}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-foreground truncate text-sm font-medium">
+                      {item.title}
+                    </p>
                   </div>
-                ))}
-              </div>
-            )
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
@@ -326,13 +328,15 @@ export default async function SorterPage({ params }: SorterPageProps) {
                           key={item.id || index}
                           className="flex items-center gap-2 text-sm"
                         >
-                          <span className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold border-2 ${
-                            index === 0 
-                              ? 'border-yellow-500 bg-yellow-50 text-yellow-700' 
-                              : index === 1 
-                              ? 'border-gray-400 bg-gray-50 text-gray-700' 
-                              : 'border-amber-600 bg-amber-50 text-amber-700'
-                          }`}>
+                          <span
+                            className={`flex h-5 w-5 items-center justify-center rounded-full border-2 text-xs font-bold ${
+                              index === 0
+                                ? "border-yellow-500 bg-yellow-50 text-yellow-700"
+                                : index === 1
+                                  ? "border-gray-400 bg-gray-50 text-gray-700"
+                                  : "border-amber-600 bg-amber-50 text-amber-700"
+                            }`}
+                          >
                             {index + 1}
                           </span>
                           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -345,7 +349,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                 />
                               </div>
                             ) : (
-                              <div className="bg-gray-100 h-6 w-6 flex-shrink-0 rounded flex items-center justify-center">
+                              <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-gray-100">
                                 <span className="text-muted-foreground text-xs font-bold">
                                   {item.title.charAt(0).toUpperCase()}
                                 </span>

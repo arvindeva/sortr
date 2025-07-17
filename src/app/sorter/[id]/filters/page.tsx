@@ -49,13 +49,13 @@ export default function FilterPage({ params }: FilterPageProps) {
       try {
         const { id } = await params;
         const response = await fetch(`/api/sorters/${id}`);
-        
+
         if (!response.ok) {
           throw new Error("Failed to fetch sorter data");
         }
 
         const data: ApiResponse = await response.json();
-        
+
         if (!data.sorter.useGroups) {
           // Redirect to sort page if not using groups
           router.push(`/sorter/${id}/sort`);
@@ -64,9 +64,9 @@ export default function FilterPage({ params }: FilterPageProps) {
 
         setSorter(data.sorter);
         setGroups(data.groups);
-        
+
         // Select all groups by default
-        setSelectedGroups(data.groups.map(group => group.id));
+        setSelectedGroups(data.groups.map((group) => group.id));
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -78,10 +78,10 @@ export default function FilterPage({ params }: FilterPageProps) {
   }, [params, router]);
 
   const toggleGroup = (groupId: string) => {
-    setSelectedGroups(prev => 
-      prev.includes(groupId) 
-        ? prev.filter(id => id !== groupId)
-        : [...prev, groupId]
+    setSelectedGroups((prev) =>
+      prev.includes(groupId)
+        ? prev.filter((id) => id !== groupId)
+        : [...prev, groupId],
     );
   };
 
@@ -92,8 +92,11 @@ export default function FilterPage({ params }: FilterPageProps) {
     }
 
     // Store selected groups in localStorage for the sort page
-    localStorage.setItem(`sorter_${sorter?.id}_selectedGroups`, JSON.stringify(selectedGroups));
-    
+    localStorage.setItem(
+      `sorter_${sorter?.id}_selectedGroups`,
+      JSON.stringify(selectedGroups),
+    );
+
     router.push(`/sorter/${sorter?.id}/sort`);
   };
 
@@ -102,7 +105,7 @@ export default function FilterPage({ params }: FilterPageProps) {
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2"></div>
             <p className="text-muted-foreground">Loading filters...</p>
           </div>
         </div>
@@ -113,8 +116,8 @@ export default function FilterPage({ params }: FilterPageProps) {
   if (error) {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="text-center py-12">
-          <p className="text-red-600 mb-4">{error}</p>
+        <div className="py-12 text-center">
+          <p className="mb-4 text-red-600">{error}</p>
           <Button onClick={() => router.back()}>Go Back</Button>
         </div>
       </div>
@@ -124,7 +127,7 @@ export default function FilterPage({ params }: FilterPageProps) {
   if (!sorter) {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="text-center py-12">
+        <div className="py-12 text-center">
           <p className="text-muted-foreground mb-4">Sorter not found</p>
           <Button onClick={() => router.back()}>Go Back</Button>
         </div>
@@ -133,7 +136,7 @@ export default function FilterPage({ params }: FilterPageProps) {
   }
 
   const totalItems = selectedGroups.reduce((total, groupId) => {
-    const group = groups.find(g => g.id === groupId);
+    const group = groups.find((g) => g.id === groupId);
     return total + (group?.items.length || 0);
   }, 0);
 
@@ -141,27 +144,30 @@ export default function FilterPage({ params }: FilterPageProps) {
     <div className="container mx-auto max-w-4xl px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-4 mb-4">
+        <div className="mb-4 flex items-center gap-4">
           <Link href={`/sorter/${sorter.id}`}>
             <Button variant="ghost" size="sm">
-              <ChevronLeft className="h-4 w-4 mr-1" />
+              <ChevronLeft className="mr-1 h-4 w-4" />
               Back to Sorter
             </Button>
           </Link>
         </div>
-        
+
         <div className="mb-4">
-          <h1 className="text-2xl font-bold mb-2">Select Groups to Sort</h1>
+          <h1 className="mb-2 text-2xl font-bold">Start Sorting</h1>
           <p className="text-muted-foreground">
-            Choose which groups you want to include in your sorting session for "{sorter.title}"
+            Choose which groups you want to include in your sorting session for
+            "{sorter.title}"
           </p>
         </div>
 
         {/* Stats */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="text-muted-foreground flex items-center gap-4 text-sm">
           <div className="flex items-center gap-1">
             <Filter className="h-4 w-4" />
-            <span>{selectedGroups.length} of {groups.length} groups selected</span>
+            <span>
+              {selectedGroups.length} of {groups.length} groups selected
+            </span>
           </div>
           <div>
             <span>{totalItems} items total</span>
@@ -174,29 +180,32 @@ export default function FilterPage({ params }: FilterPageProps) {
         <div className="grid gap-4 md:grid-cols-2">
           {groups.map((group) => {
             const isSelected = selectedGroups.includes(group.id);
-            
+
             return (
               <div
                 key={group.id}
-                className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                  isSelected 
-                    ? 'border-primary bg-primary/5 shadow-sm' 
-                    : 'border-border hover:border-primary/50'
+                className={`cursor-pointer rounded-lg border p-4 transition-all ${
+                  isSelected
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "border-border hover:border-primary/50"
                 }`}
                 onClick={() => toggleGroup(group.id)}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-lg">{group.name}</h3>
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">{group.name}</h3>
                   <Badge variant={isSelected ? "default" : "secondary"}>
                     {group.items.length} items
                   </Badge>
                 </div>
-                
+
                 <div className="space-y-2">
                   {group.items.slice(0, 3).map((item) => (
-                    <div key={item.id} className="flex items-center gap-2 text-sm">
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-2 text-sm"
+                    >
                       {item.imageUrl ? (
-                        <div className="h-6 w-6 bg-muted rounded overflow-hidden flex-shrink-0">
+                        <div className="bg-muted h-6 w-6 flex-shrink-0 overflow-hidden rounded">
                           <img
                             src={item.imageUrl}
                             alt={item.title}
@@ -204,18 +213,20 @@ export default function FilterPage({ params }: FilterPageProps) {
                           />
                         </div>
                       ) : (
-                        <div className="h-6 w-6 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs font-bold text-muted-foreground">
+                        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-gray-100">
+                          <span className="text-muted-foreground text-xs font-bold">
                             {item.title.charAt(0).toUpperCase()}
                           </span>
                         </div>
                       )}
-                      <span className="text-muted-foreground truncate">{item.title}</span>
+                      <span className="text-muted-foreground truncate">
+                        {item.title}
+                      </span>
                     </div>
                   ))}
-                  
+
                   {group.items.length > 3 && (
-                    <div className="text-xs text-muted-foreground ml-8">
+                    <div className="text-muted-foreground ml-8 text-xs">
                       +{group.items.length - 3} more items
                     </div>
                   )}
@@ -232,17 +243,17 @@ export default function FilterPage({ params }: FilterPageProps) {
           onClick={handleStartSorting}
           disabled={selectedGroups.length === 0}
           size="lg"
-          className="flex-1 max-w-md"
+          className="max-w-md flex-1"
         >
-          <Play className="h-4 w-4 mr-2" />
+          <Play className="mr-2 h-4 w-4" />
           Start Sorting ({totalItems} items)
         </Button>
-        
+
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setSelectedGroups(groups.map(g => g.id))}
+            onClick={() => setSelectedGroups(groups.map((g) => g.id))}
           >
             Select All
           </Button>
@@ -257,8 +268,8 @@ export default function FilterPage({ params }: FilterPageProps) {
       </div>
 
       {selectedGroups.length === 0 && (
-        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-yellow-800 text-sm">
+        <div className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+          <p className="text-sm text-yellow-800">
             Please select at least one group to start sorting.
           </p>
         </div>

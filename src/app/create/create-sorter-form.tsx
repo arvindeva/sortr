@@ -16,10 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { Plus, X, Camera, ChevronDown, GripVertical } from "lucide-react";
-import {
-  createSorterSchema,
-  type CreateSorterInput,
-} from "@/lib/validations";
+import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
 
 export default function CreateSorterForm() {
   const router = useRouter();
@@ -38,7 +35,7 @@ export default function CreateSorterForm() {
   });
 
   const useGroups = form.watch("useGroups");
-  
+
   // Initialize groups when switching to filters mode
   useEffect(() => {
     if (useGroups) {
@@ -66,15 +63,22 @@ export default function CreateSorterForm() {
       }
     }
   }, [useGroups, form]);
-  
 
   // Field arrays for both modes
-  const { fields: groupFields, append: appendGroup, remove: removeGroup } = useFieldArray({
+  const {
+    fields: groupFields,
+    append: appendGroup,
+    remove: removeGroup,
+  } = useFieldArray({
     control: form.control,
     name: "groups",
   });
 
-  const { fields: itemFields, append: appendItem, remove: removeItem } = useFieldArray({
+  const {
+    fields: itemFields,
+    append: appendItem,
+    remove: removeItem,
+  } = useFieldArray({
     control: form.control,
     name: "items",
   });
@@ -109,7 +113,7 @@ export default function CreateSorterForm() {
     if (currentItems.length > 1) {
       form.setValue(
         `groups.${groupIndex}.items`,
-        currentItems.filter((_, i) => i !== itemIndex)
+        currentItems.filter((_, i) => i !== itemIndex),
       );
     }
   };
@@ -141,21 +145,24 @@ export default function CreateSorterForm() {
       if (data.useGroups && data.groups) {
         // Filter out empty groups and items
         const validGroups = data.groups
-          .filter(group => group.name.trim())
-          .map(group => ({
+          .filter((group) => group.name.trim())
+          .map((group) => ({
             name: group.name.trim(),
-            items: group.items.filter(item => item.title.trim()).map(item => ({
-              title: item.title.trim(),
-            })),
+            items: group.items
+              .filter((item) => item.title.trim())
+              .map((item) => ({
+                title: item.title.trim(),
+              })),
           }))
-          .filter(group => group.items.length > 0);
+          .filter((group) => group.items.length > 0);
 
         Object.assign(payload, { groups: validGroups });
       } else {
         // Traditional mode
-        const validItems = data.items
-          ?.filter(item => item.title.trim())
-          .map(item => ({ title: item.title.trim() })) || [];
+        const validItems =
+          data.items
+            ?.filter((item) => item.title.trim())
+            .map((item) => ({ title: item.title.trim() })) || [];
 
         Object.assign(payload, { items: validItems });
       }
@@ -267,7 +274,7 @@ export default function CreateSorterForm() {
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                   <div className="space-y-0.5">
                     <FormLabel className="text-base">Use Filters</FormLabel>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-muted-foreground text-sm">
                       Group items into filters for selective sorting
                     </div>
                   </div>
@@ -304,7 +311,7 @@ export default function CreateSorterForm() {
                 {groupFields.map((groupField, groupIndex) => (
                   <div key={groupField.id} className="rounded-lg border p-4">
                     <div className="mb-3 flex items-center gap-2">
-                      <GripVertical className="h-4 w-4 text-muted-foreground" />
+                      <GripVertical className="text-muted-foreground h-4 w-4" />
                       <FormField
                         control={form.control}
                         name={`groups.${groupIndex}.name`}
@@ -335,37 +342,45 @@ export default function CreateSorterForm() {
                     </div>
 
                     <div className="ml-6 space-y-2">
-                      {form.watch(`groups.${groupIndex}.items`)?.map((_, itemIndex) => (
-                        <FormField
-                          key={itemIndex}
-                          control={form.control}
-                          name={`groups.${groupIndex}.items.${itemIndex}.title`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="flex items-center gap-2">
-                                <FormControl>
-                                  <Input
-                                    placeholder={`Item ${itemIndex + 1}`}
-                                    {...field}
-                                  />
-                                </FormControl>
-                                {form.watch(`groups.${groupIndex}.items`).length > 1 && (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => removeItemFromGroup(groupIndex, itemIndex)}
-                                    title="Remove item"
-                                  >
-                                    <X size={16} />
-                                  </Button>
-                                )}
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ))}
+                      {form
+                        .watch(`groups.${groupIndex}.items`)
+                        ?.map((_, itemIndex) => (
+                          <FormField
+                            key={itemIndex}
+                            control={form.control}
+                            name={`groups.${groupIndex}.items.${itemIndex}.title`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="flex items-center gap-2">
+                                  <FormControl>
+                                    <Input
+                                      placeholder={`Item ${itemIndex + 1}`}
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  {form.watch(`groups.${groupIndex}.items`)
+                                    .length > 1 && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        removeItemFromGroup(
+                                          groupIndex,
+                                          itemIndex,
+                                        )
+                                      }
+                                      title="Remove item"
+                                    >
+                                      <X size={16} />
+                                    </Button>
+                                  )}
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        ))}
                       <Button
                         type="button"
                         variant="ghost"
@@ -380,9 +395,11 @@ export default function CreateSorterForm() {
                   </div>
                 ))}
               </div>
-              
+
               <div className="text-muted-foreground mt-4 text-sm">
-                <p>Add at least 2 filters with 1 item each to create your sorter</p>
+                <p>
+                  Add at least 2 filters with 1 item each to create your sorter
+                </p>
               </div>
             </div>
           ) : (
@@ -435,7 +452,7 @@ export default function CreateSorterForm() {
                   />
                 ))}
               </div>
-              
+
               <div className="text-muted-foreground mt-4 text-sm">
                 <p>Add at least 2 items to create your sorter</p>
               </div>
