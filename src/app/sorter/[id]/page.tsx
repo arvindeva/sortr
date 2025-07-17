@@ -131,12 +131,12 @@ export default async function SorterPage({ params }: SorterPageProps) {
           <div className="flex items-center gap-1">
             <User size={16} />
             <span>by</span>
-            {sorter.creatorUsername ? (
+            {sorter.user.username ? (
               <Link
-                href={`/user/${sorter.creatorUsername}`}
+                href={`/user/${sorter.user.username}`}
                 className="text-foreground font-semibold hover:underline"
               >
-                {sorter.creatorUsername}
+                {sorter.user.username}
               </Link>
             ) : (
               <span className="font-medium">Unknown User</span>
