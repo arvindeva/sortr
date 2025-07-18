@@ -3,9 +3,9 @@ import { db } from "@/db";
 import { user, sorters } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
-import { RetroCard, RetroCardContent, RetroCardHeader, RetroCardTitle } from "@/components/ui/retro-card";
-import { RetroBadge } from "@/components/ui/retro-badge";
-import { RetroBox } from "@/components/ui/retro-box";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Box } from "@/components/ui/box";
 
 // Cache statically but revalidate on-demand when completion counts change
 
@@ -68,7 +68,7 @@ export default async function UserProfilePage({
     <main className="container mx-auto max-w-4xl px-4 py-8">
       {/* Profile Header */}
       <section className="mb-8">
-        <RetroBox variant="primary" size="lg" className="flex items-center space-x-6">
+        <Box variant="primary" size="lg" className="flex items-center space-x-6">
           {/* Avatar Placeholder */}
           <div className="flex h-24 w-24 items-center justify-center bg-black text-yellow-300 border-2 border-black">
             <span className="text-2xl font-bold">
@@ -81,43 +81,43 @@ export default async function UserProfilePage({
             <h1 className="mb-2 text-3xl font-bold">{userData.username}</h1>
             <p className="text-lg font-medium">User since {userSince}</p>
           </div>
-        </RetroBox>
+        </Box>
       </section>
 
       {/* Sorters Section */}
       <section>
-        <RetroBox variant="secondary" size="lg" className="mb-6">
+        <Box variant="secondary" size="lg" className="mb-6">
           <h2 className="text-2xl font-bold">Sorters ({userSorters.length})</h2>
-        </RetroBox>
+        </Box>
 
         {userSorters.length === 0 ? (
           <div className="text-center">
-            <RetroBox variant="warning" size="lg">
+            <Box variant="warning" size="lg">
               <p className="mb-4 text-lg font-medium">
                 No sorters created yet.
               </p>
               <p className="font-medium">
                 Start creating sorters to share with others!
               </p>
-            </RetroBox>
+            </Box>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {userSorters.map((sorter) => (
-              <RetroCard key={sorter.id} className="min-h-[180px]">
-                <RetroCardHeader className="flex h-28 flex-col justify-start pb-3">
-                  <RetroCardTitle className="mb-3 line-clamp-2 text-lg leading-relaxed">
+              <Card key={sorter.id} className="min-h-[180px]">
+                <CardHeader className="flex h-28 flex-col justify-start pb-3">
+                  <CardTitle className="mb-3 line-clamp-2 text-lg leading-relaxed">
                     <Link href={`/sorter/${sorter.slug}`} className="hover:underline">
                       {sorter.title}
                     </Link>
-                  </RetroCardTitle>
+                  </CardTitle>
                   {sorter.category && (
-                    <RetroBadge variant="default">
+                    <Badge variant="default">
                       {sorter.category}
-                    </RetroBadge>
+                    </Badge>
                   )}
-                </RetroCardHeader>
-                <RetroCardContent>
+                </CardHeader>
+                <CardContent>
                   <div className="text-muted-foreground flex items-center justify-between text-sm font-medium">
                     <span>
                       {new Date(sorter.createdAt).toLocaleDateString()}
@@ -127,8 +127,8 @@ export default async function UserProfilePage({
                       <span>{sorter.completionCount} completions</span>
                     </div>
                   </div>
-                </RetroCardContent>
-              </RetroCard>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}

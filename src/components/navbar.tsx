@@ -1,7 +1,7 @@
 "use client";
 import { useSession, signOut } from "next-auth/react";
-import { RetroButton } from "@/components/ui/retro-button";
-import { RetroLogo } from "@/components/ui/retro-logo";
+import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/ui/logo";
 import { LoginButton } from "@/components/login-button";
 import { ModeToggle } from "@/components/mode-toggle";
 import Link from "next/link";
@@ -29,22 +29,22 @@ export function Navbar() {
   return (
     <nav className="bg-blue-50 dark:bg-neutral-900 sticky top-0 z-30 flex w-full items-center justify-between border-b-2 border-black dark:border-white px-6 py-4">
       <Link href="/">
-        <RetroLogo variant="primary" size="md" className="text-3xl font-bold tracking-wide transition-all duration-300 ease-out hover:tracking-widest">
+        <Logo variant="primary" size="md" className="text-3xl font-bold tracking-wide transition-all duration-300 ease-out hover:tracking-widest">
           sortr
-        </RetroLogo>
+        </Logo>
       </Link>
 
       {/* Desktop Navigation */}
       <div className="hidden items-center gap-4 md:flex">
         {/* Create button - always visible */}
         {status === "loading" ? (
-          <RetroButton size="sm" variant="default" disabled>
+          <Button size="sm" variant="default" disabled>
             <Plus className="mr-1" size={16} />
             Create a Sorter
-          </RetroButton>
+          </Button>
         ) : session ? (
           <Link href="/create">
-            <RetroButton
+            <Button
               size="sm"
               variant="default"
               className="group"
@@ -54,11 +54,11 @@ export function Navbar() {
                 size={16}
               />
               Create a Sorter
-            </RetroButton>
+            </Button>
           </Link>
         ) : (
           <Link href="/auth/signin">
-            <RetroButton
+            <Button
               size="sm"
               variant="default"
               className="group"
@@ -68,32 +68,32 @@ export function Navbar() {
                 size={16}
               />
               Create a Sorter
-            </RetroButton>
+            </Button>
           </Link>
         )}
 
         {status === "loading" ? (
-          <RetroButton size="sm" variant="ghost" disabled>
+          <Button size="sm" variant="ghost" disabled>
             Loading...
-          </RetroButton>
+          </Button>
         ) : session ? (
           <div className="flex items-center gap-4">
             {userData?.username ? (
               <Link href={`/user/${userData.username}`}>
-                <RetroButton size="sm" variant="ghost">
+                <Button size="sm" variant="ghost">
                   <User size={16} className="mr-1" />
                   Profile
-                </RetroButton>
+                </Button>
               </Link>
             ) : (
-              <RetroButton size="sm" variant="ghost" disabled>
+              <Button size="sm" variant="ghost" disabled>
                 <User size={16} className="mr-1" />
                 Profile
-              </RetroButton>
+              </Button>
             )}
-            <RetroButton size="sm" variant="outline" onClick={() => signOut()}>
+            <Button size="sm" variant="outline" onClick={() => signOut()}>
               Logout
-            </RetroButton>
+            </Button>
           </div>
         ) : (
           <LoginButton />
@@ -104,14 +104,14 @@ export function Navbar() {
       {/* Mobile Menu Button */}
       <div className="flex items-center gap-4 md:hidden">
         <ModeToggle />
-        <RetroButton
+        <Button
           variant="ghost"
           size="sm"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-        </RetroButton>
+        </Button>
       </div>
 
       {/* Mobile Menu Overlay */}
@@ -129,31 +129,31 @@ export function Navbar() {
         <div className="flex flex-col gap-3 p-4">
           {/* Create button */}
           {status === "loading" ? (
-            <RetroButton variant="default" disabled className="w-full">
+            <Button variant="default" disabled className="w-full">
               <Plus className="mr-2" size={16} />
               Create a Sorter
-            </RetroButton>
+            </Button>
           ) : session ? (
             <Link href="/create" onClick={() => setMobileMenuOpen(false)}>
-              <RetroButton variant="default" className="w-full">
+              <Button variant="default" className="w-full">
                 <Plus className="mr-2" size={16} />
                 Create a Sorter
-              </RetroButton>
+              </Button>
             </Link>
           ) : (
             <Link href="/auth/signin" onClick={() => setMobileMenuOpen(false)}>
-              <RetroButton variant="default" className="w-full">
+              <Button variant="default" className="w-full">
                 <Plus className="mr-2" size={16} />
                 Create a Sorter
-              </RetroButton>
+              </Button>
             </Link>
           )}
 
           {/* Auth buttons */}
           {status === "loading" ? (
-            <RetroButton variant="ghost" disabled className="w-full">
+            <Button variant="ghost" disabled className="w-full">
               Loading...
-            </RetroButton>
+            </Button>
           ) : session ? (
             <>
               {userData?.username ? (
@@ -161,18 +161,18 @@ export function Navbar() {
                   href={`/user/${userData.username}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <RetroButton variant="ghost" className="w-full">
+                  <Button variant="ghost" className="w-full">
                     <User size={16} className="mr-2" />
                     Profile
-                  </RetroButton>
+                  </Button>
                 </Link>
               ) : (
-                <RetroButton variant="ghost" disabled className="w-full">
+                <Button variant="ghost" disabled className="w-full">
                   <User size={16} className="mr-2" />
                   Profile
-                </RetroButton>
+                </Button>
               )}
-              <RetroButton
+              <Button
                 variant="outline"
                 onClick={() => {
                   signOut();
@@ -181,7 +181,7 @@ export function Navbar() {
                 className="w-full"
               >
                 Logout
-              </RetroButton>
+              </Button>
             </>
           ) : (
             <div onClick={() => setMobileMenuOpen(false)}>

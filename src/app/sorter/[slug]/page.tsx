@@ -3,10 +3,10 @@ import { db } from "@/db";
 import { sorters, sorterItems, sortingResults, user } from "@/db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 import Link from "next/link";
-import { RetroButton } from "@/components/ui/retro-button";
-import { RetroBadge } from "@/components/ui/retro-badge";
-import { RetroBox } from "@/components/ui/retro-box";
-import { RetroCard, RetroCardContent, RetroCardHeader, RetroCardTitle } from "@/components/ui/retro-card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Box } from "@/components/ui/box";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Play, User, Calendar, Eye, Trophy } from "lucide-react";
 
 interface SorterPageProps {
@@ -128,7 +128,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
     <main className="container mx-auto max-w-4xl px-4 py-8">
       {/* Sorter Header */}
       <section className="mb-8">
-        <RetroBox variant="primary" size="xl" className="mb-6">
+        <Box variant="primary" size="xl" className="mb-6">
           <div>
             <h1 className="mb-2 text-3xl font-bold">{sorter.title}</h1>
             {sorter.description && (
@@ -139,13 +139,13 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
             {/* Category Badge */}
             {sorter.category && (
-              <RetroBadge variant="default">{sorter.category}</RetroBadge>
+              <Badge variant="default">{sorter.category}</Badge>
             )}
           </div>
-        </RetroBox>
+        </Box>
 
         {/* Creator and Stats Info */}
-        <RetroBox variant="white" size="lg" className="mb-6">
+        <Box variant="white" size="lg" className="mb-6">
           <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
             <div className="flex items-center gap-1">
               <User size={16} />
@@ -177,13 +177,13 @@ export default async function SorterPage({ params }: SorterPageProps) {
               <span>{sorter.completionCount} completions</span>
             </div>
           </div>
-        </RetroBox>
+        </Box>
 
         {/* Start Sorting Button */}
         <div className="block">
           {sorter.useGroups ? (
             <Link href={`/sorter/${sorter.slug}/filters`}>
-              <RetroButton
+              <Button
                 size="lg"
                 variant="default"
                 className="mb-8 group"
@@ -193,11 +193,11 @@ export default async function SorterPage({ params }: SorterPageProps) {
                   size={20}
                 />
                 Start Sorting
-              </RetroButton>
+              </Button>
             </Link>
           ) : (
             <Link href={`/sorter/${sorter.slug}/sort`}>
-              <RetroButton
+              <Button
                 size="lg"
                 variant="default"
                 className="mb-8 group"
@@ -207,7 +207,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                   size={20}
                 />
                 Sort now
-              </RetroButton>
+              </Button>
             </Link>
           )}
         </div>
@@ -217,28 +217,28 @@ export default async function SorterPage({ params }: SorterPageProps) {
       <div className="grid gap-8 md:grid-cols-2">
         {/* Left Column - Items to Rank */}
         <section>
-          <RetroBox variant="secondary" size="lg" className="mb-6">
+          <Box variant="secondary" size="lg" className="mb-6">
             <h2 className="text-xl font-bold">
               Items to Rank ({items?.length || 0})
             </h2>
-          </RetroBox>
+          </Box>
           
           {sorter.useGroups && groups ? (
             /* Groups Mode */
             groups.length === 0 ? (
-              <RetroBox variant="warning" size="md">
+              <Box variant="warning" size="md">
                 <p className="font-medium italic">
                   No groups found for this sorter.
                 </p>
-              </RetroBox>
+              </Box>
             ) : (
               <div className="space-y-6">
                 {groups.map((group) => (
                   <div key={group.id} className="space-y-3">
                     {/* Group Header */}
-                    <RetroBadge variant="default" className="text-base">
+                    <Badge variant="default" className="text-base">
                       {group.name}
-                    </RetroBadge>
+                    </Badge>
 
                     {/* Items in Group */}
                     <div className="ml-4 space-y-2">
@@ -276,11 +276,11 @@ export default async function SorterPage({ params }: SorterPageProps) {
             )
           ) : /* Traditional Mode */
           items?.length === 0 ? (
-            <RetroBox variant="warning" size="md">
+            <Box variant="warning" size="md">
               <p className="font-medium italic">
                 No items found for this sorter.
               </p>
-            </RetroBox>
+            </Box>
           ) : (
             <div className="space-y-3">
               {items?.map((item) => (
@@ -315,18 +315,18 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
         {/* Right Column - Recent Results */}
         <section>
-          <RetroBox variant="secondary" size="lg" className="mb-6">
+          <Box variant="secondary" size="lg" className="mb-6">
             <h2 className="text-xl font-bold">
               Recent Results ({recentResults.length})
             </h2>
-          </RetroBox>
+          </Box>
           
           {recentResults.length === 0 ? (
-            <RetroBox variant="warning" size="md">
+            <Box variant="warning" size="md">
               <p className="font-medium italic">
                 No results yet. Be the first to complete this sorter!
               </p>
-            </RetroBox>
+            </Box>
           ) : (
             <div className="space-y-4">
               {recentResults.map((result) => (
@@ -335,8 +335,8 @@ export default async function SorterPage({ params }: SorterPageProps) {
                   href={`/results/${result.id}`}
                   className="block"
                 >
-                  <RetroCard className="cursor-pointer">
-                    <RetroCardHeader>
+                  <Card className="cursor-pointer">
+                    <CardHeader>
                       {/* Username and Date */}
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-bold">
@@ -353,9 +353,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
                           )}
                         </span>
                       </div>
-                    </RetroCardHeader>
+                    </CardHeader>
 
-                    <RetroCardContent>
+                    <CardContent>
                       {/* Top 3 Results */}
                       <div className="space-y-2">
                         {result.top3.map((item: any, index: number) => (
@@ -397,8 +397,8 @@ export default async function SorterPage({ params }: SorterPageProps) {
                           </div>
                         ))}
                       </div>
-                    </RetroCardContent>
-                  </RetroCard>
+                    </CardContent>
+                  </Card>
                 </Link>
               ))}
             </div>
