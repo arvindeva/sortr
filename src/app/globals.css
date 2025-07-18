@@ -43,6 +43,20 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  
+  /* Retro shadow utilities */
+  --shadow-retro-small: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-retro-medium: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-retro-large: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-retro-xlarge: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-retro-small-grey: 2px 2px 0px 0px rgba(64, 64, 64, 1);
+  --shadow-retro-medium-grey: 4px 4px 0px 0px rgba(64, 64, 64, 1);
+  --shadow-retro-large-grey: 6px 6px 0px 0px rgba(64, 64, 64, 1);
+  --shadow-retro-xlarge-grey: 8px 8px 0px 0px rgba(64, 64, 64, 1);
+  --shadow-retro-small-yellow: 2px 2px 0px 0px rgba(251, 191, 36, 1);
+  --shadow-retro-medium-yellow: 4px 4px 0px 0px rgba(251, 191, 36, 1);
+  --shadow-retro-large-yellow: 6px 6px 0px 0px rgba(251, 191, 36, 1);
+  --shadow-retro-xlarge-yellow: 8px 8px 0px 0px rgba(251, 191, 36, 1);
 }
 
 :root {
