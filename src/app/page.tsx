@@ -34,8 +34,7 @@ export default async function Home() {
       <section className="mx-auto mb-10 max-w-xl text-center">
         <h1 className="mb-4 text-7xl font-bold tracking-wide">sortr</h1>
         <p className="text-muted-foreground text-lg">
-          Create and share ranked lists for anything—albums, movies, characters,
-          and more. Powered by merge sort.
+          Create and share ranked lists for anything
         </p>
       </section>
       <section className="w-full">
