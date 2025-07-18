@@ -27,7 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Tech Stack
 
 - **Framework**: Next.js 15 with App Router and React 19
-- **Styling**: Tailwind CSS 4 with shadcn/ui components (new-york variant)
+- **Styling**: Tailwind CSS 4 with shadcn/ui components (new-york variant) retrofitted with retro styling
 - **Database**: PostgreSQL with Drizzle ORM and Drizzle Kit
 - **State Management**: TanStack Query for server state, React state for UI state
 - **Authentication**: NextAuth.js v4 with Email provider and Drizzle adapter
@@ -106,7 +106,7 @@ sortr is a web app for creating and sharing ranked lists through pairwise compar
 - clsx + tailwind-merge utility pattern for conditional classes
 - **Data Fetching**: Use TanStack Query instead of useEffect for API calls when possible
 - **State Management**: Prefer TanStack Query for server state, React state for UI state
-- **Retro Design System**: Use retro components for consistent styling (see Retro Components section)
+- **Design System**: Use standard shadcn/ui components with built-in retro styling (see Design System section)
 
 ### Database Schema
 
@@ -155,13 +155,17 @@ Requires configuration for:
 - **Real-time progress calculation**: Progress percentage updates immediately after each choice using dynamic total comparison optimization
 - **Massive storage optimization**: localStorage usage reduced by 95% using UUID-to-index mapping (12,000 chars → 500 chars for 94 comparisons)
 - **Enhanced filters UI**: Simplified checkbox-based interface with collapsible item lists for better usability in dark mode
-- **Retro Design System**: Comprehensive retro styling with shared constants, press animations, and consistent component library
+- **Unified Design System**: Retrofitted shadcn/ui components with retro styling, eliminating separate retro components for a unified approach
 
-## Retro Components
+## Design System
 
-### Design System Overview
+### Retro-Styled shadcn/ui Components
 
-The application uses a comprehensive retro design system with shared constants and consistent styling patterns. All components follow the same retro aesthetic with:
+The application uses a unified design system where standard shadcn/ui components have been retrofitted with retro styling. This approach provides the best of both worlds: familiar shadcn/ui APIs with distinctive retro aesthetics.
+
+### Design Philosophy
+
+All components follow the same retro aesthetic principles:
 
 - **Press Animation**: Interactive elements move down on hover with shadow disappearing
 - **Consistent Borders**: All components use 2px borders with black (light) / white (dark) colors
@@ -169,35 +173,35 @@ The application uses a comprehensive retro design system with shared constants a
 - **Space Grotesk Font**: Modern geometric font for readability and retro feel
 - **Shared Constants**: Centralized styling configuration in `/src/lib/retro-constants.ts`
 
-### Available Components
+### Core Components
 
-#### RetroButton
-Primary interactive component with press animation and multiple variants:
-- `variant`: `"default"` (yellow bg, black text), `"secondary"` (black bg, yellow shadow), `"outline"` (transparent bg, grey shadow), `"ghost"` (transparent bg, grey shadow)
+#### Button
+Standard shadcn/ui Button component with retro styling:
+- `variant`: `"default"` (yellow bg, black text), `"secondary"` (black bg, yellow shadow), `"outline"` (transparent bg, grey shadow), `"ghost"` (transparent bg, grey shadow), `"destructive"` (red bg), `"link"` (text only)
 - `size`: `"sm"`, `"default"`, `"lg"`, `"icon"`
-- Usage: All buttons, clickable elements, form controls
+- Features: Press animation, retro colors, bold shadows
 
-#### RetroCard
-Container component for content with press animation:
+#### Card
+Standard shadcn/ui Card component with retro styling:
 - `variant`: `"default"` (white bg), `"primary"` (yellow bg), `"accent"` (cyan bg)
-- Includes: `RetroCardHeader`, `RetroCardTitle`, `RetroCardContent`, `RetroCardFooter`, etc.
-- Usage: Content containers, listings, summaries
+- Includes: `CardHeader`, `CardTitle`, `CardContent`, `CardFooter`, etc.
+- Features: Hover lift animation, retro borders, dramatic shadows
 
-#### RetroBox
-Static container for highlights and sections:
+#### Badge
+Standard shadcn/ui Badge component with retro styling:
+- `variant`: `"default"` (cyan), `"secondary"` (pink), `"destructive"` (red), `"outline"` (transparent)
+- Features: Press animation, small shadows, vibrant colors
+
+#### Box
+Custom container component for highlights and sections:
 - `variant`: `"primary"` (yellow), `"secondary"` (pink), `"accent"` (cyan), `"warning"` (orange), etc.
 - `size`: `"sm"`, `"md"`, `"lg"`, `"xl"`
 - Usage: Hero sections, headers, highlights
 
-#### RetroLogo
-Special interactive component for logos with press animation:
-- Same variants as RetroBox but with button-like press behavior
+#### Logo
+Interactive branding component with press animation:
+- Same variants as Box but with button-like press behavior
 - Usage: Interactive branding elements, clickable logos
-
-#### RetroBadge
-Small labels with press animation:
-- Multiple color variants with consistent styling
-- Usage: Categories, status indicators, tags
 
 ### Shared Constants
 
@@ -209,16 +213,18 @@ All components use constants from `/src/lib/retro-constants.ts`:
 
 ### Usage Guidelines
 
-1. **Use RetroButton for all interactive elements** (buttons, clickable items)
-2. **Use RetroCard for content containers** (listings, summaries)
-3. **Use RetroBox for static highlights** (hero sections, headers)
-4. **Use RetroLogo for special interactive branding** (logos, headers)
-5. **Use RetroBadge for small labels** (categories, status indicators)
+1. **Use Button for all interactive elements** (buttons, clickable items, form controls)
+2. **Use Card for content containers** (listings, summaries, content blocks)
+3. **Use Badge for small labels** (categories, status indicators, tags)
+4. **Use Box for static highlights** (hero sections, headers, callouts)
+5. **Use Logo for special interactive branding** (logos, headers)
 
 ### Implementation Notes
 
-- All components use the same press animation: element moves down, shadow disappears
+- All components maintain standard shadcn/ui APIs for easy migration
+- Press animation: element moves down, shadow disappears on hover
 - Border thickness is standardized to 2px across all components
 - Shadow values use shared constants for consistency
 - Components are built with `cva` (class-variance-authority) for type-safe variants
-- Dark mode support is built into all components
+- Full dark mode support is built into all components
+- No separate retro components needed - everything uses the unified system
