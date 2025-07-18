@@ -106,6 +106,7 @@ sortr is a web app for creating and sharing ranked lists through pairwise compar
 - clsx + tailwind-merge utility pattern for conditional classes
 - **Data Fetching**: Use TanStack Query instead of useEffect for API calls when possible
 - **State Management**: Prefer TanStack Query for server state, React state for UI state
+- **Retro Design System**: Use retro components for consistent styling (see Retro Components section)
 
 ### Database Schema
 
@@ -154,3 +155,70 @@ Requires configuration for:
 - **Real-time progress calculation**: Progress percentage updates immediately after each choice using dynamic total comparison optimization
 - **Massive storage optimization**: localStorage usage reduced by 95% using UUID-to-index mapping (12,000 chars → 500 chars for 94 comparisons)
 - **Enhanced filters UI**: Simplified checkbox-based interface with collapsible item lists for better usability in dark mode
+- **Retro Design System**: Comprehensive retro styling with shared constants, press animations, and consistent component library
+
+## Retro Components
+
+### Design System Overview
+
+The application uses a comprehensive retro design system with shared constants and consistent styling patterns. All components follow the same retro aesthetic with:
+
+- **Press Animation**: Interactive elements move down on hover with shadow disappearing
+- **Consistent Borders**: All components use 2px borders with black (light) / white (dark) colors
+- **Dramatic Shadows**: Bold drop shadows for depth and retro aesthetic
+- **Space Grotesk Font**: Modern geometric font for readability and retro feel
+- **Shared Constants**: Centralized styling configuration in `/src/lib/retro-constants.ts`
+
+### Available Components
+
+#### RetroButton
+Primary interactive component with press animation and multiple variants:
+- `variant`: `"default"` (yellow bg, black text), `"secondary"` (black bg, yellow shadow), `"outline"` (transparent bg, grey shadow), `"ghost"` (transparent bg, grey shadow)
+- `size`: `"sm"`, `"default"`, `"lg"`, `"icon"`
+- Usage: All buttons, clickable elements, form controls
+
+#### RetroCard
+Container component for content with press animation:
+- `variant`: `"default"` (white bg), `"primary"` (yellow bg), `"accent"` (cyan bg)
+- Includes: `RetroCardHeader`, `RetroCardTitle`, `RetroCardContent`, `RetroCardFooter`, etc.
+- Usage: Content containers, listings, summaries
+
+#### RetroBox
+Static container for highlights and sections:
+- `variant`: `"primary"` (yellow), `"secondary"` (pink), `"accent"` (cyan), `"warning"` (orange), etc.
+- `size`: `"sm"`, `"md"`, `"lg"`, `"xl"`
+- Usage: Hero sections, headers, highlights
+
+#### RetroLogo
+Special interactive component for logos with press animation:
+- Same variants as RetroBox but with button-like press behavior
+- Usage: Interactive branding elements, clickable logos
+
+#### RetroBadge
+Small labels with press animation:
+- Multiple color variants with consistent styling
+- Usage: Categories, status indicators, tags
+
+### Shared Constants
+
+All components use constants from `/src/lib/retro-constants.ts`:
+- **Colors**: Standardized color palette with light/dark variants
+- **Shadows**: Helper functions for consistent shadow generation
+- **Animations**: Press, lift, and text spacing animations
+- **Borders**: Consistent border thickness and colors
+
+### Usage Guidelines
+
+1. **Use RetroButton for all interactive elements** (buttons, clickable items)
+2. **Use RetroCard for content containers** (listings, summaries)
+3. **Use RetroBox for static highlights** (hero sections, headers)
+4. **Use RetroLogo for special interactive branding** (logos, headers)
+5. **Use RetroBadge for small labels** (categories, status indicators)
+
+### Implementation Notes
+
+- All components use the same press animation: element moves down, shadow disappears
+- Border thickness is standardized to 2px across all components
+- Shadow values use shared constants for consistency
+- Components are built with `cva` (class-variance-authority) for type-safe variants
+- Dark mode support is built into all components

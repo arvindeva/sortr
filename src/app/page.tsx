@@ -1,5 +1,6 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { RetroCard, RetroCardHeader, RetroCardTitle, RetroCardContent } from "@/components/ui/retro-card";
+import { RetroBadge } from "@/components/ui/retro-badge";
+import { RetroBox } from "@/components/ui/retro-box";
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -32,41 +33,61 @@ export default async function Home() {
   return (
     <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-4xl px-4 py-10">
       <section className="mx-auto mb-10 max-w-xl text-center">
-        <h1 className="mb-4 text-7xl font-bold tracking-wide">sortr</h1>
-        <p className="text-muted-foreground text-lg">
-          Create and share ranked lists for anything
-        </p>
+        <RetroBox variant="primary" size="xl" shadow="lg" className="mb-6">
+          <h1 className="mb-4 text-6xl font-bold tracking-wide">sortr</h1>
+          <p className="text-lg font-medium">
+            Create and share ranked lists for anything
+          </p>
+        </RetroBox>
       </section>
       <section className="w-full">
-        <h2 className="mb-6 text-2xl font-semibold">Popular Sorters</h2>
+        <RetroBox variant="secondary" size="lg" className="mb-6">
+          <h2 className="text-2xl font-semibold">Popular Sorters</h2>
+        </RetroBox>
         {popularSorters.length === 0 ? (
-          <p className="text-muted-foreground text-center italic">
-            No sorters available yet.
-          </p>
+          <div className="text-center">
+            <RetroBox variant="warning" size="md" shadow="sm">
+              <p className="font-medium">
+                No sorters available yet.
+              </p>
+            </RetroBox>
+          </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {popularSorters.map((sorter) => (
-              <Link key={sorter.id} href={`/sorter/${sorter.slug}`}>
-                <Card className="hover:border-primary/50 transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md">
-                  <CardHeader>
-                    <div className="flex-1">
-                      <CardTitle className="text-xl">{sorter.title}</CardTitle>
-                      <p className="text-muted-foreground mt-1 text-sm">
-                        by <b>{sorter.creatorUsername || "Unknown User"}</b>
+              <RetroCard key={sorter.id} className="min-h-[160px]">
+                <RetroCardHeader>
+                  <div className="flex-1">
+                    <div className="h-[5rem] flex flex-col">
+                      <RetroCardTitle className="text-xl line-clamp-2 mb-2">
+                        <Link href={`/sorter/${sorter.slug}`} className="hover:underline">
+                          {sorter.title}
+                        </Link>
+                      </RetroCardTitle>
+                      <p className="text-muted-foreground text-sm font-medium">
+                        by <b>
+                          <Link href={`/user/${sorter.creatorUsername}`} className="hover:underline">
+                            {sorter.creatorUsername || "Unknown User"}
+                          </Link>
+                        </b>
                       </p>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-muted-foreground flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-4">
-                        <span>{sorter.completionCount} completions</span>
-                        <span>{sorter.viewCount} views</span>
-                      </div>
-                      {sorter.category && <Badge>{sorter.category}</Badge>}
+                  </div>
+                </RetroCardHeader>
+                <RetroCardContent>
+                  <div className="text-muted-foreground flex items-center justify-between text-sm font-medium">
+                    <div className="flex items-center gap-4">
+                      <span>{sorter.completionCount} completions</span>
+                      <span>{sorter.viewCount} views</span>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                    {sorter.category && (
+                      <RetroBadge variant="default">
+                        {sorter.category}
+                      </RetroBadge>
+                    )}
+                  </div>
+                </RetroCardContent>
+              </RetroCard>
             ))}
           </div>
         )}

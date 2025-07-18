@@ -3,8 +3,10 @@ import { db } from "@/db";
 import { sorters, sorterItems, sortingResults, user } from "@/db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { RetroButton } from "@/components/ui/retro-button";
+import { RetroBadge } from "@/components/ui/retro-badge";
+import { RetroBox } from "@/components/ui/retro-box";
+import { RetroCard, RetroCardContent, RetroCardHeader, RetroCardTitle } from "@/components/ui/retro-card";
 import { Play, User, Calendar, Eye, Trophy } from "lucide-react";
 
 interface SorterPageProps {
@@ -123,115 +125,128 @@ export default async function SorterPage({ params }: SorterPageProps) {
   const recentResults = await getRecentResults(sorter.id);
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8">
+    <main className="container mx-auto max-w-4xl px-4 py-8">
       {/* Sorter Header */}
-      <div className="mb-8">
-        <div className="mb-4 flex items-start justify-between">
-          <div className="flex-1">
-            <h1 className="mb-2 text-2xl font-bold">{sorter.title}</h1>
+      <section className="mb-8">
+        <RetroBox variant="primary" size="xl" className="mb-6">
+          <div>
+            <h1 className="mb-2 text-3xl font-bold">{sorter.title}</h1>
             {sorter.description && (
-              <p className="text-muted-foreground mb-4 text-lg">
+              <p className="mb-4 text-lg font-medium">
                 {sorter.description}
               </p>
             )}
 
             {/* Category Badge */}
-            {sorter.category && <Badge>{sorter.category}</Badge>}
-          </div>
-        </div>
-
-        {/* Creator and Stats Info */}
-        <div className="text-muted-foreground mb-6 flex flex-wrap items-center gap-6 text-sm">
-          <div className="flex items-center gap-1">
-            <User size={16} />
-            <span>by</span>
-            {sorter.user.username ? (
-              <Link
-                href={`/user/${sorter.user.username}`}
-                className="text-foreground font-semibold hover:underline"
-              >
-                {sorter.user.username}
-              </Link>
-            ) : (
-              <span className="font-medium">Unknown User</span>
+            {sorter.category && (
+              <RetroBadge variant="default">{sorter.category}</RetroBadge>
             )}
           </div>
+        </RetroBox>
 
-          <div className="flex items-center gap-1">
-            <Calendar size={16} />
-            <span>{new Date(sorter.createdAt).toLocaleDateString()}</span>
-          </div>
+        {/* Creator and Stats Info */}
+        <RetroBox variant="white" size="lg" className="mb-6">
+          <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
+            <div className="flex items-center gap-1">
+              <User size={16} />
+              <span>by</span>
+              {sorter.user.username ? (
+                <Link
+                  href={`/user/${sorter.user.username}`}
+                  className="font-bold hover:underline"
+                >
+                  {sorter.user.username}
+                </Link>
+              ) : (
+                <span className="font-bold">Unknown User</span>
+              )}
+            </div>
 
-          <div className="flex items-center gap-1">
-            <Eye size={16} />
-            <span>{sorter.viewCount} views</span>
-          </div>
+            <div className="flex items-center gap-1">
+              <Calendar size={16} />
+              <span>{new Date(sorter.createdAt).toLocaleDateString()}</span>
+            </div>
 
-          <div className="flex items-center gap-1">
-            <Trophy size={16} />
-            <span>{sorter.completionCount} completions</span>
+            <div className="flex items-center gap-1">
+              <Eye size={16} />
+              <span>{sorter.viewCount} views</span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <Trophy size={16} />
+              <span>{sorter.completionCount} completions</span>
+            </div>
           </div>
-        </div>
+        </RetroBox>
 
         {/* Start Sorting Button */}
-        {sorter.useGroups ? (
-          <Link href={`/sorter/${sorter.slug}/filters`}>
-            <Button
-              size="lg"
-              className="mb-8 transition-transform duration-200 hover:scale-105"
-            >
-              <Play
-                className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
-                size={20}
-              />
-              Start Sorting
-            </Button>
-          </Link>
-        ) : (
-          <Link href={`/sorter/${sorter.slug}/sort`}>
-            <Button
-              size="lg"
-              className="mb-8 transition-transform duration-200 hover:scale-105"
-            >
-              <Play
-                className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
-                size={20}
-              />
-              Sort now
-            </Button>
-          </Link>
-        )}
-      </div>
+        <div className="block">
+          {sorter.useGroups ? (
+            <Link href={`/sorter/${sorter.slug}/filters`}>
+              <RetroButton
+                size="lg"
+                variant="default"
+                className="mb-8 group"
+              >
+                <Play
+                  className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
+                  size={20}
+                />
+                Start Sorting
+              </RetroButton>
+            </Link>
+          ) : (
+            <Link href={`/sorter/${sorter.slug}/sort`}>
+              <RetroButton
+                size="lg"
+                variant="default"
+                className="mb-8 group"
+              >
+                <Play
+                  className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
+                  size={20}
+                />
+                Sort now
+              </RetroButton>
+            </Link>
+          )}
+        </div>
+      </section>
 
       {/* Two Column Layout */}
       <div className="grid gap-8 md:grid-cols-2">
         {/* Left Column - Items to Rank */}
-        <div>
-          <h2 className="mb-4 text-xl font-bold">
-            Items to Rank ({items?.length || 0})
-          </h2>
+        <section>
+          <RetroBox variant="secondary" size="lg" className="mb-6">
+            <h2 className="text-xl font-bold">
+              Items to Rank ({items?.length || 0})
+            </h2>
+          </RetroBox>
+          
           {sorter.useGroups && groups ? (
             /* Groups Mode */
             groups.length === 0 ? (
-              <p className="text-muted-foreground italic">
-                No groups found for this sorter.
-              </p>
+              <RetroBox variant="warning" size="md">
+                <p className="font-medium italic">
+                  No groups found for this sorter.
+                </p>
+              </RetroBox>
             ) : (
               <div className="space-y-6">
                 {groups.map((group) => (
                   <div key={group.id} className="space-y-3">
                     {/* Group Header */}
-                    <h3 className="text-primary text-lg font-semibold">
+                    <RetroBadge variant="default" className="text-base">
                       {group.name}
-                    </h3>
+                    </RetroBadge>
 
                     {/* Items in Group */}
                     <div className="ml-4 space-y-2">
                       {group.items.map((item) => (
-                        <div key={item.id} className="flex items-center gap-3">
+                        <div key={item.id} className="flex items-center gap-3 p-2 border-2 border-black dark:border-white bg-white dark:bg-neutral-800">
                           {/* Thumbnail */}
                           {item.imageUrl ? (
-                            <div className="bg-muted h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg">
+                            <div className="h-10 w-10 flex-shrink-0 overflow-hidden border-2 border-black">
                               <img
                                 src={item.imageUrl}
                                 alt={item.title}
@@ -239,8 +254,8 @@ export default async function SorterPage({ params }: SorterPageProps) {
                               />
                             </div>
                           ) : (
-                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                              <span className="text-muted-foreground text-xs font-bold">
+                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center border-2 border-black bg-gray-300">
+                              <span className="text-xs font-bold">
                                 {item.title.charAt(0).toUpperCase()}
                               </span>
                             </div>
@@ -248,7 +263,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
                           {/* Title */}
                           <div className="min-w-0 flex-1">
-                            <p className="text-foreground truncate text-sm">
+                            <p className="truncate text-sm font-medium">
                               {item.title}
                             </p>
                           </div>
@@ -261,16 +276,18 @@ export default async function SorterPage({ params }: SorterPageProps) {
             )
           ) : /* Traditional Mode */
           items?.length === 0 ? (
-            <p className="text-muted-foreground italic">
-              No items found for this sorter.
-            </p>
+            <RetroBox variant="warning" size="md">
+              <p className="font-medium italic">
+                No items found for this sorter.
+              </p>
+            </RetroBox>
           ) : (
             <div className="space-y-3">
               {items?.map((item) => (
-                <div key={item.id} className="flex items-center gap-3">
+                <div key={item.id} className="flex items-center gap-3 p-3 border-2 border-black dark:border-white bg-white dark:bg-neutral-800">
                   {/* Thumbnail */}
                   {item.imageUrl ? (
-                    <div className="bg-muted h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
+                    <div className="h-12 w-12 flex-shrink-0 overflow-hidden border-2 border-black">
                       <img
                         src={item.imageUrl}
                         alt={item.title}
@@ -278,15 +295,15 @@ export default async function SorterPage({ params }: SorterPageProps) {
                       />
                     </div>
                   ) : (
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                      <span className="text-muted-foreground text-xs font-bold">
+                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center border-2 border-black bg-gray-300">
+                      <span className="text-xs font-bold">
                         {item.title.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
                   {/* Item Name */}
                   <div className="min-w-0 flex-1">
-                    <p className="text-foreground truncate text-sm font-medium">
+                    <p className="truncate text-sm font-medium">
                       {item.title}
                     </p>
                   </div>
@@ -294,17 +311,22 @@ export default async function SorterPage({ params }: SorterPageProps) {
               ))}
             </div>
           )}
-        </div>
+        </section>
 
         {/* Right Column - Recent Results */}
-        <div>
-          <h2 className="mb-4 text-xl font-bold">
-            Recent Results ({recentResults.length})
-          </h2>
+        <section>
+          <RetroBox variant="secondary" size="lg" className="mb-6">
+            <h2 className="text-xl font-bold">
+              Recent Results ({recentResults.length})
+            </h2>
+          </RetroBox>
+          
           {recentResults.length === 0 ? (
-            <p className="text-muted-foreground italic">
-              No results yet. Be the first to complete this sorter!
-            </p>
+            <RetroBox variant="warning" size="md">
+              <p className="font-medium italic">
+                No results yet. Be the first to complete this sorter!
+              </p>
+            </RetroBox>
           ) : (
             <div className="space-y-4">
               {recentResults.map((result) => (
@@ -313,72 +335,76 @@ export default async function SorterPage({ params }: SorterPageProps) {
                   href={`/results/${result.id}`}
                   className="block"
                 >
-                  <div className="bg-card text-card-foreground border-border hover:border-primary/50 rounded-xl border px-6 py-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md">
-                    {/* Username and Date */}
-                    <div className="mb-3 flex items-center justify-between">
-                      <span className="text-sm font-medium">
-                        {result.username}
-                      </span>
-                      <span className="text-muted-foreground text-xs">
-                        {new Date(result.createdAt).toLocaleDateString(
-                          "en-US",
-                          {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          },
-                        )}
-                      </span>
-                    </div>
+                  <RetroCard className="cursor-pointer">
+                    <RetroCardHeader>
+                      {/* Username and Date */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold">
+                          {result.username}
+                        </span>
+                        <span className="text-muted-foreground text-xs font-medium">
+                          {new Date(result.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            },
+                          )}
+                        </span>
+                      </div>
+                    </RetroCardHeader>
 
-                    {/* Top 3 Results */}
-                    <div className="space-y-2">
-                      {result.top3.map((item: any, index: number) => (
-                        <div
-                          key={item.id || index}
-                          className="flex items-center gap-2 text-sm"
-                        >
-                          <span
-                            className={`flex h-5 w-5 items-center justify-center rounded-full border-2 text-xs font-bold ${
-                              index === 0
-                                ? "border-yellow-500 bg-yellow-50 text-yellow-700"
-                                : index === 1
-                                  ? "border-gray-400 bg-gray-50 text-gray-700"
-                                  : "border-amber-600 bg-amber-50 text-amber-700"
-                            }`}
+                    <RetroCardContent>
+                      {/* Top 3 Results */}
+                      <div className="space-y-2">
+                        {result.top3.map((item: any, index: number) => (
+                          <div
+                            key={item.id || index}
+                            className="flex items-center gap-2 text-sm"
                           >
-                            {index + 1}
-                          </span>
-                          <div className="flex min-w-0 flex-1 items-center gap-2">
-                            {item.imageUrl ? (
-                              <div className="bg-muted h-6 w-6 flex-shrink-0 overflow-hidden rounded">
-                                <img
-                                  src={item.imageUrl}
-                                  alt={item.title}
-                                  className="h-full w-full object-cover"
-                                />
-                              </div>
-                            ) : (
-                              <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-gray-100">
-                                <span className="text-muted-foreground text-xs font-bold">
-                                  {item.title.charAt(0).toUpperCase()}
-                                </span>
-                              </div>
-                            )}
-                            <span className="text-muted-foreground truncate">
-                              {item.title}
+                            <span
+                              className={`flex h-5 w-5 items-center justify-center border-2 text-xs font-bold ${
+                                index === 0
+                                  ? "border-yellow-500 bg-yellow-300 text-black"
+                                  : index === 1
+                                    ? "border-gray-400 bg-gray-300 text-black"
+                                    : "border-amber-600 bg-amber-300 text-black"
+                              }`}
+                            >
+                              {index + 1}
                             </span>
+                            <div className="flex min-w-0 flex-1 items-center gap-2">
+                              {item.imageUrl ? (
+                                <div className="h-6 w-6 flex-shrink-0 overflow-hidden border-2 border-black">
+                                  <img
+                                    src={item.imageUrl}
+                                    alt={item.title}
+                                    className="h-full w-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center border-2 border-black bg-gray-300">
+                                  <span className="text-xs font-bold">
+                                    {item.title.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
+                              <span className="text-muted-foreground truncate font-medium">
+                                {item.title}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                        ))}
+                      </div>
+                    </RetroCardContent>
+                  </RetroCard>
                 </Link>
               ))}
             </div>
           )}
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
