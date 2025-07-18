@@ -37,6 +37,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Compression**: lz-string for data compression
 - **UI Icons**: Lucide React
 - **Notifications**: Sonner for toast notifications
+- **Animations**: Framer Motion for smooth animations and transitions
 - **Development**: TypeScript with strict mode, Prettier for formatting
 
 ### Project Structure
@@ -59,6 +60,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Navigation components (Navbar, LoginButton, ShareButton)
   - Theme components (ThemeProvider, ModeToggle)
   - Progress tracking (ProgressProvider)
+  - Animated components (AnimatedRankings)
 - `src/db/` - Database configuration and schema
 - `src/lib/` - Utility functions and shared logic
   - `src/lib/auth.ts` - NextAuth.js configuration
@@ -74,7 +76,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Sorter Creation**: Form-based sorter creation with support for groups and individual items
 - **Group Filtering**: NEW - Filter page for selecting which groups to include in sorting
 - **Interactive Sorting**: Pairwise comparison UI with progress tracking and undo functionality
-- **Results Display**: Ranked results with sharing capabilities
+- **Results Display**: Ranked results with sharing capabilities and smooth animations
 - **Theme System**: Complete dark/light/system theme switching using next-themes
 - **Progress Tracking**: Local storage-based progress saving for incomplete sorts
 - **User Profiles**: Username-based user profiles with sorter listings
@@ -140,9 +142,13 @@ Requires configuration for:
 - Complete theming system (dark/light/system)
 - Responsive design with mobile support
 - LocalStorage-based progress saving with UUID-to-index optimization (95% storage reduction)
+- Animated results display with Framer Motion for smooth transitions
+- Enhanced progress bar with real-time updates during sorting
 
-🔄 **Recent Major Optimizations:**
+🔄 **Recent Major Updates:**
 
+- **Animated Results Display**: Added Framer Motion animations for smooth result transitions with staggered loading effects and special highlighting for top 3 positions (gold, silver, bronze)
+- **Enhanced Progress Tracking**: Improved progress bar with real-time updates during sorting sessions and better visual feedback
 - **Slug-based URL system**: Groups now use friendly URLs with automatic duplicate handling (e.g., "action-movies", "action-movies-2")
 - **Group-specific progress tracking**: Each filter combination maintains separate progress (no more conflicts when switching between different group selections)
 - **Real-time progress calculation**: Progress percentage updates immediately after each choice using dynamic total comparison optimization
