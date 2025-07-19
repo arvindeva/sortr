@@ -162,7 +162,7 @@ export default function FilterPage({ params }: FilterPageProps) {
       <div className="mb-8">
         <div className="mb-4 flex items-center gap-4">
           <Link href={`/sorter/${sorter.slug}`}>
-            <Button variant="ghost" size="sm">
+            <Button variant="noShadow" size="sm">
               <ChevronLeft className="mr-1 h-4 w-4" />
               Back to Sorter
             </Button>
@@ -280,14 +280,14 @@ export default function FilterPage({ params }: FilterPageProps) {
 
         <div className="flex gap-2">
           <Button
-            variant="outline"
+            variant="neutral"
             size="sm"
             onClick={() => setSelectedGroups(groups.map((g) => g.slug))}
           >
             Select All
           </Button>
           <Button
-            variant="outline"
+            variant="neutral"
             size="sm"
             onClick={() => setSelectedGroups([])}
           >

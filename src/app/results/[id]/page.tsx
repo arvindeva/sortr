@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Box } from "@/components/ui/box";
+import { Panel, PanelHeader, PanelTitle, PanelContent } from "@/components/ui/panel";
 import { ArrowLeft, Trophy, RotateCcw, Play } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
@@ -154,96 +156,137 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       {/* Header */}
       <div className="mb-8">
         {/* Main Header: "[sorter name] \n sorted by [username]" */}
-        <div className="mb-6">
-          <div className="mb-4 flex items-start justify-between md:mb-0">
-            <div className="flex-1">
-              <div>
-                <Link href={`/sorter/${sorter.slug}`}>
-                  <h1 className="mb-2 cursor-pointer text-2xl font-bold hover:underline">
-                    {sorter.title}
-                  </h1>
-                </Link>
-                <p className="text-muted-foreground">
-                  sorted by{" "}
-                  <Link
-                    href={`/user/${result.username}`}
-                    className="text-foreground font-semibold hover:underline"
-                  >
-                    {result.username}
-                  </Link>{" "}
-                  at{" "}
-                  {new Date(result.createdAt).toLocaleDateString("en-US", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </p>
-              </div>
-            </div>
-
-            <div className="hidden gap-2 md:flex">
-              <ShareButton size="sm" />
-              <Link href={sorter.useGroups ? `/sorter/${sorter.slug}/filters` : `/sorter/${sorter.slug}/sort`}>
-                <Button size="sm">
-                  <Play className="mr-2" size={16} />
-                  Sort now
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          {/* Filter badges - shown if groups were selected */}
-          {selectedGroups && selectedGroups.length > 0 && (
-            <div className="mb-4">
-              <p className="text-sm text-muted-foreground mb-2">
-                Groups sorted: {selectedGroups.length} {selectedGroups.length === 1 ? 'group' : 'groups'}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {selectedGroups.map((group) => (
-                  <Badge key={group.id} variant="secondary" className="text-xs">
-                    {group.name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Mobile buttons - shown under title section */}
-          <div className="flex gap-2 md:hidden">
-            <ShareButton size="sm" />
-            <Link href={sorter.useGroups ? `/sorter/${sorter.slug}/filters` : `/sorter/${sorter.slug}/sort`}>
-              <Button size="sm">
-                <Play className="mr-2" size={16} />
-                Sort now
-              </Button>
+        <Box variant="primary" size="xl" className="mb-6 block">
+          <div>
+            <Link href={`/sorter/${sorter.slug}`}>
+              <h1 className="mb-2 cursor-pointer text-2xl font-bold hover:underline">
+                {sorter.title}
+              </h1>
             </Link>
+            <p className="text-lg font-medium">
+              sorted by{" "}
+              <Link
+                href={`/user/${result.username}`}
+                className="font-semibold hover:underline"
+              >
+                {result.username}
+              </Link>{" "}
+              at{" "}
+              {new Date(result.createdAt).toLocaleDateString("en-US", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </p>
           </div>
+        </Box>
+
+        {/* Share and Sort Buttons */}
+        <div className="mb-6 flex flex-wrap gap-4">
+          <ShareButton />
+          <Link href={sorter.useGroups ? `/sorter/${sorter.slug}/filters` : `/sorter/${sorter.slug}/sort`}>
+            <Button variant="default">
+              <RotateCcw className="mr-2" size={16} />
+              Sort Again
+            </Button>
+          </Link>
         </div>
+
+        {/* Filter badges - shown if groups were selected */}
+        {selectedGroups && selectedGroups.length > 0 && (
+          <div className="mb-4">
+            <p className="text-sm text-muted-foreground mb-2">
+              Groups sorted: {selectedGroups.length} {selectedGroups.length === 1 ? 'group' : 'groups'}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {selectedGroups.map((group) => (
+                <Badge key={group.id} variant="neutral" className="text-xs">
+                  {group.name}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Two Column Layout */}
       <div className="grid gap-8 md:grid-cols-3">
         {/* Left Column - Rankings (spans 2 columns on desktop) */}
         <div className="md:col-span-2">
-          <h2 className="mb-4 text-xl font-bold">Rankings</h2>
-          <AnimatedRankings rankings={result.rankings} />
+          <Panel variant="primary">
+            <PanelHeader variant="primary">
+              <PanelTitle>
+                Rankings
+              </PanelTitle>
+            </PanelHeader>
+            <PanelContent variant="primary">
+              <AnimatedRankings rankings={result.rankings} />
+            </PanelContent>
+          </Panel>
         </div>
 
         {/* Right Column - Sorter Info (desktop only) */}
         <div className="hidden md:block">
-          <h2 className="mb-4 text-xl font-bold">Sorter Info</h2>
-          <Link href={`/sorter/${sorter.slug}`} className="block">
-            <Card className="hover:border-primary/50 transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md">
-              <CardContent>
-                <div className="mb-3">
-                  <h3 className="mb-1 text-lg font-medium">{sorter.title}</h3>
-                  <p className="text-muted-foreground text-sm">
+          <Panel variant="primary">
+            <PanelHeader variant="primary">
+              <PanelTitle>
+                Sorter Info
+              </PanelTitle>
+            </PanelHeader>
+            <PanelContent variant="primary">
+              <Link href={`/sorter/${sorter.slug}`} className="block hover:opacity-80 transition-opacity">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
+                    <p className="text-sm">
+                      by {sorter.creatorUsername}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-sm">
+                      Created at{" "}
+                      {new Date(sorter.createdAt).toLocaleDateString("en-US", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+
+                  {/* Category */}
+                  {sorter.category && (
+                    <div>
+                      <Badge variant="default">{sorter.category}</Badge>
+                    </div>
+                  )}
+                </div>
+              </Link>
+            </PanelContent>
+          </Panel>
+        </div>
+      </div>
+
+      {/* Mobile: Info Card (shows at bottom on mobile) */}
+      <div className="mt-8 md:hidden">
+        <Panel variant="primary">
+          <PanelHeader variant="primary">
+            <PanelTitle>
+              Sorter Info
+            </PanelTitle>
+          </PanelHeader>
+          <PanelContent variant="primary">
+            <Link href={`/sorter/${sorter.slug}`} className="block hover:opacity-80 transition-opacity">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
+                  <p className="text-sm">
                     by {sorter.creatorUsername}
                   </p>
                 </div>
 
-                <div className="mb-3">
-                  <span className="text-muted-foreground text-xs">
+                <div>
+                  <span className="text-sm">
                     Created at{" "}
                     {new Date(sorter.createdAt).toLocaleDateString("en-US", {
                       day: "numeric",
@@ -256,48 +299,13 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 {/* Category */}
                 {sorter.category && (
                   <div>
-                    <Badge>{sorter.category}</Badge>
+                    <Badge variant="default">{sorter.category}</Badge>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-      </div>
-
-      {/* Mobile: Info Card (shows at bottom on mobile) */}
-      <div className="mt-8 md:hidden">
-        <h2 className="mb-4 text-xl font-bold">Sorter Info</h2>
-        <Link href={`/sorter/${sorter.slug}`} className="block">
-          <Card className="hover:border-primary/50 transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md">
-            <CardContent className="px-4 py-3">
-              <div className="mb-3">
-                <h3 className="mb-1 text-lg font-medium">{sorter.title}</h3>
-                <p className="text-muted-foreground text-sm">
-                  by {sorter.creatorUsername}
-                </p>
               </div>
-
-              <div className="mb-3">
-                <span className="text-muted-foreground text-xs">
-                  Created at{" "}
-                  {new Date(sorter.createdAt).toLocaleDateString("en-US", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
-
-              {/* Category */}
-              {sorter.category && (
-                <div>
-                  <Badge>{sorter.category}</Badge>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </Link>
+            </Link>
+          </PanelContent>
+        </Panel>
       </div>
 
       {/* Actions */}
@@ -309,7 +317,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           </Button>
         </Link>
         <Link href={`/sorter/${sorter.slug}`}>
-          <Button variant="outline">View Sorter Details</Button>
+          <Button variant="neutral">View Sorter Details</Button>
         </Link>
       </div>
     </div>

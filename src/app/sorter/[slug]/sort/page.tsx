@@ -481,7 +481,7 @@ export default function SortPage() {
             <div className="flex gap-1">
               <Button
                 type="button"
-                variant="outline"
+                variant="neutral"
                 size="sm"
                 onClick={handleUndo}
                 disabled={!canUndo}
@@ -492,7 +492,7 @@ export default function SortPage() {
               </Button>
               <Button
                 type="button"
-                variant="outline"
+                variant="neutral"
                 size="sm"
                 onClick={handleReset}
                 disabled={completedComparisons === 0}

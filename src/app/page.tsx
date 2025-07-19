@@ -73,7 +73,7 @@ export default async function Home() {
                               {sorter.title}
                             </Link>
                           </CardTitle>
-                          <p className="text-muted-foreground text-sm font-medium">
+                          <p className="text-foreground text-sm font-medium">
                             by{" "}
                             <b>
                               <Link
@@ -88,7 +88,7 @@ export default async function Home() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-muted-foreground flex items-center justify-between text-sm font-medium">
+                      <div className="text-foreground flex items-center justify-between text-sm font-medium">
                         <div className="flex items-center gap-4">
                           <span>{sorter.completionCount} completions</span>
                           <span>{sorter.viewCount} views</span>

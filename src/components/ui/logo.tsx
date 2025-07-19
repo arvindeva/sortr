@@ -1,16 +1,15 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { RETRO_BASE_CLASSES, createShadow, createDarkShadow } from "@/lib/retro-constants";
 
 const logoVariants = cva(
-  `inline-block ${RETRO_BASE_CLASSES.border} ${createShadow('large', 'black')} ${createDarkShadow('large', 'grey')} ${RETRO_BASE_CLASSES.pressAnimation}`,
+  "inline-block border-2 border-border shadow-shadow rounded-base hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none transition-all",
   {
     variants: {
       variant: {
-        primary: "bg-yellow-300 text-black dark:bg-yellow-300",
-        secondary: "bg-pink-300 text-black dark:bg-pink-400",
-        accent: "bg-cyan-300 text-black dark:bg-cyan-400",
+        primary: "bg-main text-main-foreground",
+        secondary: "bg-secondary-background text-foreground",
+        accent: "bg-secondary-background text-foreground",
       },
       size: {
         sm: "px-4 py-2 text-sm",

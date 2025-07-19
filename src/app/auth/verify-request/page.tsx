@@ -33,7 +33,7 @@ function VerifyRequestContent() {
           Didn't receive the email? Check your spam folder or try again.
         </p>
         <Button 
-          variant="outline" 
+          variant="neutral" 
           onClick={() => window.location.href = "/auth/signin"}
         >
           Back to Sign In

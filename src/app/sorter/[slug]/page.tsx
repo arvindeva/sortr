@@ -6,7 +6,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
+import {
+  Panel,
+  PanelHeader,
+  PanelTitle,
+  PanelContent,
+} from "@/components/ui/panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RankingItem, RankingItemContent } from "@/components/ui/ranking-item";
 import { Play, User, Calendar, Eye, Trophy } from "lucide-react";
 
 interface SorterPageProps {
@@ -59,7 +66,7 @@ async function getSorterWithItems(
     .from(sorters)
     .where(eq(sorters.slug, sorterSlug))
     .limit(1);
-  
+
   if (sorterIdQuery.length === 0) {
     return null;
   }
@@ -128,13 +135,11 @@ export default async function SorterPage({ params }: SorterPageProps) {
     <main className="container mx-auto max-w-4xl px-4 py-8">
       {/* Sorter Header */}
       <section className="mb-8">
-        <Box variant="primary" size="xl" className="mb-6">
+        <Box variant="primary" size="xl" className="mb-6 block">
           <div>
             <h1 className="mb-2 text-3xl font-bold">{sorter.title}</h1>
             {sorter.description && (
-              <p className="mb-4 text-lg font-medium">
-                {sorter.description}
-              </p>
+              <p className="mb-4 text-lg font-medium">{sorter.description}</p>
             )}
 
             {/* Category Badge */}
@@ -145,7 +150,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
         </Box>
 
         {/* Creator and Stats Info */}
-        <Box variant="white" size="lg" className="mb-6">
+        <Box variant="white" size="lg" className="mb-6 block">
           <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
             <div className="flex items-center gap-1">
               <User size={16} />
@@ -183,11 +188,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
         <div className="block">
           {sorter.useGroups ? (
             <Link href={`/sorter/${sorter.slug}/filters`}>
-              <Button
-                size="lg"
-                variant="default"
-                className="mb-8 group"
-              >
+              <Button size="lg" variant="default" className="group mb-8">
                 <Play
                   className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
                   size={20}
@@ -197,11 +198,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
             </Link>
           ) : (
             <Link href={`/sorter/${sorter.slug}/sort`}>
-              <Button
-                size="lg"
-                variant="default"
-                className="mb-8 group"
-              >
+              <Button size="lg" variant="default" className="group mb-8">
                 <Play
                   className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
                   size={20}
@@ -217,36 +214,82 @@ export default async function SorterPage({ params }: SorterPageProps) {
       <div className="grid gap-8 md:grid-cols-2">
         {/* Left Column - Items to Rank */}
         <section>
-          <Box variant="secondary" size="lg" className="mb-6">
-            <h2 className="text-xl font-bold">
-              Items to Rank ({items?.length || 0})
-            </h2>
-          </Box>
-          
-          {sorter.useGroups && groups ? (
-            /* Groups Mode */
-            groups.length === 0 ? (
-              <Box variant="warning" size="md">
-                <p className="font-medium italic">
-                  No groups found for this sorter.
-                </p>
-              </Box>
-            ) : (
-              <div className="space-y-6">
-                {groups.map((group) => (
-                  <div key={group.id} className="space-y-3">
-                    {/* Group Header */}
-                    <Badge variant="default" className="text-base">
-                      {group.name}
-                    </Badge>
+          <Panel variant="primary">
+            <PanelHeader variant="primary">
+              <PanelTitle>Items to Rank ({items?.length || 0})</PanelTitle>
+            </PanelHeader>
+            <PanelContent variant="primary">
+              {sorter.useGroups && groups ? (
+                /* Groups Mode */
+                groups.length === 0 ? (
+                  <Box variant="warning" size="md">
+                    <p className="font-medium italic">
+                      No groups found for this sorter.
+                    </p>
+                  </Box>
+                ) : (
+                  <div className="space-y-6">
+                    {groups.map((group) => (
+                      <div key={group.id} className="space-y-3">
+                        {/* Group Header */}
+                        <Badge variant="default" className="text-base">
+                          {group.name}
+                        </Badge>
 
-                    {/* Items in Group */}
-                    <div className="ml-4 space-y-2">
-                      {group.items.map((item) => (
-                        <div key={item.id} className="flex items-center gap-3 p-2 border-2 border-black dark:border-white bg-white dark:bg-neutral-800">
+                        {/* Items in Group */}
+                        <div className="space-y-3">
+                          {group.items.map((item) => (
+                            <RankingItem key={item.id}>
+                              <RankingItemContent>
+                                <div className="flex items-center gap-3">
+                                  {/* Thumbnail */}
+                                  {item.imageUrl ? (
+                                    <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
+                                      <img
+                                        src={item.imageUrl}
+                                        alt={item.title}
+                                        className="h-full w-full object-cover"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="border-border bg-secondary-background rounded-base flex h-10 w-10 flex-shrink-0 items-center justify-center border-2">
+                                      <span className="text-main text-xs font-bold">
+                                        {item.title.charAt(0).toUpperCase()}
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {/* Title */}
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-medium">
+                                      {item.title}
+                                    </p>
+                                  </div>
+                                </div>
+                              </RankingItemContent>
+                            </RankingItem>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : /* Traditional Mode */
+              items?.length === 0 ? (
+                <Box variant="warning" size="md">
+                  <p className="font-medium italic">
+                    No items found for this sorter.
+                  </p>
+                </Box>
+              ) : (
+                <div className="space-y-3">
+                  {items?.map((item) => (
+                    <RankingItem key={item.id}>
+                      <RankingItemContent>
+                        <div className="flex items-center gap-3">
                           {/* Thumbnail */}
                           {item.imageUrl ? (
-                            <div className="h-10 w-10 flex-shrink-0 overflow-hidden border-2 border-black">
+                            <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
                               <img
                                 src={item.imageUrl}
                                 alt={item.title}
@@ -254,155 +297,111 @@ export default async function SorterPage({ params }: SorterPageProps) {
                               />
                             </div>
                           ) : (
-                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center border-2 border-black bg-gray-300">
-                              <span className="text-xs font-bold">
+                            <div className="border-border bg-secondary-background rounded-base flex h-10 w-10 flex-shrink-0 items-center justify-center border-2">
+                              <span className="text-main text-xs font-bold">
                                 {item.title.charAt(0).toUpperCase()}
                               </span>
                             </div>
                           )}
-
-                          {/* Title */}
+                          {/* Item Name */}
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-medium">
                               {item.title}
                             </p>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )
-          ) : /* Traditional Mode */
-          items?.length === 0 ? (
-            <Box variant="warning" size="md">
-              <p className="font-medium italic">
-                No items found for this sorter.
-              </p>
-            </Box>
-          ) : (
-            <div className="space-y-3">
-              {items?.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 p-3 border-2 border-black dark:border-white bg-white dark:bg-neutral-800">
-                  {/* Thumbnail */}
-                  {item.imageUrl ? (
-                    <div className="h-12 w-12 flex-shrink-0 overflow-hidden border-2 border-black">
-                      <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center border-2 border-black bg-gray-300">
-                      <span className="text-xs font-bold">
-                        {item.title.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  {/* Item Name */}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {item.title}
-                    </p>
-                  </div>
+                      </RankingItemContent>
+                    </RankingItem>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
+              )}
+            </PanelContent>
+          </Panel>
         </section>
 
         {/* Right Column - Recent Results */}
         <section>
-          <Box variant="secondary" size="lg" className="mb-6">
-            <h2 className="text-xl font-bold">
-              Recent Results ({recentResults.length})
-            </h2>
-          </Box>
-          
-          {recentResults.length === 0 ? (
-            <Box variant="warning" size="md">
-              <p className="font-medium italic">
-                No results yet. Be the first to complete this sorter!
-              </p>
-            </Box>
-          ) : (
-            <div className="space-y-4">
-              {recentResults.map((result) => (
-                <Link
-                  key={result.id}
-                  href={`/results/${result.id}`}
-                  className="block"
-                >
-                  <Card className="cursor-pointer">
-                    <CardHeader>
-                      {/* Username and Date */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold">
-                          {result.username}
-                        </span>
-                        <span className="text-muted-foreground text-xs font-medium">
-                          {new Date(result.createdAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            },
-                          )}
-                        </span>
-                      </div>
-                    </CardHeader>
-
-                    <CardContent>
-                      {/* Top 3 Results */}
-                      <div className="space-y-2">
-                        {result.top3.map((item: any, index: number) => (
-                          <div
-                            key={item.id || index}
-                            className="flex items-center gap-2 text-sm"
-                          >
-                            <span
-                              className={`flex h-5 w-5 items-center justify-center border-2 text-xs font-bold ${
-                                index === 0
-                                  ? "border-yellow-500 bg-yellow-300 text-black"
-                                  : index === 1
-                                    ? "border-gray-400 bg-gray-300 text-black"
-                                    : "border-amber-600 bg-amber-300 text-black"
-                              }`}
-                            >
-                              {index + 1}
+          <Panel variant="primary">
+            <PanelHeader variant="primary">
+              <PanelTitle>Recent Results ({recentResults.length})</PanelTitle>
+            </PanelHeader>
+            <PanelContent variant="primary">
+              {recentResults.length === 0 ? (
+                <Box variant="warning" size="md">
+                  <p className="font-medium italic">
+                    No results yet. Be the first to complete this sorter!
+                  </p>
+                </Box>
+              ) : (
+                <div className="space-y-4">
+                  {recentResults.map((result) => (
+                    <Link
+                      key={result.id}
+                      href={`/results/${result.id}`}
+                      className="block"
+                    >
+                      <Card className="bg-main text-main-foreground cursor-pointer">
+                        <CardHeader>
+                          {/* Username and Date */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-bold">
+                              {result.username}
                             </span>
-                            <div className="flex min-w-0 flex-1 items-center gap-2">
-                              {item.imageUrl ? (
-                                <div className="h-6 w-6 flex-shrink-0 overflow-hidden border-2 border-black">
-                                  <img
-                                    src={item.imageUrl}
-                                    alt={item.title}
-                                    className="h-full w-full object-cover"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center border-2 border-black bg-gray-300">
-                                  <span className="text-xs font-bold">
-                                    {item.title.charAt(0).toUpperCase()}
+                            <span className="text-main-foreground text-xs font-medium">
+                              {new Date(result.createdAt).toLocaleDateString(
+                                "en-US",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                },
+                              )}
+                            </span>
+                          </div>
+                        </CardHeader>
+
+                        <CardContent>
+                          {/* Top 3 Results */}
+                          <div className="space-y-2">
+                            {result.top3.map((item: any, index: number) => (
+                              <div
+                                key={item.id || index}
+                                className="flex items-center gap-2 text-sm"
+                              >
+                                <span className="text-sm font-bold">
+                                  {index + 1}.
+                                </span>
+                                <div className="flex min-w-0 flex-1 items-center gap-2">
+                                  {item.imageUrl ? (
+                                    <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
+                                      <img
+                                        src={item.imageUrl}
+                                        alt={item.title}
+                                        className="h-full w-full object-cover"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="border-border bg-secondary-background rounded-base flex h-6 w-6 flex-shrink-0 items-center justify-center border-2">
+                                      <span className="text-main text-xs font-bold">
+                                        {item.title.charAt(0).toUpperCase()}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <span className="truncate font-medium">
+                                    {item.title}
                                   </span>
                                 </div>
-                              )}
-                              <span className="text-muted-foreground truncate font-medium">
-                                {item.title}
-                              </span>
-                            </div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </PanelContent>
+          </Panel>
         </section>
       </div>
     </main>

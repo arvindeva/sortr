@@ -11,6 +11,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 
+**IMPORTANT**: Do not run `npm run build` automatically. Only build when the user explicitly requests it.
+
 ### Database
 
 - `npx drizzle-kit generate` - Generate database migrations
@@ -27,7 +29,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Tech Stack
 
 - **Framework**: Next.js 15 with App Router and React 19
-- **Styling**: Tailwind CSS 4 with shadcn/ui components (new-york variant) retrofitted with retro styling
+- **Styling**: Tailwind CSS 4 with neobrutalism.dev components (shadcn/ui with automatic retro styling via CSS variables)
 - **Database**: PostgreSQL with Drizzle ORM and Drizzle Kit
 - **State Management**: TanStack Query for server state, React state for UI state
 - **Authentication**: NextAuth.js v4 with Email provider and Drizzle adapter
@@ -106,7 +108,7 @@ sortr is a web app for creating and sharing ranked lists through pairwise compar
 - clsx + tailwind-merge utility pattern for conditional classes
 - **Data Fetching**: Use TanStack Query instead of useEffect for API calls when possible
 - **State Management**: Prefer TanStack Query for server state, React state for UI state
-- **Design System**: Use standard shadcn/ui components with built-in retro styling (see Design System section)
+- **Design System**: Use neobrutalism.dev components with automatic retro styling (see Design System section)
 
 ### Database Schema
 
@@ -155,61 +157,78 @@ Requires configuration for:
 - **Real-time progress calculation**: Progress percentage updates immediately after each choice using dynamic total comparison optimization
 - **Massive storage optimization**: localStorage usage reduced by 95% using UUID-to-index mapping (12,000 chars → 500 chars for 94 comparisons)
 - **Enhanced filters UI**: Simplified checkbox-based interface with collapsible item lists for better usability in dark mode
-- **Unified Design System**: Retrofitted shadcn/ui components with retro styling, eliminating separate retro components for a unified approach
+- **Neobrutalism.dev Integration**: Migrated to neobrutalism.dev component library for automatic retro styling via CSS variables, eliminating manual component retrofitting
 
 ## Design System
 
-### Retro-Styled shadcn/ui Components
+### Neobrutalism.dev Components
 
-The application uses a unified design system where standard shadcn/ui components have been retrofitted with retro styling. This approach provides the best of both worlds: familiar shadcn/ui APIs with distinctive retro aesthetics.
+The application uses the neobrutalism.dev component library, which provides shadcn/ui components with automatic retro/neobrutalism styling via CSS variables. This approach eliminates the need for manual component retrofitting and provides consistent styling across the entire application.
 
 ### Design Philosophy
 
-All components follow the same retro aesthetic principles:
+All components follow the neobrutalism aesthetic principles:
 
-- **Press Animation**: Interactive elements move down on hover with shadow disappearing
-- **Consistent Borders**: All components use 2px borders with black (light) / white (dark) colors
-- **Dramatic Shadows**: Bold drop shadows for depth and retro aesthetic
+- **Press Animation**: Interactive elements move down on hover with shadow disappearing (`hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none`)
+- **Consistent Borders**: All components use 2px borders with black (light) / white (dark) colors (`border-2 border-border`)
+- **Dramatic Shadows**: Bold drop shadows for depth and retro aesthetic (`shadow-shadow`)
 - **Space Grotesk Font**: Modern geometric font for readability and retro feel
-- **Shared Constants**: Centralized styling configuration in `/src/lib/retro-constants.ts`
+- **CSS Variables**: Centralized styling configuration in `/src/app/globals.css`
+
+### Component Installation
+
+**IMPORTANT**: Always use neobrutalism.dev components when available instead of creating custom implementations.
+
+Components are installed from the neobrutalism.dev registry:
+```bash
+npx shadcn@latest add https://neobrutalism.dev/r/button.json
+npx shadcn@latest add https://neobrutalism.dev/r/card.json
+npx shadcn@latest add https://neobrutalism.dev/r/badge.json
+npx shadcn@latest add https://neobrutalism.dev/r/input.json
+npx shadcn@latest add https://neobrutalism.dev/r/textarea.json
+npx shadcn@latest add https://neobrutalism.dev/r/select.json
+```
+
+Before implementing any UI component, check if it exists at https://neobrutalism.dev/components/ and use the official version with the installation command above. Only create custom implementations if the component doesn't exist on neobrutalism.dev.
 
 ### Core Components
 
 #### Button
-Standard shadcn/ui Button component with retro styling:
-- `variant`: `"default"` (yellow bg, black text), `"secondary"` (black bg, yellow shadow), `"outline"` (transparent bg, grey shadow), `"ghost"` (transparent bg, grey shadow), `"destructive"` (red bg), `"link"` (text only)
+Neobrutalism Button component with built-in retro styling:
+- `variant`: `"default"` (yellow bg, black text), `"reverse"` (inverse press animation), `"noShadow"` (no shadow), `"neutral"` (secondary bg)
 - `size`: `"sm"`, `"default"`, `"lg"`, `"icon"`
-- Features: Press animation, retro colors, bold shadows
+- Features: Built-in press animation, retro colors, bold shadows
 
 #### Card
-Standard shadcn/ui Card component with retro styling:
-- `variant`: `"default"` (white bg), `"primary"` (yellow bg), `"accent"` (cyan bg)
-- Includes: `CardHeader`, `CardTitle`, `CardContent`, `CardFooter`, etc.
-- Features: Hover lift animation, retro borders, dramatic shadows
+Neobrutalism Card component with built-in retro styling:
+- Single variant with retro borders and shadows
+- Includes: `CardHeader`, `CardTitle`, `CardContent`, `CardFooter`, `CardAction`, `CardDescription`
+- Features: Automatic retro borders, dramatic shadows, consistent spacing
 
 #### Badge
-Standard shadcn/ui Badge component with retro styling:
-- `variant`: `"default"` (cyan), `"secondary"` (pink), `"destructive"` (red), `"outline"` (transparent)
-- Features: Press animation, small shadows, vibrant colors
+Neobrutalism Badge component with built-in retro styling:
+- `variant`: `"default"` (main color), `"neutral"` (secondary bg)
+- Features: Built-in retro styling, consistent borders, small shadows
 
-#### Box
+#### Box (Custom)
 Custom container component for highlights and sections:
 - `variant`: `"primary"` (yellow), `"secondary"` (pink), `"accent"` (cyan), `"warning"` (orange), etc.
 - `size`: `"sm"`, `"md"`, `"lg"`, `"xl"`
 - Usage: Hero sections, headers, highlights
 
-#### Logo
+#### Logo (Custom)
 Interactive branding component with press animation:
 - Same variants as Box but with button-like press behavior
 - Usage: Interactive branding elements, clickable logos
 
-### Shared Constants
+### CSS Variables
 
-All components use constants from `/src/lib/retro-constants.ts`:
-- **Colors**: Standardized color palette with light/dark variants
-- **Shadows**: Helper functions for consistent shadow generation
-- **Animations**: Press, lift, and text spacing animations
-- **Borders**: Consistent border thickness and colors
+All styling is controlled via CSS variables in `/src/app/globals.css`:
+- **Colors**: `--main`, `--background`, `--foreground`, `--border`, etc.
+- **Shadows**: `--shadow: 2px 2px 0px 0px var(--border)`
+- **Spacing**: `--spacing-boxShadowX`, `--spacing-boxShadowY`, `--spacing-reverseBoxShadowX`, `--spacing-reverseBoxShadowY`
+- **Borders**: `--radius-base: 10px`
+- **Fonts**: `--font-weight-base: 500`, `--font-weight-heading: 800`
 
 ### Usage Guidelines
 
@@ -221,10 +240,10 @@ All components use constants from `/src/lib/retro-constants.ts`:
 
 ### Implementation Notes
 
-- All components maintain standard shadcn/ui APIs for easy migration
-- Press animation: element moves down, shadow disappears on hover
+- Components maintain standard shadcn/ui APIs for easy migration
+- Press animation is built into components via neobrutalism classes
 - Border thickness is standardized to 2px across all components
-- Shadow values use shared constants for consistency
-- Components are built with `cva` (class-variance-authority) for type-safe variants
-- Full dark mode support is built into all components
-- No separate retro components needed - everything uses the unified system
+- Shadow values are controlled via CSS variables for consistency
+- Components use `cva` (class-variance-authority) for type-safe variants
+- Full dark mode support is built into all components via CSS variables
+- No manual component retrofitting needed - styling is automatic via CSS variables

@@ -30,7 +30,7 @@
   --secondary: var(--background);
   --secondary-foreground: var(--foreground);
   --muted: var(--background);
-  --muted-foreground: var(--foreground);
+  --muted-foreground: oklch(70% 0 0);
   --accent: var(--background);
   --accent-foreground: var(--foreground);
   --destructive: #ef4444;
@@ -64,7 +64,7 @@
   --secondary: var(--background);
   --secondary-foreground: var(--foreground);
   --muted: var(--background);
-  --muted-foreground: var(--foreground);
+  --muted-foreground: oklch(70% 0 0);
   --accent: var(--background);
   --accent-foreground: var(--foreground);
   --destructive: #ef4444;

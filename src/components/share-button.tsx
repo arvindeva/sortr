@@ -29,7 +29,7 @@ export function ShareButton({ size = "sm" }: ShareButtonProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size={size}>
+        <Button variant="neutral" size={size}>
           <Share2 className="mr-2" size={16} />
           Share
         </Button>

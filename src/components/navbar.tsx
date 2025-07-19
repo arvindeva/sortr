@@ -27,9 +27,13 @@ export function Navbar() {
   });
 
   return (
-    <nav className="bg-blue-50 dark:bg-neutral-900 sticky top-0 z-30 flex w-full items-center justify-between border-b-2 border-black dark:border-white px-6 py-4">
+    <nav className="sticky top-0 z-30 flex w-full items-center justify-between border-b-2 border-border bg-secondary-background px-6 py-4">
       <Link href="/">
-        <Logo variant="primary" size="md" className="text-3xl font-bold tracking-wide transition-all duration-300 ease-out hover:tracking-widest">
+        <Logo
+          variant="primary"
+          size="md"
+          className="text-3xl font-bold tracking-wide transition-all duration-300 ease-out hover:tracking-widest"
+        >
           sortr
         </Logo>
       </Link>
@@ -44,11 +48,7 @@ export function Navbar() {
           </Button>
         ) : session ? (
           <Link href="/create">
-            <Button
-              size="sm"
-              variant="default"
-              className="group"
-            >
+            <Button size="sm" variant="default" className="group">
               <Plus
                 className="mr-1 transition-transform duration-200 group-hover:rotate-90"
                 size={16}
@@ -58,11 +58,7 @@ export function Navbar() {
           </Link>
         ) : (
           <Link href="/auth/signin">
-            <Button
-              size="sm"
-              variant="default"
-              className="group"
-            >
+            <Button size="sm" variant="default" className="group">
               <Plus
                 className="mr-1 transition-transform duration-200 group-hover:rotate-90"
                 size={16}
@@ -73,25 +69,25 @@ export function Navbar() {
         )}
 
         {status === "loading" ? (
-          <Button size="sm" variant="ghost" disabled>
+          <Button size="sm" variant="default" disabled>
             Loading...
           </Button>
         ) : session ? (
           <div className="flex items-center gap-4">
             {userData?.username ? (
               <Link href={`/user/${userData.username}`}>
-                <Button size="sm" variant="ghost">
+                <Button size="sm" variant="default">
                   <User size={16} className="mr-1" />
                   Profile
                 </Button>
               </Link>
             ) : (
-              <Button size="sm" variant="ghost" disabled>
+              <Button size="sm" variant="default" disabled>
                 <User size={16} className="mr-1" />
                 Profile
               </Button>
             )}
-            <Button size="sm" variant="outline" onClick={() => signOut()}>
+            <Button size="sm" variant="neutral" onClick={() => signOut()}>
               Logout
             </Button>
           </div>
@@ -105,8 +101,8 @@ export function Navbar() {
       <div className="flex items-center gap-4 md:hidden">
         <ModeToggle />
         <Button
-          variant="ghost"
-          size="sm"
+          variant="default"
+          size="icon"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -124,7 +120,7 @@ export function Navbar() {
 
       {/* Mobile Menu */}
       <div
-        className={`bg-blue-50 dark:bg-neutral-900 absolute top-full right-0 left-0 z-30 border-b-2 border-black dark:border-white transition-all duration-300 ease-out md:hidden ${mobileMenuOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
+        className={`absolute top-full right-0 left-0 z-30 border-b-2 border-border bg-secondary-background transition-all duration-300 ease-out md:hidden ${mobileMenuOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
       >
         <div className="flex flex-col gap-3 p-4">
           {/* Create button */}
@@ -151,7 +147,7 @@ export function Navbar() {
 
           {/* Auth buttons */}
           {status === "loading" ? (
-            <Button variant="ghost" disabled className="w-full">
+            <Button variant="default" disabled className="w-full">
               Loading...
             </Button>
           ) : session ? (
@@ -161,19 +157,19 @@ export function Navbar() {
                   href={`/user/${userData.username}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Button variant="ghost" className="w-full">
+                  <Button variant="default" className="w-full">
                     <User size={16} className="mr-2" />
                     Profile
                   </Button>
                 </Link>
               ) : (
-                <Button variant="ghost" disabled className="w-full">
+                <Button variant="default" disabled className="w-full">
                   <User size={16} className="mr-2" />
                   Profile
                 </Button>
               )}
               <Button
-                variant="outline"
+                variant="default"
                 onClick={() => {
                   signOut();
                   setMobileMenuOpen(false);

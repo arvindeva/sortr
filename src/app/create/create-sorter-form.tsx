@@ -6,6 +6,14 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -15,6 +23,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import { Box } from "@/components/ui/box";
+import {
+  Panel,
+  PanelHeader,
+  PanelTitle,
+  PanelContent,
+} from "@/components/ui/panel";
 import { Plus, X, Camera, ChevronDown, GripVertical } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
 
@@ -201,295 +216,313 @@ export default function CreateSorterForm() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold">Sorter Details</h2>
-      </div>
-      <Form {...form}>
-        <form 
-          onSubmit={form.handleSubmit(onSubmit)} 
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
-              e.preventDefault();
-            }
-          }}
-          className="space-y-6"
-        >
-          {/* Basic Info */}
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Best Marvel Movies" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      <Panel variant="primary">
+        <PanelHeader variant="primary">
+          <PanelTitle>Sorter Details</PanelTitle>
+        </PanelHeader>
+        <PanelContent variant="primary">
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
+                  e.preventDefault();
+                }
+              }}
+              className="space-y-6"
+            >
+              {/* Basic Info */}
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Best Marvel Movies"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <textarea
-                      placeholder="Describe what you're ranking..."
-                      className="border-input focus:ring-ring w-full resize-none rounded-md border px-3 py-2 focus:ring-2 focus:outline-none"
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Describe what you're ranking..."
+                          rows={3}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <select
-                        className="border-input focus:ring-ring bg-background text-foreground [&>option[value='']]:text-muted-foreground w-full cursor-pointer appearance-none rounded-md border py-2 pr-10 pl-3 focus:ring-2 focus:outline-none"
-                        {...field}
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <FormControl>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Movies">Movies</SelectItem>
+                            <SelectItem value="Music">Music</SelectItem>
+                            <SelectItem value="Video Games">
+                              Video Games
+                            </SelectItem>
+                            <SelectItem value="TV Shows">TV Shows</SelectItem>
+                            <SelectItem value="Books">Books</SelectItem>
+                            <SelectItem value="Food">Food</SelectItem>
+                            <SelectItem value="Sports">Sports</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Filters Toggle */}
+                <FormField
+                  control={form.control}
+                  name="useGroups"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Box
+                        variant="secondary"
+                        size="md"
+                        className="flex flex-row items-center justify-between"
                       >
-                        <option value="" className="text-muted-foreground">
-                          Select a category
-                        </option>
-                        <option value="Movies">Movies</option>
-                        <option value="Music">Music</option>
-                        <option value="Video Games">Video Games</option>
-                        <option value="TV Shows">TV Shows</option>
-                        <option value="Books">Books</option>
-                        <option value="Food">Food</option>
-                        <option value="Sports">Sports</option>
-                        <option value="Other">Other</option>
-                      </select>
-                      <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 transform" />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Filters Toggle */}
-            <FormField
-              control={form.control}
-              name="useGroups"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Use Filters</FormLabel>
-                    <div className="text-muted-foreground text-sm">
-                      Group items into filters for selective sorting
-                    </div>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Items Section */}
-          {useGroups ? (
-            /* Filters Mode */
-            <div>
-              <div className="mb-4 flex items-center justify-between">
-                <FormLabel>Filters *</FormLabel>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addGroup}
-                  className="flex items-center gap-1"
-                >
-                  <Plus size={16} />
-                  Add Filter
-                </Button>
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            Use Filters
+                          </FormLabel>
+                          <div className="text-sm font-medium">
+                            Group items into filters for selective sorting
+                          </div>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </Box>
+                    </FormItem>
+                  )}
+                />
               </div>
 
-              <div className="space-y-6">
-                {groupFields.map((groupField, groupIndex) => (
-                  <div key={groupField.id} className="rounded-lg border p-4">
-                    <div className="mb-3 flex items-center gap-2">
-                      <GripVertical className="text-muted-foreground h-4 w-4" />
-                      <FormField
-                        control={form.control}
-                        name={`groups.${groupIndex}.name`}
-                        render={({ field }) => (
-                          <FormItem className="flex-1">
-                            <FormControl>
-                              <Input
-                                placeholder="Filter name (e.g., Kill em All)"
-                                {...field}
-                                className="font-medium"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      {groupFields.length > 2 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeGroupHandler(groupIndex)}
-                          title="Remove filter"
-                        >
-                          <X size={16} />
-                        </Button>
-                      )}
-                    </div>
+              {/* Items Section */}
+              {useGroups ? (
+                /* Filters Mode */
+                <div>
+                  <div className="mb-4 flex items-center justify-between">
+                    <FormLabel>Filters *</FormLabel>
+                    <Button
+                      type="button"
+                      variant="neutral"
+                      size="sm"
+                      onClick={addGroup}
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      Add Filter
+                    </Button>
+                  </div>
 
-                    <div className="ml-6 space-y-2">
-                      {form
-                        .watch(`groups.${groupIndex}.items`)
-                        ?.map((_, itemIndex) => (
+                  <div className="space-y-6">
+                    {groupFields.map((groupField, groupIndex) => (
+                      <Box key={groupField.id} variant="white" size="md">
+                        <div className="mb-3 flex items-center gap-2">
+                          <GripVertical className="text-foreground h-4 w-4" />
                           <FormField
-                            key={itemIndex}
                             control={form.control}
-                            name={`groups.${groupIndex}.items.${itemIndex}.title`}
+                            name={`groups.${groupIndex}.name`}
                             render={({ field }) => (
-                              <FormItem>
-                                <div className="flex items-center gap-2">
-                                  <FormControl>
-                                    <Input
-                                      placeholder={`Item ${itemIndex + 1}`}
-                                      {...field}
-                                    />
-                                  </FormControl>
-                                  {form.watch(`groups.${groupIndex}.items`)
-                                    .length > 1 && (
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        removeItemFromGroup(
-                                          groupIndex,
-                                          itemIndex,
-                                        )
-                                      }
-                                      title="Remove item"
-                                    >
-                                      <X size={16} />
-                                    </Button>
-                                  )}
-                                </div>
+                              <FormItem className="flex-1">
+                                <FormControl>
+                                  <Input
+                                    placeholder="Filter name (e.g., Kill em All)"
+                                    {...field}
+                                    className="font-medium"
+                                  />
+                                </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-                        ))}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => addItemToGroup(groupIndex)}
-                        className="mt-2 flex items-center gap-1 text-sm"
-                      >
-                        <Plus size={14} />
-                        Add Item
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="text-muted-foreground mt-4 text-sm">
-                <p>
-                  Add at least 2 filters with 1 item each to create your sorter
-                </p>
-              </div>
-            </div>
-          ) : (
-            /* Traditional Mode */
-            <div>
-              <div className="mb-4 flex items-center justify-between">
-                <FormLabel>Items to Rank *</FormLabel>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addItemHandler}
-                  className="flex items-center gap-1"
-                >
-                  <Plus size={16} />
-                  Add Item
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                {itemFields.map((field, index) => (
-                  <FormField
-                    key={field.id}
-                    control={form.control}
-                    name={`items.${index}.title`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center gap-2">
-                          <FormControl>
-                            <Input
-                              placeholder={`Item ${index + 1}`}
-                              {...field}
-                            />
-                          </FormControl>
-                          {itemFields.length > 2 && (
+                          {groupFields.length > 2 && (
                             <Button
                               type="button"
-                              variant="outline"
+                              variant="neutral"
                               size="sm"
-                              onClick={() => removeItemHandler(index)}
-                              title="Remove item"
+                              onClick={() => removeGroupHandler(groupIndex)}
+                              title="Remove filter"
                             >
                               <X size={16} />
                             </Button>
                           )}
                         </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ))}
-              </div>
 
-              <div className="text-muted-foreground mt-4 text-sm">
-                <p>Add at least 2 items to create your sorter</p>
-              </div>
-            </div>
-          )}
+                        <div className="ml-6 space-y-2">
+                          {form
+                            .watch(`groups.${groupIndex}.items`)
+                            ?.map((_, itemIndex) => (
+                              <FormField
+                                key={itemIndex}
+                                control={form.control}
+                                name={`groups.${groupIndex}.items.${itemIndex}.title`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <div className="flex items-center gap-2">
+                                      <FormControl>
+                                        <Input
+                                          placeholder={`Item ${itemIndex + 1}`}
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      {form.watch(`groups.${groupIndex}.items`)
+                                        .length > 1 && (
+                                        <Button
+                                          type="button"
+                                          variant="neutral"
+                                          size="sm"
+                                          onClick={() =>
+                                            removeItemFromGroup(
+                                              groupIndex,
+                                              itemIndex,
+                                            )
+                                          }
+                                          title="Remove item"
+                                        >
+                                          <X size={16} />
+                                        </Button>
+                                      )}
+                                    </div>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            ))}
+                          <Button
+                            type="button"
+                            variant="noShadow"
+                            size="sm"
+                            onClick={() => addItemToGroup(groupIndex)}
+                            className="mt-2 flex items-center gap-1 text-sm"
+                          >
+                            <Plus size={14} />
+                            Add Item
+                          </Button>
+                        </div>
+                      </Box>
+                    ))}
+                  </div>
 
-          {/* Submit */}
-          <div className="flex gap-4">
-            <Button type="submit" disabled={isLoading} className="flex-1">
-              {isLoading ? "Creating..." : "Create Sorter"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.back()}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </Form>
+                  <Box variant="accent" size="sm" className="mt-4">
+                    <p className="text-sm font-medium">
+                      Add at least 2 filters with 1 item each to create your
+                      sorter
+                    </p>
+                  </Box>
+                </div>
+              ) : (
+                /* Traditional Mode */
+                <div>
+                  <div className="mb-4 flex items-center justify-between">
+                    <FormLabel>Items to Rank *</FormLabel>
+                    <Button
+                      type="button"
+                      variant="neutral"
+                      size="sm"
+                      onClick={addItemHandler}
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      Add Item
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {itemFields.map((field, index) => (
+                      <FormField
+                        key={field.id}
+                        control={form.control}
+                        name={`items.${index}.title`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex items-center gap-2">
+                              <FormControl>
+                                <Input
+                                  placeholder={`Item ${index + 1}`}
+                                  {...field}
+                                />
+                              </FormControl>
+                              {itemFields.length > 2 && (
+                                <Button
+                                  type="button"
+                                  variant="neutral"
+                                  size="sm"
+                                  onClick={() => removeItemHandler(index)}
+                                  title="Remove item"
+                                >
+                                  <X size={16} />
+                                </Button>
+                              )}
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
+
+                  <Box variant="accent" size="sm" className="mt-4">
+                    <p className="text-sm font-medium">
+                      Add at least 2 items to create your sorter
+                    </p>
+                  </Box>
+                </div>
+              )}
+
+              {/* Submit */}
+              <div className="flex gap-4">
+                <Button type="submit" disabled={isLoading} className="flex-1">
+                  {isLoading ? "Creating..." : "Create Sorter"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="neutral"
+                  onClick={() => router.back()}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </PanelContent>
+      </Panel>
     </div>
   );
 }
