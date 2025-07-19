@@ -25,7 +25,7 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
             delay: index < 10 ? index * 0.1 : 10 * 0.1,
             ease: "easeOut",
           }}
-          className={`bg-main text-main-foreground rounded-base border-border shadow-shadow flex items-center gap-4 border-2 p-4`}
+          className={`bg-background text-foreground rounded-base border-border shadow-shadow flex items-center gap-4 border-2 p-4 overflow-hidden`}
         >
           {/* Rank */}
           <span className="text-lg font-bold">{index + 1}.</span>
@@ -48,8 +48,8 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
           )}
 
           {/* Title */}
-          <div className="flex-1">
-            <h3 className="font-medium">{item.title}</h3>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium break-words">{item.title}</h3>
           </div>
         </motion.div>
       ))}

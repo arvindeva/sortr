@@ -152,18 +152,18 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   const { result, sorter, selectedGroups } = data;
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8">
+    <div className="container mx-auto max-w-4xl px-4 py-8 overflow-hidden">
       {/* Header */}
       <div className="mb-8">
-        {/* Main Header: "[sorter name] \n sorted by [username]" */}
-        <Box variant="primary" size="xl" className="mb-6 block">
+        {/* Main Header */}
+        <Box variant="primary" size="md" className="mb-6 block">
           <div>
             <Link href={`/sorter/${sorter.slug}`}>
-              <h1 className="mb-2 cursor-pointer text-2xl font-bold hover:underline">
+              <h1 className="text-xl font-bold cursor-pointer hover:underline mb-2">
                 {sorter.title}
               </h1>
             </Link>
-            <p className="text-lg font-medium">
+            <p className="text-md font-medium">
               sorted by{" "}
               <Link
                 href={`/user/${result.username}`}
@@ -219,7 +219,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 Rankings
               </PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary">
+            <PanelContent variant="primary" className="p-3 md:p-6 overflow-hidden">
               <AnimatedRankings rankings={result.rankings} />
             </PanelContent>
           </Panel>
@@ -233,7 +233,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 Sorter Info
               </PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary">
+            <PanelContent variant="primary" className="p-3 md:p-6">
               <Link href={`/sorter/${sorter.slug}`} className="block hover:opacity-80 transition-opacity">
                 <div className="space-y-4">
                   <div>
@@ -275,7 +275,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
               Sorter Info
             </PanelTitle>
           </PanelHeader>
-          <PanelContent variant="primary">
+          <PanelContent variant="primary" className="p-3 md:p-6">
             <Link href={`/sorter/${sorter.slug}`} className="block hover:opacity-80 transition-opacity">
               <div className="space-y-4">
                 <div>

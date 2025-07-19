@@ -7,25 +7,8 @@ const panelVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-background text-foreground",
-        primary: "bg-background text-foreground",
-        accent: "bg-background text-foreground",
-        secondary: "bg-background text-foreground",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  },
-);
-
-const panelHeaderVariants = cva(
-  "px-6 py-4 border-b-2 border-border",
-  {
-    variants: {
-      variant: {
         default: "bg-secondary-background text-foreground",
-        primary: "bg-main text-main-foreground",
+        primary: "bg-secondary-background text-foreground",
         accent: "bg-secondary-background text-foreground",
         secondary: "bg-secondary-background text-foreground",
       },
@@ -35,6 +18,20 @@ const panelHeaderVariants = cva(
     },
   },
 );
+
+const panelHeaderVariants = cva("px-6 py-4 border-b-2 border-border", {
+  variants: {
+    variant: {
+      default: "bg-secondary-background text-foreground",
+      primary: "bg-main text-main-foreground",
+      accent: "bg-secondary-background text-foreground",
+      secondary: "bg-secondary-background text-foreground",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
 
 function Panel({
   className,
@@ -68,7 +65,7 @@ function PanelTitle({ className, ...props }: React.ComponentProps<"h3">) {
   return (
     <h3
       data-slot="panel-title"
-      className={cn("text-lg leading-none font-heading", className)}
+      className={cn("font-heading text-lg leading-none", className)}
       {...props}
     />
   );
@@ -77,10 +74,10 @@ function PanelTitle({ className, ...props }: React.ComponentProps<"h3">) {
 const panelContentVariants = cva("p-6", {
   variants: {
     variant: {
-      default: "bg-background text-foreground",
-      primary: "bg-background text-foreground",
-      accent: "bg-background text-foreground",
-      secondary: "bg-background text-foreground",
+      default: "bg-secondary-background text-foreground",
+      primary: "bg-secondary-background text-foreground",
+      accent: "bg-secondary-background text-foreground",
+      secondary: "bg-secondary-background text-foreground",
     },
   },
   defaultVariants: {

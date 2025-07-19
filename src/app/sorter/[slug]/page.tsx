@@ -134,24 +134,19 @@ export default async function SorterPage({ params }: SorterPageProps) {
   return (
     <main className="container mx-auto max-w-4xl px-4 py-8">
       {/* Sorter Header */}
-      <section className="mb-8">
-        <Box variant="primary" size="xl" className="mb-6 block">
+      <section>
+        <Box variant="primary" size="md" className="mb-6 block">
           <div>
-            <h1 className="mb-2 text-3xl font-bold">{sorter.title}</h1>
-            {sorter.description && (
-              <p className="mb-4 text-lg font-medium">{sorter.description}</p>
-            )}
-
-            {/* Category Badge */}
-            {sorter.category && (
-              <Badge variant="default">{sorter.category}</Badge>
-            )}
+            <h1 className="text-xl font-bold">{sorter.title}</h1>
           </div>
         </Box>
 
         {/* Creator and Stats Info */}
-        <Box variant="white" size="lg" className="mb-6 block">
-          <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
+        <Box variant="secondary" size="md" className="mb-6 block">
+          <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+            {sorter.description && (
+              <p className="text-md font-medium">{sorter.description}</p>
+            )}
             <div className="flex items-center gap-1">
               <User size={16} />
               <span>by</span>
@@ -218,7 +213,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
             <PanelHeader variant="primary">
               <PanelTitle>Items to Rank ({items?.length || 0})</PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary">
+            <PanelContent variant="primary" className="p-3 md:p-6">
               {sorter.useGroups && groups ? (
                 /* Groups Mode */
                 groups.length === 0 ? (
@@ -239,9 +234,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
                         {/* Items in Group */}
                         <div className="space-y-3">
                           {group.items.map((item) => (
-                            <RankingItem key={item.id}>
+                            <RankingItem key={item.id} className="bg-background text-foreground">
                               <RankingItemContent>
-                                <div className="flex items-center gap-3">
+                                <div className="flex min-w-0 items-center gap-3 overflow-hidden">
                                   {/* Thumbnail */}
                                   {item.imageUrl ? (
                                     <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
@@ -260,8 +255,8 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                   )}
 
                                   {/* Title */}
-                                  <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-medium">
+                                  <div className="w-0 min-w-0 flex-1">
+                                    <p className="text-sm font-medium break-words hyphens-auto">
                                       {item.title}
                                     </p>
                                   </div>
@@ -284,9 +279,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
               ) : (
                 <div className="space-y-3">
                   {items?.map((item) => (
-                    <RankingItem key={item.id}>
+                    <RankingItem key={item.id} className="bg-background text-foreground">
                       <RankingItemContent>
-                        <div className="flex items-center gap-3">
+                        <div className="flex min-w-0 items-center gap-3 overflow-hidden">
                           {/* Thumbnail */}
                           {item.imageUrl ? (
                             <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
@@ -304,8 +299,8 @@ export default async function SorterPage({ params }: SorterPageProps) {
                             </div>
                           )}
                           {/* Item Name */}
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium">
+                          <div className="w-0 min-w-0 flex-1">
+                            <p className="text-sm font-medium break-words hyphens-auto">
                               {item.title}
                             </p>
                           </div>
@@ -325,7 +320,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
             <PanelHeader variant="primary">
               <PanelTitle>Recent Results ({recentResults.length})</PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary">
+            <PanelContent variant="primary" className="p-3 md:p-6">
               {recentResults.length === 0 ? (
                 <Box variant="warning" size="md">
                   <p className="font-medium italic">
@@ -340,14 +335,14 @@ export default async function SorterPage({ params }: SorterPageProps) {
                       href={`/results/${result.id}`}
                       className="block"
                     >
-                      <Card className="bg-main text-main-foreground cursor-pointer">
+                      <Card className="bg-background text-foreground cursor-pointer">
                         <CardHeader>
                           {/* Username and Date */}
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-bold">
                               {result.username}
                             </span>
-                            <span className="text-main-foreground text-xs font-medium">
+                            <span className="text-foreground text-xs font-medium">
                               {new Date(result.createdAt).toLocaleDateString(
                                 "en-US",
                                 {
@@ -387,7 +382,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                       </span>
                                     </div>
                                   )}
-                                  <span className="truncate font-medium">
+                                  <span className="font-medium break-words">
                                     {item.title}
                                   </span>
                                 </div>

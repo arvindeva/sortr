@@ -150,12 +150,11 @@ Requires configuration for:
 
 🔄 **Recent Major Updates:**
 
-- **Animated Results Display**: Added Framer Motion animations for smooth result transitions with staggered loading effects and special highlighting for top 3 positions (gold, silver, bronze)
-- **Enhanced Progress Tracking**: Improved progress bar with real-time updates during sorting sessions and better visual feedback
-- **Slug-based URL system**: Groups now use friendly URLs with automatic duplicate handling (e.g., "action-movies", "action-movies-2")
-- **Group-specific progress tracking**: Each filter combination maintains separate progress (no more conflicts when switching between different group selections)
-- **Real-time progress calculation**: Progress percentage updates immediately after each choice using dynamic total comparison optimization
-- **Massive storage optimization**: localStorage usage reduced by 95% using UUID-to-index mapping (12,000 chars → 500 chars for 94 comparisons)
+- **UI Consistency & Mobile Optimization**: Updated all pages to use consistent panel structure with mobile-optimized padding (`p-3 md:p-6`), improved text wrapping to prevent horizontal scrolling, and standardized card backgrounds across all pages
+- **Panel Background Enhancement**: Changed panel backgrounds to use grey (`bg-secondary-background`) in dark mode to match navbar styling for better visual consistency
+- **Sorting Interface Improvements**: Created custom `ComparisonCard` component with clean layout (image flush with top, text at bottom), added neobrutalist VS divider visible on all devices, and implemented black text with white text in dark mode for UI elements
+- **Component Library Expansion**: Added neobrutalist Progress component (`npx shadcn@latest add https://neobrutalism.dev/r/progress.json`) and created custom ComparisonCard with proper borders and neobrutalist styling
+- **Results Page Refinement**: Updated rankings items to match homepage card styling, restructured header layout to match sorter page patterns, and optimized padding for mobile devices
 - **Enhanced filters UI**: Simplified checkbox-based interface with collapsible item lists for better usability in dark mode
 - **Neobrutalism.dev Integration**: Migrated to neobrutalism.dev component library for automatic retro styling via CSS variables, eliminating manual component retrofitting
 
@@ -187,6 +186,7 @@ npx shadcn@latest add https://neobrutalism.dev/r/badge.json
 npx shadcn@latest add https://neobrutalism.dev/r/input.json
 npx shadcn@latest add https://neobrutalism.dev/r/textarea.json
 npx shadcn@latest add https://neobrutalism.dev/r/select.json
+npx shadcn@latest add https://neobrutalism.dev/r/progress.json
 ```
 
 Before implementing any UI component, check if it exists at https://neobrutalism.dev/components/ and use the official version with the installation command above. Only create custom implementations if the component doesn't exist on neobrutalism.dev.
@@ -220,6 +220,18 @@ Custom container component for highlights and sections:
 Interactive branding component with press animation:
 - Same variants as Box but with button-like press behavior
 - Usage: Interactive branding elements, clickable logos
+
+#### ComparisonCard (Custom)
+Specialized card component for sorting interface:
+- Primary color background (`bg-main`) with black text (white in dark mode for UI elements)
+- Image area flush with top border, text area at bottom with border separator
+- Built-in hover effects and neobrutalist styling
+- Usage: Pairwise comparison interface in sorting
+
+#### Progress
+Neobrutalism Progress component with built-in retro styling:
+- `h-4` height with thick borders and primary color fill
+- Features: Border separator on indicator, secondary background, neobrutalist shadows
 
 ### CSS Variables
 

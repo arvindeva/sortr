@@ -27,12 +27,15 @@ export function Navbar() {
   });
 
   return (
-    <nav className="sticky top-0 z-30 flex w-full items-center justify-between border-b-2 border-border bg-secondary-background px-6 py-4">
+    <nav className="sticky top-0 z-30 flex w-full items-center justify-between border-b-2 border-border bg-secondary-background px-4 py-2 md:px-6 md:py-4">
       <Link href="/">
+        <span className="text-2xl font-bold tracking-wide transition-all duration-300 ease-out hover:tracking-widest md:hidden">
+          sortr
+        </span>
         <Logo
           variant="primary"
           size="md"
-          className="text-3xl font-bold tracking-wide transition-all duration-300 ease-out hover:tracking-widest"
+          className="hidden text-3xl font-bold tracking-wide transition-all duration-300 ease-out hover:tracking-widest md:block"
         >
           sortr
         </Logo>

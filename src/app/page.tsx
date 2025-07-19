@@ -39,19 +39,17 @@ export default async function Home() {
   return (
     <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-4xl px-4 py-10">
       <section className="mx-auto mb-10 max-w-xl text-center">
-        <Box variant="primary" size="xl" className="mb-6">
-          <h1 className="mb-4 text-6xl font-bold tracking-wide">sortr</h1>
-          <p className="text-lg font-medium">
-            Create and share ranked lists for anything
-          </p>
-        </Box>
+        <h1 className="mb-4 text-6xl font-bold tracking-wide">sortr</h1>
+        <p className="text-lg font-medium">
+          Create and share ranked lists for anything
+        </p>
       </section>
       <section className="w-full">
         <Panel variant="primary">
           <PanelHeader variant="primary">
             <PanelTitle>Popular Sorters</PanelTitle>
           </PanelHeader>
-          <PanelContent variant="primary">
+          <PanelContent variant="primary" className="p-3 md:p-6">
             {popularSorters.length === 0 ? (
               <div className="text-center">
                 <Box variant="warning" size="md">
@@ -61,11 +59,11 @@ export default async function Home() {
             ) : (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {popularSorters.map((sorter) => (
-                  <Card key={sorter.id} className="min-h-[160px]">
-                    <CardHeader>
+                  <Card key={sorter.id} className="md:min-h-[160px]">
+                    <CardHeader className="px-3 md:px-6 flex-1">
                       <div className="flex-1">
-                        <div className="flex h-[5rem] flex-col">
-                          <CardTitle className="mb-2 line-clamp-2 text-xl">
+                        <div className="md:h-6rem flex flex-col">
+                          <CardTitle className="line-clamp-2 text-xl font-medium">
                             <Link
                               href={`/sorter/${sorter.slug}`}
                               className="hover:underline"
@@ -87,14 +85,16 @@ export default async function Home() {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="px-3 md:px-6">
                       <div className="text-foreground flex items-center justify-between text-sm font-medium">
                         <div className="flex items-center gap-4">
                           <span>{sorter.completionCount} completions</span>
                           <span>{sorter.viewCount} views</span>
                         </div>
                         {sorter.category && (
-                          <Badge variant="default">{sorter.category}</Badge>
+                          <Badge variant="default" className="hidden md:block">
+                            {sorter.category}
+                          </Badge>
                         )}
                       </div>
                     </CardContent>

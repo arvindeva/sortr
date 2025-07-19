@@ -76,20 +76,22 @@ export default async function UserProfilePage({
       <section className="mb-8">
         <Box
           variant="primary"
-          size="lg"
-          className="flex items-center space-x-6"
+          size="sm"
+          className="flex items-center space-x-6 py-4"
         >
           {/* Avatar Placeholder */}
-          <div className="bg-border text-main border-border rounded-base flex h-24 w-24 items-center justify-center border-2">
-            <span className="text-2xl font-bold">
+          <div className="bg-border text-main border-border rounded-base flex h-16 w-16 items-center justify-center border-2 md:h-24 md:w-24">
+            <span className="text-4xl font-bold">
               {userData.username?.charAt(0).toUpperCase()}
             </span>
           </div>
 
           {/* User Info */}
           <div>
-            <h1 className="mb-2 text-3xl font-bold">{userData.username}</h1>
-            <p className="text-lg font-medium">User since {userSince}</p>
+            <h1 className="mb-2 text-lg font-bold md:text-4xl">
+              {userData.username}
+            </h1>
+            <p className="text-md font-medium">User since {userSince}</p>
           </div>
         </Box>
       </section>
@@ -100,7 +102,7 @@ export default async function UserProfilePage({
           <PanelHeader variant="primary">
             <PanelTitle>Sorters ({userSorters.length})</PanelTitle>
           </PanelHeader>
-          <PanelContent variant="primary">
+          <PanelContent variant="primary" className="p-3 md:p-6">
             {userSorters.length === 0 ? (
               <div className="text-center">
                 <Box variant="warning" size="lg">
@@ -115,9 +117,9 @@ export default async function UserProfilePage({
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
                 {userSorters.map((sorter) => (
-                  <Card key={sorter.id} className="min-h-[180px]">
-                    <CardHeader className="flex h-28 flex-col justify-start pb-3">
-                      <CardTitle className="mb-3 line-clamp-2 text-lg leading-relaxed">
+                  <Card key={sorter.id} className="md:min-h-[180px]">
+                    <CardHeader className="flex flex-col justify-start md:h-28">
+                      <CardTitle className="line-clamp-2 text-lg leading-relaxed">
                         <Link
                           href={`/sorter/${sorter.slug}`}
                           className="hover:underline"

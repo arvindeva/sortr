@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { ComparisonCard } from "@/components/ui/comparison-card";
 import { ArrowLeft, Trophy, Undo2, RotateCcw } from "lucide-react";
 import { SortItem } from "@/lib/sorting";
 import { InteractiveMergeSort, SortState } from "@/lib/interactive-merge-sort";
@@ -411,7 +411,7 @@ export default function SortPage() {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <div className="text-center">
-          <p className="text-muted-foreground">Loading sorter...</p>
+          <p className="text-black dark:text-white">Loading sorter...</p>
         </div>
       </div>
     );
@@ -421,7 +421,7 @@ export default function SortPage() {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <div className="text-center">
-          <p className="text-muted-foreground">Failed to load sorter</p>
+          <p className="text-black dark:text-white">Failed to load sorter</p>
           <Button onClick={() => router.push(`/sorter/${sorterSlug}`)}>
             Go Back
           </Button>
@@ -436,7 +436,7 @@ export default function SortPage() {
         <div className="text-center">
           <Trophy className="mx-auto mb-4" size={48} />
           <h1 className="mb-2 text-2xl font-bold">Saving Results...</h1>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-black dark:text-white mb-4">
             Please wait while we save your results
           </p>
         </div>
@@ -448,7 +448,7 @@ export default function SortPage() {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <div className="text-center">
-          <p className="text-muted-foreground">Preparing comparison...</p>
+          <p className="text-black dark:text-white">Preparing comparison...</p>
         </div>
       </div>
     );
@@ -464,17 +464,17 @@ export default function SortPage() {
       : 0;
 
   return (
-    <div className="container mx-auto max-w-4xl px-0 py-8 md:px-4">
+    <div className="container mx-auto max-w-4xl px-0 py-8 md:px-4 text-black dark:text-white">
       {/* Header */}
       <div className="mb-6 px-2 md:px-0">
         <h1 className="mb-2 text-2xl">
-          <span className="text-muted-foreground font-normal">Sorting:</span>{" "}
+          <span className="text-black dark:text-white font-normal">Sorting:</span>{" "}
           <span className="font-bold">{sorterData.sorter.title}</span>
         </h1>
 
         {/* Progress and Actions - Compact */}
         <div className="space-y-3">
-          <div className="text-muted-foreground flex items-center justify-between text-sm">
+          <div className="text-black dark:text-white flex items-center justify-between text-sm">
             <span>
               {completedComparisons} comparisons • {progress}% complete
             </span>
@@ -510,73 +510,25 @@ export default function SortPage() {
       {/* Comparison Cards */}
       <div className="relative grid grid-cols-2 gap-2 px-0 md:gap-4 md:px-0 items-stretch">
         {/* Item A */}
-        <Card
-          className="hover:border-primary/50 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md md:mx-auto md:w-80 py-0 gap-0 flex flex-col"
+        <ComparisonCard
+          className="md:mx-auto md:w-80"
+          imageUrl={currentComparison.itemA.imageUrl}
+          title={currentComparison.itemA.title}
           onClick={() => handleChoice(currentComparison.itemA.id)}
-        >
-          <CardContent className="p-0 flex flex-col flex-1">
-            {/* Full-width image area */}
-            {currentComparison.itemA.imageUrl ? (
-              <div className="aspect-square w-full overflow-hidden bg-gray-100 rounded-t-xl md:h-64">
-                <img
-                  src={currentComparison.itemA.imageUrl}
-                  alt={currentComparison.itemA.title}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="aspect-square w-full flex items-center justify-center bg-gray-100 rounded-t-xl md:h-64">
-                <span className="text-muted-foreground text-lg md:text-4xl font-bold">
-                  {currentComparison.itemA.title.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
-            
-            {/* Text area with minimum height and flex-grow */}
-            <div className="flex min-h-16 items-center justify-center px-4 py-6 text-center flex-1">
-              <h3 className="text-sm font-semibold leading-tight md:text-lg">
-                {currentComparison.itemA.title}
-              </h3>
-            </div>
-          </CardContent>
-        </Card>
+        />
 
         {/* Item B */}
-        <Card
-          className="hover:border-primary/50 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md md:mx-auto md:w-80 py-0 gap-0 flex flex-col"
+        <ComparisonCard
+          className="md:mx-auto md:w-80"
+          imageUrl={currentComparison.itemB.imageUrl}
+          title={currentComparison.itemB.title}
           onClick={() => handleChoice(currentComparison.itemB.id)}
-        >
-          <CardContent className="p-0 flex flex-col flex-1">
-            {/* Full-width image area */}
-            {currentComparison.itemB.imageUrl ? (
-              <div className="aspect-square w-full overflow-hidden bg-gray-100 rounded-t-xl md:h-64">
-                <img
-                  src={currentComparison.itemB.imageUrl}
-                  alt={currentComparison.itemB.title}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="aspect-square w-full flex items-center justify-center bg-gray-100 rounded-t-xl md:h-64">
-                <span className="text-muted-foreground text-lg md:text-4xl font-bold">
-                  {currentComparison.itemB.title.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
-            
-            {/* Text area with minimum height and flex-grow */}
-            <div className="flex min-h-16 items-center justify-center px-4 py-6 text-center flex-1">
-              <h3 className="text-sm font-semibold leading-tight md:text-lg">
-                {currentComparison.itemB.title}
-              </h3>
-            </div>
-          </CardContent>
-        </Card>
+        />
 
-        {/* VS Divider - desktop only */}
-        <div className="absolute top-1/2 left-1/2 z-10 hidden -translate-x-1/2 -translate-y-1/2 transform md:block">
-          <div className="bg-background rounded-full border px-4 py-2 shadow-md">
-            <span className="text-muted-foreground text-sm font-bold">VS</span>
+        {/* VS Divider - neobrutalist styling, visible on all devices */}
+        <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 transform">
+          <div className="bg-main border-2 border-border shadow-shadow rounded-base px-3 py-2">
+            <span className="text-black text-sm font-bold">VS</span>
           </div>
         </div>
       </div>
