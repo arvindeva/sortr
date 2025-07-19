@@ -30,7 +30,7 @@ import {
   PanelTitle,
   PanelContent,
 } from "@/components/ui/panel";
-import { Plus, X, Camera, ChevronDown, GripVertical } from "lucide-react";
+import { Plus, X, Camera, ChevronDown, ChevronUp, GripVertical } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
 
 export default function CreateSorterForm() {
@@ -54,8 +54,9 @@ export default function CreateSorterForm() {
   // Initialize groups when switching to filters mode
   useEffect(() => {
     if (useGroups) {
-      // Initialize groups if they don't exist
-      if (!form.getValues("groups")) {
+      // Initialize groups if they don't exist or are empty
+      const currentGroups = form.getValues("groups");
+      if (!currentGroups || currentGroups.length === 0) {
         form.setValue("groups", [
           {
             name: "",
@@ -84,6 +85,7 @@ export default function CreateSorterForm() {
     fields: groupFields,
     append: appendGroup,
     remove: removeGroup,
+    move: moveGroup,
   } = useFieldArray({
     control: form.control,
     name: "groups",
@@ -110,6 +112,20 @@ export default function CreateSorterForm() {
   const removeGroupHandler = (index: number) => {
     if (groupFields.length > 2) {
       removeGroup(index);
+    }
+  };
+
+  // Move group up
+  const moveGroupUp = (index: number) => {
+    if (index > 0) {
+      moveGroup(index, index - 1);
+    }
+  };
+
+  // Move group down
+  const moveGroupDown = (index: number) => {
+    if (index < groupFields.length - 1) {
+      moveGroup(index, index + 1);
     }
   };
 
@@ -216,11 +232,11 @@ export default function CreateSorterForm() {
 
   return (
     <div>
-      <Panel variant="primary">
+      <Panel variant="primary" className="bg-background">
         <PanelHeader variant="primary">
           <PanelTitle>Sorter Details</PanelTitle>
         </PanelHeader>
-        <PanelContent variant="primary">
+        <PanelContent variant="primary" className="p-3 md:p-6 bg-background">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -352,39 +368,48 @@ export default function CreateSorterForm() {
 
                   <div className="space-y-6">
                     {groupFields.map((groupField, groupIndex) => (
-                      <Box key={groupField.id} variant="white" size="md">
-                        <div className="mb-3 flex items-center gap-2">
-                          <GripVertical className="text-foreground h-4 w-4" />
-                          <FormField
-                            control={form.control}
-                            name={`groups.${groupIndex}.name`}
-                            render={({ field }) => (
-                              <FormItem className="flex-1">
-                                <FormControl>
-                                  <Input
-                                    placeholder="Filter name (e.g., Kill em All)"
-                                    {...field}
-                                    className="font-medium"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          {groupFields.length > 2 && (
-                            <Button
-                              type="button"
-                              variant="neutral"
-                              size="sm"
-                              onClick={() => removeGroupHandler(groupIndex)}
-                              title="Remove filter"
-                            >
-                              <X size={16} />
-                            </Button>
-                          )}
+                      <div key={groupField.id} className="flex items-center gap-3">
+                        <Box variant="white" size="md" className="flex-1 p-3 md:px-6 md:py-3">
+                          <div className="mb-4">
+                            <div className="mb-2 flex items-center justify-between">
+                              <FormLabel>Filter name</FormLabel>
+                              {/* Remove button */}
+                              {groupFields.length > 2 && (
+                                <Button
+                                  type="button"
+                                  variant="neutralNoShadow"
+                                  size="sm"
+                                  onClick={() => removeGroupHandler(groupIndex)}
+                                  title="Remove filter"
+                                  className="h-6 w-6 p-0 min-w-0 flex-shrink-0"
+                                >
+                                  <X size={14} />
+                                </Button>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <FormField
+                              control={form.control}
+                              name={`groups.${groupIndex}.name`}
+                              render={({ field }) => (
+                                <FormItem className="flex-1">
+                                  <FormControl>
+                                    <Input
+                                      placeholder="Filter name"
+                                      {...field}
+                                      className="font-medium"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                         </div>
 
-                        <div className="ml-6 space-y-2">
+                        <div>
+                          <FormLabel className="mb-2 block">Items</FormLabel>
+                          <div className="space-y-2">
                           {form
                             .watch(`groups.${groupIndex}.items`)
                             ?.map((_, itemIndex) => (
@@ -405,7 +430,7 @@ export default function CreateSorterForm() {
                                         .length > 1 && (
                                         <Button
                                           type="button"
-                                          variant="neutral"
+                                          variant="neutralNoShadow"
                                           size="sm"
                                           onClick={() =>
                                             removeItemFromGroup(
@@ -414,8 +439,9 @@ export default function CreateSorterForm() {
                                             )
                                           }
                                           title="Remove item"
+                                          className="h-6 w-6 p-0"
                                         >
-                                          <X size={16} />
+                                          <X size={14} />
                                         </Button>
                                       )}
                                     </div>
@@ -426,7 +452,7 @@ export default function CreateSorterForm() {
                             ))}
                           <Button
                             type="button"
-                            variant="noShadow"
+                            variant="neutral"
                             size="sm"
                             onClick={() => addItemToGroup(groupIndex)}
                             className="mt-2 flex items-center gap-1 text-sm"
@@ -434,8 +460,44 @@ export default function CreateSorterForm() {
                             <Plus size={14} />
                             Add Item
                           </Button>
+                          </div>
                         </div>
-                      </Box>
+                        </Box>
+                        
+                        {/* Up/Down arrows outside the card */}
+                        <div className="flex flex-col gap-1">
+                          {/* Move up button */}
+                          {groupIndex > 0 ? (
+                            <Button
+                              type="button"
+                              variant="neutral"
+                              size="sm"
+                              onClick={() => moveGroupUp(groupIndex)}
+                              title="Move filter up"
+                              className="h-6 w-6 p-0"
+                            >
+                              <ChevronUp size={14} />
+                            </Button>
+                          ) : (
+                            <div className="h-6 w-6"></div>
+                          )}
+                          {/* Move down button */}
+                          {groupIndex < groupFields.length - 1 ? (
+                            <Button
+                              type="button"
+                              variant="neutral"
+                              size="sm"
+                              onClick={() => moveGroupDown(groupIndex)}
+                              title="Move filter down"
+                              className="h-6 w-6 p-0"
+                            >
+                              <ChevronDown size={14} />
+                            </Button>
+                          ) : (
+                            <div className="h-6 w-6"></div>
+                          )}
+                        </div>
+                      </div>
                     ))}
                   </div>
 
@@ -481,12 +543,13 @@ export default function CreateSorterForm() {
                               {itemFields.length > 2 && (
                                 <Button
                                   type="button"
-                                  variant="neutral"
+                                  variant="neutralNoShadow"
                                   size="sm"
                                   onClick={() => removeItemHandler(index)}
                                   title="Remove item"
+                                  className="h-6 w-6 p-0"
                                 >
-                                  <X size={16} />
+                                  <X size={14} />
                                 </Button>
                               )}
                             </div>
