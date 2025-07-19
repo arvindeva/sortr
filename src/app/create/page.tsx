@@ -12,13 +12,10 @@ export default async function CreatePage() {
   }
 
   return (
-    <div className="container mx-auto max-w-2xl px-4 py-8">
-      <Box variant="primary" size="xl" className="mb-8 block">
+    <div className="container mx-auto max-w-4xl px-4 py-8">
+      <Box variant="primary" size="md" className="mb-6 block">
         <div>
-          <h1 className="mb-2 text-3xl font-bold">Create New Sorter</h1>
-          <p className="text-lg font-medium">
-            Create a new sorter for others to rank and compare items.
-          </p>
+          <h1 className="text-xl font-bold">Create New Sorter</h1>
         </div>
       </Box>
 
