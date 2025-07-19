@@ -50,25 +50,25 @@ export function Navbar() {
             Create a Sorter
           </Button>
         ) : session ? (
-          <Link href="/create">
-            <Button size="sm" variant="default" className="group">
+          <Button asChild size="sm" variant="default" className="group">
+            <Link href="/create">
               <Plus
                 className="mr-1 transition-transform duration-200 group-hover:rotate-90"
                 size={16}
               />
               Create a Sorter
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         ) : (
-          <Link href="/auth/signin">
-            <Button size="sm" variant="default" className="group">
+          <Button asChild size="sm" variant="default" className="group">
+            <Link href="/auth/signin">
               <Plus
                 className="mr-1 transition-transform duration-200 group-hover:rotate-90"
                 size={16}
               />
               Create a Sorter
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         )}
 
         {status === "loading" ? (
@@ -78,12 +78,12 @@ export function Navbar() {
         ) : session ? (
           <div className="flex items-center gap-4">
             {userData?.username ? (
-              <Link href={`/user/${userData.username}`}>
-                <Button size="sm" variant="default">
+              <Button asChild size="sm" variant="default">
+                <Link href={`/user/${userData.username}`}>
                   <User size={16} className="mr-1" />
                   Profile
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             ) : (
               <Button size="sm" variant="default" disabled>
                 <User size={16} className="mr-1" />
@@ -102,6 +102,24 @@ export function Navbar() {
 
       {/* Mobile Menu Button */}
       <div className="flex items-center gap-4 md:hidden">
+        {/* Create button - mobile navbar */}
+        {status === "loading" ? (
+          <Button variant="default" size="icon" disabled aria-label="Create a Sorter">
+            <Plus size={20} />
+          </Button>
+        ) : session ? (
+          <Button asChild variant="default" size="icon" aria-label="Create a Sorter">
+            <Link href="/create">
+              <Plus size={20} />
+            </Link>
+          </Button>
+        ) : (
+          <Button asChild variant="default" size="icon" aria-label="Create a Sorter">
+            <Link href="/auth/signin">
+              <Plus size={20} />
+            </Link>
+          </Button>
+        )}
         <ModeToggle />
         <Button
           variant="default"
@@ -126,28 +144,6 @@ export function Navbar() {
         className={`absolute top-full right-0 left-0 z-30 border-b-2 border-border bg-secondary-background transition-all duration-300 ease-out md:hidden ${mobileMenuOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
       >
         <div className="flex flex-col gap-3 p-4">
-          {/* Create button */}
-          {status === "loading" ? (
-            <Button variant="default" disabled className="w-full">
-              <Plus className="mr-2" size={16} />
-              Create a Sorter
-            </Button>
-          ) : session ? (
-            <Link href="/create" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="default" className="w-full">
-                <Plus className="mr-2" size={16} />
-                Create a Sorter
-              </Button>
-            </Link>
-          ) : (
-            <Link href="/auth/signin" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="default" className="w-full">
-                <Plus className="mr-2" size={16} />
-                Create a Sorter
-              </Button>
-            </Link>
-          )}
-
           {/* Auth buttons */}
           {status === "loading" ? (
             <Button variant="default" disabled className="w-full">
@@ -156,15 +152,15 @@ export function Navbar() {
           ) : session ? (
             <>
               {userData?.username ? (
-                <Link
-                  href={`/user/${userData.username}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Button variant="default" className="w-full">
+                <Button asChild variant="default" className="w-full">
+                  <Link
+                    href={`/user/${userData.username}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     <User size={16} className="mr-2" />
                     Profile
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               ) : (
                 <Button variant="default" disabled className="w-full">
                   <User size={16} className="mr-2" />
