@@ -184,12 +184,12 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         {/* Share and Sort Buttons */}
         <div className="mb-6 flex flex-wrap gap-4">
           <ShareButton />
-          <Link href={sorter.useGroups ? `/sorter/${sorter.slug}/filters` : `/sorter/${sorter.slug}/sort`}>
-            <Button variant="default">
+          <Button asChild variant="default">
+            <Link href={sorter.useGroups ? `/sorter/${sorter.slug}/filters` : `/sorter/${sorter.slug}/sort`}>
               <RotateCcw className="mr-2" size={16} />
               Sort Again
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
 
         {/* Filter badges - shown if groups were selected */}
@@ -310,15 +310,17 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
       {/* Actions */}
       <div className="mt-8 flex justify-center gap-4">
-        <Link href={sorter.useGroups ? `/sorter/${sorter.slug}/filters` : `/sorter/${sorter.slug}/sort`}>
-          <Button>
+        <Button asChild>
+          <Link href={sorter.useGroups ? `/sorter/${sorter.slug}/filters` : `/sorter/${sorter.slug}/sort`}>
             <Play className="mr-2" size={16} />
             Sort now
-          </Button>
-        </Link>
-        <Link href={`/sorter/${sorter.slug}`}>
-          <Button variant="neutral">View Sorter Details</Button>
-        </Link>
+          </Link>
+        </Button>
+        <Button asChild variant="neutral">
+          <Link href={`/sorter/${sorter.slug}`}>
+            View Sorter Details
+          </Link>
+        </Button>
       </div>
     </div>
   );

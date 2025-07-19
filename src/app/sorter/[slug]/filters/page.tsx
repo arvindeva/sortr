@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Panel,
+  PanelHeader,
+  PanelTitle,
+  PanelContent,
+} from "@/components/ui/panel";
+import {
   ChevronLeft,
   Filter,
   Play,
@@ -53,7 +59,7 @@ export default function FilterPage({ params }: FilterPageProps) {
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentSlug, setCurrentSlug] = useState<string>('');
+  const [currentSlug, setCurrentSlug] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -161,140 +167,133 @@ export default function FilterPage({ params }: FilterPageProps) {
       {/* Header */}
       <div className="mb-8">
         <div className="mb-4 flex items-center gap-4">
-          <Link href={`/sorter/${sorter.slug}`}>
-            <Button variant="noShadow" size="sm">
+          <Button asChild variant="noShadow" size="sm">
+            <Link href={`/sorter/${sorter.slug}`}>
               <ChevronLeft className="mr-1 h-4 w-4" />
               Back to Sorter
-            </Button>
-          </Link>
-        </div>
-
-        <div className="mb-4">
-          <h1 className="mb-2 text-2xl font-bold">Start Sorting</h1>
-          <p className="text-muted-foreground">
-            Choose which groups you want to include in your sorting session for
-            "{sorter.title}"
-          </p>
-        </div>
-
-        {/* Stats */}
-        <div className="text-muted-foreground flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1">
-            <Filter className="h-4 w-4" />
-            <span>
-              {selectedGroups.length} of {groups.length} groups selected
-            </span>
-          </div>
-          <div>
-            <span>{totalItems} items total</span>
-          </div>
+            </Link>
+          </Button>
         </div>
       </div>
 
-      {/* Groups Selection */}
-      <div className="mb-8">
-        <div className="space-y-4">
-          {groups.map((group) => {
-            const isSelected = selectedGroups.includes(group.slug);
-            const isExpanded = expandedGroups.includes(group.id);
+      {/* Main Content Panel */}
+      <Panel variant="primary">
+        <PanelHeader variant="primary">
+          <PanelTitle>Filters</PanelTitle>
+        </PanelHeader>
+        <PanelContent variant="primary" className="p-3 md:p-6">
+          <div className="mb-6">
+            <p className="text-foreground mb-4">
+              This sorter has filters. Choose which groups you want to include
+              in your sorting session for "{sorter.title}"
+            </p>
 
-            return (
-              <div key={group.id} className="space-y-2">
-                {/* Group Row */}
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    id={`group-${group.id}`}
-                    className="border-foreground cursor-pointer"
-                    checked={isSelected}
-                    onCheckedChange={() => toggleGroup(group.slug)}
-                  />
-                  <label
-                    htmlFor={`group-${group.id}`}
-                    className="cursor-pointer font-medium"
-                  >
-                    {group.name}
-                  </label>
-                  <button
-                    onClick={() => toggleExpanded(group.id)}
-                    className="cursor-pointer text-sm text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
-                  >
-                    {isExpanded
-                      ? `Hide ${group.items.length} items`
-                      : `Show ${group.items.length} items`}
-                  </button>
-                </div>
+            {/* Stats */}
+            <div className="text-muted-foreground flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-1">
+                <Filter className="h-4 w-4" />
+                <span>
+                  {selectedGroups.length} of {groups.length} groups selected
+                </span>
+              </div>
+              <div>
+                <span>{totalItems} items total</span>
+              </div>
+            </div>
+          </div>
 
-                {/* Expandable Items List */}
-                {isExpanded && (
-                  <div className="ml-6 space-y-2">
-                    {group.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center gap-2 text-sm"
+          {/* Groups Selection */}
+          <div className="mb-8">
+            <div className="space-y-4">
+              {groups.map((group) => {
+                const isSelected = selectedGroups.includes(group.slug);
+                const isExpanded = expandedGroups.includes(group.id);
+
+                return (
+                  <div key={group.id} className="space-y-2">
+                    {/* Group Row */}
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id={`group-${group.id}`}
+                        className="border-foreground cursor-pointer"
+                        checked={isSelected}
+                        onCheckedChange={() => toggleGroup(group.slug)}
+                      />
+                      <label
+                        htmlFor={`group-${group.id}`}
+                        className="cursor-pointer font-medium"
                       >
-                        {item.imageUrl ? (
-                          <div className="bg-muted h-6 w-6 flex-shrink-0 overflow-hidden rounded">
-                            <img
-                              src={item.imageUrl}
-                              alt={item.title}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-gray-100">
-                            <span className="text-muted-foreground text-xs font-bold">
-                              {item.title.charAt(0).toUpperCase()}
+                        {group.name}
+                      </label>
+                      <button
+                        onClick={() => toggleExpanded(group.id)}
+                        className="cursor-pointer text-sm text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                      >
+                        {isExpanded
+                          ? `Hide ${group.items.length} items`
+                          : `Show ${group.items.length} items`}
+                      </button>
+                    </div>
+
+                    {/* Expandable Items List */}
+                    {isExpanded && (
+                      <div className="ml-6 space-y-2">
+                        {group.items.map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex items-center gap-2 text-sm"
+                          >
+                            <span className="text-foreground truncate">
+                              {item.title}
                             </span>
                           </div>
-                        )}
-                        <span className="text-muted-foreground truncate">
-                          {item.title}
-                        </span>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      {selectedGroups.length === 0 && (
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-          <p className="text-sm text-yellow-800">
-            Please select at least one group to start sorting.
-          </p>
-        </div>
-      )}
-      {/* Action Buttons */}
-      <div className="mt-4 flex items-center gap-4">
-        <Button
-          onClick={handleStartSorting}
-          disabled={selectedGroups.length === 0}
-          size="lg"
-          className="max-w-md flex-1"
-        >
-          <Play className="mr-2 h-4 w-4" />
-          Start Sorting ({totalItems} items)
-        </Button>
+                );
+              })}
+            </div>
+          </div>
 
-        <div className="flex gap-2">
+          {/* Quick Actions */}
+          <div className="mb-4 flex gap-2">
+            <Button
+              variant="neutral"
+              size="sm"
+              onClick={() => setSelectedGroups(groups.map((g) => g.slug))}
+            >
+              Select All
+            </Button>
+            <Button
+              variant="neutral"
+              size="sm"
+              onClick={() => setSelectedGroups([])}
+            >
+              Clear All
+            </Button>
+          </div>
+
+          {selectedGroups.length === 0 && (
+            <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+              <p className="text-sm text-yellow-800">
+                Please select at least one group to start sorting.
+              </p>
+            </div>
+          )}
+
+          {/* Start Sorting Button */}
           <Button
-            variant="neutral"
-            size="sm"
-            onClick={() => setSelectedGroups(groups.map((g) => g.slug))}
+            onClick={handleStartSorting}
+            disabled={selectedGroups.length === 0}
+            size="lg"
+            className="w-full"
           >
-            Select All
+            <Play className="mr-2 h-4 w-4" />
+            Start Sorting ({totalItems} items)
           </Button>
-          <Button
-            variant="neutral"
-            size="sm"
-            onClick={() => setSelectedGroups([])}
-          >
-            Clear All
-          </Button>
-        </div>
-      </div>
+        </PanelContent>
+      </Panel>
     </div>
   );
 }

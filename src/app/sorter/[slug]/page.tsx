@@ -143,11 +143,12 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
         {/* Creator and Stats Info */}
         <Box variant="secondary" size="md" className="mb-6 block">
-          <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+          <div className="space-y-3">
             {sorter.description && (
               <p className="text-md font-medium">{sorter.description}</p>
             )}
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium">
+              <div className="flex items-center gap-1">
               <User size={16} />
               <span>by</span>
               {sorter.user.username ? (
@@ -176,31 +177,32 @@ export default async function SorterPage({ params }: SorterPageProps) {
               <Trophy size={16} />
               <span>{sorter.completionCount} completions</span>
             </div>
+            </div>
           </div>
         </Box>
 
-        {/* Start Sorting Button */}
+        {/* Start Now Button */}
         <div className="block">
           {sorter.useGroups ? (
-            <Link href={`/sorter/${sorter.slug}/filters`}>
-              <Button size="lg" variant="default" className="group mb-8">
+            <Button asChild size="lg" variant="default" className="group mb-8">
+              <Link href={`/sorter/${sorter.slug}/filters`}>
                 <Play
                   className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
                   size={20}
                 />
-                Start Sorting
-              </Button>
-            </Link>
+                Sort Now
+              </Link>
+            </Button>
           ) : (
-            <Link href={`/sorter/${sorter.slug}/sort`}>
-              <Button size="lg" variant="default" className="group mb-8">
+            <Button asChild size="lg" variant="default" className="group mb-8">
+              <Link href={`/sorter/${sorter.slug}/sort`}>
                 <Play
                   className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
                   size={20}
                 />
                 Sort now
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
         </div>
       </section>
@@ -234,7 +236,10 @@ export default async function SorterPage({ params }: SorterPageProps) {
                         {/* Items in Group */}
                         <div className="space-y-3">
                           {group.items.map((item) => (
-                            <RankingItem key={item.id} className="bg-background text-foreground">
+                            <RankingItem
+                              key={item.id}
+                              className="bg-background text-foreground"
+                            >
                               <RankingItemContent>
                                 <div className="flex min-w-0 items-center gap-3 overflow-hidden">
                                   {/* Thumbnail */}
@@ -279,7 +284,10 @@ export default async function SorterPage({ params }: SorterPageProps) {
               ) : (
                 <div className="space-y-3">
                   {items?.map((item) => (
-                    <RankingItem key={item.id} className="bg-background text-foreground">
+                    <RankingItem
+                      key={item.id}
+                      className="bg-background text-foreground"
+                    >
                       <RankingItemContent>
                         <div className="flex min-w-0 items-center gap-3 overflow-hidden">
                           {/* Thumbnail */}
