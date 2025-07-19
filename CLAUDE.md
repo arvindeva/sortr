@@ -186,6 +186,7 @@ npx shadcn@latest add https://neobrutalism.dev/r/badge.json
 npx shadcn@latest add https://neobrutalism.dev/r/input.json
 npx shadcn@latest add https://neobrutalism.dev/r/textarea.json
 npx shadcn@latest add https://neobrutalism.dev/r/select.json
+npx shadcn@latest add https://neobrutalism.dev/r/switch.json
 npx shadcn@latest add https://neobrutalism.dev/r/progress.json
 ```
 
