@@ -60,7 +60,7 @@ export default async function Home() {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {popularSorters.map((sorter) => (
                   <Card key={sorter.id} className="md:min-h-[160px]">
-                    <CardHeader className="px-3 md:px-6 flex-1">
+                    <CardHeader className="flex-1 px-3 md:px-6">
                       <div className="flex-1">
                         <div className="md:h-6rem flex flex-col">
                           <CardTitle className="line-clamp-2 text-xl font-medium">
