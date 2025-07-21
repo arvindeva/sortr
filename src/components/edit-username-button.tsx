@@ -61,11 +61,9 @@ export function EditUsernameButton({
         throw new Error(data.error || "Failed to update username");
       }
 
-      // Redirect to new username URL
-      router.push(`/user/${data.username}`);
-      router.refresh();
-
-      setIsOpen(false);
+      // Immediately redirect to new username URL with full page refresh
+      // This prevents the brief moment where old username is still visible
+      window.location.href = `/user/${data.username}`;
     } catch (error) {
       console.error("Error updating username:", error);
       setError(
