@@ -468,10 +468,62 @@ export default function SortPage() {
   }
 
   if (!currentComparison) {
+    const clearAllSaves = () => {
+      try {
+        // Get all localStorage keys
+        const keys = Object.keys(localStorage);
+
+        // Filter and remove sorting-related keys
+        const sortingKeys = keys.filter(
+          (key) =>
+            key.startsWith("sorting-progress-") ||
+            (key.startsWith("sorter_") && key.endsWith("_selectedGroups")),
+        );
+
+        sortingKeys.forEach((key) => localStorage.removeItem(key));
+
+        // Show success message and reload
+        alert(
+          `Cleared ${sortingKeys.length} saved sorting sessions. Reloading page...`,
+        );
+        window.location.reload();
+      } catch (error) {
+        console.error("Failed to clear localStorage:", error);
+        alert(
+          "Failed to clear saves. Please try manually clearing your browser storage.",
+        );
+      }
+    };
+
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="text-center">
-          <p className="text-black dark:text-white">Preparing comparison...</p>
+      <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
+        <div className="space-y-6 text-center">
+          <div>
+            <p className="mb-2 text-lg text-black dark:text-white">
+              Preparing comparison...
+            </p>
+            <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2"></div>
+          </div>
+
+          <Box variant="warning" size="md" className="mx-auto max-w-md">
+            <div className="space-y-3 text-center">
+              <p className="text-sm font-medium">
+                If this screen persists, you may have a browser storage issue.
+              </p>
+              <p className="text-xs">
+                This can happen when storage is full from saved sorting
+                progress.
+              </p>
+              <Button
+                variant="neutral"
+                size="sm"
+                onClick={clearAllSaves}
+                className="w-full"
+              >
+                Clear All Saved Progress
+              </Button>
+            </div>
+          </Box>
         </div>
       </div>
     );
