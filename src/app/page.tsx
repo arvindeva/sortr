@@ -13,7 +13,7 @@ import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 
 // Force dynamic rendering for always-fresh data
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 async function getPopularSorters() {
   const popularSorters = await db
@@ -39,19 +39,23 @@ export default async function Home() {
 
   return (
     <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-4xl px-2 py-10 md:px-4">
-      <section className="mx-auto mb-10 max-w-xl text-center">
-        <h1 className="mb-4 text-6xl font-bold tracking-wide">sortr</h1>
-        <p className="text-lg font-medium">
-          Create and share ranked lists for anything. Inspired by{" "}
-          <Link
-            href={`https://execfera.github.io/charasort/`}
-            target="_blank"
-            className="text-blue-700 underline dark:text-blue-300"
-          >
-            charasort
-          </Link>
-          .
-        </p>
+      <section className="mx-auto mb-10 flex max-w-xl justify-center">
+        <Box variant="primary" size="sm" className="text-center md:p-8">
+          <h1 className="text-4xl font-bold tracking-wide md:mb-4 md:text-6xl">
+            sortr
+          </h1>
+          <p className="text-sm font-medium md:text-lg">
+            Create and share ranked lists for anything. <br></br>Inspired by{" "}
+            <Link
+              href={`https://execfera.github.io/charasort/`}
+              target="_blank"
+              className="text-blue-800 underline dark:text-blue-800"
+            >
+              charasort
+            </Link>
+            .
+          </p>
+        </Box>
       </section>
       <section className="w-full">
         <Panel variant="primary">

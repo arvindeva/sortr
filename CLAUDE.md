@@ -58,11 +58,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `src/app/results/[id]/` - Sorting results display
   - `src/app/user/[username]/` - User profile pages
 - `src/components/` - React components
-  - `src/components/ui/` - shadcn/ui components (Button, Card, Badge, Switch, Progress, etc.)
+  - `src/components/ui/` - shadcn/ui components (Button, Card, Badge, Switch, Progress, Skeleton, Dialog, etc.)
+  - Custom UI components (SortingBarsLoader, SortPageSkeleton, ComparisonCard)
   - Navigation components (Navbar, LoginButton, ShareButton)
   - Theme components (ThemeProvider, ModeToggle)
   - Progress tracking (ProgressProvider)
   - Animated components (AnimatedRankings)
+  - User management (EditUsernameButton, DeleteSorterButton, UserProfileHeader)
 - `src/db/` - Database configuration and schema
 - `src/lib/` - Utility functions and shared logic
   - `src/lib/auth.ts` - NextAuth.js configuration
@@ -150,13 +152,13 @@ Requires configuration for:
 
 🔄 **Recent Major Updates:**
 
-- **UI Consistency & Mobile Optimization**: Updated all pages to use consistent panel structure with mobile-optimized padding (`p-2 md:p-6`), improved text wrapping to prevent horizontal scrolling, and standardized card backgrounds across all pages
-- **Panel Background Enhancement**: Changed panel backgrounds to use grey (`bg-secondary-background`) in dark mode to match navbar styling for better visual consistency
-- **Sorting Interface Improvements**: Created custom `ComparisonCard` component with clean layout (image flush with top, text at bottom), added neobrutalist VS divider visible on all devices, and implemented black text with white text in dark mode for UI elements
-- **Component Library Expansion**: Added neobrutalist Progress component (`npx shadcn@latest add https://neobrutalism.dev/r/progress.json`) and created custom ComparisonCard with proper borders and neobrutalist styling
-- **Results Page Refinement**: Updated rankings items to match homepage card styling, restructured header layout to match sorter page patterns, and optimized padding for mobile devices
-- **Enhanced filters UI**: Simplified checkbox-based interface with collapsible item lists for better usability in dark mode
-- **Neobrutalism.dev Integration**: Migrated to neobrutalism.dev component library for automatic retro styling via CSS variables, eliminating manual component retrofitting
+- **Force-Dynamic Rendering**: Migrated homepage, user profiles, and sorter detail pages from time-based caching to force-dynamic rendering for always-fresh data, eliminating stale content issues where deleted sorters would show as broken links
+- **Enhanced Loading States**: Created custom `SortingBarsLoader` component with animated sorting bars using site primary colors, replaced simple text-based loading states across sort/filter/auth pages with consistent animated components
+- **Skeleton Loading Implementation**: Added comprehensive skeleton loading for sort page that matches actual interface layout with proper responsive design and neobrutalist styling
+- **UX Improvements**: Fixed loading state flash issues in create/edit/delete actions by removing `finally` blocks and maintaining loading states until navigation completes, providing seamless user experience
+- **Component Library Expansion**: Added neobrutalism Skeleton (`npx shadcn@latest add https://neobrutalism.dev/r/skeleton.json`) and Dialog components, created reusable SortingBarsLoader for consistent loading animations
+- **Authentication UI**: Enhanced "Check your email" page with red envelope icon (white background in light mode, secondary-background in dark mode) and improved text contrast using `text-foreground`
+- **Homepage Enhancement**: Wrapped main title and subtitle in primary Box component for better visual hierarchy and consistent styling with site design language
 
 ## Design System
 
@@ -188,6 +190,8 @@ npx shadcn@latest add https://neobrutalism.dev/r/textarea.json
 npx shadcn@latest add https://neobrutalism.dev/r/select.json
 npx shadcn@latest add https://neobrutalism.dev/r/switch.json
 npx shadcn@latest add https://neobrutalism.dev/r/progress.json
+npx shadcn@latest add https://neobrutalism.dev/r/skeleton.json
+npx shadcn@latest add https://neobrutalism.dev/r/dialog.json
 ```
 
 Before implementing any UI component, check if it exists at https://neobrutalism.dev/components/ and use the official version with the installation command above. Only create custom implementations if the component doesn't exist on neobrutalism.dev.
