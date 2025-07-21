@@ -10,6 +10,7 @@ import { ArrowLeft, Trophy, Undo2, RotateCcw } from "lucide-react";
 import { SortItem } from "@/lib/sorting";
 import { InteractiveMergeSort, SortState } from "@/lib/interactive-merge-sort";
 import LZString from "lz-string";
+import { Box } from "@/components/ui/box";
 
 interface SorterData {
   sorter: {
@@ -44,74 +45,89 @@ function generateProgressKey(sorterId: string, groupSlugs: string[]): string {
   if (groupSlugs.length === 0) {
     return `sorting-progress-${sorterId}-all`;
   }
-  
+
   // Sort slugs for consistent key generation
-  const sortedSlugs = groupSlugs.sort().join('-');
+  const sortedSlugs = groupSlugs.sort().join("-");
   return `sorting-progress-${sorterId}-${sortedSlugs}`;
 }
 
 // Storage optimization: Convert UUID-based choices to indexed format
-function serializeChoices(items: SortItem[], userChoices: Map<string, string>, stateHistory: any[]): any {
+function serializeChoices(
+  items: SortItem[],
+  userChoices: Map<string, string>,
+  stateHistory: any[],
+): any {
   // Create item map for UUID to index conversion
-  const itemMap = items.map(item => item.id);
+  const itemMap = items.map((item) => item.id);
   const itemToIndex = new Map(itemMap.map((id, index) => [id, index]));
-  
+
   // Convert user choices to indexed format
   const choices: number[][] = [];
   for (const [key, winnerId] of userChoices.entries()) {
-    const [id1, id2] = key.split(',');
+    const [id1, id2] = key.split(",");
     const index1 = itemToIndex.get(id1);
     const index2 = itemToIndex.get(id2);
     const winnerIndex = itemToIndex.get(winnerId);
-    
-    if (index1 !== undefined && index2 !== undefined && winnerIndex !== undefined) {
+
+    if (
+      index1 !== undefined &&
+      index2 !== undefined &&
+      winnerIndex !== undefined
+    ) {
       choices.push([index1, index2, winnerIndex]);
     }
   }
-  
+
   // Convert state history to indexed format
-  const historyChoices = stateHistory.map(state => {
+  const historyChoices = stateHistory.map((state) => {
     const stateChoices: number[][] = [];
     for (const [key, winnerId] of state.userChoices.entries()) {
-      const [id1, id2] = key.split(',');
+      const [id1, id2] = key.split(",");
       const index1 = itemToIndex.get(id1);
       const index2 = itemToIndex.get(id2);
       const winnerIndex = itemToIndex.get(winnerId);
-      
-      if (index1 !== undefined && index2 !== undefined && winnerIndex !== undefined) {
+
+      if (
+        index1 !== undefined &&
+        index2 !== undefined &&
+        winnerIndex !== undefined
+      ) {
         stateChoices.push([index1, index2, winnerIndex]);
       }
     }
     return {
       choices: stateChoices,
-      comparisonCount: state.comparisonCount
+      comparisonCount: state.comparisonCount,
     };
   });
-  
+
   return {
     itemMap,
     choices,
-    historyChoices
+    historyChoices,
   };
 }
 
 // Convert indexed format back to UUID-based choices
-function deserializeChoices(serializedData: any): { userChoices: Map<string, string>, stateHistory: any[] } {
+function deserializeChoices(serializedData: any): {
+  userChoices: Map<string, string>;
+  stateHistory: any[];
+} {
   const { itemMap, choices, historyChoices } = serializedData;
-  
+
   // Reconstruct user choices map
   const userChoices = new Map<string, string>();
   for (const [index1, index2, winnerIndex] of choices) {
     const id1 = itemMap[index1];
     const id2 = itemMap[index2];
     const winnerId = itemMap[winnerIndex];
-    
+
     if (id1 && id2 && winnerId) {
-      const key = [id1, id2].sort().join(',');
+      const key = [id1, id2].sort().join(",");
       userChoices.set(key, winnerId);
     }
   }
-  
+
   // Reconstruct state history
   const stateHistory = historyChoices.map((historyState: any) => {
     const stateChoices = new Map<string, string>();
@@ -119,18 +135,18 @@ function deserializeChoices(serializedData: any): { userChoices: Map<string, str
       const id1 = itemMap[index1];
       const id2 = itemMap[index2];
       const winnerId = itemMap[winnerIndex];
-      
+
       if (id1 && id2 && winnerId) {
-        const key = [id1, id2].sort().join(',');
+        const key = [id1, id2].sort().join(",");
         stateChoices.set(key, winnerId);
       }
     }
     return {
       userChoices: stateChoices,
-      comparisonCount: historyState.comparisonCount
+      comparisonCount: historyState.comparisonCount,
     };
   });
-  
+
   return { userChoices, stateHistory };
 }
 
@@ -149,7 +165,7 @@ export default function SortPage() {
   const [canUndo, setCanUndo] = useState(false);
   const [filteredItems, setFilteredItems] = useState<SortItem[]>([]);
   const [currentGroupSlugs, setCurrentGroupSlugs] = useState<string[]>([]);
-  const [sorterId, setSorterId] = useState<string>('');
+  const [sorterId, setSorterId] = useState<string>("");
   const sorterRef = useRef<InteractiveMergeSort | null>(null);
   const resolveComparisonRef = useRef<((winnerId: string) => void) | null>(
     null,
@@ -172,15 +188,17 @@ export default function SortPage() {
     if (sorterData) {
       let itemsToSort = sorterData.items;
       let groupSlugs: string[] = [];
-      
+
       // If using groups, filter items based on selected groups from URL
       if (sorterData.sorter.useGroups && sorterData.groups) {
-        const groupsParam = searchParams.get('groups');
-        
+        const groupsParam = searchParams.get("groups");
+
         if (groupsParam) {
           try {
-            const selectedGroupSlugs = groupsParam.split(',').filter(slug => slug.trim());
-            
+            const selectedGroupSlugs = groupsParam
+              .split(",")
+              .filter((slug) => slug.trim());
+
             // If no groups selected, default to all items
             if (selectedGroupSlugs.length === 0) {
               itemsToSort = sorterData.items;
@@ -188,8 +206,8 @@ export default function SortPage() {
             } else {
               // Filter items to only include those from selected groups
               itemsToSort = sorterData.groups
-                .filter(group => selectedGroupSlugs.includes(group.slug))
-                .flatMap(group => group.items);
+                .filter((group) => selectedGroupSlugs.includes(group.slug))
+                .flatMap((group) => group.items);
               groupSlugs = selectedGroupSlugs;
             }
           } catch (error) {
@@ -204,7 +222,7 @@ export default function SortPage() {
           groupSlugs = [];
         }
       }
-      
+
       setFilteredItems(itemsToSort);
       setCurrentGroupSlugs(groupSlugs);
       setSorterId(sorterData.sorter.id);
@@ -213,7 +231,12 @@ export default function SortPage() {
 
   // Initialize sorting when data loads
   useEffect(() => {
-    if (sorterData && filteredItems.length > 0 && !sorting && !sorterRef.current) {
+    if (
+      sorterData &&
+      filteredItems.length > 0 &&
+      !sorting &&
+      !sorterRef.current
+    ) {
       // Check for saved progress using group-specific key
       const progressKey = generateProgressKey(sorterId, currentGroupSlugs);
       const savedState = localStorage.getItem(progressKey);
@@ -224,7 +247,8 @@ export default function SortPage() {
       if (savedState) {
         try {
           // Decompress the saved state
-          const decompressed = LZString.decompressFromEncodedURIComponent(savedState);
+          const decompressed =
+            LZString.decompressFromEncodedURIComponent(savedState);
           if (decompressed) {
             const parsed = JSON.parse(decompressed);
             savedComparisonCount = parsed.completedComparisons || 0;
@@ -237,7 +261,7 @@ export default function SortPage() {
             } else {
               // Legacy format support
               savedChoices = new Map(parsed.userChoicesArray || []);
-              
+
               // Restore state history if available
               if (parsed.stateHistoryArray) {
                 savedStateHistory = parsed.stateHistoryArray.map(
@@ -279,22 +303,21 @@ export default function SortPage() {
           const serializedData = serializeChoices(
             filteredItems,
             sorterRef.current.getUserChoices(),
-            sorterRef.current.getStateHistory()
+            sorterRef.current.getStateHistory(),
           );
-          
+
           const stateToSave = {
             optimized: true,
             completedComparisons: sorterRef.current.getComparisonCount(),
-            ...serializedData
+            ...serializedData,
           };
-          
+
           // Compress the state before saving
-          const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(stateToSave));
-          const progressKey = generateProgressKey(sorterId, currentGroupSlugs);
-          localStorage.setItem(
-            progressKey,
-            compressed,
+          const compressed = LZString.compressToEncodedURIComponent(
+            JSON.stringify(stateToSave),
           );
+          const progressKey = generateProgressKey(sorterId, currentGroupSlugs);
+          localStorage.setItem(progressKey, compressed);
         }
       });
 
@@ -346,10 +369,10 @@ export default function SortPage() {
       // Save results
       setSaving(true);
       // Get selected groups for saving with results
-      const selectedGroups = sorterData.sorter.useGroups 
+      const selectedGroups = sorterData.sorter.useGroups
         ? localStorage.getItem(`sorter_${sorterId}_selectedGroups`)
         : null;
-      
+
       const selectedGroupIds = selectedGroups ? JSON.parse(selectedGroups) : [];
 
       const response = await fetch("/api/sorting-results", {
@@ -436,7 +459,7 @@ export default function SortPage() {
         <div className="text-center">
           <Trophy className="mx-auto mb-4" size={48} />
           <h1 className="mb-2 text-2xl font-bold">Saving Results...</h1>
-          <p className="text-black dark:text-white mb-4">
+          <p className="mb-4 text-black dark:text-white">
             Please wait while we save your results
           </p>
         </div>
@@ -464,20 +487,49 @@ export default function SortPage() {
       : 0;
 
   return (
-    <div className="container mx-auto max-w-4xl px-0 py-8 md:px-4 text-black dark:text-white">
+    <div className="container mx-auto max-w-4xl px-0 py-8 text-black md:px-4 dark:text-white">
       {/* Header */}
       <div className="mb-6 px-2 md:px-0">
-        <h1 className="mb-2 text-2xl">
-          <span className="text-black dark:text-white font-normal">Sorting:</span>{" "}
-          <span className="font-bold">{sorterData.sorter.title}</span>
-        </h1>
-
+        <Box variant="primary" size="md" className="mb-6 block">
+          <div>
+            <h1 className="text-xl font-bold">{sorterData.sorter.title}</h1>
+          </div>
+        </Box>
         {/* Progress and Actions - Compact */}
         <div className="space-y-3">
-          <div className="text-black dark:text-white flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-sm text-black dark:text-white">
             <span>
               {completedComparisons} comparisons • {progress}% complete
             </span>
+            <div className="hidden md:block">
+              <div className="flex gap-1">
+                <Button
+                  type="button"
+                  variant="neutral"
+                  size="sm"
+                  onClick={handleUndo}
+                  disabled={!canUndo}
+                  className="h-7 px-2 text-xs"
+                >
+                  <Undo2 className="mr-1" size={12} />
+                  Undo
+                </Button>
+                <Button
+                  type="button"
+                  variant="neutral"
+                  size="sm"
+                  onClick={handleReset}
+                  disabled={completedComparisons === 0}
+                  className="h-7 px-2 text-xs"
+                >
+                  <RotateCcw className="mr-1" size={12} />
+                  Reset
+                </Button>
+              </div>
+            </div>
+          </div>
+          <Progress value={progress} className="h-4 w-full md:h-6" />
+          <div className="block md:hidden">
             <div className="flex gap-1">
               <Button
                 type="button"
@@ -503,12 +555,11 @@ export default function SortPage() {
               </Button>
             </div>
           </div>
-          <Progress value={progress} className="h-2 w-full" />
         </div>
       </div>
 
       {/* Comparison Cards */}
-      <div className="relative grid grid-cols-2 gap-2 px-0 md:gap-4 md:px-0 items-stretch">
+      <div className="relative grid grid-cols-2 items-stretch gap-2 px-0 md:gap-4 md:px-0">
         {/* Item A */}
         <ComparisonCard
           className="md:mx-auto md:w-80"
@@ -527,8 +578,8 @@ export default function SortPage() {
 
         {/* VS Divider - neobrutalist styling, visible on all devices */}
         <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 transform">
-          <div className="bg-main border-2 border-border shadow-shadow rounded-base px-3 py-2">
-            <span className="text-black text-sm font-bold">VS</span>
+          <div className="bg-main border-border shadow-shadow rounded-base border-2 px-3 py-2">
+            <span className="text-sm font-bold text-black">VS</span>
           </div>
         </div>
       </div>
