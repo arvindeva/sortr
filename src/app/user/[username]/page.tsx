@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import { user, sorters } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -12,6 +13,8 @@ import {
   PanelTitle,
   PanelContent,
 } from "@/components/ui/panel";
+import { authOptions } from "@/lib/auth";
+import { UserProfileHeader } from "@/components/user-profile-header";
 
 // Cache statically but revalidate on-demand when completion counts change
 
@@ -63,6 +66,13 @@ export default async function UserProfilePage({
 
   const userSorters = await getUserSorters(userData.id);
 
+  // Get current session to check if this is the current user's profile
+  const session = await getServerSession(authOptions);
+  const currentUserEmail = session?.user?.email;
+  
+  // Check if current user is viewing their own profile
+  const isOwnProfile = currentUserEmail === userData.email;
+
   const userSince = new Date(
     userData.emailVerified || new Date(),
   ).toLocaleDateString("en-US", {
@@ -73,28 +83,11 @@ export default async function UserProfilePage({
   return (
     <main className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
       {/* Profile Header */}
-      <section className="mb-8">
-        <Box
-          variant="primary"
-          size="sm"
-          className="flex items-center space-x-6 py-4"
-        >
-          {/* Avatar Placeholder */}
-          <div className="bg-border text-main border-border rounded-base flex h-16 w-16 items-center justify-center border-2 md:h-24 md:w-24">
-            <span className="text-4xl font-bold">
-              {userData.username?.charAt(0).toUpperCase()}
-            </span>
-          </div>
-
-          {/* User Info */}
-          <div>
-            <h1 className="mb-2 text-lg font-bold md:text-4xl">
-              {userData.username}
-            </h1>
-            <p className="text-md font-medium">User since {userSince}</p>
-          </div>
-        </Box>
-      </section>
+      <UserProfileHeader 
+        username={userData.username || ''}
+        userSince={userSince}
+        isOwnProfile={isOwnProfile}
+      />
 
       {/* Sorters Section */}
       <section>
