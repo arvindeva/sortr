@@ -12,6 +12,7 @@ import { InteractiveMergeSort, SortState } from "@/lib/interactive-merge-sort";
 import LZString from "lz-string";
 import { Box } from "@/components/ui/box";
 import { SortPageSkeleton } from "@/components/sort-page-skeleton";
+import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
 
 interface SorterData {
   sorter: {
@@ -369,6 +370,12 @@ export default function SortPage() {
 
       // Save results
       setSaving(true);
+
+      // Add artificial delay for testing animation
+      if (process.env.NODE_ENV === "development") {
+        await new Promise((resolve) => setTimeout(resolve, 3000)); // 3 second delay
+      }
+
       // Get selected groups for saving with results
       const selectedGroups = sorterData.sorter.useGroups
         ? localStorage.getItem(`sorter_${sorterId}_selectedGroups`)
@@ -452,11 +459,10 @@ export default function SortPage() {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <div className="text-center">
-          <Trophy className="mx-auto mb-4" size={48} />
-          <h1 className="mb-2 text-2xl font-bold">Saving Results...</h1>
-          <p className="mb-4 text-black dark:text-white">
-            Please wait while we save your results
-          </p>
+          <h1 className="mb-3 animate-pulse text-2xl font-bold">
+            Saving Results...
+          </h1>
+          <SortingBarsLoader className="mb-6" />
         </div>
       </div>
     );

@@ -11,6 +11,7 @@ import {
   PanelTitle,
   PanelContent,
 } from "@/components/ui/panel";
+import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
 import {
   ChevronLeft,
   Filter,
@@ -124,12 +125,12 @@ export default function FilterPage({ params }: FilterPageProps) {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2"></div>
-            <p className="text-muted-foreground">Loading filters...</p>
-          </div>
+      <div className="container mx-auto max-w-4xl px-4 py-8">
+        <div className="text-center">
+          <h1 className="mb-3 text-2xl font-bold animate-pulse">
+            Loading filters...
+          </h1>
+          <SortingBarsLoader className="mb-6" />
         </div>
       </div>
     );
