@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+
+# Main pages
+Allow: /
+Allow: /sorter/*
+Allow: /results/*
+Allow: /user/*
+
+# Disallow authentication and API routes
+Disallow: /auth/
+Disallow: /api/
+Disallow: /create
+
+# Disallow sort pages (interactive, not useful for SEO)
+Disallow: /sorter/*/sort
+Disallow: /sorter/*/filters
+
+# Sitemap
+Sitemap: https://sortr.dev/sitemap.xml
