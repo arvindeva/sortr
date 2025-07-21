@@ -13,6 +13,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://sortr.dev'),
   title: "sortr - Create and Share Ranked Lists",
   description: "Create and share ranked lists for anything through pairwise comparison. Build custom rankings, sort items by preference, and discover popular sorters across movies, music, games, and more.",
   keywords: ["ranking", "sorter", "list", "comparison", "polls", "tier list", "ranking tool", "vote", "survey"],
