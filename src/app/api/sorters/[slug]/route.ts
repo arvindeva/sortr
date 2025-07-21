@@ -3,6 +3,7 @@ import { sorters, sorterItems, sorterGroups, user, sortingResults } from "@/db/s
 import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
+import { revalidatePath } from "next/cache";
 import { authOptions } from "@/lib/auth";
 
 export async function GET(
@@ -166,6 +167,15 @@ export async function DELETE(
     
     // 4. Finally delete the sorter
     await db.delete(sorters).where(eq(sorters.id, sorter.id));
+
+    // Revalidate pages that show sorter data
+    try {
+      revalidatePath('/'); // Homepage (popular sorters)
+      revalidatePath(`/sorter/${slug}`); // Sorter page (will 404, but clears cache)
+    } catch (revalidateError) {
+      console.warn("Failed to revalidate some paths:", revalidateError);
+      // Don't fail the entire request if revalidation fails
+    }
 
     return Response.json({ 
       message: "Sorter deleted successfully",

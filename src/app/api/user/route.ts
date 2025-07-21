@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -101,6 +102,18 @@ export async function PATCH(request: NextRequest) {
       .update(user)
       .set({ username })
       .where(eq(user.id, userId));
+
+    // Revalidate pages that show user data
+    try {
+      revalidatePath('/'); // Homepage (popular sorters)
+      revalidatePath(`/user/${username}`); // New username profile page
+      if (currentUser[0].username) {
+        revalidatePath(`/user/${currentUser[0].username}`); // Old username profile page (if different)
+      }
+    } catch (revalidateError) {
+      console.warn("Failed to revalidate some paths:", revalidateError);
+      // Don't fail the entire request if revalidation fails
+    }
 
     return NextResponse.json({
       message: "Username updated successfully",
