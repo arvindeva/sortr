@@ -107,7 +107,32 @@ export const signInSchema = z.object({
     .email("Please enter a valid email address"),
 });
 
+// Username validation schema
+export const updateUsernameSchema = z.object({
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .max(20, "Username must be 20 characters or less")
+    .regex(
+      /^[a-zA-Z0-9_-]+$/,
+      "Username can only contain letters, numbers, underscores, and hyphens"
+    )
+    .regex(
+      /^[a-zA-Z0-9]/,
+      "Username must start with a letter or number"
+    )
+    .regex(
+      /[a-zA-Z0-9]$/,
+      "Username must end with a letter or number"
+    )
+    .refine(
+      (username) => !username.includes("--") && !username.includes("__"),
+      "Username cannot contain consecutive hyphens or underscores"
+    ),
+});
+
 // Type exports
 export type CreateSorterInput = z.infer<typeof createSorterSchema>;
 export type CreateSorterFormInput = z.infer<typeof createSorterFormSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
+export type UpdateUsernameInput = z.infer<typeof updateUsernameSchema>;
