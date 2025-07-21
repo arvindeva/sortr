@@ -59,8 +59,7 @@ export function DeleteSorterButton({ sorterSlug, sorterTitle }: DeleteSorterButt
           ? error.message
           : "Failed to delete sorter. Please try again."
       );
-    } finally {
-      setIsDeleting(false);
+      setIsDeleting(false); // Only set loading false on error
     }
   };
 

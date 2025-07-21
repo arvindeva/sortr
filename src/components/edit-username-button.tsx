@@ -71,8 +71,7 @@ export function EditUsernameButton({
           ? error.message
           : "Failed to update username. Please try again.",
       );
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Only set loading false on error
     }
   };
 
