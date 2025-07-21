@@ -12,7 +12,7 @@ export default async function CreatePage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8">
+    <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
       <Box variant="primary" size="md" className="mb-6 block">
         <div>
           <h1 className="text-xl font-bold">Create New Sorter</h1>

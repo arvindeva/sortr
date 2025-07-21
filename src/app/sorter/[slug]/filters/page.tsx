@@ -124,7 +124,7 @@ export default function FilterPage({ params }: FilterPageProps) {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2"></div>
@@ -137,7 +137,7 @@ export default function FilterPage({ params }: FilterPageProps) {
 
   if (error) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
         <div className="py-12 text-center">
           <p className="mb-4 text-red-600">{error}</p>
           <Button onClick={() => router.back()}>Go Back</Button>
@@ -148,7 +148,7 @@ export default function FilterPage({ params }: FilterPageProps) {
 
   if (!sorter) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
         <div className="py-12 text-center">
           <p className="text-muted-foreground mb-4">Sorter not found</p>
           <Button onClick={() => router.back()}>Go Back</Button>
@@ -163,7 +163,7 @@ export default function FilterPage({ params }: FilterPageProps) {
   }, 0);
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8">
+    <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
       {/* Header */}
       <div className="mb-8">
         <div className="mb-4 flex items-center gap-4">
@@ -181,7 +181,7 @@ export default function FilterPage({ params }: FilterPageProps) {
         <PanelHeader variant="primary">
           <PanelTitle>Filters</PanelTitle>
         </PanelHeader>
-        <PanelContent variant="primary" className="p-3 md:p-6">
+        <PanelContent variant="primary" className="p-2 md:p-6">
           <div className="mb-6">
             <p className="text-foreground mb-4">
               This sorter has filters. Choose which groups you want to include

@@ -37,11 +37,19 @@ export default async function Home() {
   const popularSorters = await getPopularSorters();
 
   return (
-    <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-4xl px-4 py-10">
+    <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-4xl px-2 py-10 md:px-4">
       <section className="mx-auto mb-10 max-w-xl text-center">
         <h1 className="mb-4 text-6xl font-bold tracking-wide">sortr</h1>
         <p className="text-lg font-medium">
-          Create and share ranked lists for anything
+          Create and share ranked lists for anything. Inspired by{" "}
+          <Link
+            href={`https://execfera.github.io/charasort/`}
+            target="_blank"
+            className="text-blue-700 underline dark:text-blue-300"
+          >
+            charasort
+          </Link>
+          .
         </p>
       </section>
       <section className="w-full">
@@ -49,7 +57,7 @@ export default async function Home() {
           <PanelHeader variant="primary">
             <PanelTitle>Popular Sorters</PanelTitle>
           </PanelHeader>
-          <PanelContent variant="primary" className="p-3 md:p-6">
+          <PanelContent variant="primary" className="p-2 md:p-6">
             {popularSorters.length === 0 ? (
               <div className="text-center">
                 <Box variant="warning" size="md">
@@ -60,7 +68,7 @@ export default async function Home() {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {popularSorters.map((sorter) => (
                   <Card key={sorter.id} className="md:min-h-[160px]">
-                    <CardHeader className="flex-1 px-3 md:px-6">
+                    <CardHeader className="flex-1 px-2 md:px-6">
                       <div className="flex-1">
                         <div className="md:h-6rem flex flex-col">
                           <CardTitle className="line-clamp-2 text-xl font-medium">
@@ -85,7 +93,7 @@ export default async function Home() {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="px-3 md:px-6">
+                    <CardContent className="px-2 md:px-6">
                       <div className="text-foreground flex items-center justify-between text-sm font-medium">
                         <div className="flex items-center gap-4">
                           <span>{sorter.completionCount} completions</span>

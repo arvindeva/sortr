@@ -150,7 +150,7 @@ Requires configuration for:
 
 🔄 **Recent Major Updates:**
 
-- **UI Consistency & Mobile Optimization**: Updated all pages to use consistent panel structure with mobile-optimized padding (`p-3 md:p-6`), improved text wrapping to prevent horizontal scrolling, and standardized card backgrounds across all pages
+- **UI Consistency & Mobile Optimization**: Updated all pages to use consistent panel structure with mobile-optimized padding (`p-2 md:p-6`), improved text wrapping to prevent horizontal scrolling, and standardized card backgrounds across all pages
 - **Panel Background Enhancement**: Changed panel backgrounds to use grey (`bg-secondary-background`) in dark mode to match navbar styling for better visual consistency
 - **Sorting Interface Improvements**: Created custom `ComparisonCard` component with clean layout (image flush with top, text at bottom), added neobrutalist VS divider visible on all devices, and implemented black text with white text in dark mode for UI elements
 - **Component Library Expansion**: Added neobrutalist Progress component (`npx shadcn@latest add https://neobrutalism.dev/r/progress.json`) and created custom ComparisonCard with proper borders and neobrutalist styling

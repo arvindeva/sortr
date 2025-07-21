@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import { db } from "@/db";
 import { sorters, sorterItems, sortingResults, user } from "@/db/schema";
 import { eq, sql, desc } from "drizzle-orm";
@@ -55,6 +56,66 @@ interface SorterData {
   sorter: Sorter;
   items: SorterItem[];
   groups: SorterGroup[];
+}
+
+export async function generateMetadata({ params }: SorterPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  
+  // Get sorter data for metadata (without incrementing view count)
+  const response = await fetch(`${process.env.NEXTAUTH_URL}/api/sorters/${slug}`);
+  if (!response.ok) {
+    return {
+      title: "Sorter Not Found | sortr",
+      description: "The requested sorter could not be found."
+    };
+  }
+
+  const data: SorterData = await response.json();
+  const { sorter, items, groups } = data;
+
+  // Create dynamic title
+  const title = `${sorter.title} | sortr`;
+  
+  // Create description
+  let description = `Rank and sort items in "${sorter.title}"`;
+  if (sorter.description) {
+    description = sorter.description;
+  }
+  if (sorter.category) {
+    description += ` - ${sorter.category} ranking on sortr`;
+  }
+  
+  // Count total items
+  const itemCount = sorter.useGroups 
+    ? groups.reduce((total, group) => total + group.items.length, 0)
+    : items.length;
+
+  const fullDescription = `${description}. Sort ${itemCount} items through pairwise comparison and create your personalized ranking.`;
+
+  return {
+    title,
+    description: fullDescription,
+    openGraph: {
+      title,
+      description: fullDescription,
+      type: "website",
+      siteName: "sortr",
+      images: [
+        {
+          url: "/og-sorter.png", // We'll create this later
+          width: 1200,
+          height: 630,
+          alt: `${sorter.title} - Ranking sorter`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: fullDescription,
+      images: ["/og-sorter.png"],
+    },
+  };
 }
 
 async function getSorterWithItems(
@@ -131,8 +192,40 @@ export default async function SorterPage({ params }: SorterPageProps) {
   const { sorter, items, groups } = data;
   const recentResults = await getRecentResults(sorter.id);
 
+  // JSON-LD structured data
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Survey",
+    "name": sorter.title,
+    "description": sorter.description || `Rank and sort items in "${sorter.title}"`,
+    "url": `${process.env.NEXTAUTH_URL}/sorter/${sorter.slug}`,
+    "dateCreated": sorter.createdAt,
+    "creator": {
+      "@type": "Person",
+      "name": sorter.user.username || "Anonymous"
+    },
+    "about": sorter.category || "Ranking",
+    "interactionStatistic": [
+      {
+        "@type": "InteractionCounter",
+        "interactionType": "https://schema.org/ViewAction",
+        "userInteractionCount": sorter.viewCount
+      },
+      {
+        "@type": "InteractionCounter", 
+        "interactionType": "https://schema.org/CompleteAction",
+        "userInteractionCount": sorter.completionCount
+      }
+    ]
+  };
+
   return (
-    <main className="container mx-auto max-w-4xl px-4 py-8">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <main className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
       {/* Sorter Header */}
       <section>
         <Box variant="primary" size="md" className="mb-6 block">
@@ -215,7 +308,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
             <PanelHeader variant="primary">
               <PanelTitle>Items to Rank ({items?.length || 0})</PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary" className="p-3 md:p-6">
+            <PanelContent variant="primary" className="p-2 md:p-6">
               {sorter.useGroups && groups ? (
                 /* Groups Mode */
                 groups.length === 0 ? (
@@ -328,7 +421,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
             <PanelHeader variant="primary">
               <PanelTitle>Recent Results ({recentResults.length})</PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary" className="p-3 md:p-6">
+            <PanelContent variant="primary" className="p-2 md:p-6">
               {recentResults.length === 0 ? (
                 <Box variant="warning" size="md">
                   <p className="font-medium italic">
@@ -407,6 +500,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
           </Panel>
         </section>
       </div>
-    </main>
+      </main>
+    </>
   );
 }

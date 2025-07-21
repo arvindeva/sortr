@@ -236,7 +236,7 @@ export default function CreateSorterForm() {
         <PanelHeader variant="primary">
           <PanelTitle>Sorter Details</PanelTitle>
         </PanelHeader>
-        <PanelContent variant="primary" className="p-3 md:p-6 bg-background">
+        <PanelContent variant="primary" className="p-2 md:p-6 bg-background">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}

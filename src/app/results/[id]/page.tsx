@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import { db } from "@/db";
 import { sortingResults, sorters, user, sorterGroups } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
@@ -45,6 +46,63 @@ interface ResultData {
     id: string;
     name: string;
   }[];
+}
+
+export async function generateMetadata({ params }: ResultsPageProps): Promise<Metadata> {
+  const { id } = await params;
+  
+  try {
+    const data = await getResultData(id);
+    
+    if (!data) {
+      return {
+        title: "Results Not Found | sortr",
+        description: "The requested ranking results could not be found."
+      };
+    }
+
+    const { result, sorter } = data;
+    
+    // Create content-first title: "Sorter Title Rankings by Username | sortr"
+    const title = `${sorter.title} Rankings by ${result.username} | sortr`;
+    
+    // Get top 3 items for description
+    const top3 = result.rankings.slice(0, 3);
+    const top3Text = top3.map((item, i) => `${i + 1}. ${item.title}`).join(', ');
+    
+    const description = `See ${result.username}'s ranking of ${sorter.title}. Top 3: ${top3Text}. View the complete personalized ranking results.`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "website",
+        siteName: "sortr",
+        images: [
+          {
+            url: "/og-results.png", // We'll create this later
+            width: 1200,
+            height: 630,
+            alt: `${sorter.title} Rankings by ${result.username}`,
+          },
+        ],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: ["/og-results.png"],
+      },
+    };
+  } catch (error) {
+    console.error("Error generating metadata for results page:", error);
+    return {
+      title: "Results | sortr",
+      description: "View ranking results on sortr."
+    };
+  }
 }
 
 async function getResultData(resultId: string): Promise<ResultData | null> {
@@ -152,7 +210,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   const { result, sorter, selectedGroups } = data;
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8 overflow-hidden">
+    <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4 overflow-hidden">
       {/* Header */}
       <div className="mb-8">
         {/* Main Header */}
@@ -219,7 +277,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 Rankings
               </PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary" className="p-3 md:p-6 overflow-hidden">
+            <PanelContent variant="primary" className="p-2 md:p-6 overflow-hidden">
               <AnimatedRankings rankings={result.rankings} />
             </PanelContent>
           </Panel>
@@ -233,7 +291,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 Sorter Info
               </PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary" className="p-3 md:p-6">
+            <PanelContent variant="primary" className="p-2 md:p-6">
               <Link href={`/sorter/${sorter.slug}`} className="block hover:opacity-80 transition-opacity">
                 <div className="space-y-4">
                   <div>

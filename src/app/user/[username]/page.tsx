@@ -71,7 +71,7 @@ export default async function UserProfilePage({
   });
 
   return (
-    <main className="container mx-auto max-w-4xl px-4 py-8">
+    <main className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
       {/* Profile Header */}
       <section className="mb-8">
         <Box
@@ -102,7 +102,7 @@ export default async function UserProfilePage({
           <PanelHeader variant="primary">
             <PanelTitle>Sorters ({userSorters.length})</PanelTitle>
           </PanelHeader>
-          <PanelContent variant="primary" className="p-3 md:p-6">
+          <PanelContent variant="primary" className="p-2 md:p-6">
             {userSorters.length === 0 ? (
               <div className="text-center">
                 <Box variant="warning" size="lg">
