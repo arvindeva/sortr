@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Trash2, AlertTriangle } from "lucide-react";
 
 interface DeleteSorterButtonProps {
   sorterSlug: string;
@@ -11,20 +18,21 @@ interface DeleteSorterButtonProps {
 }
 
 export function DeleteSorterButton({ sorterSlug, sorterTitle }: DeleteSorterButtonProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleDelete = async () => {
-    // Show confirmation dialog
-    const isConfirmed = window.confirm(
-      `Are you sure you want to delete "${sorterTitle}"?\n\nThis action cannot be undone. All sorting results and data associated with this sorter will be permanently deleted.`
-    );
-
-    if (!isConfirmed) {
-      return;
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
+      setError(null);
     }
+  };
 
+  const handleDelete = async () => {
     setIsDeleting(true);
+    setError(null);
 
     try {
       const response = await fetch(`/api/sorters/${sorterSlug}`, {
@@ -40,18 +48,15 @@ export function DeleteSorterButton({ sorterSlug, sorterTitle }: DeleteSorterButt
         throw new Error(data.error || "Failed to delete sorter");
       }
 
-      // Show success message
-      alert(`"${data.title}" has been deleted successfully.`);
-      
-      // Redirect to home page
-      router.push("/");
-      router.refresh(); // Force refresh to update any cached data
+      // Immediately redirect to home page with full page refresh
+      // This prevents the brief moment where user stays on the deleted page
+      window.location.href = "/";
       
     } catch (error) {
       console.error("Error deleting sorter:", error);
-      alert(
+      setError(
         error instanceof Error 
-          ? `Failed to delete sorter: ${error.message}` 
+          ? error.message
           : "Failed to delete sorter. Please try again."
       );
     } finally {
@@ -60,19 +65,72 @@ export function DeleteSorterButton({ sorterSlug, sorterTitle }: DeleteSorterButt
   };
 
   return (
-    <Button
-      variant="neutral"
-      size="lg"
-      onClick={handleDelete}
-      disabled={isDeleting}
-      className="group"
-      title={`Delete "${sorterTitle}"`}
-    >
-      <Trash2
-        className="mr-2 transition-transform duration-200 group-hover:scale-110"
-        size={20}
-      />
-      {isDeleting ? "Deleting..." : "Delete"}
-    </Button>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button
+          variant="neutral"
+          size="lg"
+          className="group"
+          title={`Delete "${sorterTitle}"`}
+        >
+          <Trash2
+            className="mr-2 transition-transform duration-200 group-hover:scale-110"
+            size={20}
+          />
+          Delete
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="text-red-500" size={20} />
+            Delete Sorter
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="text-sm">
+            <p className="font-medium mb-2">
+              Are you sure you want to delete <strong>"{sorterTitle}"</strong>?
+            </p>
+            <p className="text-foreground">
+              This action cannot be undone. All sorting results and data associated with this sorter will be permanently deleted.
+            </p>
+          </div>
+
+          {error && (
+            <div className="bg-red-500 text-white p-3 rounded-base border-2 border-border text-sm">
+              {error}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <Button
+              variant="default"
+              className="flex-1 bg-red-500 hover:bg-red-600"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                "Deleting..."
+              ) : (
+                <>
+                  <Trash2 className="mr-2" size={16} />
+                  Delete Forever
+                </>
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="neutral"
+              onClick={() => setIsOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

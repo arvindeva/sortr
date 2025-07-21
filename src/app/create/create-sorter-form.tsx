@@ -220,13 +220,12 @@ export default function CreateSorterForm() {
 
       const result = await response.json();
 
-      // Redirect to sorter page
+      // Redirect to sorter page (keep loading state during redirect)
       router.push(`/sorter/${result.sorter.slug}`);
     } catch (error) {
       console.error("Error creating sorter:", error);
       alert(error instanceof Error ? error.message : "Failed to create sorter");
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Only set loading false on error
     }
   };
 
