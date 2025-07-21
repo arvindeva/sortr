@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
+import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import { sorters, sorterItems, sortingResults, user } from "@/db/schema";
 import { eq, sql, desc } from "drizzle-orm";
@@ -15,7 +16,9 @@ import {
 } from "@/components/ui/panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RankingItem, RankingItemContent } from "@/components/ui/ranking-item";
-import { Play, User, Calendar, Eye, Trophy } from "lucide-react";
+import { Play, User, Calendar, Eye, Trophy, Trash2 } from "lucide-react";
+import { authOptions } from "@/lib/auth";
+import { DeleteSorterButton } from "@/components/delete-sorter-button";
 
 interface SorterPageProps {
   params: Promise<{
@@ -49,6 +52,7 @@ interface Sorter {
   viewCount: number;
   user: {
     username: string;
+    id: string;
   };
 }
 
@@ -192,6 +196,22 @@ export default async function SorterPage({ params }: SorterPageProps) {
   const { sorter, items, groups } = data;
   const recentResults = await getRecentResults(sorter.id);
 
+  // Get current session to check ownership
+  const session = await getServerSession(authOptions);
+  const currentUserEmail = session?.user?.email;
+  
+  // Check if current user is the owner
+  let isOwner = false;
+  if (currentUserEmail && sorter.user?.id) {
+    const userData = await db
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.email, currentUserEmail))
+      .limit(1);
+    
+    isOwner = userData.length > 0 && userData[0].id === sorter.user.id;
+  }
+
   // JSON-LD structured data
   const jsonLd = {
     "@context": "https://schema.org",
@@ -275,9 +295,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
         </Box>
 
         {/* Start Now Button */}
-        <div className="block">
+        <div className="flex items-center gap-4 mb-8">
           {sorter.useGroups ? (
-            <Button asChild size="lg" variant="default" className="group mb-8">
+            <Button asChild size="lg" variant="default" className="group">
               <Link href={`/sorter/${sorter.slug}/filters`}>
                 <Play
                   className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
@@ -287,7 +307,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
               </Link>
             </Button>
           ) : (
-            <Button asChild size="lg" variant="default" className="group mb-8">
+            <Button asChild size="lg" variant="default" className="group">
               <Link href={`/sorter/${sorter.slug}/sort`}>
                 <Play
                   className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
@@ -296,6 +316,14 @@ export default async function SorterPage({ params }: SorterPageProps) {
                 Sort now
               </Link>
             </Button>
+          )}
+          
+          {/* Delete Button - Only show for sorter owner */}
+          {isOwner && (
+            <DeleteSorterButton 
+              sorterSlug={sorter.slug} 
+              sorterTitle={sorter.title} 
+            />
           )}
         </div>
       </section>

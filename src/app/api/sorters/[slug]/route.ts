@@ -1,7 +1,9 @@
 import { db } from "@/db";
-import { sorters, sorterItems, sorterGroups, user } from "@/db/schema";
+import { sorters, sorterItems, sorterGroups, user, sortingResults } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
@@ -100,6 +102,78 @@ export async function GET(
     }
   } catch (error) {
     console.error("Error fetching sorter:", error);
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> },
+) {
+  try {
+    const { slug } = await params;
+    
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get the current user
+    const userData = await db
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.email, session.user.email))
+      .limit(1);
+
+    if (userData.length === 0) {
+      return Response.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const currentUserId = userData[0].id;
+
+    // Get sorter and verify ownership
+    const sorterData = await db
+      .select({
+        id: sorters.id,
+        title: sorters.title,
+        userId: sorters.userId,
+      })
+      .from(sorters)
+      .where(eq(sorters.slug, slug))
+      .limit(1);
+
+    if (sorterData.length === 0) {
+      return Response.json({ error: "Sorter not found" }, { status: 404 });
+    }
+
+    const sorter = sorterData[0];
+
+    // Check ownership
+    if (sorter.userId !== currentUserId) {
+      return Response.json({ error: "Forbidden: You can only delete your own sorters" }, { status: 403 });
+    }
+
+    // Delete in the correct order (foreign key constraints)
+    // 1. Delete sorting results
+    await db.delete(sortingResults).where(eq(sortingResults.sorterId, sorter.id));
+    
+    // 2. Delete sorter items
+    await db.delete(sorterItems).where(eq(sorterItems.sorterId, sorter.id));
+    
+    // 3. Delete sorter groups (if any)
+    await db.delete(sorterGroups).where(eq(sorterGroups.sorterId, sorter.id));
+    
+    // 4. Finally delete the sorter
+    await db.delete(sorters).where(eq(sorters.id, sorter.id));
+
+    return Response.json({ 
+      message: "Sorter deleted successfully",
+      title: sorter.title 
+    });
+
+  } catch (error) {
+    console.error("Error deleting sorter:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
