@@ -11,6 +11,7 @@ import { SortItem } from "@/lib/sorting";
 import { InteractiveMergeSort, SortState } from "@/lib/interactive-merge-sort";
 import LZString from "lz-string";
 import { Box } from "@/components/ui/box";
+import { SortPageSkeleton } from "@/components/sort-page-skeleton";
 
 interface SorterData {
   sorter: {
@@ -431,13 +432,7 @@ export default function SortPage() {
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="text-center">
-          <p className="text-black dark:text-white">Loading sorter...</p>
-        </div>
-      </div>
-    );
+    return <SortPageSkeleton />;
   }
 
   if (error || !sorterData) {
