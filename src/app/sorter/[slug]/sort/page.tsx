@@ -370,12 +370,7 @@ export default function SortPage() {
 
       // Save results
       setSaving(true);
-
-      // Add artificial delay for testing animation
-      if (process.env.NODE_ENV === "development") {
-        await new Promise((resolve) => setTimeout(resolve, 3000)); // 3 second delay
-      }
-
+      
       // Get selected groups for saving with results
       const selectedGroups = sorterData.sorter.useGroups
         ? localStorage.getItem(`sorter_${sorterId}_selectedGroups`)
