@@ -16,7 +16,8 @@ import {
 import { authOptions } from "@/lib/auth";
 import { UserProfileHeader } from "@/components/user-profile-header";
 
-// Cache statically but revalidate on-demand when completion counts change
+// Force dynamic rendering for always-fresh user statistics
+export const dynamic = 'force-dynamic';
 
 interface UserProfilePageProps {
   params: Promise<{

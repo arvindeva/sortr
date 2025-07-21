@@ -12,8 +12,8 @@ import { sorters, user } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 
-// Cache statically and revalidate every 5 minutes
-export const revalidate = 300;
+// Force dynamic rendering for always-fresh data
+export const dynamic = 'force-dynamic';
 
 async function getPopularSorters() {
   const popularSorters = await db

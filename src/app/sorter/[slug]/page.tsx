@@ -20,6 +20,9 @@ import { Play, User, Calendar, Eye, Trophy, Trash2 } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { DeleteSorterButton } from "@/components/delete-sorter-button";
 
+// Force dynamic rendering for real-time view counts and recent results
+export const dynamic = 'force-dynamic';
+
 interface SorterPageProps {
   params: Promise<{
     slug: string;
