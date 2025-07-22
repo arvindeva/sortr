@@ -132,32 +132,33 @@ export default async function UserProfilePage({
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
                 {userSorters.map((sorter) => (
-                  <Card key={sorter.id} className="md:min-h-[180px]">
-                    <CardHeader className="flex flex-col justify-start md:h-28">
-                      <CardTitle className="line-clamp-2 text-lg leading-relaxed">
-                        <Link
-                          href={`/sorter/${sorter.slug}`}
-                          className="hover:underline"
-                        >
+                  <Link
+                    key={sorter.id}
+                    href={`/sorter/${sorter.slug}`}
+                    className="card-link"
+                  >
+                    <Card className="md:min-h-[180px] cursor-pointer card">
+                      <CardHeader className="flex flex-col justify-start md:h-28">
+                        <CardTitle className="line-clamp-2 text-lg leading-relaxed">
                           {sorter.title}
-                        </Link>
-                      </CardTitle>
-                      {sorter.category && (
-                        <Badge variant="default">{sorter.category}</Badge>
-                      )}
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-foreground flex items-center justify-between text-sm font-medium">
-                        <span>
-                          {new Date(sorter.createdAt).toLocaleDateString()}
-                        </span>
-                        <div className="flex gap-3">
-                          <span>{sorter.viewCount} views</span>
-                          <span>{sorter.completionCount} completions</span>
+                        </CardTitle>
+                        {sorter.category && (
+                          <Badge variant="default">{sorter.category}</Badge>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-foreground flex items-center justify-between text-sm font-medium">
+                          <span>
+                            {new Date(sorter.createdAt).toLocaleDateString()}
+                          </span>
+                          <div className="flex gap-3">
+                            <span>{sorter.viewCount} views</span>
+                            <span>{sorter.completionCount} completions</span>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             )}
@@ -186,38 +187,32 @@ export default async function UserProfilePage({
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
                 {userResults.map((result) => (
-                  <Card key={result.id} className="md:min-h-[180px]">
-                    <CardHeader className="flex flex-col justify-start md:h-28">
-                      <CardTitle className="line-clamp-2 text-lg leading-relaxed">
-                        <Link
-                          href={`/results/${result.id}`}
-                          className="hover:underline"
-                        >
+                  <Link
+                    key={result.id}
+                    href={`/results/${result.id}`}
+                    className="card-link"
+                  >
+                    <Card className="md:min-h-[180px] cursor-pointer card">
+                      <CardHeader className="flex flex-col justify-start md:h-28">
+                        <CardTitle className="line-clamp-2 text-lg leading-relaxed">
                           {result.sorterTitle || "Unknown Sorter"}
-                        </Link>
-                      </CardTitle>
-                      {result.sorterCategory && (
-                        <Badge variant="default">{result.sorterCategory}</Badge>
-                      )}
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-foreground flex items-center justify-between text-sm font-medium">
-                        <span>
-                          {new Date(result.createdAt).toLocaleDateString()}
-                        </span>
-                        <div className="flex gap-3">
-                          {result.sorterSlug && (
-                            <Link 
-                              href={`/sorter/${result.sorterSlug}`}
-                              className="hover:underline"
-                            >
-                              View Sorter
-                            </Link>
-                          )}
+                        </CardTitle>
+                        {result.sorterCategory && (
+                          <Badge variant="default">{result.sorterCategory}</Badge>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-foreground flex items-center justify-between text-sm font-medium">
+                          <span>
+                            {new Date(result.createdAt).toLocaleDateString()}
+                          </span>
+                          <div className="flex gap-3">
+                            <span className="text-muted-foreground">Result</span>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             )}

@@ -470,9 +470,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
                       <Link
                         key={result.id}
                         href={`/results/${result.id}`}
-                        className="block"
+                        className="card-link block"
                       >
-                        <Card className="bg-background text-foreground cursor-pointer gap-3">
+                        <Card className="bg-background text-foreground cursor-pointer card">
                           <CardHeader>
                             {/* Username only */}
                             <span className="text-sm font-bold">

@@ -273,7 +273,7 @@ function BrowseContent() {
                             <CardTitle className="line-clamp-2 text-lg font-medium">
                               <Link
                                 href={`/sorter/${sorter.slug}`}
-                                className="hover:underline"
+                                className="hover:underline sorter-title-link"
                               >
                                 {sorter.title}
                               </Link>
@@ -283,7 +283,7 @@ function BrowseContent() {
                               <b>
                                 <Link
                                   href={`/user/${sorter.creatorUsername}`}
-                                  className="hover:underline"
+                                  className="hover:underline sorter-title-link"
                                 >
                                   {sorter.creatorUsername || "Unknown User"}
                                 </Link>

@@ -72,7 +72,10 @@ export function Navbar() {
         )}
 
         {/* Browse link */}
-        <Link href="/browse" className="font-medium hover:underline">
+        <Link 
+          href="/browse" 
+          className="font-medium hover:underline sorter-title-link"
+        >
           Browse
         </Link>
 
@@ -85,7 +88,7 @@ export function Navbar() {
             {userData?.username ? (
               <Link 
                 href={`/user/${userData.username}`}
-                className="font-medium hover:underline"
+                className="font-medium hover:underline sorter-title-link"
               >
                 Profile
               </Link>

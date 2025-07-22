@@ -117,15 +117,26 @@
 }
   
 @layer base {
-  html {
-    scrollbar-gutter: stable;
-  }
-  
   body {
     @apply text-foreground font-base bg-background;
   }
 
   h1, h2, h3, h4, h5, h6{
     @apply font-heading;
+  }
+
+  /* Very specific click feedback - only for sorter title links */
+  .sorter-title-link:active {
+    color: oklch(from var(--main) l c h / 0.8) !important;
+    transition: color 75ms ease-out;
+  }
+
+  /* Simple card hover and click feedback */
+  .card-link:hover .card {
+    @apply transform translate-y-[-1px] transition-transform duration-150;
+  }
+  
+  .card-link:active .card {
+    @apply transform translate-y-[1px] transition-transform duration-75;
   }
 }
