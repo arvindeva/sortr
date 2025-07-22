@@ -17,6 +17,17 @@ export const metadata: Metadata = {
   title: "sortr - Create and Share Ranked Lists",
   description: "Create and share ranked lists for anything through pairwise comparison. Build custom rankings, sort items by preference, and discover popular sorters across movies, music, games, and more.",
   keywords: ["ranking", "sorter", "list", "comparison", "polls", "tier list", "ranking tool", "vote", "survey"],
+  icons: {
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "sortr - Create and Share Ranked Lists",
     description: "Create and share ranked lists for anything through pairwise comparison. Build custom rankings, sort items by preference, and discover popular sorters.",
