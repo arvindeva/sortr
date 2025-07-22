@@ -55,7 +55,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `src/app/sorter/[id]/` - Individual sorter view and management
     - `src/app/sorter/[id]/filters/` - Group selection for sorting (NEW)
     - `src/app/sorter/[id]/sort/` - Interactive sorting interface
-  - `src/app/results/[id]/` - Sorting results display
+  - `src/app/rankings/[id]/` - Ranking results display
   - `src/app/user/[username]/` - User profile pages
 - `src/components/` - React components
   - `src/components/ui/` - shadcn/ui components (Button, Card, Badge, Switch, Progress, Skeleton, Dialog, etc.)
@@ -80,7 +80,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Sorter Creation**: Form-based sorter creation with support for groups and individual items
 - **Group Filtering**: NEW - Filter page for selecting which groups to include in sorting
 - **Interactive Sorting**: Pairwise comparison UI with progress tracking and undo functionality
-- **Results Display**: Ranked results with sharing capabilities and smooth animations
+- **Rankings Display**: Ranked results with sharing capabilities and smooth animations
 - **Theme System**: Complete dark/light/system theme switching using next-themes
 - **Progress Tracking**: Local storage-based progress saving for incomplete sorts
 - **User Profiles**: Username-based user profiles with sorter listings
@@ -97,7 +97,7 @@ sortr is a web app for creating and sharing ranked lists through pairwise compar
 - Undo recent sorting decisions (last 3 states)
 - Save progress locally without account requirement using localStorage
 - Login with email to create, save, and manage personal sorters
-- Share results pages with ranked outcomes
+- Share ranking pages with ranked outcomes
 - View and track completion/view counts for public sorters
 
 ### Code Conventions
@@ -142,12 +142,12 @@ Requires configuration for:
 - Group filtering interface with slug-based URLs and simplified checkbox UI
 - Interactive pairwise comparison sorting with real-time progress tracking and group-specific progress isolation
 - Undo functionality (last 1 state for optimal storage)
-- Results display with sharing capabilities
+- Rankings display with sharing capabilities
 - User profiles and sorter management
 - Complete theming system (dark/light/system)
 - Responsive design with mobile support
 - LocalStorage-based progress saving with UUID-to-index optimization (95% storage reduction)
-- Animated results display with Framer Motion for smooth transitions
+- Animated rankings display with Framer Motion for smooth transitions
 - Enhanced progress bar with real-time updates during sorting
 
 🔄 **Recent Major Updates:**

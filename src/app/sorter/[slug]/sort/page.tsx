@@ -397,7 +397,7 @@ export default function SortPage() {
       localStorage.removeItem(progressKey);
 
       // Redirect to results page
-      router.push(`/results/${resultId}`);
+      router.push(`/rankings/${resultId}`);
     } catch (error) {
       console.error("Error during sorting:", error);
       setSorting(false);

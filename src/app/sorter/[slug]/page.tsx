@@ -451,17 +451,17 @@ export default async function SorterPage({ params }: SorterPageProps) {
             </Panel>
           </section>
 
-          {/* Right Column - Recent Results */}
+          {/* Right Column - Recent Rankings */}
           <section>
             <Panel variant="primary">
               <PanelHeader variant="primary">
-                <PanelTitle>Recent Results ({recentResults.length})</PanelTitle>
+                <PanelTitle>Recent Rankings ({recentResults.length})</PanelTitle>
               </PanelHeader>
               <PanelContent variant="primary" className="p-2 md:p-6">
                 {recentResults.length === 0 ? (
                   <Box variant="warning" size="md">
                     <p className="font-medium italic">
-                      No results yet. Be the first to complete this sorter!
+                      No rankings yet. Be the first to complete this sorter!
                     </p>
                   </Box>
                 ) : (
@@ -469,7 +469,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                     {recentResults.map((result) => (
                       <Link
                         key={result.id}
-                        href={`/results/${result.id}`}
+                        href={`/rankings/${result.id}`}
                         className="card-link block"
                       >
                         <Card className="bg-background text-foreground cursor-pointer card">
@@ -480,7 +480,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                             </span>
                           </CardHeader>
                           <CardContent>
-                            {/* Top 3 Results */}
+                            {/* Top 3 Rankings */}
                             <div className="mb-3 space-y-2">
                               {result.top3.map((item: any, index: number) => (
                                 <div

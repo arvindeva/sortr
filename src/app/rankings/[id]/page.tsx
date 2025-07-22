@@ -13,7 +13,7 @@ import { ArrowLeft, Trophy, RotateCcw, Play } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
 
-interface ResultsPageProps {
+interface RankingsPageProps {
   params: Promise<{
     id: string;
   }>;
@@ -48,7 +48,7 @@ interface ResultData {
   }[];
 }
 
-export async function generateMetadata({ params }: ResultsPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: RankingsPageProps): Promise<Metadata> {
   const { id } = await params;
   
   try {
@@ -56,8 +56,8 @@ export async function generateMetadata({ params }: ResultsPageProps): Promise<Me
     
     if (!data) {
       return {
-        title: "Results Not Found | sortr",
-        description: "The requested ranking results could not be found."
+        title: "Rankings Not Found | sortr",
+        description: "The requested ranking could not be found."
       };
     }
 
@@ -70,7 +70,7 @@ export async function generateMetadata({ params }: ResultsPageProps): Promise<Me
     const top3 = result.rankings.slice(0, 3);
     const top3Text = top3.map((item, i) => `${i + 1}. ${item.title}`).join(', ');
     
-    const description = `See ${result.username}'s ranking of ${sorter.title}. Top 3: ${top3Text}. View the complete personalized ranking results.`;
+    const description = `See ${result.username}'s ranking of ${sorter.title}. Top 3: ${top3Text}. View the complete personalized ranking.`;
 
     return {
       title,
@@ -82,7 +82,7 @@ export async function generateMetadata({ params }: ResultsPageProps): Promise<Me
         siteName: "sortr",
         images: [
           {
-            url: "/og-results.png", // We'll create this later
+            url: "/og-rankings.png", // We'll create this later
             width: 1200,
             height: 630,
             alt: `${sorter.title} Rankings by ${result.username}`,
@@ -93,14 +93,14 @@ export async function generateMetadata({ params }: ResultsPageProps): Promise<Me
         card: "summary_large_image",
         title,
         description,
-        images: ["/og-results.png"],
+        images: ["/og-rankings.png"],
       },
     };
   } catch (error) {
-    console.error("Error generating metadata for results page:", error);
+    console.error("Error generating metadata for rankings page:", error);
     return {
-      title: "Results | sortr",
-      description: "View ranking results on sortr."
+      title: "Rankings | sortr",
+      description: "View rankings on sortr."
     };
   }
 }
@@ -199,7 +199,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
   };
 }
 
-export default async function ResultsPage({ params }: ResultsPageProps) {
+export default async function RankingsPage({ params }: RankingsPageProps) {
   const { id } = await params;
   const data = await getResultData(id);
 

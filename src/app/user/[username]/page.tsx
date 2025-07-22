@@ -166,21 +166,21 @@ export default async function UserProfilePage({
         </Panel>
       </section>
 
-      {/* Results Section */}
+      {/* Rankings Section */}
       <section>
         <Panel variant="primary">
           <PanelHeader variant="primary">
-            <PanelTitle>Results ({userResults.length})</PanelTitle>
+            <PanelTitle>Rankings ({userResults.length})</PanelTitle>
           </PanelHeader>
           <PanelContent variant="primary" className="p-2 md:p-6">
             {userResults.length === 0 ? (
               <div className="text-center">
                 <Box variant="warning" size="lg">
                   <p className="mb-4 text-lg font-medium">
-                    No sorting results yet.
+                    No rankings yet.
                   </p>
                   <p className="font-medium">
-                    Complete some sorting sessions to see results!
+                    Complete some sorting sessions to see rankings!
                   </p>
                 </Box>
               </div>
@@ -189,7 +189,7 @@ export default async function UserProfilePage({
                 {userResults.map((result) => (
                   <Link
                     key={result.id}
-                    href={`/results/${result.id}`}
+                    href={`/rankings/${result.id}`}
                     className="card-link"
                   >
                     <Card className="md:min-h-[180px] cursor-pointer card">
@@ -207,7 +207,7 @@ export default async function UserProfilePage({
                             {new Date(result.createdAt).toLocaleDateString()}
                           </span>
                           <div className="flex gap-3">
-                            <span className="text-muted-foreground">Result</span>
+                            <span className="text-muted-foreground">Ranking</span>
                           </div>
                         </div>
                       </CardContent>

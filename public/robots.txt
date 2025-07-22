@@ -4,7 +4,7 @@ Allow: /
 # Main pages
 Allow: /
 Allow: /sorter/*
-Allow: /results/*
+Allow: /rankings/*
 Allow: /user/*
 
 # Disallow authentication and API routes

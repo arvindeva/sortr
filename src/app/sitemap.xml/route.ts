@@ -59,12 +59,12 @@ export async function GET() {
     )
     .join('')}
   
-  <!-- Results pages -->
+  <!-- Rankings pages -->
   ${recentResults
     .map(
       (result) => `
   <url>
-    <loc>${baseUrl}/results/${result.id}</loc>
+    <loc>${baseUrl}/rankings/${result.id}</loc>
     <lastmod>${new Date(result.createdAt).toISOString()}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
