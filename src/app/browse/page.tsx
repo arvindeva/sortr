@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
 
 interface BrowseResult {
   sorters: Array<{
@@ -240,6 +241,9 @@ function BrowseContent() {
           <PanelContent variant="primary" className="p-2 md:p-6">
             {isLoading ? (
               <div className="text-center">
+                <div className="mb-4">
+                  <SortingBarsLoader />
+                </div>
                 <Box variant="neutral" size="md">
                   <p className="font-medium">Loading sorters...</p>
                 </Box>
