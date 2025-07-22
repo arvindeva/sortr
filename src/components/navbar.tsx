@@ -34,15 +34,15 @@ export function Navbar() {
         </span>
         <Logo
           variant="primary"
-          size="md"
-          className="hidden text-3xl font-bold tracking-wide transition-all duration-300 ease-out hover:tracking-widest md:block"
+          size="sm"
+          className="hidden text-2xl font-bold tracking-wide transition-all duration-300 ease-out hover:tracking-widest md:block"
         >
           sortr
         </Logo>
       </Link>
 
       {/* Desktop Navigation */}
-      <div className="hidden items-center gap-4 md:flex">
+      <div className="hidden items-center gap-6 md:flex">
         {/* Create button - always visible */}
         {status === "loading" ? (
           <Button size="sm" variant="default" disabled>
@@ -71,33 +71,40 @@ export function Navbar() {
           </Button>
         )}
 
+        {/* Browse link */}
+        <Link href="/browse" className="font-medium hover:underline">
+          Browse
+        </Link>
+
         {status === "loading" ? (
           <Button size="sm" variant="default" disabled>
             Loading...
           </Button>
         ) : session ? (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             {userData?.username ? (
-              <Button asChild size="sm" variant="default">
-                <Link href={`/user/${userData.username}`}>
-                  <User size={16} className="mr-1" />
-                  Profile
-                </Link>
-              </Button>
-            ) : (
-              <Button size="sm" variant="default" disabled>
-                <User size={16} className="mr-1" />
+              <Link 
+                href={`/user/${userData.username}`}
+                className="font-medium hover:underline"
+              >
                 Profile
-              </Button>
+              </Link>
+            ) : (
+              <span className="font-medium text-muted-foreground">
+                Profile
+              </span>
             )}
+            <ModeToggle />
             <Button size="sm" variant="neutral" onClick={() => signOut()}>
               Logout
             </Button>
           </div>
         ) : (
-          <LoginButton />
+          <>
+            <ModeToggle />
+            <LoginButton />
+          </>
         )}
-        <ModeToggle />
       </div>
 
       {/* Mobile Menu Button */}
@@ -144,6 +151,13 @@ export function Navbar() {
         className={`absolute top-full right-0 left-0 z-30 border-b-2 border-border bg-secondary-background transition-all duration-300 ease-out md:hidden ${mobileMenuOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
       >
         <div className="flex flex-col gap-3 p-4">
+          {/* Browse link */}
+          <Button asChild variant="default" className="w-full">
+            <Link href="/browse" onClick={() => setMobileMenuOpen(false)}>
+              Browse
+            </Link>
+          </Button>
+
           {/* Auth buttons */}
           {status === "loading" ? (
             <Button variant="default" disabled className="w-full">

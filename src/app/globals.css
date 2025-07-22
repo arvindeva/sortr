@@ -117,6 +117,10 @@
 }
   
 @layer base {
+  html {
+    scrollbar-gutter: stable;
+  }
+  
   body {
     @apply text-foreground font-base bg-background;
   }
