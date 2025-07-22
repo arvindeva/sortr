@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import { ProgressProvider } from "@/components/progress-provider";
 
 import "./globals.css";
@@ -57,10 +58,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${dmSans.variable} antialiased`} style={{ fontFamily: 'var(--font-dm-sans)' }}>
+      <body className={`${dmSans.variable} antialiased flex flex-col min-h-screen`} style={{ fontFamily: 'var(--font-dm-sans)' }}>
         <Providers>
           <Navbar />
-          {children}
+          <div className="flex-1">
+            {children}
+          </div>
+          <Footer />
         </Providers>
         <ProgressProvider />
       </body>
