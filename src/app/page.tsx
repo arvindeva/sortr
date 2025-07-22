@@ -1,5 +1,3 @@
-"use client";
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
@@ -9,34 +7,35 @@ import {
   PanelTitle,
   PanelContent,
 } from "@/components/ui/panel";
+import { db } from "@/db";
+import { sorters, user } from "@/db/schema";
+import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
 
-interface Sorter {
-  id: string;
-  title: string;
-  slug: string;
-  description?: string;
-  category?: string;
-  completionCount: number;
-  viewCount: number;
-  createdAt: string;
-  creatorUsername: string;
+// Force dynamic rendering for always-fresh data
+export const dynamic = "force-dynamic";
+
+async function getPopularSorters() {
+  const popularSorters = await db
+    .select({
+      id: sorters.id,
+      title: sorters.title,
+      slug: sorters.slug,
+      category: sorters.category,
+      completionCount: sorters.completionCount,
+      viewCount: sorters.viewCount,
+      creatorUsername: user.username,
+    })
+    .from(sorters)
+    .leftJoin(user, eq(sorters.userId, user.id))
+    .orderBy(desc(sorters.completionCount))
+    .limit(10);
+
+  return popularSorters;
 }
 
-export default function Home() {
-
-  const { data: popularSorters, isLoading, error } = useQuery<Sorter[]>({
-    queryKey: ["popular-sorters"],
-    queryFn: async () => {
-      const response = await fetch("/api/browse?sort=popular&limit=10");
-      if (!response.ok) {
-        throw new Error("Failed to fetch popular sorters");
-      }
-      const data = await response.json();
-      return data.sorters;
-    },
-  });
+export default async function Home() {
+  const popularSorters = await getPopularSorters();
 
   return (
     <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-4xl px-2 py-10 md:px-4">
@@ -64,19 +63,7 @@ export default function Home() {
             <PanelTitle>Popular Sorters</PanelTitle>
           </PanelHeader>
           <PanelContent variant="primary" className="p-2 md:p-6">
-            {isLoading ? (
-              <div className="text-center">
-                <Box variant="neutral" size="md">
-                  <p className="font-medium">Loading popular sorters...</p>
-                </Box>
-              </div>
-            ) : error ? (
-              <div className="text-center">
-                <Box variant="warning" size="md">
-                  <p className="font-medium">Error loading sorters.</p>
-                </Box>
-              </div>
-            ) : !popularSorters || popularSorters.length === 0 ? (
+            {popularSorters.length === 0 ? (
               <div className="text-center">
                 <Box variant="warning" size="md">
                   <p className="font-medium">No sorters available yet.</p>
