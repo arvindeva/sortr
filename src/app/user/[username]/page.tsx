@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
-import { user, sorters } from "@/db/schema";
+import { user, sorters, sortingResults } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,6 +55,26 @@ async function getUserSorters(userId: string) {
   return userSorters;
 }
 
+async function getUserResults(userId: string) {
+  const userResults = await db
+    .select({
+      id: sortingResults.id,
+      sorterId: sortingResults.sorterId,
+      rankings: sortingResults.rankings,
+      selectedGroups: sortingResults.selectedGroups,
+      createdAt: sortingResults.createdAt,
+      sorterTitle: sorters.title,
+      sorterSlug: sorters.slug,
+      sorterCategory: sorters.category,
+    })
+    .from(sortingResults)
+    .leftJoin(sorters, eq(sortingResults.sorterId, sorters.id))
+    .where(eq(sortingResults.userId, userId))
+    .orderBy(desc(sortingResults.createdAt));
+
+  return userResults;
+}
+
 export default async function UserProfilePage({
   params,
 }: UserProfilePageProps) {
@@ -66,6 +86,7 @@ export default async function UserProfilePage({
   }
 
   const userSorters = await getUserSorters(userData.id);
+  const userResults = await getUserResults(userData.id);
 
   // Get current session to check if this is the current user's profile
   const session = await getServerSession(authOptions);
@@ -91,7 +112,7 @@ export default async function UserProfilePage({
       />
 
       {/* Sorters Section */}
-      <section>
+      <section className="mb-8">
         <Panel variant="primary">
           <PanelHeader variant="primary">
             <PanelTitle>Sorters ({userSorters.length})</PanelTitle>
@@ -133,6 +154,66 @@ export default async function UserProfilePage({
                         <div className="flex gap-3">
                           <span>{sorter.viewCount} views</span>
                           <span>{sorter.completionCount} completions</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </PanelContent>
+        </Panel>
+      </section>
+
+      {/* Results Section */}
+      <section>
+        <Panel variant="primary">
+          <PanelHeader variant="primary">
+            <PanelTitle>Results ({userResults.length})</PanelTitle>
+          </PanelHeader>
+          <PanelContent variant="primary" className="p-2 md:p-6">
+            {userResults.length === 0 ? (
+              <div className="text-center">
+                <Box variant="warning" size="lg">
+                  <p className="mb-4 text-lg font-medium">
+                    No sorting results yet.
+                  </p>
+                  <p className="font-medium">
+                    Complete some sorting sessions to see results!
+                  </p>
+                </Box>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+                {userResults.map((result) => (
+                  <Card key={result.id} className="md:min-h-[180px]">
+                    <CardHeader className="flex flex-col justify-start md:h-28">
+                      <CardTitle className="line-clamp-2 text-lg leading-relaxed">
+                        <Link
+                          href={`/results/${result.id}`}
+                          className="hover:underline"
+                        >
+                          {result.sorterTitle || "Unknown Sorter"}
+                        </Link>
+                      </CardTitle>
+                      {result.sorterCategory && (
+                        <Badge variant="default">{result.sorterCategory}</Badge>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-foreground flex items-center justify-between text-sm font-medium">
+                        <span>
+                          {new Date(result.createdAt).toLocaleDateString()}
+                        </span>
+                        <div className="flex gap-3">
+                          {result.sorterSlug && (
+                            <Link 
+                              href={`/sorter/${result.sorterSlug}`}
+                              className="hover:underline"
+                            >
+                              View Sorter
+                            </Link>
+                          )}
                         </div>
                       </div>
                     </CardContent>

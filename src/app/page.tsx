@@ -73,7 +73,7 @@ export default async function Home() {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {popularSorters.map((sorter) => (
                   <Card key={sorter.id} className="md:min-h-[160px]">
-                    <CardHeader className="flex-1 px-2 md:px-6">
+                    <CardHeader className="flex-1">
                       <div className="flex-1">
                         <div className="md:h-6rem flex flex-col">
                           <CardTitle className="line-clamp-2 text-xl font-medium">
@@ -98,7 +98,7 @@ export default async function Home() {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="px-2 md:px-6">
+                    <CardContent>
                       <div className="text-foreground flex items-center justify-between text-sm font-medium">
                         <div className="flex items-center gap-4">
                           <span>{sorter.completionCount} completions</span>
