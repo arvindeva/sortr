@@ -25,7 +25,11 @@ export function ProgressProvider() {
 
       if (link && link.href && link.href !== window.location.href) {
         // Don't show progress for links that open in new tabs
-        if (link.target === "_blank" || link.target === "_top" || link.target === "_parent") {
+        if (
+          link.target === "_blank" ||
+          link.target === "_top" ||
+          link.target === "_parent"
+        ) {
           return;
         }
 
@@ -53,7 +57,7 @@ export function ProgressProvider() {
 
   return (
     <div className="fixed top-0 right-0 left-0 z-50">
-      <div className="bg-muted h-0.5">
+      <div className="bg-muted h-1">
         <div
           className="bg-primary h-full transition-all duration-200 ease-out"
           style={{ width: `${progress}%` }}
