@@ -172,10 +172,9 @@ The application uses the neobrutalism.dev component library, which provides shad
 
 All components follow the neobrutalism aesthetic principles:
 
-- **Press Animation**: Interactive elements move down on hover with shadow disappearing (`hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none`)
 - **Consistent Borders**: All components use 2px borders with black (light) / white (dark) colors (`border-2 border-border`)
 - **Dramatic Shadows**: Bold drop shadows for depth and retro aesthetic (`shadow-shadow`)
-- **Space Grotesk Font**: Modern geometric font for readability and retro feel
+- **DM Sans Font**: Modern geometric font for readability and retro feel
 - **CSS Variables**: Centralized styling configuration in `/src/app/globals.css`
 
 ### Component Installation
