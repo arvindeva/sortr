@@ -19,7 +19,7 @@ const panelVariants = cva(
   },
 );
 
-const panelHeaderVariants = cva("px-6 py-4 border-b-2 border-border", {
+const panelHeaderVariants = cva("px-3 md:px-6 py-4 border-b-2 border-border", {
   variants: {
     variant: {
       default: "bg-secondary-background text-foreground",

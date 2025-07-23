@@ -206,11 +206,6 @@ export default async function UserProfilePage({
                           <span>
                             {new Date(result.createdAt).toLocaleDateString()}
                           </span>
-                          <div className="flex gap-3">
-                            <span className="text-muted-foreground">
-                              Ranking
-                            </span>
-                          </div>
                         </div>
                       </CardContent>
                     </Card>

@@ -6,12 +6,17 @@ import { LoginButton } from "@/components/login-button";
 import { ModeToggle } from "@/components/mode-toggle";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Menu, X, User } from "lucide-react";
+import { Plus, Menu, X, User, Search } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
 
 export function Navbar() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const { data: userData } = useQuery({
     queryKey: ["user", session?.user?.email],
@@ -25,6 +30,15 @@ export function Navbar() {
     },
     enabled: !!session?.user?.email,
   });
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/browse?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+      setMobileSearchOpen(false);
+    }
+  };
 
   return (
     <nav className="border-border bg-secondary-background sticky top-0 z-30 flex w-full items-center justify-between border-b-2 px-4 py-2 md:px-6 md:py-4">
@@ -43,6 +57,17 @@ export function Navbar() {
 
       {/* Desktop Navigation */}
       <div className="hidden items-center gap-6 md:flex">
+        {/* Search Bar */}
+        <form onSubmit={handleSearch} className="relative">
+          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+          <Input
+            placeholder="Search sorters..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-64 pl-9 pr-3"
+          />
+        </form>
+
         {/* Create button - always visible */}
         {status === "loading" ? (
           <Button size="sm" variant="default" disabled>
@@ -110,6 +135,16 @@ export function Navbar() {
 
       {/* Mobile Menu Button */}
       <div className="flex items-center gap-4 md:hidden">
+        {/* Search button - mobile navbar */}
+        <Button
+          variant="default"
+          size="icon"
+          onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+          aria-label="Search"
+        >
+          <Search size={20} />
+        </Button>
+
         {/* Create button - mobile navbar */}
         {status === "loading" ? (
           <Button
@@ -159,6 +194,14 @@ export function Navbar() {
         <div
           className="fixed inset-0 z-20 bg-black/50 md:hidden"
           onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Search Overlay */}
+      {mobileSearchOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/50 md:hidden"
+          onClick={() => setMobileSearchOpen(false)}
         />
       )}
 
@@ -213,6 +256,36 @@ export function Navbar() {
               <LoginButton />
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Mobile Search Input */}
+      <div
+        className={`border-border bg-secondary-background absolute top-full right-0 left-0 z-30 border-b-2 transition-all duration-300 ease-out md:hidden ${mobileSearchOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
+      >
+        <div className="p-4">
+          <form onSubmit={handleSearch} className="space-y-3">
+            <div className="relative">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+              <Input
+                placeholder="Search sorters..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3"
+                autoFocus={mobileSearchOpen}
+              />
+            </div>
+            <Button 
+              type="submit" 
+              variant="default" 
+              size="sm" 
+              className="w-full"
+              disabled={!searchQuery.trim()}
+            >
+              <Search className="mr-2 h-4 w-4" />
+              Search
+            </Button>
+          </form>
         </div>
       </div>
     </nav>
