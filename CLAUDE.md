@@ -81,10 +81,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Group Filtering**: NEW - Filter page for selecting which groups to include in sorting
 - **Interactive Sorting**: Pairwise comparison UI with progress tracking and undo functionality
 - **Rankings Display**: Ranked results with sharing capabilities and smooth animations
+- **Search Functionality**: Global search bar in navbar (desktop input field, mobile expandable overlay) that redirects to browse page with query parameters
 - **Theme System**: Complete dark/light/system theme switching using next-themes
 - **Progress Tracking**: Local storage-based progress saving for incomplete sorts
 - **User Profiles**: Username-based user profiles with sorter listings
 - **Responsive Design**: Mobile-first design with Tailwind CSS
+- **Notifications**: Neobrutalism-styled toast notifications using Sonner
 
 ### Application Purpose
 
@@ -92,9 +94,9 @@ sortr is a web app for creating and sharing ranked lists through pairwise compar
 
 - Create sortable lists ("Sorters") with custom items and optional images
 - Organize items into groups for better categorization and filtering
-- Select specific groups to include in sorting sessions (NEW)
-- Rank items using interactive pairwise comparison UI with progress tracking
-- Undo recent sorting decisions (last 3 states)
+- Select specific groups to include in sorting sessions
+- Rank items using merge sort, UI with progress tracking
+- Undo recent sorting decisions (last 1 states)
 - Save progress locally without account requirement using localStorage
 - Login with email to create, save, and manage personal sorters
 - Share ranking pages with ranked outcomes
@@ -193,6 +195,7 @@ npx shadcn@latest add https://neobrutalism.dev/r/switch.json
 npx shadcn@latest add https://neobrutalism.dev/r/progress.json
 npx shadcn@latest add https://neobrutalism.dev/r/skeleton.json
 npx shadcn@latest add https://neobrutalism.dev/r/dialog.json
+npx shadcn@latest add https://neobrutalism.dev/r/sonner.json
 ```
 
 Before implementing any UI component, check if it exists at https://neobrutalism.dev/components/ and use the official version with the installation command above. Only create custom implementations if the component doesn't exist on neobrutalism.dev.

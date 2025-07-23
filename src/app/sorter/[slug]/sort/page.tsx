@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ComparisonCard } from "@/components/ui/comparison-card";
-import { ArrowLeft, Trophy, Undo2, RotateCcw } from "lucide-react";
+import { Undo2, RotateCcw } from "lucide-react";
 import { SortItem } from "@/lib/sorting";
 import { InteractiveMergeSort, SortState } from "@/lib/interactive-merge-sort";
 import LZString from "lz-string";

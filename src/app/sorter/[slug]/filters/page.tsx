@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Panel,
@@ -12,13 +12,7 @@ import {
   PanelContent,
 } from "@/components/ui/panel";
 import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
-import {
-  ChevronLeft,
-  Filter,
-  Play,
-  ChevronDown,
-  ChevronRight,
-} from "lucide-react";
+import { ChevronLeft, Filter, Play } from "lucide-react";
 import Link from "next/link";
 
 interface FilterPageProps {
@@ -54,47 +48,50 @@ interface ApiResponse {
 
 export default function FilterPage({ params }: FilterPageProps) {
   const router = useRouter();
-  const [sorter, setSorter] = useState<Sorter | null>(null);
-  const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentSlug, setCurrentSlug] = useState<string>("");
+  const [isGroupsInitialized, setIsGroupsInitialized] = useState(false);
 
+  // Get slug from params
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { slug } = await params;
-        setCurrentSlug(slug);
-        const response = await fetch(`/api/sorters/${slug}`);
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch sorter data");
-        }
-
-        const data: ApiResponse = await response.json();
-
-        if (!data.sorter.useGroups) {
-          // Redirect to sort page if not using groups
-          router.push(`/sorter/${slug}/sort`);
-          return;
-        }
-
-        setSorter(data.sorter);
-        setGroups(data.groups);
-
-        // Select all groups by default
-        setSelectedGroups(data.groups.map((group) => group.slug));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setIsLoading(false);
-      }
+    const getSlug = async () => {
+      const { slug } = await params;
+      setCurrentSlug(slug);
     };
+    getSlug();
+  }, [params]);
 
-    fetchData();
-  }, [params, router]);
+  // Fetch sorter data with TanStack Query
+  const { data, isLoading, error } = useQuery<ApiResponse>({
+    queryKey: ["sorter", currentSlug],
+    queryFn: async () => {
+      if (!currentSlug) throw new Error("No slug provided");
+
+      const response = await fetch(`/api/sorters/${currentSlug}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch sorter data");
+      }
+      return response.json();
+    },
+    enabled: !!currentSlug,
+  });
+
+  // Handle redirect and initialize selected groups
+  useEffect(() => {
+    if (data) {
+      if (!data.sorter.useGroups) {
+        router.push(`/sorter/${currentSlug}/sort`);
+        return;
+      }
+
+      // Select all groups by default (only on first load)
+      if (!isGroupsInitialized) {
+        setSelectedGroups(data.groups.map((group) => group.slug));
+        setIsGroupsInitialized(true);
+      }
+    }
+  }, [data, currentSlug, router, isGroupsInitialized]);
 
   const toggleGroup = (groupSlug: string) => {
     setSelectedGroups((prev) =>
@@ -140,14 +137,16 @@ export default function FilterPage({ params }: FilterPageProps) {
     return (
       <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
         <div className="py-12 text-center">
-          <p className="mb-4 text-red-600">{error}</p>
+          <p className="mb-4 text-red-600">
+            {error instanceof Error ? error.message : "An error occurred"}
+          </p>
           <Button onClick={() => router.back()}>Go Back</Button>
         </div>
       </div>
     );
   }
 
-  if (!sorter) {
+  if (!data) {
     return (
       <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
         <div className="py-12 text-center">
@@ -157,6 +156,9 @@ export default function FilterPage({ params }: FilterPageProps) {
       </div>
     );
   }
+
+  // Destructure data for easier access
+  const { sorter, groups } = data;
 
   const totalItems = selectedGroups.reduce((total, groupSlug) => {
     const group = groups.find((g) => g.slug === groupSlug);
