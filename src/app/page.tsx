@@ -76,7 +76,7 @@ export default async function Home() {
                     <CardHeader className="flex-1">
                       <div className="flex-1">
                         <div className="md:h-6rem flex flex-col">
-                          <CardTitle className="line-clamp-2 text-xl font-medium">
+                          <CardTitle className="line-clamp-2 text-lg">
                             <Link
                               href={`/sorter/${sorter.slug}`}
                               className="sorter-title-link hover:underline"

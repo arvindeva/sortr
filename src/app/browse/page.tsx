@@ -47,13 +47,21 @@ interface BrowseResult {
 
 // Static categories from create sorter form
 const CATEGORIES = [
-  "Movies",
+  "Movies & TV",
   "Music",
   "Video Games",
-  "TV Shows",
   "Books",
   "Food",
   "Sports",
+  "Fashion",
+  "Academics",
+  "Anime & Manga",
+  "Tech",
+  "Internet",
+  "Travel",
+  "Nature",
+  "Hobbies",
+  "Vehicles",
   "Other",
 ];
 
@@ -282,7 +290,7 @@ function BrowseContent() {
                       <CardHeader className="flex-1">
                         <div className="flex-1">
                           <div className="flex flex-col">
-                            <CardTitle className="line-clamp-2 text-lg font-medium">
+                            <CardTitle className="line-clamp-2 text-lg">
                               <Link
                                 href={`/sorter/${sorter.slug}`}
                                 className="sorter-title-link hover:underline"
