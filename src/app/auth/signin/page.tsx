@@ -46,7 +46,7 @@ function SignInContent() {
 
   if (session?.user) {
     return (
-      <div className="mt-20 flex flex-col items-center">
+      <div className="mt-20 flex flex-col items-center px-4">
         <p className="mb-4">
           You are already signed in as <strong>{session.user.email}</strong>
         </p>
@@ -58,7 +58,7 @@ function SignInContent() {
   }
 
   return (
-    <div className="mt-20 flex flex-col items-center">
+    <div className="mt-20 flex flex-col items-center px-4">
       <h1 className="mb-6 text-3xl font-bold">Sign in to sortr</h1>
       {errorMessage && (
         <div className="mb-4 rounded border border-red-300 bg-red-100 p-4 text-red-700">
@@ -105,7 +105,7 @@ export default function SignInPage() {
   return (
     <Suspense
       fallback={
-        <div className="mt-20 flex items-center justify-center">Loading...</div>
+        <div className="mt-20 flex items-center justify-center px-4">Loading...</div>
       }
     >
       <SignInContent />
