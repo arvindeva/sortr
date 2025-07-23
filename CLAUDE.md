@@ -165,6 +165,11 @@ Requires configuration for:
 - **Authentication UI**: Enhanced "Check your email" page with red envelope icon (white background in light mode, secondary-background in dark mode) and improved text contrast using `text-foreground`
 - **Homepage Enhancement**: Wrapped main title and subtitle in primary Box component for better visual hierarchy and consistent styling with site design language
 - **Downloadable Ranking Images**: Implemented PNG export feature using html-to-image library with custom RankingImageLayout component featuring neobrutalism Panel design, medal emojis for top 3, 3-column vertical layout for remaining items, rounded corners with shadows, and consistent header/footer rosa backgrounds. Includes progress bar exclusion for download links and development preview component.
+- **Font System Update**: Migrated from DM Sans to Poppins throughout the application for improved readability and modern aesthetics. Updated Next.js layout configuration, CSS variables, and image generation systems for consistent typography across web and downloadable content.
+- **Card Component Improvements**: Enhanced card styling with automatic bold headers, optimized padding for mobile devices (px-3 mobile, px-4 desktop), and consistent font weight handling. Removed manual font overrides for cleaner component architecture.
+- **Ranking Layout Enhancements**: Improved alignment consistency across all ranking displays by implementing fixed-width containers, swapping image/number positions for better visual hierarchy ([image - number - name] format), and combining rank numbers with item names for cleaner presentation. Added responsive sizing and primary rosa placeholder avatars.
+- **Navigation and Interaction Improvements**: Enhanced sorter info panels with precise clickability (title and username only), added proper click animations with rosa color feedback, improved mobile padding for signin forms, and refined user profile card layouts with better spacing and date formatting.
+- **Category System Expansion**: Updated sorter categories with new options (Fashion, Academics, Anime & Manga, Tech, Internet, Travel, Nature, Hobbies, Vehicles), consolidated Movies & TV Shows, and streamlined category names for better organization and user experience.
 
 ## Design System
 
@@ -178,7 +183,7 @@ All components follow the neobrutalism aesthetic principles:
 
 - **Consistent Borders**: All components use 2px borders with black (light) / white (dark) colors (`border-2 border-border`)
 - **Dramatic Shadows**: Bold drop shadows for depth and retro aesthetic (`shadow-shadow`)
-- **DM Sans Font**: Modern geometric font for readability and retro feel
+- **Poppins Font**: Modern geometric font for readability and retro feel
 - **CSS Variables**: Centralized styling configuration in `/src/app/globals.css`
 
 ### Component Installation
