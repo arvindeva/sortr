@@ -190,8 +190,8 @@ export default async function UserProfilePage({
                     href={`/rankings/${result.id}`}
                     className="card-link"
                   >
-                    <Card className="card cursor-pointer md:min-h-[180px]">
-                      <CardHeader className="flex flex-col justify-start md:h-28">
+                    <Card className="card cursor-pointer md:min-h-[180px] gap-2">
+                      <CardHeader className="flex flex-col justify-start">
                         <CardTitle className="line-clamp-2 text-lg leading-relaxed">
                           {result.sorterTitle || "Unknown Sorter"}
                         </CardTitle>
@@ -202,9 +202,60 @@ export default async function UserProfilePage({
                         )}
                       </CardHeader>
                       <CardContent>
+                        {/* Top 3 Rankings Preview */}
+                        <div className="mb-3 space-y-2">
+                          {(() => {
+                            let rankings = [];
+                            try {
+                              rankings = JSON.parse(result.rankings);
+                            } catch (error) {
+                              console.error("Failed to parse rankings:", error);
+                            }
+                            const top3 = rankings.slice(0, 3);
+                            return top3.map((item: any, index: number) => (
+                              <div
+                                key={item.id || index}
+                                className="flex items-center gap-2 text-sm"
+                              >
+                                <div className="flex min-w-0 flex-1 items-center gap-2">
+                                  {item.imageUrl ? (
+                                    <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
+                                      <img
+                                        src={item.imageUrl}
+                                        alt={item.title}
+                                        className="h-full w-full object-cover"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="border-border bg-secondary-background rounded-base flex h-6 w-6 flex-shrink-0 items-center justify-center border-2">
+                                      <span className="text-main text-xs font-bold">
+                                        {item.title.charAt(0).toUpperCase()}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <span className="text-sm font-bold min-w-[1.5rem] text-center">
+                                    {index + 1}.
+                                  </span>
+                                  <span className="font-medium break-words">
+                                    {item.title}
+                                  </span>
+                                </div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                        
+                        {/* Date */}
                         <div className="text-foreground flex items-center justify-between text-sm font-medium">
                           <span>
-                            {new Date(result.createdAt).toLocaleDateString()}
+                            {new Date(result.createdAt).toLocaleDateString(
+                              "en-US",
+                              {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              }
+                            )}
                           </span>
                         </div>
                       </CardContent>

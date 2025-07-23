@@ -474,7 +474,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                         href={`/rankings/${result.id}`}
                         className="card-link block"
                       >
-                        <Card className="bg-background text-foreground card cursor-pointer">
+                        <Card className="bg-background text-foreground card cursor-pointer gap-2">
                           <CardHeader>
                             {/* Username only */}
                             <span className="text-sm font-bold">
@@ -489,9 +489,6 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                   key={item.id || index}
                                   className="flex items-center gap-2 text-sm"
                                 >
-                                  <span className="text-sm font-bold">
-                                    {index + 1}.
-                                  </span>
                                   <div className="flex min-w-0 flex-1 items-center gap-2">
                                     {item.imageUrl ? (
                                       <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
@@ -508,6 +505,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                         </span>
                                       </div>
                                     )}
+                                    <span className="text-sm font-bold min-w-[1.5rem] text-center">
+                                      {index + 1}.
+                                    </span>
                                     <span className="font-medium break-words">
                                       {item.title}
                                     </span>

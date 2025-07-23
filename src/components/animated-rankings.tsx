@@ -25,14 +25,11 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
             delay: index < 10 ? index * 0.1 : 10 * 0.1,
             ease: "easeOut",
           }}
-          className={`bg-background text-foreground rounded-base border-border shadow-shadow flex items-center gap-4 overflow-hidden border-2 p-4`}
+          className={`bg-background text-foreground rounded-base border-border shadow-shadow flex items-center gap-3 overflow-hidden border-2 p-2 md:p-4`}
         >
-          {/* Rank */}
-          <span className="text-lg font-bold">{index + 1}.</span>
-
           {/* Image */}
           {item.imageUrl ? (
-            <div className="rounded-base border-border h-16 w-16 flex-shrink-0 overflow-hidden border-2">
+            <div className="rounded-base border-border h-10 w-10 md:h-16 md:w-16 flex-shrink-0 overflow-hidden border-2">
               <img
                 src={item.imageUrl}
                 alt={item.title}
@@ -40,16 +37,18 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
               />
             </div>
           ) : (
-            <div className="rounded-base border-border bg-secondary-background flex h-16 w-16 flex-shrink-0 items-center justify-center border-2">
-              <span className="text-foreground text-sm font-bold">
+            <div className="rounded-base border-border bg-secondary-background flex h-10 w-10 md:h-16 md:w-16 flex-shrink-0 items-center justify-center border-2">
+              <span className="text-main text-sm font-bold">
                 {item.title.charAt(0).toUpperCase()}
               </span>
             </div>
           )}
 
-          {/* Title */}
+          {/* Title with Rank */}
           <div className="min-w-0 flex-1">
-            <h3 className="font-medium break-words">{item.title}</h3>
+            <h3 className="text-sm md:text-base font-medium break-words">
+              {index + 1}.&nbsp;&nbsp;{item.title}
+            </h3>
           </div>
         </motion.div>
       ))}
