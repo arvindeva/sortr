@@ -205,7 +205,7 @@ Before implementing any UI component, check if it exists at https://neobrutalism
 
 Neobrutalism Button component with built-in retro styling:
 
-- `variant`: `"default"` (yellow bg, black text), `"reverse"` (inverse press animation), `"noShadow"` (no shadow), `"neutral"` (secondary bg)
+- `variant`: `"default"` (rosa bg, black text), `"reverse"` (inverse press animation), `"noShadow"` (no shadow), `"neutral"` (secondary bg)
 - `size`: `"sm"`, `"default"`, `"lg"`, `"icon"`
 - Features: Built-in press animation, retro colors, bold shadows
 
@@ -228,7 +228,7 @@ Neobrutalism Badge component with built-in retro styling:
 
 Custom container component for highlights and sections:
 
-- `variant`: `"primary"` (yellow), `"secondary"` (pink), `"accent"` (cyan), `"warning"` (orange), etc.
+- `variant`: `"primary"` (rosa).
 - `size`: `"sm"`, `"md"`, `"lg"`, `"xl"`
 - Usage: Hero sections, headers, highlights
 

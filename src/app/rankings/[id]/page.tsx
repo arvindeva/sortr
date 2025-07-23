@@ -17,6 +17,7 @@ import {
 import { ArrowLeft, Trophy, RotateCcw, Play } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
+import { RankingImageLayout } from "@/components/ranking-image-layout";
 
 interface RankingsPageProps {
   params: Promise<{
@@ -250,7 +251,15 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
 
         {/* Share and Sort Buttons */}
         <div className="mb-6 flex flex-wrap gap-4">
-          <ShareButton />
+          <ShareButton 
+            rankingData={{
+              sorterTitle: sorter.title,
+              username: result.username,
+              rankings: result.rankings,
+              createdAt: result.createdAt,
+              selectedGroups: selectedGroups?.map(group => group.name),
+            }}
+          />
           <Button asChild variant="default">
             <Link
               href={
@@ -399,6 +408,30 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
           <Link href={`/sorter/${sorter.slug}`}>View Sorter Details</Link>
         </Button>
       </div>
+
+      {/* Development Preview: Image Layout */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="mt-12 border-t-2 border-dashed border-gray-300 pt-8">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-gray-600">
+              Development Preview: Downloadable Image Layout
+            </h2>
+            <p className="text-sm text-gray-500">
+              This preview shows what the downloaded image will look like. This section is only visible in development.
+            </p>
+          </div>
+          
+          <div className="overflow-auto bg-gray-100 p-4">
+            <RankingImageLayout
+              sorterTitle={sorter.title}
+              username={result.username}
+              rankings={result.rankings}
+              createdAt={result.createdAt}
+              selectedGroups={selectedGroups?.map(group => group.name)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

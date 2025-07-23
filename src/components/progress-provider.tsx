@@ -24,6 +24,11 @@ export function ProgressProvider() {
       const link = target.closest("a");
 
       if (link && link.href && link.href !== window.location.href) {
+        // Don't show progress for download links
+        if (link.download || link.href.startsWith('blob:') || link.href.startsWith('data:')) {
+          return;
+        }
+
         // Don't show progress for links that open in new tabs
         if (
           link.target === "_blank" ||

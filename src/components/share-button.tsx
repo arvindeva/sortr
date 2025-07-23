@@ -9,19 +9,40 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { useDownloadRankingImage } from "@/hooks/use-download-ranking-image";
+
+interface RankedItem {
+  id: string;
+  title: string;
+  imageUrl?: string;
+}
 
 interface ShareButtonProps {
   size?: "sm" | "default" | "lg";
+  rankingData?: {
+    sorterTitle: string;
+    username: string;
+    rankings: RankedItem[];
+    createdAt: Date;
+    selectedGroups?: string[];
+  };
 }
 
-export function ShareButton({ size = "sm" }: ShareButtonProps) {
+export function ShareButton({ size = "sm", rankingData }: ShareButtonProps) {
+  const { downloadImage, isGenerating } = useDownloadRankingImage();
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Link copied!");
   };
 
-  const handleDownloadImage = () => {
-    toast.info("Image download is coming soon!");
+  const handleDownloadImage = async () => {
+    if (!rankingData) {
+      toast.error("Ranking data not available for download");
+      return;
+    }
+
+    await downloadImage(rankingData);
   };
 
   return (
@@ -37,9 +58,12 @@ export function ShareButton({ size = "sm" }: ShareButtonProps) {
           <Link2 className="mr-2" size={16} />
           Copy Link
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleDownloadImage}>
+        <DropdownMenuItem 
+          onClick={handleDownloadImage}
+          disabled={isGenerating || !rankingData}
+        >
           <Download className="mr-2" size={16} />
-          Download Image
+          {isGenerating ? "Generating..." : "Download Image"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
