@@ -58,18 +58,18 @@ export function useDownloadRankingImage() {
       // Wait for the next tick to ensure rendering is complete
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Wait for fonts to be ready - specifically check for DM Sans
+      // Wait for fonts to be ready - specifically check for Poppins
       await document.fonts.ready;
       
-      // Additional check to ensure DM Sans is loaded
+      // Additional check to ensure Poppins is loaded
       try {
-        await document.fonts.load('400 16px "DM Sans"');
-        await document.fonts.load('500 16px "DM Sans"');
-        await document.fonts.load('600 16px "DM Sans"');
-        await document.fonts.load('700 16px "DM Sans"');
-        await document.fonts.load('800 16px "DM Sans"');
+        await document.fonts.load('400 16px "Poppins"');
+        await document.fonts.load('500 16px "Poppins"');
+        await document.fonts.load('600 16px "Poppins"');
+        await document.fonts.load('700 16px "Poppins"');
+        await document.fonts.load('800 16px "Poppins"');
       } catch (error) {
-        console.warn("Failed to load DM Sans font weights:", error);
+        console.warn("Failed to load Poppins font weights:", error);
       }
 
       // Wait for all images to load
@@ -107,7 +107,7 @@ export function useDownloadRankingImage() {
         width: 1092, // Updated width to include shadow space
         height: undefined, // Auto height based on content
         style: {
-          fontFamily: 'var(--font-dm-sans), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
+          fontFamily: 'var(--font-poppins), "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
         },
       });
 

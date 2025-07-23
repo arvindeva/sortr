@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -7,10 +7,10 @@ import { ProgressProvider } from "@/components/progress-provider";
 
 import "./globals.css";
 
-const dmSans = DM_Sans({
+const poppins = Poppins({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-dm-sans",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-poppins",
 });
 
 export const metadata: Metadata = {
@@ -72,8 +72,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${dmSans.variable} flex min-h-screen flex-col antialiased`}
-        style={{ fontFamily: "var(--font-dm-sans)" }}
+        className={`${poppins.variable} flex min-h-screen flex-col antialiased`}
+        style={{ fontFamily: "var(--font-poppins)" }}
       >
         <Providers>
           <Navbar />

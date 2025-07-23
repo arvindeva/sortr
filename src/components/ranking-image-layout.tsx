@@ -56,7 +56,7 @@ export function RankingImageLayout({
           backgroundColor: "#2a2a2a", // Dark grey panel background
           color: "#ffffff", // White text
           fontFamily:
-            'var(--font-dm-sans), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
+            'var(--font-poppins), "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
           border: "3px solid #000000",
           borderRadius: "20px", // Rounded corners
           boxShadow: "6px 6px 0px 0px #000000", // Add shadow back
@@ -126,13 +126,13 @@ export function RankingImageLayout({
                   {/* Bigger Image for 1st Place */}
                   <div
                     style={{
-                      width: "100px", // 20px bigger than other top 3 items
-                      height: "100px", // 20px bigger than other top 3 items
+                      width: "200px", // 20px bigger than other top 3 items
+                      height: "200px", // 20px bigger than other top 3 items
                       flexShrink: 0,
                       border: "2px solid #000000",
                       borderRadius: "10px",
                       overflow: "hidden",
-                      backgroundColor: "#4a4a4a",
+                      backgroundColor: "#2a2a2a",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -154,7 +154,7 @@ export function RankingImageLayout({
                         style={{
                           fontSize: "28px", // Slightly bigger for larger image
                           fontWeight: "800",
-                          color: "#ffffff",
+                          color: "oklch(67.58% 0.2135 18.63)", // Primary rosa color
                         }}
                       >
                         {item.title.charAt(0).toUpperCase()}
@@ -215,29 +215,16 @@ export function RankingImageLayout({
                       margin: "8px 16px", // Use margin instead for spacing
                     }}
                   >
-                    {/* Bigger Medal Emoji instead of rank number */}
-                    <div
-                      style={{
-                        fontSize: "28px", // Bigger medal emoji
-                        minWidth: "35px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {index === 0 ? "🥈" : "🥉"}
-                    </div>
-
                     {/* Larger Image for Top 3 */}
                     <div
                       style={{
-                        width: "80px",
-                        height: "80px",
+                        width: "120px",
+                        height: "120px",
                         flexShrink: 0,
                         border: "2px solid #000000",
                         borderRadius: "10px",
                         overflow: "hidden",
-                        backgroundColor: "#4a4a4a",
+                        backgroundColor: "#2a2a2a",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -259,12 +246,25 @@ export function RankingImageLayout({
                           style={{
                             fontSize: "24px",
                             fontWeight: "800",
-                            color: "#ffffff",
+                            color: "oklch(67.58% 0.2135 18.63)", // Primary rosa color
                           }}
                         >
                           {item.title.charAt(0).toUpperCase()}
                         </span>
                       )}
+                    </div>
+
+                    {/* Bigger Medal Emoji instead of rank number */}
+                    <div
+                      style={{
+                        fontSize: "28px", // Bigger medal emoji
+                        minWidth: "35px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {index === 0 ? "🥈" : "🥉"}
                     </div>
 
                     {/* Title without medal emoji */}
@@ -326,7 +326,8 @@ export function RankingImageLayout({
                         <span
                           style={{
                             fontWeight: "700",
-                            minWidth: "35px",
+                            minWidth: "40px",
+                            textAlign: "center",
                             color: "#cccccc",
                           }}
                         >
@@ -370,7 +371,8 @@ export function RankingImageLayout({
                         <span
                           style={{
                             fontWeight: "700",
-                            minWidth: "35px",
+                            minWidth: "40px",
+                            textAlign: "center",
                             color: "#cccccc",
                           }}
                         >
@@ -414,7 +416,8 @@ export function RankingImageLayout({
                         <span
                           style={{
                             fontWeight: "700",
-                            minWidth: "35px",
+                            minWidth: "40px",
+                            textAlign: "center",
                             color: "#cccccc",
                           }}
                         >
@@ -449,20 +452,19 @@ export function RankingImageLayout({
               borderBottomRightRadius: "17px", // Match container radius minus border
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
+              justifyContent: "flex-end",
               minHeight: "48px", // Ensure consistent height with header
             }}
           >
             <span
               style={{
-                fontSize: "16px",
-                fontWeight: "500",
+                fontSize: "24px",
+                fontWeight: "900",
                 color: "#000000", // Black text on rosa background
                 margin: "0",
               }}
             >
-              Sort your own list on{" "}
-              <span style={{ fontWeight: "900" }}>sortr.io</span>.
+              sortr.io
             </span>
           </div>
         </PanelContent>
