@@ -305,15 +305,23 @@ export default function CreateSorterForm() {
                             <SelectValue placeholder="Select a category" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Movies">Movies</SelectItem>
+                            <SelectItem value="Movies & TV">Movies & TV</SelectItem>
                             <SelectItem value="Music">Music</SelectItem>
                             <SelectItem value="Video Games">
                               Video Games
                             </SelectItem>
-                            <SelectItem value="TV Shows">TV Shows</SelectItem>
                             <SelectItem value="Books">Books</SelectItem>
                             <SelectItem value="Food">Food</SelectItem>
                             <SelectItem value="Sports">Sports</SelectItem>
+                            <SelectItem value="Fashion">Fashion</SelectItem>
+                            <SelectItem value="Academics">Academics</SelectItem>
+                            <SelectItem value="Anime & Manga">Anime & Manga</SelectItem>
+                            <SelectItem value="Tech">Tech</SelectItem>
+                            <SelectItem value="Internet">Internet</SelectItem>
+                            <SelectItem value="Travel">Travel</SelectItem>
+                            <SelectItem value="Nature">Nature</SelectItem>
+                            <SelectItem value="Hobbies">Hobbies</SelectItem>
+                            <SelectItem value="Vehicles">Vehicles</SelectItem>
                             <SelectItem value="Other">Other</SelectItem>
                           </SelectContent>
                         </Select>
