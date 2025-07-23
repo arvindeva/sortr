@@ -81,6 +81,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Group Filtering**: NEW - Filter page for selecting which groups to include in sorting
 - **Interactive Sorting**: Pairwise comparison UI with progress tracking and undo functionality
 - **Rankings Display**: Ranked results with sharing capabilities and smooth animations
+- **Downloadable Images**: PNG export of rankings with neobrutalism design using html-to-image
 - **Search Functionality**: Global search bar in navbar (desktop input field, mobile expandable overlay) that redirects to browse page with query parameters
 - **Theme System**: Complete dark/light/system theme switching using next-themes
 - **Progress Tracking**: Local storage-based progress saving for incomplete sorts
@@ -99,7 +100,8 @@ sortr is a web app for creating and sharing ranked lists through pairwise compar
 - Undo recent sorting decisions (last 1 states)
 - Save progress locally without account requirement using localStorage
 - Login with email to create, save, and manage personal sorters
-- Share ranking pages with ranked outcomes
+- Share ranking pages with ranked outcomes and downloadable images
+- Download ranking images as PNG with neobrutalism design
 - View and track completion/view counts for public sorters
 
 ### Code Conventions
@@ -151,6 +153,7 @@ Requires configuration for:
 - LocalStorage-based progress saving with UUID-to-index optimization (95% storage reduction)
 - Animated rankings display with Framer Motion for smooth transitions
 - Enhanced progress bar with real-time updates during sorting
+- **Downloadable ranking images**: PNG export with html-to-image, neobrutalism Panel design, medal emojis, 3-column layout for 4+ items, and consistent header/footer styling
 
 🔄 **Recent Major Updates:**
 
@@ -161,6 +164,7 @@ Requires configuration for:
 - **Component Library Expansion**: Added neobrutalism Skeleton (`npx shadcn@latest add https://neobrutalism.dev/r/skeleton.json`) and Dialog components, created reusable SortingBarsLoader for consistent loading animations
 - **Authentication UI**: Enhanced "Check your email" page with red envelope icon (white background in light mode, secondary-background in dark mode) and improved text contrast using `text-foreground`
 - **Homepage Enhancement**: Wrapped main title and subtitle in primary Box component for better visual hierarchy and consistent styling with site design language
+- **Downloadable Ranking Images**: Implemented PNG export feature using html-to-image library with custom RankingImageLayout component featuring neobrutalism Panel design, medal emojis for top 3, 3-column vertical layout for remaining items, rounded corners with shadows, and consistent header/footer rosa backgrounds. Includes progress bar exclusion for download links and development preview component.
 
 ## Design System
 
