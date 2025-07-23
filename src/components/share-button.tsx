@@ -17,9 +17,7 @@ interface ShareButtonProps {
 export function ShareButton({ size = "sm" }: ShareButtonProps) {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    toast.success("Link copied!", {
-      icon: <Check className="h-4 w-4" />,
-    });
+    toast.success("Link copied!");
   };
 
   const handleDownloadImage = () => {
