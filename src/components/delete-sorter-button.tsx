@@ -17,7 +17,10 @@ interface DeleteSorterButtonProps {
   sorterTitle: string;
 }
 
-export function DeleteSorterButton({ sorterSlug, sorterTitle }: DeleteSorterButtonProps) {
+export function DeleteSorterButton({
+  sorterSlug,
+  sorterTitle,
+}: DeleteSorterButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,13 +54,12 @@ export function DeleteSorterButton({ sorterSlug, sorterTitle }: DeleteSorterButt
       // Immediately redirect to home page with full page refresh
       // This prevents the brief moment where user stays on the deleted page
       window.location.href = "/";
-      
     } catch (error) {
       console.error("Error deleting sorter:", error);
       setError(
-        error instanceof Error 
+        error instanceof Error
           ? error.message
-          : "Failed to delete sorter. Please try again."
+          : "Failed to delete sorter. Please try again.",
       );
       setIsDeleting(false); // Only set loading false on error
     }
@@ -89,16 +91,17 @@ export function DeleteSorterButton({ sorterSlug, sorterTitle }: DeleteSorterButt
 
         <div className="space-y-4">
           <div className="text-sm">
-            <p className="font-medium mb-2">
+            <p className="mb-2 font-medium">
               Are you sure you want to delete <strong>"{sorterTitle}"</strong>?
             </p>
             <p className="text-foreground">
-              This action cannot be undone. All sorting results and data associated with this sorter will be permanently deleted.
+              This action cannot be undone. All sorting results and data
+              associated with this sorter will be permanently deleted.
             </p>
           </div>
 
           {error && (
-            <div className="bg-red-500 text-white p-3 rounded-base border-2 border-border text-sm">
+            <div className="rounded-base border-border border-2 bg-red-500 p-3 text-sm text-white">
               {error}
             </div>
           )}

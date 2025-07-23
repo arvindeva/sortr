@@ -7,10 +7,10 @@ interface UserProfileHeaderProps {
   isOwnProfile: boolean;
 }
 
-export function UserProfileHeader({ 
-  username, 
-  userSince, 
-  isOwnProfile 
+export function UserProfileHeader({
+  username,
+  userSince,
+  isOwnProfile,
 }: UserProfileHeaderProps) {
   return (
     <section className="mb-8">
@@ -28,16 +28,10 @@ export function UserProfileHeader({
 
         {/* User Info */}
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <h1 className="text-lg font-bold md:text-4xl">
-              {username}
-            </h1>
+          <div className="mb-2 flex items-center gap-2">
+            <h1 className="text-lg font-bold md:text-4xl">{username}</h1>
             {/* Edit Username Button - Only show for own profile */}
-            {isOwnProfile && (
-              <EditUsernameButton 
-                currentUsername={username}
-              />
-            )}
+            {isOwnProfile && <EditUsernameButton currentUsername={username} />}
           </div>
           <p className="text-md font-medium">User since {userSince}</p>
         </div>

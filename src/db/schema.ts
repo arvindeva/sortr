@@ -85,8 +85,9 @@ export const sorterItems = pgTable("sorterItems", {
   sorterId: uuid("sorterId")
     .notNull()
     .references(() => sorters.id, { onDelete: "cascade" }),
-  groupId: uuid("groupId")
-    .references(() => sorterGroups.id, { onDelete: "cascade" }),
+  groupId: uuid("groupId").references(() => sorterGroups.id, {
+    onDelete: "cascade",
+  }),
   title: text("title").notNull(),
   imageUrl: text("imageUrl"),
 });

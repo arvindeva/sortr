@@ -67,7 +67,11 @@ function SignInContent() {
       )}
       <div className="w-full max-w-md">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+            noValidate
+          >
             <FormField
               control={form.control}
               name="email"
@@ -78,18 +82,16 @@ function SignInContent() {
                       type="email"
                       placeholder="Enter your email"
                       {...field}
-                      onKeyDown={(e) => e.key === "Enter" && form.handleSubmit(onSubmit)()}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && form.handleSubmit(onSubmit)()
+                      }
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full"
-            >
+            <Button type="submit" disabled={isLoading} className="w-full">
               {isLoading ? "Sending..." : "Sign in with Email"}
             </Button>
           </form>

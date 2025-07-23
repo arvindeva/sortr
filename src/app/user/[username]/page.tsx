@@ -17,7 +17,7 @@ import { authOptions } from "@/lib/auth";
 import { UserProfileHeader } from "@/components/user-profile-header";
 
 // Force dynamic rendering for always-fresh user statistics
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 interface UserProfilePageProps {
   params: Promise<{
@@ -91,7 +91,7 @@ export default async function UserProfilePage({
   // Get current session to check if this is the current user's profile
   const session = await getServerSession(authOptions);
   const currentUserEmail = session?.user?.email;
-  
+
   // Check if current user is viewing their own profile
   const isOwnProfile = currentUserEmail === userData.email;
 
@@ -105,8 +105,8 @@ export default async function UserProfilePage({
   return (
     <main className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
       {/* Profile Header */}
-      <UserProfileHeader 
-        username={userData.username || ''}
+      <UserProfileHeader
+        username={userData.username || ""}
         userSince={userSince}
         isOwnProfile={isOwnProfile}
       />
@@ -137,7 +137,7 @@ export default async function UserProfilePage({
                     href={`/sorter/${sorter.slug}`}
                     className="card-link"
                   >
-                    <Card className="md:min-h-[180px] cursor-pointer card">
+                    <Card className="card cursor-pointer md:min-h-[180px]">
                       <CardHeader className="flex flex-col justify-start md:h-28">
                         <CardTitle className="line-clamp-2 text-lg leading-relaxed">
                           {sorter.title}
@@ -176,9 +176,7 @@ export default async function UserProfilePage({
             {userResults.length === 0 ? (
               <div className="text-center">
                 <Box variant="warning" size="lg">
-                  <p className="mb-4 text-lg font-medium">
-                    No rankings yet.
-                  </p>
+                  <p className="mb-4 text-lg font-medium">No rankings yet.</p>
                   <p className="font-medium">
                     Complete some sorting sessions to see rankings!
                   </p>
@@ -192,13 +190,15 @@ export default async function UserProfilePage({
                     href={`/rankings/${result.id}`}
                     className="card-link"
                   >
-                    <Card className="md:min-h-[180px] cursor-pointer card">
+                    <Card className="card cursor-pointer md:min-h-[180px]">
                       <CardHeader className="flex flex-col justify-start md:h-28">
                         <CardTitle className="line-clamp-2 text-lg leading-relaxed">
                           {result.sorterTitle || "Unknown Sorter"}
                         </CardTitle>
                         {result.sorterCategory && (
-                          <Badge variant="default">{result.sorterCategory}</Badge>
+                          <Badge variant="default">
+                            {result.sorterCategory}
+                          </Badge>
                         )}
                       </CardHeader>
                       <CardContent>
@@ -207,7 +207,9 @@ export default async function UserProfilePage({
                             {new Date(result.createdAt).toLocaleDateString()}
                           </span>
                           <div className="flex gap-3">
-                            <span className="text-muted-foreground">Ranking</span>
+                            <span className="text-muted-foreground">
+                              Ranking
+                            </span>
                           </div>
                         </div>
                       </CardContent>

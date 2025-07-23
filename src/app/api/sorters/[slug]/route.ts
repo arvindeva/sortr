@@ -1,5 +1,11 @@
 import { db } from "@/db";
-import { sorters, sorterItems, sorterGroups, user, sortingResults } from "@/db/schema";
+import {
+  sorters,
+  sorterItems,
+  sorterGroups,
+  user,
+  sortingResults,
+} from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
@@ -113,7 +119,7 @@ export async function DELETE(
 ) {
   try {
     const { slug } = await params;
-    
+
     // Check authentication
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
@@ -152,36 +158,40 @@ export async function DELETE(
 
     // Check ownership
     if (sorter.userId !== currentUserId) {
-      return Response.json({ error: "Forbidden: You can only delete your own sorters" }, { status: 403 });
+      return Response.json(
+        { error: "Forbidden: You can only delete your own sorters" },
+        { status: 403 },
+      );
     }
 
     // Delete in the correct order (foreign key constraints)
     // 1. Delete sorting results
-    await db.delete(sortingResults).where(eq(sortingResults.sorterId, sorter.id));
-    
+    await db
+      .delete(sortingResults)
+      .where(eq(sortingResults.sorterId, sorter.id));
+
     // 2. Delete sorter items
     await db.delete(sorterItems).where(eq(sorterItems.sorterId, sorter.id));
-    
+
     // 3. Delete sorter groups (if any)
     await db.delete(sorterGroups).where(eq(sorterGroups.sorterId, sorter.id));
-    
+
     // 4. Finally delete the sorter
     await db.delete(sorters).where(eq(sorters.id, sorter.id));
 
     // Revalidate pages that show sorter data
     try {
-      revalidatePath('/'); // Homepage (popular sorters)
+      revalidatePath("/"); // Homepage (popular sorters)
       revalidatePath(`/sorter/${slug}`); // Sorter page (will 404, but clears cache)
     } catch (revalidateError) {
       console.warn("Failed to revalidate some paths:", revalidateError);
       // Don't fail the entire request if revalidation fails
     }
 
-    return Response.json({ 
+    return Response.json({
       message: "Sorter deleted successfully",
-      title: sorter.title 
+      title: sorter.title,
     });
-
   } catch (error) {
     console.error("Error deleting sorter:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });

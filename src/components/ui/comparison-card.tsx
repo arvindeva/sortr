@@ -7,18 +7,18 @@ interface ComparisonCardProps extends React.ComponentProps<"div"> {
   onClick?: () => void;
 }
 
-function ComparisonCard({ 
-  className, 
-  imageUrl, 
-  title, 
-  onClick, 
-  ...props 
+function ComparisonCard({
+  className,
+  imageUrl,
+  title,
+  onClick,
+  ...props
 }: ComparisonCardProps) {
   return (
     <div
       className={cn(
-        "bg-main text-black rounded-base border-2 border-border shadow-shadow cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md overflow-hidden flex flex-col",
-        className
+        "bg-main rounded-base border-border shadow-shadow flex cursor-pointer flex-col overflow-hidden border-2 text-black transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md",
+        className,
       )}
       onClick={onClick}
       {...props}
@@ -33,16 +33,16 @@ function ComparisonCard({
           />
         </div>
       ) : (
-        <div className="aspect-square w-full flex items-center justify-center bg-secondary-background md:h-64">
-          <span className="text-black text-lg md:text-4xl font-bold">
+        <div className="bg-secondary-background flex aspect-square w-full items-center justify-center md:h-64">
+          <span className="text-lg font-bold text-black md:text-4xl">
             {title.charAt(0).toUpperCase()}
           </span>
         </div>
       )}
-      
+
       {/* Text area at bottom */}
-      <div className="px-4 py-6 text-center border-t-2 border-border">
-        <h3 className="text-sm font-semibold leading-tight md:text-lg text-black">
+      <div className="border-border border-t-2 px-4 py-6 text-center">
+        <h3 className="text-sm leading-tight font-semibold text-black md:text-lg">
           {title}
         </h3>
       </div>

@@ -6,14 +6,19 @@ import { eq, desc, asc, sql, ilike, or, and, inArray } from "drizzle-orm";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     // Parse query parameters
     const query = searchParams.get("q") || "";
     const categoriesParam = searchParams.get("categories") || "";
-    const categories = categoriesParam ? categoriesParam.split(",").filter(Boolean) : [];
+    const categories = categoriesParam
+      ? categoriesParam.split(",").filter(Boolean)
+      : [];
     const sort = searchParams.get("sort") || "popular";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "20")));
+    const limit = Math.min(
+      50,
+      Math.max(1, parseInt(searchParams.get("limit") || "20")),
+    );
     const offset = (page - 1) * limit;
 
     // Build WHERE conditions
@@ -26,8 +31,8 @@ export async function GET(request: NextRequest) {
         or(
           ilike(sorters.title, searchTerm),
           ilike(sorters.description, searchTerm),
-          ilike(user.username, searchTerm)
-        )
+          ilike(user.username, searchTerm),
+        ),
       );
     }
 
@@ -60,23 +65,24 @@ export async function GET(request: NextRequest) {
       .$dynamic();
 
     // Apply conditions if any
-    const finalQuery = conditions.length > 0 
-      ? baseQuery.where(and(...conditions)) 
-      : baseQuery;
+    const finalQuery =
+      conditions.length > 0 ? baseQuery.where(and(...conditions)) : baseQuery;
 
-    const finalCountQuery = conditions.length > 0 
-      ? countQueryBase.where(and(...conditions)) 
-      : countQueryBase;
+    const finalCountQuery =
+      conditions.length > 0
+        ? countQueryBase.where(and(...conditions))
+        : countQueryBase;
 
     // Apply sorting and pagination
-    const sortedQuery = sort === "recent" 
-      ? finalQuery.orderBy(desc(sorters.createdAt))
-      : finalQuery.orderBy(desc(sorters.completionCount));
+    const sortedQuery =
+      sort === "recent"
+        ? finalQuery.orderBy(desc(sorters.createdAt))
+        : finalQuery.orderBy(desc(sorters.completionCount));
 
     // Execute both queries
     const [sortedSorters, countResult] = await Promise.all([
       sortedQuery.limit(limit).offset(offset),
-      finalCountQuery
+      finalCountQuery,
     ]);
 
     const totalCount = countResult[0]?.count || 0;
@@ -90,12 +96,11 @@ export async function GET(request: NextRequest) {
       hasNextPage: page < totalPages,
       hasPrevPage: page > 1,
     });
-
   } catch (error) {
     console.error("Error in browse API:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

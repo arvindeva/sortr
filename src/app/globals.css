@@ -13,13 +13,13 @@
   --ring: oklch(0% 0 0);
   --overlay: oklch(0% 0 0 / 0.8);
   --shadow: 2px 2px 0px 0px var(--border);
-  --chart-1: #FF6678;
-  --chart-2: #7A83FF;
-  --chart-3: #FACC00;
-  --chart-4: #00D696;
-  --chart-5: #5294FF;
+  --chart-1: #ff6678;
+  --chart-2: #7a83ff;
+  --chart-3: #facc00;
+  --chart-4: #00d696;
+  --chart-5: #5294ff;
   --chart-active-dot: #000;
-  
+
   /* Additional shadcn variables */
   --card: var(--secondary-background);
   --card-foreground: var(--foreground);
@@ -47,13 +47,13 @@
   --border: oklch(0% 0 0);
   --ring: oklch(100% 0 0);
   --shadow: 2px 2px 0px 0px var(--border);
-  --chart-1: #FF4D61;
-  --chart-2: #7A83FF;
-  --chart-3: #E0B700;
-  --chart-4: #00BD84;
-  --chart-5: #5294FF;
+  --chart-1: #ff4d61;
+  --chart-2: #7a83ff;
+  --chart-3: #e0b700;
+  --chart-4: #00bd84;
+  --chart-5: #5294ff;
   --chart-active-dot: #fff;
-  
+
   /* Additional shadcn variables for dark mode */
   --card: var(--secondary-background);
   --card-foreground: var(--foreground);
@@ -115,13 +115,18 @@
   --font-family-base: var(--font-dm-sans);
   --font-family-heading: var(--font-dm-sans);
 }
-  
+
 @layer base {
   body {
     @apply text-foreground font-base bg-background;
   }
 
-  h1, h2, h3, h4, h5, h6{
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-heading;
   }
 
@@ -133,10 +138,10 @@
 
   /* Simple card hover and click feedback */
   .card-link:hover .card {
-    @apply transform translate-y-[-1px] transition-transform duration-150;
+    @apply translate-y-[-1px] transform transition-transform duration-150;
   }
-  
+
   .card-link:active .card {
-    @apply transform translate-y-[1px] transition-transform duration-75;
+    @apply translate-y-[1px] transform transition-transform duration-75;
   }
 }

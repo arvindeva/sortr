@@ -455,7 +455,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
           <section>
             <Panel variant="primary">
               <PanelHeader variant="primary">
-                <PanelTitle>Recent Rankings ({recentResults.length})</PanelTitle>
+                <PanelTitle>
+                  Recent Rankings ({recentResults.length})
+                </PanelTitle>
               </PanelHeader>
               <PanelContent variant="primary" className="p-2 md:p-6">
                 {recentResults.length === 0 ? (
@@ -472,7 +474,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                         href={`/rankings/${result.id}`}
                         className="card-link block"
                       >
-                        <Card className="bg-background text-foreground cursor-pointer card">
+                        <Card className="bg-background text-foreground card cursor-pointer">
                           <CardHeader>
                             {/* Username only */}
                             <span className="text-sm font-bold">

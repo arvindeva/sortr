@@ -27,7 +27,7 @@ export function Navbar() {
   });
 
   return (
-    <nav className="sticky top-0 z-30 flex w-full items-center justify-between border-b-2 border-border bg-secondary-background px-4 py-2 md:px-6 md:py-4">
+    <nav className="border-border bg-secondary-background sticky top-0 z-30 flex w-full items-center justify-between border-b-2 px-4 py-2 md:px-6 md:py-4">
       <Link href="/">
         <span className="text-2xl font-bold tracking-wide transition-all duration-300 ease-out hover:tracking-widest md:hidden">
           sortr
@@ -72,9 +72,9 @@ export function Navbar() {
         )}
 
         {/* Browse link */}
-        <Link 
-          href="/browse" 
-          className="font-medium hover:underline sorter-title-link"
+        <Link
+          href="/browse"
+          className="sorter-title-link font-medium hover:underline"
         >
           Browse
         </Link>
@@ -86,16 +86,14 @@ export function Navbar() {
         ) : session ? (
           <div className="flex items-center gap-6">
             {userData?.username ? (
-              <Link 
+              <Link
                 href={`/user/${userData.username}`}
-                className="font-medium hover:underline sorter-title-link"
+                className="sorter-title-link font-medium hover:underline"
               >
                 Profile
               </Link>
             ) : (
-              <span className="font-medium text-muted-foreground">
-                Profile
-              </span>
+              <span className="text-muted-foreground font-medium">Profile</span>
             )}
             <ModeToggle />
             <Button size="sm" variant="neutral" onClick={() => signOut()}>
@@ -114,17 +112,32 @@ export function Navbar() {
       <div className="flex items-center gap-4 md:hidden">
         {/* Create button - mobile navbar */}
         {status === "loading" ? (
-          <Button variant="default" size="icon" disabled aria-label="Create a Sorter">
+          <Button
+            variant="default"
+            size="icon"
+            disabled
+            aria-label="Create a Sorter"
+          >
             <Plus size={20} />
           </Button>
         ) : session ? (
-          <Button asChild variant="default" size="icon" aria-label="Create a Sorter">
+          <Button
+            asChild
+            variant="default"
+            size="icon"
+            aria-label="Create a Sorter"
+          >
             <Link href="/create">
               <Plus size={20} />
             </Link>
           </Button>
         ) : (
-          <Button asChild variant="default" size="icon" aria-label="Create a Sorter">
+          <Button
+            asChild
+            variant="default"
+            size="icon"
+            aria-label="Create a Sorter"
+          >
             <Link href="/auth/signin">
               <Plus size={20} />
             </Link>
@@ -151,7 +164,7 @@ export function Navbar() {
 
       {/* Mobile Menu */}
       <div
-        className={`absolute top-full right-0 left-0 z-30 border-b-2 border-border bg-secondary-background transition-all duration-300 ease-out md:hidden ${mobileMenuOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
+        className={`border-border bg-secondary-background absolute top-full right-0 left-0 z-30 border-b-2 transition-all duration-300 ease-out md:hidden ${mobileMenuOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
       >
         <div className="flex flex-col gap-3 p-4">
           {/* Browse link */}

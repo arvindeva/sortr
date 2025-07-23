@@ -11,17 +11,19 @@ export function cn(...inputs: ClassValue[]) {
  * @returns A URL-friendly slug
  */
 export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    // Replace spaces with hyphens
-    .replace(/\s+/g, '-')
-    // Remove special characters except hyphens
-    .replace(/[^a-z0-9-]/g, '')
-    // Remove multiple consecutive hyphens
-    .replace(/-+/g, '-')
-    // Remove leading/trailing hyphens
-    .replace(/^-|-$/g, '');
+  return (
+    text
+      .toLowerCase()
+      .trim()
+      // Replace spaces with hyphens
+      .replace(/\s+/g, "-")
+      // Remove special characters except hyphens
+      .replace(/[^a-z0-9-]/g, "")
+      // Remove multiple consecutive hyphens
+      .replace(/-+/g, "-")
+      // Remove leading/trailing hyphens
+      .replace(/^-|-$/g, "")
+  );
 }
 
 /**
@@ -30,21 +32,24 @@ export function slugify(text: string): string {
  * @param existingSlugs Array of existing slugs to check against
  * @returns A unique slug
  */
-export function generateUniqueSlug(groupName: string, existingSlugs: string[]): string {
+export function generateUniqueSlug(
+  groupName: string,
+  existingSlugs: string[],
+): string {
   const baseSlug = slugify(groupName);
-  
+
   if (!existingSlugs.includes(baseSlug)) {
     return baseSlug;
   }
-  
+
   let counter = 2;
   let uniqueSlug = `${baseSlug}-${counter}`;
-  
+
   while (existingSlugs.includes(uniqueSlug)) {
     counter++;
     uniqueSlug = `${baseSlug}-${counter}`;
   }
-  
+
   return uniqueSlug;
 }
 
@@ -54,8 +59,8 @@ export function generateUniqueSlug(groupName: string, existingSlugs: string[]): 
  * @returns A random alphanumeric string
  */
 function generateRandomString(length: number): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -73,11 +78,11 @@ export function generateSorterSlug(title: string): string {
   if (baseSlug.length > 50) {
     baseSlug = baseSlug.substring(0, 50);
     // Remove trailing hyphen if we cut off mid-word
-    baseSlug = baseSlug.replace(/-$/, '');
+    baseSlug = baseSlug.replace(/-$/, "");
   }
-  
+
   // Generate 5-character random suffix
   const suffix = generateRandomString(5);
-  
+
   return `${baseSlug}-${suffix}`;
 }

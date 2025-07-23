@@ -57,14 +57,14 @@ export async function PATCH(request: NextRequest) {
     // Parse and validate request body
     const body = await request.json();
     const validationResult = updateUsernameSchema.safeParse(body);
-    
+
     if (!validationResult.success) {
       return NextResponse.json(
-        { 
+        {
           error: "Invalid input",
-          details: validationResult.error.errors
+          details: validationResult.error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -93,19 +93,16 @@ export async function PATCH(request: NextRequest) {
     if (existingUser.length > 0 && existingUser[0].id !== userId) {
       return NextResponse.json(
         { error: "Username is already taken" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
     // Update username
-    await db
-      .update(user)
-      .set({ username })
-      .where(eq(user.id, userId));
+    await db.update(user).set({ username }).where(eq(user.id, userId));
 
     // Revalidate pages that show user data
     try {
-      revalidatePath('/'); // Homepage (popular sorters)
+      revalidatePath("/"); // Homepage (popular sorters)
       revalidatePath(`/user/${username}`); // New username profile page
       if (currentUser[0].username) {
         revalidatePath(`/user/${currentUser[0].username}`); // Old username profile page (if different)
@@ -117,9 +114,8 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({
       message: "Username updated successfully",
-      username
+      username,
     });
-
   } catch (error) {
     console.error("Error updating username:", error);
     return NextResponse.json(

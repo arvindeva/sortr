@@ -12,7 +12,7 @@ export function SortPageSkeleton() {
             <Skeleton className="h-6 w-48" />
           </div>
         </Box>
-        
+
         {/* Progress and Actions - Compact */}
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm text-black dark:text-white">
@@ -24,10 +24,10 @@ export function SortPageSkeleton() {
               </div>
             </div>
           </div>
-          
+
           {/* Progress Bar Skeleton */}
           <Skeleton className="h-4 w-full md:h-6" />
-          
+
           {/* Mobile Action Buttons */}
           <div className="block md:hidden">
             <div className="flex gap-1">
@@ -63,12 +63,12 @@ export function SortPageSkeleton() {
 
 function ComparisonCardSkeleton() {
   return (
-    <div className="bg-main border-border shadow-shadow hover:shadow-none hover:translate-x-boxShadowX hover:translate-y-boxShadowY rounded-base border-2 cursor-pointer overflow-hidden transition-all duration-150 ease-in-out">
+    <div className="bg-main border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY rounded-base cursor-pointer overflow-hidden border-2 transition-all duration-150 ease-in-out hover:shadow-none">
       {/* Image area skeleton - aspect square, flush with top */}
       <div className="aspect-square w-full">
         <Skeleton className="h-full w-full rounded-none border-none" />
       </div>
-      
+
       {/* Text area with border separator */}
       <div className="border-border border-t-2 p-4">
         <Skeleton className="h-5 w-full" />

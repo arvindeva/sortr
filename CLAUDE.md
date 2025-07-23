@@ -181,6 +181,7 @@ All components follow the neobrutalism aesthetic principles:
 **IMPORTANT**: Always use neobrutalism.dev components when available instead of creating custom implementations.
 
 Components are installed from the neobrutalism.dev registry:
+
 ```bash
 npx shadcn@latest add https://neobrutalism.dev/r/button.json
 npx shadcn@latest add https://neobrutalism.dev/r/card.json
@@ -199,48 +200,63 @@ Before implementing any UI component, check if it exists at https://neobrutalism
 ### Core Components
 
 #### Button
+
 Neobrutalism Button component with built-in retro styling:
+
 - `variant`: `"default"` (yellow bg, black text), `"reverse"` (inverse press animation), `"noShadow"` (no shadow), `"neutral"` (secondary bg)
 - `size`: `"sm"`, `"default"`, `"lg"`, `"icon"`
 - Features: Built-in press animation, retro colors, bold shadows
 
 #### Card
+
 Neobrutalism Card component with built-in retro styling:
+
 - Single variant with retro borders and shadows
 - Includes: `CardHeader`, `CardTitle`, `CardContent`, `CardFooter`, `CardAction`, `CardDescription`
 - Features: Automatic retro borders, dramatic shadows, consistent spacing
 
 #### Badge
+
 Neobrutalism Badge component with built-in retro styling:
+
 - `variant`: `"default"` (main color), `"neutral"` (secondary bg)
 - Features: Built-in retro styling, consistent borders, small shadows
 
 #### Box (Custom)
+
 Custom container component for highlights and sections:
+
 - `variant`: `"primary"` (yellow), `"secondary"` (pink), `"accent"` (cyan), `"warning"` (orange), etc.
 - `size`: `"sm"`, `"md"`, `"lg"`, `"xl"`
 - Usage: Hero sections, headers, highlights
 
 #### Logo (Custom)
+
 Interactive branding component with press animation:
+
 - Same variants as Box but with button-like press behavior
 - Usage: Interactive branding elements, clickable logos
 
 #### ComparisonCard (Custom)
+
 Specialized card component for sorting interface:
+
 - Primary color background (`bg-main`) with black text (white in dark mode for UI elements)
 - Image area flush with top border, text area at bottom with border separator
 - Built-in hover effects and neobrutalist styling
 - Usage: Pairwise comparison interface in sorting
 
 #### Progress
+
 Neobrutalism Progress component with built-in retro styling:
+
 - `h-4` height with thick borders and primary color fill
 - Features: Border separator on indicator, secondary background, neobrutalist shadows
 
 ### CSS Variables
 
 All styling is controlled via CSS variables in `/src/app/globals.css`:
+
 - **Colors**: `--main`, `--background`, `--foreground`, `--border`, etc.
 - **Shadows**: `--shadow: 2px 2px 0px 0px var(--border)`
 - **Spacing**: `--spacing-boxShadowX`, `--spacing-boxShadowY`, `--spacing-reverseBoxShadowX`, `--spacing-reverseBoxShadowY`

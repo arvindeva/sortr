@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { sorters, sortingResults, user } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 
 export async function GET() {
   try {
-    const baseUrl = process.env.NEXTAUTH_URL || 'https://sortr.dev';
-    
+    const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.dev";
+
     // Get all public sorters
     const publicSorters = await db
       .select({
@@ -55,9 +55,9 @@ export async function GET() {
     <lastmod>${new Date(sorter.createdAt).toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-  </url>`
+  </url>`,
     )
-    .join('')}
+    .join("")}
   
   <!-- Rankings pages -->
   ${recentResults
@@ -68,13 +68,13 @@ export async function GET() {
     <lastmod>${new Date(result.createdAt).toISOString()}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
-  </url>`
+  </url>`,
     )
-    .join('')}
+    .join("")}
   
   <!-- User profiles -->
   ${userProfiles
-    .filter(profile => profile.username) // Extra safety check
+    .filter((profile) => profile.username) // Extra safety check
     .map(
       (profile) => `
   <url>
@@ -82,20 +82,20 @@ export async function GET() {
     <lastmod>${profile.createdAt ? new Date(profile.createdAt).toISOString() : new Date().toISOString()}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
-  </url>`
+  </url>`,
     )
-    .join('')}
+    .join("")}
 </urlset>`;
 
     return new NextResponse(sitemap, {
       status: 200,
       headers: {
-        'Content-Type': 'application/xml',
-        'Cache-Control': 'public, max-age=86400, revalidate', // Cache for 24 hours
+        "Content-Type": "application/xml",
+        "Cache-Control": "public, max-age=86400, revalidate", // Cache for 24 hours
       },
     });
   } catch (error) {
-    console.error('Error generating sitemap:', error);
-    return new NextResponse('Error generating sitemap', { status: 500 });
+    console.error("Error generating sitemap:", error);
+    return new NextResponse("Error generating sitemap", { status: 500 });
   }
 }

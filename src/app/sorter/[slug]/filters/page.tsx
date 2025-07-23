@@ -127,7 +127,7 @@ export default function FilterPage({ params }: FilterPageProps) {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <div className="text-center">
-          <h1 className="mb-3 text-2xl font-bold animate-pulse">
+          <h1 className="mb-3 animate-pulse text-2xl font-bold">
             Loading filters...
           </h1>
           <SortingBarsLoader className="mb-6" />

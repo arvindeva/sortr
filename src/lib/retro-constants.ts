@@ -79,13 +79,13 @@ export const RETRO_SHADOW_CLASSES = {
   medium: "shadow-[var(--shadow-retro-medium)]",
   large: "shadow-[var(--shadow-retro-large)]",
   xlarge: "shadow-[var(--shadow-retro-xlarge)]",
-  
+
   // Grey shadows for dark mode
   smallGrey: "shadow-[var(--shadow-retro-small-grey)]",
   mediumGrey: "shadow-[var(--shadow-retro-medium-grey)]",
   largeGrey: "shadow-[var(--shadow-retro-large-grey)]",
   xlargeGrey: "shadow-[var(--shadow-retro-xlarge-grey)]",
-  
+
   // Yellow shadows
   smallYellow: "shadow-[var(--shadow-retro-small-yellow)]",
   mediumYellow: "shadow-[var(--shadow-retro-medium-yellow)]",
@@ -99,12 +99,16 @@ export const createShadow = (
   color: keyof typeof RETRO_SHADOWS.colors,
 ) => {
   // Map to static shadow classes
-  if (color === 'black') {
+  if (color === "black") {
     return RETRO_SHADOW_CLASSES[size as keyof typeof RETRO_SHADOW_CLASSES];
-  } else if (color === 'grey') {
-    return RETRO_SHADOW_CLASSES[`${size}Grey` as keyof typeof RETRO_SHADOW_CLASSES];
-  } else if (color === 'yellow') {
-    return RETRO_SHADOW_CLASSES[`${size}Yellow` as keyof typeof RETRO_SHADOW_CLASSES];
+  } else if (color === "grey") {
+    return RETRO_SHADOW_CLASSES[
+      `${size}Grey` as keyof typeof RETRO_SHADOW_CLASSES
+    ];
+  } else if (color === "yellow") {
+    return RETRO_SHADOW_CLASSES[
+      `${size}Yellow` as keyof typeof RETRO_SHADOW_CLASSES
+    ];
   }
   return RETRO_SHADOW_CLASSES.medium; // fallback
 };
@@ -114,11 +118,11 @@ export const createDarkShadow = (
   color: keyof typeof RETRO_SHADOWS.colors,
 ) => {
   // Map to static shadow classes with dark: prefix
-  if (color === 'black') {
+  if (color === "black") {
     return `dark:${RETRO_SHADOW_CLASSES[size as keyof typeof RETRO_SHADOW_CLASSES]}`;
-  } else if (color === 'grey') {
+  } else if (color === "grey") {
     return `dark:${RETRO_SHADOW_CLASSES[`${size}Grey` as keyof typeof RETRO_SHADOW_CLASSES]}`;
-  } else if (color === 'yellow') {
+  } else if (color === "yellow") {
     return `dark:${RETRO_SHADOW_CLASSES[`${size}Yellow` as keyof typeof RETRO_SHADOW_CLASSES]}`;
   }
   return `dark:${RETRO_SHADOW_CLASSES.medium}`; // fallback

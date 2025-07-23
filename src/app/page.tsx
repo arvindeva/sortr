@@ -79,7 +79,7 @@ export default async function Home() {
                           <CardTitle className="line-clamp-2 text-xl font-medium">
                             <Link
                               href={`/sorter/${sorter.slug}`}
-                              className="hover:underline sorter-title-link"
+                              className="sorter-title-link hover:underline"
                             >
                               {sorter.title}
                             </Link>
@@ -89,7 +89,7 @@ export default async function Home() {
                             <b>
                               <Link
                                 href={`/user/${sorter.creatorUsername}`}
-                                className="hover:underline sorter-title-link"
+                                className="sorter-title-link hover:underline"
                               >
                                 {sorter.creatorUsername || "Unknown User"}
                               </Link>

@@ -14,10 +14,21 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://sortr.dev'),
+  metadataBase: new URL(process.env.NEXTAUTH_URL || "https://sortr.dev"),
   title: "sortr - Create and Share Ranked Lists",
-  description: "Create and share ranked lists for anything through pairwise comparison. Build custom rankings, sort items by preference, and discover popular sorters across movies, music, games, and more.",
-  keywords: ["ranking", "sorter", "list", "comparison", "polls", "tier list", "ranking tool", "vote", "survey"],
+  description:
+    "Create and share ranked lists for anything through pairwise comparison. Build custom rankings, sort items by preference, and discover popular sorters across movies, music, games, and more.",
+  keywords: [
+    "ranking",
+    "sorter",
+    "list",
+    "comparison",
+    "polls",
+    "tier list",
+    "ranking tool",
+    "vote",
+    "survey",
+  ],
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
@@ -31,7 +42,8 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
   openGraph: {
     title: "sortr - Create and Share Ranked Lists",
-    description: "Create and share ranked lists for anything through pairwise comparison. Build custom rankings, sort items by preference, and discover popular sorters.",
+    description:
+      "Create and share ranked lists for anything through pairwise comparison. Build custom rankings, sort items by preference, and discover popular sorters.",
     type: "website",
     siteName: "sortr",
     images: [
@@ -46,7 +58,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "sortr - Create and Share Ranked Lists",
-    description: "Create and share ranked lists for anything through pairwise comparison. Build custom rankings and discover popular sorters.",
+    description:
+      "Create and share ranked lists for anything through pairwise comparison. Build custom rankings and discover popular sorters.",
     images: ["/og-home.png"],
   },
 };
@@ -58,12 +71,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${dmSans.variable} antialiased flex flex-col min-h-screen`} style={{ fontFamily: 'var(--font-dm-sans)' }}>
+      <body
+        className={`${dmSans.variable} flex min-h-screen flex-col antialiased`}
+        style={{ fontFamily: "var(--font-dm-sans)" }}
+      >
         <Providers>
           <Navbar />
-          <div className="flex-1">
-            {children}
-          </div>
+          <div className="flex-1">{children}</div>
           <Footer />
         </Providers>
         <ProgressProvider />

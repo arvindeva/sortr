@@ -370,7 +370,7 @@ export default function SortPage() {
 
       // Save results
       setSaving(true);
-      
+
       // Get selected groups for saving with results
       const selectedGroups = sorterData.sorter.useGroups
         ? localStorage.getItem(`sorter_${sorterId}_selectedGroups`)

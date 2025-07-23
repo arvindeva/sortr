@@ -48,23 +48,25 @@ interface BrowseResult {
 // Static categories from create sorter form
 const CATEGORIES = [
   "Movies",
-  "Music", 
+  "Music",
   "Video Games",
   "TV Shows",
   "Books",
   "Food",
   "Sports",
-  "Other"
+  "Other",
 ];
 
 function BrowseContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // Get current filters from URL
   const query = searchParams.get("q") || "";
   const categoriesParam = searchParams.get("categories") || "";
-  const selectedCategories = categoriesParam ? categoriesParam.split(",").filter(Boolean) : [];
+  const selectedCategories = categoriesParam
+    ? categoriesParam.split(",").filter(Boolean)
+    : [];
   const sort = searchParams.get("sort") || "popular";
   const page = parseInt(searchParams.get("page") || "1");
 
@@ -88,25 +90,28 @@ function BrowseContent() {
   }, [searchInput, query]);
 
   // Function to update URL with new filters
-  const updateFilters = useCallback((updates: Record<string, any>) => {
-    const params = new URLSearchParams(searchParams.toString());
-    
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === "" || value === null || value === undefined) {
-        params.delete(key);
-      } else if (Array.isArray(value)) {
-        if (value.length === 0) {
-          params.delete(key);
-        } else {
-          params.set(key, value.join(","));
-        }
-      } else {
-        params.set(key, value.toString());
-      }
-    });
+  const updateFilters = useCallback(
+    (updates: Record<string, any>) => {
+      const params = new URLSearchParams(searchParams.toString());
 
-    router.push(`/browse?${params.toString()}`);
-  }, [searchParams, router]);
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === "" || value === null || value === undefined) {
+          params.delete(key);
+        } else if (Array.isArray(value)) {
+          if (value.length === 0) {
+            params.delete(key);
+          } else {
+            params.set(key, value.join(","));
+          }
+        } else {
+          params.set(key, value.toString());
+        }
+      });
+
+      router.push(`/browse?${params.toString()}`);
+    },
+    [searchParams, router],
+  );
 
   // Fetch browse results
   const { data, isLoading, error } = useQuery<BrowseResult>({
@@ -131,9 +136,9 @@ function BrowseContent() {
   // Handle category toggle
   const toggleCategory = (category: string) => {
     const newCategories = selectedCategories.includes(category)
-      ? selectedCategories.filter(c => c !== category)
+      ? selectedCategories.filter((c) => c !== category)
       : [...selectedCategories, category];
-    
+
     updateFilters({ categories: newCategories, page: 1 });
   };
 
@@ -162,17 +167,17 @@ function BrowseContent() {
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
             placeholder="Search sorters by title, creator, or description..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-9 pr-10"
+            className="pr-10 pl-9"
           />
           {searchInput && (
             <button
               onClick={() => setSearchInput("")}
-              className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2"
             >
               <X className="h-4 w-4" />
             </button>
@@ -187,7 +192,7 @@ function BrowseContent() {
             variant="neutral"
             size="sm"
             onClick={clearCategories}
-            className="text-xs h-6"
+            className="h-6 text-xs"
             disabled={selectedCategories.length === 0}
           >
             Clear All
@@ -195,8 +200,10 @@ function BrowseContent() {
           {CATEGORIES.map((category) => (
             <Badge
               key={category}
-              variant={selectedCategories.includes(category) ? "default" : "neutral"}
-              className="cursor-pointer hover:opacity-80 transition-opacity h-6 flex items-center"
+              variant={
+                selectedCategories.includes(category) ? "default" : "neutral"
+              }
+              className="flex h-6 cursor-pointer items-center transition-opacity hover:opacity-80"
               onClick={() => toggleCategory(category)}
             >
               {category}
@@ -221,10 +228,11 @@ function BrowseContent() {
             </Select>
           </div>
         </div>
-        
+
         {data && (
-          <div className="text-sm text-muted-foreground">
-            Showing {((page - 1) * 20) + 1}-{Math.min(page * 20, data.totalCount)} of {data.totalCount} sorters
+          <div className="text-muted-foreground text-sm">
+            Showing {(page - 1) * 20 + 1}-{Math.min(page * 20, data.totalCount)}{" "}
+            of {data.totalCount} sorters
           </div>
         )}
       </div>
@@ -251,14 +259,18 @@ function BrowseContent() {
             ) : error ? (
               <div className="text-center">
                 <Box variant="warning" size="md">
-                  <p className="font-medium">Error loading sorters. Please try again.</p>
+                  <p className="font-medium">
+                    Error loading sorters. Please try again.
+                  </p>
                 </Box>
               </div>
             ) : !data || data.sorters.length === 0 ? (
               <div className="text-center">
                 <Box variant="warning" size="md">
                   <p className="mb-2 font-medium">No sorters found.</p>
-                  <p className="text-sm">Try adjusting your search or filter criteria.</p>
+                  <p className="text-sm">
+                    Try adjusting your search or filter criteria.
+                  </p>
                 </Box>
               </div>
             ) : (
@@ -273,7 +285,7 @@ function BrowseContent() {
                             <CardTitle className="line-clamp-2 text-lg font-medium">
                               <Link
                                 href={`/sorter/${sorter.slug}`}
-                                className="hover:underline sorter-title-link"
+                                className="sorter-title-link hover:underline"
                               >
                                 {sorter.title}
                               </Link>
@@ -283,7 +295,7 @@ function BrowseContent() {
                               <b>
                                 <Link
                                   href={`/user/${sorter.creatorUsername}`}
-                                  className="hover:underline sorter-title-link"
+                                  className="sorter-title-link hover:underline"
                                 >
                                   {sorter.creatorUsername || "Unknown User"}
                                 </Link>
@@ -299,7 +311,10 @@ function BrowseContent() {
                             <span>{sorter.viewCount} views</span>
                           </div>
                           {sorter.category && (
-                            <Badge variant="default" className="hidden md:block">
+                            <Badge
+                              variant="default"
+                              className="hidden md:block"
+                            >
                               {sorter.category}
                             </Badge>
                           )}
@@ -322,24 +337,33 @@ function BrowseContent() {
                         <ChevronLeft className="h-4 w-4" />
                         Previous
                       </Button>
-                      
+
                       <div className="flex items-center gap-1">
                         {/* Show page numbers */}
-                        {Array.from({ length: Math.min(5, data.totalPages) }, (_, i) => {
-                          const pageNum = Math.max(1, Math.min(data.totalPages - 4, page - 2)) + i;
-                          if (pageNum > data.totalPages) return null;
-                          
-                          return (
-                            <Button
-                              key={pageNum}
-                              variant={pageNum === page ? "default" : "neutral"}
-                              size="sm"
-                              onClick={() => handlePageChange(pageNum)}
-                            >
-                              {pageNum}
-                            </Button>
-                          );
-                        })}
+                        {Array.from(
+                          { length: Math.min(5, data.totalPages) },
+                          (_, i) => {
+                            const pageNum =
+                              Math.max(
+                                1,
+                                Math.min(data.totalPages - 4, page - 2),
+                              ) + i;
+                            if (pageNum > data.totalPages) return null;
+
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={
+                                  pageNum === page ? "default" : "neutral"
+                                }
+                                size="sm"
+                                onClick={() => handlePageChange(pageNum)}
+                              >
+                                {pageNum}
+                              </Button>
+                            );
+                          },
+                        )}
                       </div>
 
                       <Button
@@ -365,18 +389,20 @@ function BrowseContent() {
 
 export default function BrowsePage() {
   return (
-    <Suspense fallback={
-      <main className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
-        <Box variant="primary" size="md" className="mb-6 block">
-          <h1 className="text-xl font-bold">Browse Sorters</h1>
-        </Box>
-        <div className="text-center">
-          <Box variant="neutral" size="md">
-            <p className="font-medium">Loading...</p>
+    <Suspense
+      fallback={
+        <main className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
+          <Box variant="primary" size="md" className="mb-6 block">
+            <h1 className="text-xl font-bold">Browse Sorters</h1>
           </Box>
-        </div>
-      </main>
-    }>
+          <div className="text-center">
+            <Box variant="neutral" size="md">
+              <p className="font-medium">Loading...</p>
+            </Box>
+          </div>
+        </main>
+      }
+    >
       <BrowseContent />
     </Suspense>
   );

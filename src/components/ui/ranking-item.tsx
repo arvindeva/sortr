@@ -6,7 +6,7 @@ function RankingItem({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="ranking-item"
       className={cn(
-        "rounded-base flex flex-col shadow-shadow border-2 border-border bg-main text-main-foreground font-base overflow-hidden",
+        "rounded-base shadow-shadow border-border bg-main text-main-foreground font-base flex flex-col overflow-hidden border-2",
         className,
       )}
       {...props}
@@ -14,7 +14,10 @@ function RankingItem({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function RankingItemContent({ className, ...props }: React.ComponentProps<"div">) {
+function RankingItemContent({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="ranking-item-content"
@@ -24,7 +27,4 @@ function RankingItemContent({ className, ...props }: React.ComponentProps<"div">
   );
 }
 
-export {
-  RankingItem,
-  RankingItemContent,
-};
+export { RankingItem, RankingItemContent };

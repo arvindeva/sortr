@@ -8,7 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
-import { Panel, PanelHeader, PanelTitle, PanelContent } from "@/components/ui/panel";
+import {
+  Panel,
+  PanelHeader,
+  PanelTitle,
+  PanelContent,
+} from "@/components/ui/panel";
 import { ArrowLeft, Trophy, RotateCcw, Play } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
@@ -48,28 +53,32 @@ interface ResultData {
   }[];
 }
 
-export async function generateMetadata({ params }: RankingsPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: RankingsPageProps): Promise<Metadata> {
   const { id } = await params;
-  
+
   try {
     const data = await getResultData(id);
-    
+
     if (!data) {
       return {
         title: "Rankings Not Found | sortr",
-        description: "The requested ranking could not be found."
+        description: "The requested ranking could not be found.",
       };
     }
 
     const { result, sorter } = data;
-    
+
     // Create content-first title: "Sorter Title Rankings by Username | sortr"
     const title = `${sorter.title} Rankings by ${result.username} | sortr`;
-    
+
     // Get top 3 items for description
     const top3 = result.rankings.slice(0, 3);
-    const top3Text = top3.map((item, i) => `${i + 1}. ${item.title}`).join(', ');
-    
+    const top3Text = top3
+      .map((item, i) => `${i + 1}. ${item.title}`)
+      .join(", ");
+
     const description = `See ${result.username}'s ranking of ${sorter.title}. Top 3: ${top3Text}. View the complete personalized ranking.`;
 
     return {
@@ -100,7 +109,7 @@ export async function generateMetadata({ params }: RankingsPageProps): Promise<M
     console.error("Error generating metadata for rankings page:", error);
     return {
       title: "Rankings | sortr",
-      description: "View rankings on sortr."
+      description: "View rankings on sortr.",
     };
   }
 }
@@ -158,7 +167,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
   }
 
   // Get selected groups if this result used groups
-  let selectedGroups: { id: string; name: string; }[] = [];
+  let selectedGroups: { id: string; name: string }[] = [];
   if (result.selectedGroups) {
     try {
       const selectedGroupIds: string[] = JSON.parse(result.selectedGroups);
@@ -170,7 +179,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
           })
           .from(sorterGroups)
           .where(inArray(sorterGroups.id, selectedGroupIds));
-        
+
         selectedGroups = groupsData;
       }
     } catch (error) {
@@ -210,14 +219,14 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
   const { result, sorter, selectedGroups } = data;
 
   return (
-    <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4 overflow-hidden">
+    <div className="container mx-auto max-w-4xl overflow-hidden px-2 py-8 md:px-4">
       {/* Header */}
       <div className="mb-8">
         {/* Main Header */}
         <Box variant="primary" size="md" className="mb-6 block">
           <div>
             <Link href={`/sorter/${sorter.slug}`}>
-              <h1 className="text-xl font-bold cursor-pointer hover:underline mb-2">
+              <h1 className="mb-2 cursor-pointer text-xl font-bold hover:underline">
                 {sorter.title}
               </h1>
             </Link>
@@ -243,7 +252,13 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         <div className="mb-6 flex flex-wrap gap-4">
           <ShareButton />
           <Button asChild variant="default">
-            <Link href={sorter.useGroups ? `/sorter/${sorter.slug}/filters` : `/sorter/${sorter.slug}/sort`}>
+            <Link
+              href={
+                sorter.useGroups
+                  ? `/sorter/${sorter.slug}/filters`
+                  : `/sorter/${sorter.slug}/sort`
+              }
+            >
               <RotateCcw className="mr-2" size={16} />
               Sort Again
             </Link>
@@ -253,8 +268,9 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         {/* Filter badges - shown if groups were selected */}
         {selectedGroups && selectedGroups.length > 0 && (
           <div className="mb-4">
-            <p className="text-sm text-muted-foreground mb-2">
-              Groups sorted: {selectedGroups.length} {selectedGroups.length === 1 ? 'group' : 'groups'}
+            <p className="text-muted-foreground mb-2 text-sm">
+              Groups sorted: {selectedGroups.length}{" "}
+              {selectedGroups.length === 1 ? "group" : "groups"}
             </p>
             <div className="flex flex-wrap gap-2">
               {selectedGroups.map((group) => (
@@ -273,11 +289,12 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         <div className="md:col-span-2">
           <Panel variant="primary">
             <PanelHeader variant="primary">
-              <PanelTitle>
-                Rankings
-              </PanelTitle>
+              <PanelTitle>Rankings</PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary" className="p-2 md:p-6 overflow-hidden">
+            <PanelContent
+              variant="primary"
+              className="overflow-hidden p-2 md:p-6"
+            >
               <AnimatedRankings rankings={result.rankings} />
             </PanelContent>
           </Panel>
@@ -287,18 +304,17 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         <div className="hidden md:block">
           <Panel variant="primary">
             <PanelHeader variant="primary">
-              <PanelTitle>
-                Sorter Info
-              </PanelTitle>
+              <PanelTitle>Sorter Info</PanelTitle>
             </PanelHeader>
             <PanelContent variant="primary" className="p-2 md:p-6">
-              <Link href={`/sorter/${sorter.slug}`} className="block hover:opacity-80 transition-opacity">
+              <Link
+                href={`/sorter/${sorter.slug}`}
+                className="block transition-opacity hover:opacity-80"
+              >
                 <div className="space-y-4">
                   <div>
                     <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
-                    <p className="text-sm">
-                      by {sorter.creatorUsername}
-                    </p>
+                    <p className="text-sm">by {sorter.creatorUsername}</p>
                   </div>
 
                   <div>
@@ -329,18 +345,17 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
       <div className="mt-8 md:hidden">
         <Panel variant="primary">
           <PanelHeader variant="primary">
-            <PanelTitle>
-              Sorter Info
-            </PanelTitle>
+            <PanelTitle>Sorter Info</PanelTitle>
           </PanelHeader>
           <PanelContent variant="primary" className="p-3 md:p-6">
-            <Link href={`/sorter/${sorter.slug}`} className="block hover:opacity-80 transition-opacity">
+            <Link
+              href={`/sorter/${sorter.slug}`}
+              className="block transition-opacity hover:opacity-80"
+            >
               <div className="space-y-4">
                 <div>
                   <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
-                  <p className="text-sm">
-                    by {sorter.creatorUsername}
-                  </p>
+                  <p className="text-sm">by {sorter.creatorUsername}</p>
                 </div>
 
                 <div>
@@ -369,15 +384,19 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
       {/* Actions */}
       <div className="mt-8 flex justify-center gap-4">
         <Button asChild>
-          <Link href={sorter.useGroups ? `/sorter/${sorter.slug}/filters` : `/sorter/${sorter.slug}/sort`}>
+          <Link
+            href={
+              sorter.useGroups
+                ? `/sorter/${sorter.slug}/filters`
+                : `/sorter/${sorter.slug}/sort`
+            }
+          >
             <Play className="mr-2" size={16} />
             Sort now
           </Link>
         </Button>
         <Button asChild variant="neutral">
-          <Link href={`/sorter/${sorter.slug}`}>
-            View Sorter Details
-          </Link>
+          <Link href={`/sorter/${sorter.slug}`}>View Sorter Details</Link>
         </Button>
       </div>
     </div>

@@ -48,14 +48,14 @@ export async function POST(request: NextRequest) {
 
     if (validatedData.useGroups && validatedData.groups) {
       // Generate unique slugs for all groups
-      const groupNames = validatedData.groups.map(group => group.name);
+      const groupNames = validatedData.groups.map((group) => group.name);
       const existingSlugs: string[] = [];
-      
+
       // Create groups and their items
       for (const group of validatedData.groups) {
         const slug = generateUniqueSlug(group.name, existingSlugs);
         existingSlugs.push(slug);
-        
+
         const [newGroup] = await db
           .insert(sorterGroups)
           .values({

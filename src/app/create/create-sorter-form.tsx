@@ -30,7 +30,14 @@ import {
   PanelTitle,
   PanelContent,
 } from "@/components/ui/panel";
-import { Plus, X, Camera, ChevronDown, ChevronUp, GripVertical } from "lucide-react";
+import {
+  Plus,
+  X,
+  Camera,
+  ChevronDown,
+  ChevronUp,
+  GripVertical,
+} from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
 
 export default function CreateSorterForm() {
@@ -235,7 +242,7 @@ export default function CreateSorterForm() {
         <PanelHeader variant="primary">
           <PanelTitle>Sorter Details</PanelTitle>
         </PanelHeader>
-        <PanelContent variant="primary" className="p-2 md:p-6 bg-background">
+        <PanelContent variant="primary" className="bg-background p-2 md:p-6">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -367,8 +374,15 @@ export default function CreateSorterForm() {
 
                   <div className="space-y-6">
                     {groupFields.map((groupField, groupIndex) => (
-                      <div key={groupField.id} className="flex items-center gap-3">
-                        <Box variant="white" size="md" className="flex-1 p-3 md:px-6 md:py-3">
+                      <div
+                        key={groupField.id}
+                        className="flex items-center gap-3"
+                      >
+                        <Box
+                          variant="white"
+                          size="md"
+                          className="flex-1 p-3 md:px-6 md:py-3"
+                        >
                           <div className="mb-4">
                             <div className="mb-2 flex items-center justify-between">
                               <FormLabel>Filter name</FormLabel>
@@ -380,7 +394,7 @@ export default function CreateSorterForm() {
                                   size="sm"
                                   onClick={() => removeGroupHandler(groupIndex)}
                                   title="Remove filter"
-                                  className="h-6 w-6 p-0 min-w-0 flex-shrink-0"
+                                  className="h-6 w-6 min-w-0 flex-shrink-0 p-0"
                                 >
                                   <X size={14} />
                                 </Button>
@@ -388,81 +402,82 @@ export default function CreateSorterForm() {
                             </div>
                             <div className="flex items-center gap-2">
                               <FormField
-                              control={form.control}
-                              name={`groups.${groupIndex}.name`}
-                              render={({ field }) => (
-                                <FormItem className="flex-1">
-                                  <FormControl>
-                                    <Input
-                                      placeholder="Filter name"
-                                      {...field}
-                                      className="font-medium"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <FormLabel className="mb-2 block">Items</FormLabel>
-                          <div className="space-y-2">
-                          {form
-                            .watch(`groups.${groupIndex}.items`)
-                            ?.map((_, itemIndex) => (
-                              <FormField
-                                key={itemIndex}
                                 control={form.control}
-                                name={`groups.${groupIndex}.items.${itemIndex}.title`}
+                                name={`groups.${groupIndex}.name`}
                                 render={({ field }) => (
-                                  <FormItem>
-                                    <div className="flex items-center gap-2">
-                                      <FormControl>
-                                        <Input
-                                          placeholder={`Item ${itemIndex + 1}`}
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      {form.watch(`groups.${groupIndex}.items`)
-                                        .length > 1 && (
-                                        <Button
-                                          type="button"
-                                          variant="neutralNoShadow"
-                                          size="sm"
-                                          onClick={() =>
-                                            removeItemFromGroup(
-                                              groupIndex,
-                                              itemIndex,
-                                            )
-                                          }
-                                          title="Remove item"
-                                          className="h-6 w-6 p-0"
-                                        >
-                                          <X size={14} />
-                                        </Button>
-                                      )}
-                                    </div>
+                                  <FormItem className="flex-1">
+                                    <FormControl>
+                                      <Input
+                                        placeholder="Filter name"
+                                        {...field}
+                                        className="font-medium"
+                                      />
+                                    </FormControl>
                                     <FormMessage />
                                   </FormItem>
                                 )}
                               />
-                            ))}
-                          <Button
-                            type="button"
-                            variant="neutral"
-                            size="sm"
-                            onClick={() => addItemToGroup(groupIndex)}
-                            className="mt-2 flex items-center gap-1 text-sm"
-                          >
-                            <Plus size={14} />
-                            Add Item
-                          </Button>
+                            </div>
                           </div>
-                        </div>
+
+                          <div>
+                            <FormLabel className="mb-2 block">Items</FormLabel>
+                            <div className="space-y-2">
+                              {form
+                                .watch(`groups.${groupIndex}.items`)
+                                ?.map((_, itemIndex) => (
+                                  <FormField
+                                    key={itemIndex}
+                                    control={form.control}
+                                    name={`groups.${groupIndex}.items.${itemIndex}.title`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <div className="flex items-center gap-2">
+                                          <FormControl>
+                                            <Input
+                                              placeholder={`Item ${itemIndex + 1}`}
+                                              {...field}
+                                            />
+                                          </FormControl>
+                                          {form.watch(
+                                            `groups.${groupIndex}.items`,
+                                          ).length > 1 && (
+                                            <Button
+                                              type="button"
+                                              variant="neutralNoShadow"
+                                              size="sm"
+                                              onClick={() =>
+                                                removeItemFromGroup(
+                                                  groupIndex,
+                                                  itemIndex,
+                                                )
+                                              }
+                                              title="Remove item"
+                                              className="h-6 w-6 p-0"
+                                            >
+                                              <X size={14} />
+                                            </Button>
+                                          )}
+                                        </div>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                ))}
+                              <Button
+                                type="button"
+                                variant="neutral"
+                                size="sm"
+                                onClick={() => addItemToGroup(groupIndex)}
+                                className="mt-2 flex items-center gap-1 text-sm"
+                              >
+                                <Plus size={14} />
+                                Add Item
+                              </Button>
+                            </div>
+                          </div>
                         </Box>
-                        
+
                         {/* Up/Down arrows outside the card */}
                         <div className="flex flex-col gap-1">
                           {/* Move up button */}
