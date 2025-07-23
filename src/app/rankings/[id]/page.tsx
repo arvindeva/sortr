@@ -316,14 +316,12 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
               <PanelTitle>Sorter Info</PanelTitle>
             </PanelHeader>
             <PanelContent variant="primary" className="p-2 md:p-6">
-              <Link
-                href={`/sorter/${sorter.slug}`}
-                className="block transition-opacity hover:opacity-80"
-              >
                 <div className="space-y-4">
                   <div>
-                    <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
-                    <p className="text-sm">by {sorter.creatorUsername}</p>
+                    <Link href={`/sorter/${sorter.slug}`} className="sorter-title-link hover:underline">
+                      <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
+                    </Link>
+                    <p className="text-sm">by <Link href={`/user/${sorter.creatorUsername}`} className="hover:underline font-medium">{sorter.creatorUsername}</Link></p>
                   </div>
 
                   <div>
@@ -344,7 +342,6 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                     </div>
                   )}
                 </div>
-              </Link>
             </PanelContent>
           </Panel>
         </div>
@@ -357,14 +354,12 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
             <PanelTitle>Sorter Info</PanelTitle>
           </PanelHeader>
           <PanelContent variant="primary" className="p-3 md:p-6">
-            <Link
-              href={`/sorter/${sorter.slug}`}
-              className="block transition-opacity hover:opacity-80"
-            >
               <div className="space-y-4">
                 <div>
-                  <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
-                  <p className="text-sm">by {sorter.creatorUsername}</p>
+                  <Link href={`/sorter/${sorter.slug}`} className="sorter-title-link hover:underline">
+                    <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
+                  </Link>
+                  <p className="text-sm">by <Link href={`/user/${sorter.creatorUsername}`} className="hover:underline font-medium">{sorter.creatorUsername}</Link></p>
                 </div>
 
                 <div>
@@ -385,7 +380,6 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   </div>
                 )}
               </div>
-            </Link>
           </PanelContent>
         </Panel>
       </div>
