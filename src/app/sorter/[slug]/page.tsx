@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   Panel,
   PanelHeader,
@@ -254,31 +255,34 @@ export default async function SorterPage({ params }: SorterPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
+      <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
         {/* Sorter Header */}
-        <section>
-          <Box variant="primary" size="md" className="mb-6 block">
-            <div className="flex items-center gap-6">
-              <div className="border-border rounded-base flex h-16 w-16 items-center justify-center overflow-hidden border-2 md:h-32 md:w-32">
+        <section className="mb-3">
+          <div className="flex items-center space-x-3 py-4 md:space-x-6">
+            {/* Cover Image */}
+            <div className="border-border rounded-base flex h-28 w-28 items-center justify-center overflow-hidden border-2 md:h-48 md:w-48">
+              {sorter.coverImageUrl ? (
                 <img
-                  src={`${sorter.coverImageUrl}`}
+                  src={sorter.coverImageUrl}
                   alt={`${sorter.title}'s cover`}
                   className="h-full w-full object-cover"
                 />
-              </div>
-              <h1 className="text-3xl font-bold">{sorter.title}</h1>
-            </div>
-          </Box>
-
-          {/* Creator and Stats Info */}
-          <Box variant="secondary" size="md" className="mb-6 block">
-            <div className="space-y-3">
-              {sorter.description && (
-                <p className="text-md font-medium">{sorter.description}</p>
+              ) : (
+                <div className="bg-secondary-background text-main flex h-full w-full items-center justify-center">
+                  <span className="text-4xl font-bold">
+                    {sorter.title.charAt(0).toUpperCase()}
+                  </span>
+                </div>
               )}
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium">
+            </div>
+
+            {/* Sorter Info */}
+            <div className="flex-1">
+              <div className="mb-2 flex items-center gap-2">
+                <PageHeader>{sorter.title}</PageHeader>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-medium">
                 <div className="flex items-center gap-1">
-                  <User size={16} />
                   <span>by</span>
                   {sorter.user.username ? (
                     <Link
@@ -291,58 +295,89 @@ export default async function SorterPage({ params }: SorterPageProps) {
                     <span className="font-bold">Unknown User</span>
                   )}
                 </div>
-
-                <div className="flex items-center gap-1">
-                  <Calendar size={16} />
-                  <span>{new Date(sorter.createdAt).toLocaleDateString()}</span>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <Eye size={16} />
-                  <span>{sorter.viewCount} views</span>
-                </div>
-
                 <div className="flex items-center gap-1">
                   <Trophy size={16} />
-                  <span>{sorter.completionCount} completions</span>
+                  <span>{sorter.completionCount}</span>
                 </div>
+                {/* <div className="flex items-center gap-1">
+                  <span>
+                    {new Date(sorter.createdAt).toLocaleDateString("en-US", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div> */}
+              </div>
+
+              {/* Desktop Action Buttons */}
+              <div className="mt-4 hidden items-center gap-4 md:flex">
+                {sorter.useGroups ? (
+                  <Button asChild size="lg" variant="default" className="group">
+                    <Link href={`/sorter/${sorter.slug}/filters`}>
+                      <Play
+                        className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
+                        size={20}
+                      />
+                      Sort Now
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button asChild size="lg" variant="default" className="group">
+                    <Link href={`/sorter/${sorter.slug}/sort`}>
+                      <Play
+                        className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
+                        size={20}
+                      />
+                      Sort now
+                    </Link>
+                  </Button>
+                )}
+
+                {/* Delete Button - Only show for sorter owner */}
+                {isOwner && (
+                  <DeleteSorterButton
+                    sorterSlug={sorter.slug}
+                    sorterTitle={sorter.title}
+                  />
+                )}
               </div>
             </div>
-          </Box>
-
-          {/* Start Now Button */}
-          <div className="mb-8 flex items-center gap-4">
-            {sorter.useGroups ? (
-              <Button asChild size="lg" variant="default" className="group">
-                <Link href={`/sorter/${sorter.slug}/filters`}>
-                  <Play
-                    className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
-                    size={20}
-                  />
-                  Sort Now
-                </Link>
-              </Button>
-            ) : (
-              <Button asChild size="lg" variant="default" className="group">
-                <Link href={`/sorter/${sorter.slug}/sort`}>
-                  <Play
-                    className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
-                    size={20}
-                  />
-                  Sort now
-                </Link>
-              </Button>
-            )}
-
-            {/* Delete Button - Only show for sorter owner */}
-            {isOwner && (
-              <DeleteSorterButton
-                sorterSlug={sorter.slug}
-                sorterTitle={sorter.title}
-              />
-            )}
           </div>
         </section>
+
+        {/* Mobile Action Buttons */}
+        <div className="mb-8 flex items-center gap-4 md:hidden">
+          {sorter.useGroups ? (
+            <Button asChild size="lg" variant="default" className="group">
+              <Link href={`/sorter/${sorter.slug}/filters`}>
+                <Play
+                  className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
+                  size={20}
+                />
+                Sort Now
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild size="lg" variant="default" className="group">
+              <Link href={`/sorter/${sorter.slug}/sort`}>
+                <Play
+                  className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
+                  size={20}
+                />
+                Sort now
+              </Link>
+            </Button>
+          )}
+
+          {/* Delete Button - Only show for sorter owner */}
+          {isOwner && (
+            <DeleteSorterButton
+              sorterSlug={sorter.slug}
+              sorterTitle={sorter.title}
+            />
+          )}
+        </div>
 
         {/* Two Column Layout */}
         <div className="grid gap-8 md:grid-cols-2">
@@ -366,9 +401,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                       {groups.map((group) => (
                         <div key={group.id} className="space-y-3">
                           {/* Group Header */}
-                          <Badge variant="default" className="text-base">
-                            {group.name}
-                          </Badge>
+                          <Badge variant="default">{group.name}</Badge>
 
                           {/* Items in Group */}
                           <div className="space-y-3">
@@ -398,7 +431,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
                                     {/* Title */}
                                     <div className="w-0 min-w-0 flex-1">
-                                      <p className="text-sm font-medium break-words hyphens-auto">
+                                      <p className="font-medium break-words hyphens-auto">
                                         {item.title}
                                       </p>
                                     </div>
@@ -445,7 +478,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                             )}
                             {/* Item Name */}
                             <div className="w-0 min-w-0 flex-1">
-                              <p className="text-sm font-medium break-words hyphens-auto">
+                              <p className="font-medium break-words hyphens-auto">
                                 {item.title}
                               </p>
                             </div>
@@ -485,9 +518,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                         <Card className="bg-background text-foreground card cursor-pointer gap-2">
                           <CardHeader>
                             {/* Username only */}
-                            <span className="text-sm font-bold">
-                              {result.username}
-                            </span>
+                            <span className="font-bold">{result.username}</span>
                           </CardHeader>
                           <CardContent>
                             {/* Top 3 Rankings */}
@@ -495,7 +526,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                               {result.top3.map((item: any, index: number) => (
                                 <div
                                   key={item.id || index}
-                                  className="flex items-center gap-2 text-sm"
+                                  className="flex items-center gap-2"
                                 >
                                   <div className="flex min-w-0 flex-1 items-center gap-2">
                                     {item.imageUrl ? (
@@ -513,7 +544,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                         </span>
                                       </div>
                                     )}
-                                    <span className="min-w-[1.5rem] text-center text-sm font-bold">
+                                    <span className="min-w-[1.5rem] text-center font-bold">
                                       {index + 1}.
                                     </span>
                                     <span className="font-medium break-words">
