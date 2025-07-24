@@ -40,6 +40,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **UI Icons**: Lucide React
 - **Notifications**: Sonner for toast notifications
 - **Animations**: Framer Motion for smooth animations and transitions
+- **Image Storage**: Cloudflare R2 with S3-compatible API for avatar uploads
+- **Image Processing**: Sharp library for server-side image manipulation (crop, resize)
 - **Development**: TypeScript with strict mode, Prettier for formatting
 
 ### Project Structure
@@ -50,6 +52,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     - `src/app/api/sorters/` - Sorter CRUD operations and fetching
     - `src/app/api/sorting-results/` - Save and retrieve sorting results
     - `src/app/api/user/` - User profile operations
+    - `src/app/api/upload-avatar/` - Avatar upload with image processing and R2 storage
+    - `src/app/api/remove-avatar/` - Avatar deletion from R2 and database cleanup
   - `src/app/auth/` - Authentication pages (signin, error, verify-request)
   - `src/app/create/` - Create sorter page with form validation
   - `src/app/sorter/[id]/` - Individual sorter view and management
@@ -64,7 +68,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Theme components (ThemeProvider, ModeToggle)
   - Progress tracking (ProgressProvider)
   - Animated components (AnimatedRankings)
-  - User management (EditUsernameButton, DeleteSorterButton, UserProfileHeader)
+  - User management (EditUsernameButton, DeleteSorterButton, UserProfileHeader, AvatarManager)
 - `src/db/` - Database configuration and schema
 - `src/lib/` - Utility functions and shared logic
   - `src/lib/auth.ts` - NextAuth.js configuration
@@ -72,6 +76,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `src/lib/interactive-merge-sort.ts` - Interactive sorting logic
   - `src/lib/validations.ts` - Zod validation schemas
   - `src/lib/username.ts` - Username generation utilities
+  - `src/lib/r2.ts` - Cloudflare R2 storage utilities and configuration
+  - `src/lib/image-processing.ts` - Sharp-based image processing (crop, resize, validation)
 - `src/types/` - TypeScript type definitions
 
 ### Key Features & Components
@@ -85,7 +91,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Search Functionality**: Global search bar in navbar (desktop input field, mobile expandable overlay) that redirects to browse page with query parameters
 - **Theme System**: Complete dark/light/system theme switching using next-themes
 - **Progress Tracking**: Local storage-based progress saving for incomplete sorts
-- **User Profiles**: Username-based user profiles with sorter listings
+- **User Profiles**: Username-based user profiles with sorter listings and avatar upload system
+- **Avatar Management**: Complete avatar upload/removal system with Cloudflare R2 storage, image processing, and shimmer loading animations
 - **Responsive Design**: Mobile-first design with Tailwind CSS
 - **Notifications**: Neobrutalism-styled toast notifications using Sonner
 
@@ -102,6 +109,7 @@ sortr is a web app for creating and sharing ranked lists through pairwise compar
 - Login with email to create, save, and manage personal sorters
 - Share ranking pages with ranked outcomes and downloadable images
 - Download ranking images as PNG with neobrutalism design
+- Upload and manage personal avatars with automatic image processing
 - View and track completion/view counts for public sorters
 
 ### Code Conventions
@@ -136,6 +144,11 @@ Requires configuration for:
 - `NEXTAUTH_SECRET` - Secret key for NextAuth.js
 - `EMAIL_SERVER` - SMTP server configuration for email authentication
 - `EMAIL_FROM` - From email address for authentication emails
+- `R2_ACCOUNT_ID` - Cloudflare R2 account identifier
+- `R2_ACCESS_KEY_ID` - R2 access key for S3-compatible API
+- `R2_SECRET_ACCESS_KEY` - R2 secret key for authentication
+- `R2_BUCKET_NAME` - R2 bucket name for avatar storage
+- `R2_PUBLIC_URL` - Public URL for R2 bucket (optional, for direct serving)
 
 ### Current Implementation Status
 
@@ -153,6 +166,7 @@ Requires configuration for:
 - LocalStorage-based progress saving with UUID-to-index optimization (95% storage reduction)
 - Animated rankings display with Framer Motion for smooth transitions
 - Enhanced progress bar with real-time updates during sorting
+- **Avatar Upload System**: Complete avatar management with Cloudflare R2 storage, Sharp image processing (center crop to 200x200), client-side management with TanStack Query, shimmer loading animations, and proper error handling
 - **Downloadable ranking images**: PNG export with html-to-image, neobrutalism Panel design, medal emojis, 3-column layout for 4+ items, and consistent header/footer styling
 
 🔄 **Recent Major Updates:**
@@ -170,6 +184,95 @@ Requires configuration for:
 - **Ranking Layout Enhancements**: Improved alignment consistency across all ranking displays by implementing fixed-width containers, swapping image/number positions for better visual hierarchy ([image - number - name] format), and combining rank numbers with item names for cleaner presentation. Added responsive sizing and primary rosa placeholder avatars.
 - **Navigation and Interaction Improvements**: Enhanced sorter info panels with precise clickability (title and username only), added proper click animations with rosa color feedback, improved mobile padding for signin forms, and refined user profile card layouts with better spacing and date formatting.
 - **Category System Expansion**: Updated sorter categories with new options (Fashion, Academics, Anime & Manga, Tech, Internet, Travel, Nature, Hobbies, Vehicles), consolidated Movies & TV Shows, and streamlined category names for better organization and user experience.
+- **Avatar Upload System Implementation**: Built comprehensive user avatar management with Cloudflare R2 storage backend, Sharp server-side image processing (automatic center crop and 200x200 resize), client-side AvatarManager component with TanStack Query mutations, shimmer loading animations with pulsing effect, file validation (JPG/PNG/WebP, 1MB limit), dropdown menu interface (Upload/Remove), cache-busting timestamps for immediate updates, and proper error handling with toast notifications.
+
+## Avatar Management System
+
+### Architecture Overview
+
+The avatar system provides complete user profile image management with enterprise-grade cloud storage and professional image processing capabilities.
+
+### Technical Stack
+
+- **Storage**: Cloudflare R2 with S3-compatible API for scalable object storage
+- **Image Processing**: Sharp library for server-side image manipulation
+- **State Management**: TanStack Query for optimistic updates and cache management
+- **UI Components**: AvatarManager with dropdown interface and loading states
+- **File Validation**: Client and server-side validation for security and UX
+
+### Image Processing Pipeline
+
+1. **Client Upload**: File selection with immediate validation (type, size)
+2. **Server Processing**: Sharp-based center crop and resize to 200x200 pixels
+3. **R2 Storage**: Upload to Cloudflare R2 with unique user-based keys
+4. **Database Update**: User record updated with public avatar URL
+5. **Cache Busting**: Timestamp parameters ensure immediate browser updates
+
+### File Specifications
+
+- **Supported Formats**: JPG, PNG, WebP
+- **Size Limit**: 1MB maximum file size
+- **Output Dimensions**: 200x200 pixels (center cropped)
+- **Naming Convention**: `avatars/{userId}.jpg` (always converted to JPG)
+
+### User Interface
+
+- **Trigger**: Pencil icon overlay on avatar container
+- **Menu Options**: Upload Avatar, Remove Avatar (if exists)
+- **Loading States**: Shimmer animation during image load, spinner overlay during upload
+- **Error Handling**: Toast notifications for validation errors and upload failures
+- **Responsive**: Optimized for mobile (16x16) and desktop (24x24) sizes
+
+### API Endpoints
+
+#### POST /api/upload-avatar
+- Accepts multipart form data with 'avatar' file field
+- Validates file type, size, and image format
+- Processes image with Sharp (center crop, resize, format conversion)
+- Uploads to R2 and updates user database record
+- Returns public avatar URL with cache-busting timestamp
+
+#### POST /api/remove-avatar
+- Authenticates user session
+- Deletes avatar file from R2 storage
+- Clears avatar URL from user database record
+- Returns success confirmation
+
+### Security & Validation
+
+- **Authentication**: NextAuth.js session validation on all endpoints
+- **File Type Validation**: MIME type checking (client and server)
+- **Size Limits**: 1MB enforced on both client and server
+- **Image Validation**: Sharp-based format verification prevents malicious uploads
+- **Access Control**: Users can only manage their own avatars
+
+### Performance Optimizations
+
+- **Client-Side State**: TanStack Query provides optimistic updates
+- **Image Preloading**: Automatic preload on URL changes for smooth UX
+- **Cache Management**: R2 public URLs with timestamp cache-busting
+- **Shimmer Loading**: CSS-based animation reduces perceived loading time
+- **Error Recovery**: Graceful fallback to initial letter avatars
+
+### CSS Animations
+
+```css
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.shimmer {
+  background-color: var(--secondary-background);
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+```
+
+### Component Structure
+
+- **AvatarManager**: Main component with upload/remove logic
+- **UserProfileHeader**: Integrates AvatarManager with user info
+- **Dropdown Menu**: neobrutalism-styled interface for actions
+- **Loading States**: Multiple states for different scenarios (initial load, upload, error)
 
 ## Design System
 

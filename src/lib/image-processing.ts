@@ -1,0 +1,94 @@
+import sharp from "sharp";
+
+/**
+ * Process avatar image: crop to square and resize to 200x200
+ * @param buffer - The image buffer to process
+ * @returns Promise<Buffer> - The processed image buffer
+ */
+export async function processAvatarImage(buffer: Buffer): Promise<Buffer> {
+  try {
+    // Get image metadata to determine dimensions
+    const image = sharp(buffer);
+    const metadata = await image.metadata();
+    
+    if (!metadata.width || !metadata.height) {
+      throw new Error("Could not determine image dimensions");
+    }
+
+    const { width, height } = metadata;
+    
+    // Calculate square crop dimensions
+    const side = Math.min(width, height);
+    
+    // Calculate crop position (center crop)
+    let left = 0;
+    let top = 0;
+    
+    if (width > height) {
+      // Crop horizontal sides
+      left = Math.floor((width - side) / 2);
+      top = 0;
+    } else if (height > width) {
+      // Crop vertical sides
+      left = 0;
+      top = Math.floor((height - side) / 2);
+    }
+    // If width === height, no cropping needed (left = 0, top = 0)
+
+    // Process the image: crop to square and resize to 200x200
+    const processedBuffer = await image
+      .extract({
+        left,
+        top,
+        width: side,
+        height: side,
+      })
+      .resize(200, 200, {
+        fit: 'cover', // Ensure exact 200x200 dimensions
+        position: 'center'
+      })
+      .jpeg({
+        quality: 90, // High quality JPEG
+        progressive: true
+      })
+      .toBuffer();
+
+    return processedBuffer;
+  } catch (error) {
+    console.error("Image processing error:", error);
+    throw new Error("Failed to process image");
+  }
+}
+
+/**
+ * Validate image format and basic properties
+ * @param buffer - The image buffer to validate
+ * @returns Promise<boolean> - Whether the image is valid
+ */
+export async function validateImageBuffer(buffer: Buffer): Promise<boolean> {
+  try {
+    const image = sharp(buffer);
+    const metadata = await image.metadata();
+    
+    // Check if it's a valid image format
+    const validFormats = ['jpeg', 'jpg', 'png', 'webp'];
+    if (!metadata.format || !validFormats.includes(metadata.format)) {
+      return false;
+    }
+    
+    // Check minimum dimensions (should be at least 50x50)
+    if (!metadata.width || !metadata.height || 
+        metadata.width < 50 || metadata.height < 50) {
+      return false;
+    }
+    
+    // Check maximum dimensions (reasonable limit: 5000x5000)
+    if (metadata.width > 5000 || metadata.height > 5000) {
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    return false;
+  }
+}

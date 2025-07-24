@@ -1,17 +1,34 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Box } from "@/components/ui/box";
 import { EditUsernameButton } from "@/components/edit-username-button";
+import { AvatarManager } from "@/components/avatar-manager";
 
 interface UserProfileHeaderProps {
   username: string;
   userSince: string;
   isOwnProfile: boolean;
+  currentImage?: string | null;
 }
 
 export function UserProfileHeader({
   username,
   userSince,
   isOwnProfile,
+  currentImage,
 }: UserProfileHeaderProps) {
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(currentImage || null);
+
+  // Sync local state with prop changes
+  useEffect(() => {
+    setAvatarUrl(currentImage || null);
+  }, [currentImage]);
+
+  const handleAvatarUpdate = (newImageUrl: string | null) => {
+    setAvatarUrl(newImageUrl);
+  };
+
   return (
     <section className="mb-8">
       <Box
@@ -19,12 +36,13 @@ export function UserProfileHeader({
         size="sm"
         className="flex items-center space-x-6 py-4"
       >
-        {/* Avatar Placeholder */}
-        <div className="bg-border text-main border-border rounded-base flex h-16 w-16 items-center justify-center border-2 md:h-24 md:w-24">
-          <span className="text-4xl font-bold">
-            {username?.charAt(0).toUpperCase()}
-          </span>
-        </div>
+        {/* Avatar Manager */}
+        <AvatarManager
+          currentImage={avatarUrl}
+          username={username}
+          isOwnProfile={isOwnProfile}
+          onAvatarUpdate={handleAvatarUpdate}
+        />
 
         {/* User Info */}
         <div className="flex-1">

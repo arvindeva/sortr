@@ -109,6 +109,7 @@ export default async function UserProfilePage({
         username={userData.username || ""}
         userSince={userSince}
         isOwnProfile={isOwnProfile}
+        currentImage={userData.image}
       />
 
       {/* Sorters Section */}
