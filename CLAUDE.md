@@ -40,7 +40,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **UI Icons**: Lucide React
 - **Notifications**: Sonner for toast notifications
 - **Animations**: Framer Motion for smooth animations and transitions
-- **Image Storage**: Cloudflare R2 with S3-compatible API for avatar uploads
+- **Image Storage**: Cloudflare R2 with S3-compatible API for avatar and cover image uploads
 - **Image Processing**: Sharp library for server-side image manipulation (crop, resize)
 - **Development**: TypeScript with strict mode, Prettier for formatting
 
@@ -56,18 +56,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     - `src/app/api/remove-avatar/` - Avatar deletion from R2 and database cleanup
   - `src/app/auth/` - Authentication pages (signin, error, verify-request)
   - `src/app/create/` - Create sorter page with form validation
-  - `src/app/sorter/[id]/` - Individual sorter view and management
-    - `src/app/sorter/[id]/filters/` - Group selection for sorting (NEW)
-    - `src/app/sorter/[id]/sort/` - Interactive sorting interface
+  - `src/app/sorter/[slug]/` - Individual sorter view and management
+    - `src/app/sorter/[slug]/filters/` - Group selection for sorting (NEW)
+    - `src/app/sorter/[slug]/sort/` - Interactive sorting interface
   - `src/app/rankings/[id]/` - Ranking results display
   - `src/app/user/[username]/` - User profile pages
 - `src/components/` - React components
   - `src/components/ui/` - shadcn/ui components (Button, Card, Badge, Switch, Progress, Skeleton, Dialog, etc.)
-  - Custom UI components (SortingBarsLoader, SortPageSkeleton, ComparisonCard)
+  - Custom UI components (SortingBarsLoader, SortPageSkeleton, ComparisonCard, SorterCard, PageHeader)
   - Navigation components (Navbar, LoginButton, ShareButton)
   - Theme components (ThemeProvider, ModeToggle)
   - Progress tracking (ProgressProvider)
-  - Animated components (AnimatedRankings)
+  - Animated components (AnimatedRankings with medal emojis)
   - User management (EditUsernameButton, DeleteSorterButton, UserProfileHeader, AvatarManager)
 - `src/db/` - Database configuration and schema
 - `src/lib/` - Utility functions and shared logic
@@ -86,7 +86,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Sorter Creation**: Form-based sorter creation with support for groups and individual items
 - **Group Filtering**: NEW - Filter page for selecting which groups to include in sorting
 - **Interactive Sorting**: Pairwise comparison UI with progress tracking and undo functionality
-- **Rankings Display**: Ranked results with sharing capabilities and smooth animations
+- **Rankings Display**: Ranked results with sharing capabilities, smooth animations, and medal emojis for top 3 positions
 - **Downloadable Images**: PNG export of rankings with neobrutalism design using html-to-image
 - **Search Functionality**: Global search bar in navbar (desktop input field, mobile expandable overlay) that redirects to browse page with query parameters
 - **Theme System**: Complete dark/light/system theme switching using next-themes
@@ -147,7 +147,7 @@ Requires configuration for:
 - `R2_ACCOUNT_ID` - Cloudflare R2 account identifier
 - `R2_ACCESS_KEY_ID` - R2 access key for S3-compatible API
 - `R2_SECRET_ACCESS_KEY` - R2 secret key for authentication
-- `R2_BUCKET_NAME` - R2 bucket name for avatar storage
+- `R2_BUCKET_NAME` - R2 bucket name for avatar and cover image storage
 - `R2_PUBLIC_URL` - Public URL for R2 bucket (optional, for direct serving)
 
 ### Current Implementation Status
@@ -185,8 +185,13 @@ Requires configuration for:
 - **Navigation and Interaction Improvements**: Enhanced sorter info panels with precise clickability (title and username only), added proper click animations with rosa color feedback, improved mobile padding for signin forms, and refined user profile card layouts with better spacing and date formatting.
 - **Category System Expansion**: Updated sorter categories with new options (Fashion, Academics, Anime & Manga, Tech, Internet, Travel, Nature, Hobbies, Vehicles), consolidated Movies & TV Shows, and streamlined category names for better organization and user experience.
 - **Avatar Upload System Implementation**: Built comprehensive user avatar management with Cloudflare R2 storage backend, Sharp server-side image processing (automatic center crop and 200x200 resize), client-side AvatarManager component with TanStack Query mutations, shimmer loading animations with pulsing effect, file validation (JPG/PNG/WebP, 1MB limit), dropdown menu interface (Upload/Remove), cache-busting timestamps for immediate updates, and proper error handling with toast notifications.
+- **Cache-Busting for Image Uploads**: Added timestamp query parameters to both avatar and cover image upload URLs to prevent CDN and browser caching issues, ensuring users see new images immediately after upload.
+- **Ranking Medal System**: Added gold 🥇, silver 🥈, bronze 🥉 medal emojis to top 3 positions in rankings display with responsive sizing and absolute positioning to avoid affecting text layout.
+- **Homepage Data Transformation**: Fixed null value handling from database joins using map transformation to convert `string|null` to appropriate types, extracted reusable SorterCard component for consistent styling across the application.
+- **Page Header Redesign**: Updated both sorter and rankings page headers to match user profile layout style - removed Box wrappers, standardized cover/avatar image dimensions (h-28 w-28 md:h-48 md:w-48), moved titles to PageHeader position, relocated action buttons to desktop header layout while maintaining mobile-friendly separate sections.
+- **Button Position Updates**: Standardized action button order across sorter and rankings pages - "Sort This/Sort Now" on left, "Share" on right, with responsive layouts (desktop: integrated in header, mobile: separate section below).
 
-## Image Upload System
+## Image Upload System (Avatars & Cover Images)
 
 ### Technical Stack
 
@@ -198,9 +203,10 @@ Requires configuration for:
 ### Image Processing Pipeline
 
 1. **Client Upload**: File selection with immediate validation (type, size)
-2. **Server Processing**: Sharp-based center crop and resize to specified pixels
-3. **R2 Storage**: Upload to Cloudflare R2 with unique user-based keys
-4. **Database Update**: Database updated with public avatar URL
+2. **Server Processing**: Sharp-based center crop and resize to specified pixels (200x200 for avatars, cover images as configured)
+3. **R2 Storage**: Upload to Cloudflare R2 with unique user-based or sorter-based keys
+4. **Cache-Busting**: Generate timestamp query parameter to prevent cache issues
+5. **Database Update**: Database updated with public image URL including cache-busting timestamp
 
 ### Security & Validation
 
@@ -208,15 +214,16 @@ Requires configuration for:
 - **File Type Validation**: MIME type checking (client and server)
 - **Size Limits**: 1MB enforced on both client and server
 - **Image Validation**: Sharp-based format verification prevents malicious uploads
-- **Access Control**: Users can only manage their own avatars
+- **Access Control**: Users can only manage their own avatars and sorter cover images
 
 ### Performance Optimizations
 
 - **Client-Side State**: TanStack Query provides optimistic updates
 - **Image Preloading**: Automatic preload on URL changes for smooth UX
-- **Cache Management**: R2 public URLs with timestamp cache-busting
+- **Cache Management**: R2 public URLs with timestamp cache-busting for both avatars and cover images to prevent stale cache issues
 - **Shimmer Loading**: CSS-based animation reduces perceived loading time
 - **Error Recovery**: Graceful fallback to initial letter avatars
+- **CDN Cache Prevention**: Timestamp query parameters ensure immediate display of updated images
 
 ## Design System
 
@@ -300,6 +307,24 @@ Neobrutalism Progress component with built-in retro styling:
 
 - `h-4` height with thick borders and primary color fill
 - Features: Border separator on indicator, secondary background, neobrutalist shadows
+
+#### SorterCard (Custom)
+
+Reusable card component for displaying sorter information:
+
+- Consistent layout with title, creator, view/completion counts, and category
+- Responsive design with hover effects
+- Used across homepage, browse page, and user profiles
+- Features: Automatic truncation, icon integration, responsive badges
+
+#### PageHeader (Custom)
+
+Typography component for consistent page title styling:
+
+- Large font size with proper font weight
+- Used across sorter, rankings, and user profile pages for main titles
+- Maintains consistent visual hierarchy
+- Features: Responsive sizing, hover states when used as links
 
 ### CSS Variables
 
