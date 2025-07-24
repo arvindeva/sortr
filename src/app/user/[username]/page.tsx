@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/panel";
 import { authOptions } from "@/lib/auth";
 import { UserProfileHeader } from "@/components/user-profile-header";
+import { Eye, Trophy } from "lucide-react";
 
 // Force dynamic rendering for always-fresh user statistics
 export const dynamic = "force-dynamic";
@@ -106,7 +107,7 @@ export default async function UserProfilePage({
   const currentImage = userData.image;
 
   return (
-    <main className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
+    <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
       {/* Profile Header */}
       <UserProfileHeader
         username={userData.username || ""}
@@ -114,7 +115,6 @@ export default async function UserProfilePage({
         isOwnProfile={isOwnProfile}
         currentImage={currentImage}
       />
-
       {/* Sorters Section */}
       <section className="mb-8">
         <Panel variant="primary">
@@ -141,9 +141,9 @@ export default async function UserProfilePage({
                     href={`/sorter/${sorter.slug}`}
                     className="card-link"
                   >
-                    <Card className="card cursor-pointer md:min-h-[180px]">
-                      <CardHeader className="flex flex-col justify-start md:h-28">
-                        <CardTitle className="line-clamp-2 text-lg leading-relaxed">
+                    <Card className="card cursor-pointer">
+                      <CardHeader className="flex flex-col justify-start">
+                        <CardTitle className="line-clamp-2 leading-relaxed">
                           {sorter.title}
                         </CardTitle>
                         {sorter.category && (
@@ -151,13 +151,14 @@ export default async function UserProfilePage({
                         )}
                       </CardHeader>
                       <CardContent>
-                        <div className="text-foreground flex items-center justify-between text-sm font-medium">
-                          <span>
-                            {new Date(sorter.createdAt).toLocaleDateString()}
-                          </span>
-                          <div className="flex gap-3">
-                            <span>{sorter.viewCount} views</span>
-                            <span>{sorter.completionCount} completions</span>
+                        <div className="text-foreground flex items-center gap-4 font-medium">
+                          <div className="flex items-center gap-1">
+                            <Eye size={16} />
+                            <span>{sorter.viewCount}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Trophy size={16} />
+                            <span>{sorter.completionCount}</span>
                           </div>
                         </div>
                       </CardContent>
@@ -196,7 +197,7 @@ export default async function UserProfilePage({
                   >
                     <Card className="card cursor-pointer gap-2 md:min-h-[180px]">
                       <CardHeader className="flex flex-col justify-start">
-                        <CardTitle className="line-clamp-2 text-lg leading-relaxed">
+                        <CardTitle className="line-clamp-2 leading-relaxed">
                           {result.sorterTitle || "Unknown Sorter"}
                         </CardTitle>
                         {result.sorterCategory && (
@@ -219,7 +220,7 @@ export default async function UserProfilePage({
                             return top3.map((item: any, index: number) => (
                               <div
                                 key={item.id || index}
-                                className="flex items-center gap-2 text-sm"
+                                className="flex items-center gap-2"
                               >
                                 <div className="flex min-w-0 flex-1 items-center gap-2">
                                   {item.imageUrl ? (
@@ -237,7 +238,7 @@ export default async function UserProfilePage({
                                       </span>
                                     </div>
                                   )}
-                                  <span className="min-w-[1.5rem] text-center text-sm font-bold">
+                                  <span className="min-w-[1.5rem] text-center font-bold">
                                     {index + 1}.
                                   </span>
                                   <span className="font-medium break-words">
@@ -247,20 +248,6 @@ export default async function UserProfilePage({
                               </div>
                             ));
                           })()}
-                        </div>
-
-                        {/* Date */}
-                        <div className="text-foreground flex items-center justify-between text-sm font-medium">
-                          <span>
-                            {new Date(result.createdAt).toLocaleDateString(
-                              "en-US",
-                              {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric",
-                              },
-                            )}
-                          </span>
                         </div>
                       </CardContent>
                     </Card>

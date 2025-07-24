@@ -192,7 +192,7 @@ export default function FilterPage({ params }: FilterPageProps) {
             </p>
 
             {/* Stats */}
-            <div className="text-muted-foreground flex items-center gap-4 text-sm">
+            <div className="text-muted-foreground flex items-center gap-4">
               <div className="flex items-center gap-1">
                 <Filter className="h-4 w-4" />
                 <span>
@@ -230,7 +230,7 @@ export default function FilterPage({ params }: FilterPageProps) {
                       </label>
                       <button
                         onClick={() => toggleExpanded(group.id)}
-                        className="cursor-pointer text-sm text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                        className="cursor-pointer text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
                       >
                         {isExpanded
                           ? `Hide ${group.items.length} items`
@@ -244,7 +244,7 @@ export default function FilterPage({ params }: FilterPageProps) {
                         {group.items.map((item) => (
                           <div
                             key={item.id}
-                            className="flex items-center gap-2 text-sm"
+                            className="flex items-center gap-2"
                           >
                             <span className="text-foreground truncate">
                               {item.title}
@@ -279,7 +279,7 @@ export default function FilterPage({ params }: FilterPageProps) {
 
           {selectedGroups.length === 0 && (
             <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-              <p className="text-sm text-yellow-800">
+              <p className="text-yellow-800">
                 Please select at least one group to start sorting.
               </p>
             </div>

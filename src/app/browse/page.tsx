@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/select";
 import { Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
+import { PageHeader } from "@/components/ui/page-header";
+import { SorterCard } from "@/components/ui/sorter-card";
 
 interface BrowseResult {
   sorters: Array<{
@@ -169,7 +171,7 @@ function BrowseContent() {
     <main className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
       {/* Page Header */}
       <Box variant="primary" size="md" className="mb-6 block">
-        <h1 className="text-xl font-bold">Browse Sorters</h1>
+        <PageHeader>Browse Sorters</PageHeader>
       </Box>
 
       {/* Search Bar */}
@@ -200,7 +202,7 @@ function BrowseContent() {
             variant="neutral"
             size="sm"
             onClick={clearCategories}
-            className="h-6 text-xs"
+            className="h-6"
             disabled={selectedCategories.length === 0}
           >
             Clear All
@@ -224,7 +226,7 @@ function BrowseContent() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Sort by:</span>
+            <span className="font-medium">Sort by:</span>
             <Select value={sort} onValueChange={handleSortChange}>
               <SelectTrigger className="w-32">
                 <SelectValue />
@@ -238,7 +240,7 @@ function BrowseContent() {
         </div>
 
         {data && (
-          <div className="text-muted-foreground text-sm">
+          <div className="text-foreground">
             Showing {(page - 1) * 20 + 1}-{Math.min(page * 20, data.totalCount)}{" "}
             of {data.totalCount} sorters
           </div>
@@ -276,59 +278,15 @@ function BrowseContent() {
               <div className="text-center">
                 <Box variant="warning" size="md">
                   <p className="mb-2 font-medium">No sorters found.</p>
-                  <p className="text-sm">
-                    Try adjusting your search or filter criteria.
-                  </p>
+                  <p>Try adjusting your search or filter criteria.</p>
                 </Box>
               </div>
             ) : (
               <>
                 {/* Results Grid */}
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
                   {data.sorters.map((sorter) => (
-                    <Card key={sorter.id} className="md:min-h-[160px]">
-                      <CardHeader className="flex-1">
-                        <div className="flex-1">
-                          <div className="flex flex-col">
-                            <CardTitle className="line-clamp-2 text-lg">
-                              <Link
-                                href={`/sorter/${sorter.slug}`}
-                                className="sorter-title-link hover:underline"
-                              >
-                                {sorter.title}
-                              </Link>
-                            </CardTitle>
-                            <p className="text-foreground text-sm font-medium">
-                              by{" "}
-                              <b>
-                                <Link
-                                  href={`/user/${sorter.creatorUsername}`}
-                                  className="sorter-title-link hover:underline"
-                                >
-                                  {sorter.creatorUsername || "Unknown User"}
-                                </Link>
-                              </b>
-                            </p>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-foreground flex items-center justify-between text-sm font-medium">
-                          <div className="flex items-center gap-4">
-                            <span>{sorter.completionCount} completions</span>
-                            <span>{sorter.viewCount} views</span>
-                          </div>
-                          {sorter.category && (
-                            <Badge
-                              variant="default"
-                              className="hidden md:block"
-                            >
-                              {sorter.category}
-                            </Badge>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <SorterCard key={sorter.id} sorter={sorter} />
                   ))}
                 </div>
 
@@ -401,7 +359,7 @@ export default function BrowsePage() {
       fallback={
         <main className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
           <Box variant="primary" size="md" className="mb-6 block">
-            <h1 className="text-xl font-bold">Browse Sorters</h1>
+            <PageHeader>Browse Sorters</PageHeader>
           </Box>
           <div className="text-center">
             <Box variant="neutral" size="md">

@@ -22,7 +22,7 @@ function VerifyRequestContent() {
           We've sent you a magic link to sign in to your account.
         </p>
         {email && (
-          <p className="text-foreground text-sm">
+          <p className="text-foreground">
             Check your email at <strong>{email}</strong> and click the link to
             continue.
           </p>
@@ -30,7 +30,7 @@ function VerifyRequestContent() {
       </div>
 
       <div className="text-center">
-        <p className="text-foreground mb-4 text-sm">
+        <p className="text-foreground mb-4">
           Didn't receive the email? Check your spam folder or try again.
         </p>
         <Button

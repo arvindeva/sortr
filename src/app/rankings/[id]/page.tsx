@@ -14,7 +14,7 @@ import {
   PanelTitle,
   PanelContent,
 } from "@/components/ui/panel";
-import { ArrowLeft, Trophy, RotateCcw, Play } from "lucide-react";
+import { ArrowLeft, Trophy, RotateCcw, Play, Eye } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
 import { RankingImageLayout } from "@/components/ranking-image-layout";
@@ -47,6 +47,8 @@ interface ResultData {
     useGroups: boolean;
     creatorUsername: string;
     createdAt: Date;
+    completionCount: number;
+    viewCount: number;
   };
   selectedGroups?: {
     id: string;
@@ -148,6 +150,8 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       useGroups: sorters.useGroups,
       creatorUsername: user.username,
       createdAt: sorters.createdAt,
+      completionCount: sorters.completionCount,
+      viewCount: sorters.viewCount,
     })
     .from(sorters)
     .leftJoin(user, eq(sorters.userId, user.id))
@@ -204,6 +208,8 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       useGroups: sorterData[0].useGroups,
       creatorUsername: sorterData[0].creatorUsername || "Unknown User",
       createdAt: sorterData[0].createdAt,
+      completionCount: sorterData[0].completionCount,
+      viewCount: sorterData[0].viewCount,
     },
     selectedGroups: selectedGroups.length > 0 ? selectedGroups : undefined,
   };
@@ -227,11 +233,11 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         <Box variant="primary" size="md" className="mb-6 block">
           <div>
             <Link href={`/sorter/${sorter.slug}`}>
-              <h1 className="mb-2 cursor-pointer text-xl font-bold hover:underline">
+              <h1 className="mb-2 cursor-pointer text-lg font-bold hover:underline md:text-2xl">
                 {sorter.title}
               </h1>
             </Link>
-            <p className="text-md font-medium">
+            <p className="font-medium">
               sorted by{" "}
               <Link
                 href={`/user/${result.username}`}
@@ -277,13 +283,13 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         {/* Filter badges - shown if groups were selected */}
         {selectedGroups && selectedGroups.length > 0 && (
           <div className="mb-4">
-            <p className="text-muted-foreground mb-2 text-sm">
+            <p className="text-muted-foreground mb-2">
               Groups sorted: {selectedGroups.length}{" "}
               {selectedGroups.length === 1 ? "group" : "groups"}
             </p>
             <div className="flex flex-wrap gap-2">
               {selectedGroups.map((group) => (
-                <Badge key={group.id} variant="neutral" className="text-xs">
+                <Badge key={group.id} variant="neutral">
                   {group.name}
                 </Badge>
               ))}
@@ -324,7 +330,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   >
                     <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
                   </Link>
-                  <p className="text-sm">
+                  <p>
                     by{" "}
                     <Link
                       href={`/user/${sorter.creatorUsername}`}
@@ -334,24 +340,22 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                     </Link>
                   </p>
                 </div>
-
-                <div>
-                  <span className="text-sm">
-                    Created at{" "}
-                    {new Date(sorter.createdAt).toLocaleDateString("en-US", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </span>
-                </div>
-
                 {/* Category */}
                 {sorter.category && (
                   <div>
                     <Badge variant="default">{sorter.category}</Badge>
                   </div>
                 )}
+                <div className="flex gap-4">
+                  <div className="flex items-center gap-1">
+                    <Eye size={16} />
+                    <span>{sorter.viewCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Trophy size={16} />
+                    <span>{sorter.completionCount}</span>
+                  </div>
+                </div>
               </div>
             </PanelContent>
           </Panel>
@@ -373,7 +377,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                 >
                   <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
                 </Link>
-                <p className="text-sm">
+                <p>
                   by{" "}
                   <Link
                     href={`/user/${sorter.creatorUsername}`}
@@ -383,24 +387,22 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   </Link>
                 </p>
               </div>
-
-              <div>
-                <span className="text-sm">
-                  Created at{" "}
-                  {new Date(sorter.createdAt).toLocaleDateString("en-US", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
-
               {/* Category */}
               {sorter.category && (
                 <div>
                   <Badge variant="default">{sorter.category}</Badge>
                 </div>
               )}
+              <div className="flex gap-4">
+                <div className="flex items-center gap-1">
+                  <Eye size={16} />
+                  <span>{sorter.viewCount}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Trophy size={16} />
+                  <span>{sorter.completionCount}</span>
+                </div>
+              </div>
             </div>
           </PanelContent>
         </Panel>
@@ -432,7 +434,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
             <h2 className="text-lg font-bold text-gray-600">
               Development Preview: Downloadable Image Layout
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-gray-500">
               This preview shows what the downloaded image will look like. This
               section is only visible in development.
             </p>

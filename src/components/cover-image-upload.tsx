@@ -49,7 +49,9 @@ export default function CoverImageUpload({
     }
   };
 
-  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInputChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       handleFileSelect(file);
@@ -70,7 +72,7 @@ export default function CoverImageUpload({
   return (
     <div className="space-y-3">
       <FormLabel>Cover Image (Optional)</FormLabel>
-      
+
       {/* Hidden file input */}
       <Input
         ref={fileInputRef}
@@ -83,21 +85,17 @@ export default function CoverImageUpload({
 
       {/* Upload area */}
       {!selectedFile ? (
-        <Box 
-          variant="white" 
-          size="md" 
-          className={`
-            cursor-pointer transition-colors
-            ${isDragging ? 'bg-secondary-background' : 'bg-background'}
-            ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary-background'}
-          `}
+        <Box
+          variant="white"
+          size="md"
+          className={`cursor-pointer transition-colors ${isDragging ? "bg-secondary-background" : "bg-background"} ${disabled ? "cursor-not-allowed opacity-50" : "hover:bg-secondary-background"} `}
           onClick={!disabled ? handleSelectClick : undefined}
         >
-          <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-            <ImageIcon size={48} className="mb-4 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
+            <ImageIcon size={48} className="text-muted-foreground mb-4" />
             <div className="mb-2">
-              <p className="text-sm font-medium">Click to upload cover image</p>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="font-medium">Click to upload cover image</p>
+              <p className="text-muted-foreground mt-1 text-xs">
                 JPG, PNG, or WebP up to 10MB
               </p>
             </div>
@@ -123,20 +121,18 @@ export default function CoverImageUpload({
                 <img
                   src={previewUrl}
                   alt="Cover preview"
-                  className="h-20 w-20 rounded-lg border-2 border-border object-cover shadow-shadow"
+                  className="border-border shadow-shadow h-20 w-20 rounded-lg border-2 object-cover"
                 />
               </div>
             )}
-            
+
             {/* File info */}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
-                {selectedFile.name}
-              </p>
-              <p className="text-xs text-muted-foreground">
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium">{selectedFile.name}</p>
+              <p className="text-muted-foreground text-xs">
                 {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-muted-foreground mt-1 text-xs">
                 Will be resized to 300x300px
               </p>
             </div>
@@ -148,7 +144,7 @@ export default function CoverImageUpload({
               size="sm"
               onClick={handleRemoveImage}
               disabled={disabled}
-              className="h-8 w-8 p-0 flex-shrink-0"
+              className="h-8 w-8 flex-shrink-0 p-0"
               title="Remove image"
             >
               <X size={14} />
@@ -156,7 +152,7 @@ export default function CoverImageUpload({
           </div>
 
           {/* Replace button */}
-          <div className="border-t border-border px-4 py-3">
+          <div className="border-border border-t px-4 py-3">
             <Button
               type="button"
               variant="neutral"
@@ -173,9 +169,9 @@ export default function CoverImageUpload({
       )}
 
       {/* Helper text */}
-      <p className="text-xs text-muted-foreground">
-        The cover image will be displayed on your sorter's profile and in listings.
-        Images are automatically cropped to square and resized.
+      <p className="text-muted-foreground text-xs">
+        The cover image will be displayed on your sorter's profile and in
+        listings. Images are automatically cropped to square and resized.
       </p>
     </div>
   );

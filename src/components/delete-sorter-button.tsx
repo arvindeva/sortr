@@ -90,7 +90,7 @@ export function DeleteSorterButton({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="text-sm">
+          <div>
             <p className="mb-2 font-medium">
               Are you sure you want to delete <strong>"{sorterTitle}"</strong>?
             </p>
@@ -101,7 +101,7 @@ export function DeleteSorterButton({
           </div>
 
           {error && (
-            <div className="rounded-base border-border border-2 bg-red-500 p-3 text-sm text-white">
+            <div className="rounded-base border-border border-2 bg-red-500 p-3 text-white">
               {error}
             </div>
           )}

@@ -15,7 +15,7 @@ export function SortPageSkeleton() {
 
         {/* Progress and Actions - Compact */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-sm text-black dark:text-white">
+          <div className="flex items-center justify-between text-black dark:text-white">
             <Skeleton className="h-4 w-32" />
             <div className="hidden md:block">
               <div className="flex gap-1">
@@ -53,7 +53,7 @@ export function SortPageSkeleton() {
         {/* VS Divider - actual component since it's static */}
         <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 transform">
           <div className="bg-main border-border shadow-shadow rounded-base border-2 px-3 py-2">
-            <span className="text-sm font-bold text-black">VS</span>
+            <span className="font-bold text-black">VS</span>
           </div>
         </div>
       </div>

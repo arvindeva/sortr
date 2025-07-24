@@ -74,7 +74,7 @@ export function EditUsernameButton({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
-          variant="neutral"
+          variant="neutralNoShadow"
           size="sm"
           className="h-6 w-6 p-0"
           title="Edit username"
@@ -89,10 +89,7 @@ export function EditUsernameButton({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label
-              htmlFor="username"
-              className="mb-2 block text-sm font-medium"
-            >
+            <label htmlFor="username" className="mb-2 block font-medium">
               Username
             </label>
             <Input

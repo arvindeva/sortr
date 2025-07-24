@@ -45,7 +45,9 @@ export default function CreateSorterForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
-  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
+    null,
+  );
 
   const form = useForm<CreateSorterInput>({
     resolver: zodResolver(createSorterSchema),
@@ -64,7 +66,7 @@ export default function CreateSorterForm() {
   // Handle cover image selection
   const handleCoverImageSelect = (file: File | null) => {
     setCoverImageFile(file);
-    
+
     if (file) {
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
@@ -284,7 +286,7 @@ export default function CreateSorterForm() {
     <div>
       <Panel variant="primary" className="bg-background">
         <PanelHeader variant="primary">
-          <PanelTitle>Sorter Details</PanelTitle>
+          <PanelTitle>Create New Sorter</PanelTitle>
         </PanelHeader>
         <PanelContent variant="primary" className="bg-background p-2 md:p-6">
           <Form {...form}>
@@ -402,7 +404,7 @@ export default function CreateSorterForm() {
                           <FormLabel className="text-base">
                             Use Filters
                           </FormLabel>
-                          <div className="text-sm font-medium">
+                          <div className="font-medium">
                             Group items into filters for selective sorting
                           </div>
                         </div>
@@ -533,7 +535,7 @@ export default function CreateSorterForm() {
                                 variant="neutral"
                                 size="sm"
                                 onClick={() => addItemToGroup(groupIndex)}
-                                className="mt-2 flex items-center gap-1 text-sm"
+                                className="mt-2 flex items-center gap-1"
                               >
                                 <Plus size={14} />
                                 Add Item
@@ -580,7 +582,7 @@ export default function CreateSorterForm() {
                   </div>
 
                   <Box variant="accent" size="sm" className="mt-4">
-                    <p className="text-sm font-medium">
+                    <p>
                       Add at least 2 filters with 1 item each to create your
                       sorter
                     </p>
@@ -639,7 +641,7 @@ export default function CreateSorterForm() {
                   </div>
 
                   <Box variant="accent" size="sm" className="mt-4">
-                    <p className="text-sm font-medium">
+                    <p className="font-medium">
                       Add at least 2 items to create your sorter
                     </p>
                   </Box>

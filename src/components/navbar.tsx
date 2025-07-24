@@ -119,12 +119,12 @@ export function Navbar() {
 
         {/* Create button - always visible */}
         {status === "loading" ? (
-          <Button size="sm" variant="default" disabled>
+          <Button variant="default" disabled>
             <Plus size={16} />
             Create a Sorter
           </Button>
         ) : session ? (
-          <Button asChild size="sm" variant="default" className="group">
+          <Button asChild variant="default" className="group">
             <Link href="/create">
               <Plus
                 className="transition-transform duration-200 group-hover:rotate-90"
@@ -134,7 +134,7 @@ export function Navbar() {
             </Link>
           </Button>
         ) : (
-          <Button asChild size="sm" variant="default" className="group">
+          <Button asChild variant="default" className="group">
             <Link href="/auth/signin">
               <Plus
                 className="transition-transform duration-200 group-hover:rotate-90"
@@ -154,7 +154,7 @@ export function Navbar() {
         </Link>
 
         {status === "loading" ? (
-          <Button size="sm" variant="default" disabled>
+          <Button variant="default" disabled>
             Loading...
           </Button>
         ) : session ? (
@@ -169,15 +169,15 @@ export function Navbar() {
             ) : (
               <span className="text-muted-foreground font-medium">Profile</span>
             )}
-            <ModeToggle />
-            <Button size="sm" variant="neutral" onClick={() => signOut()}>
+            <Button variant="neutral" onClick={() => signOut()}>
               Logout
             </Button>
+            <ModeToggle />
           </div>
         ) : (
           <>
-            <ModeToggle />
             <LoginButton />
+            <ModeToggle />
           </>
         )}
       </div>
@@ -347,7 +347,6 @@ export function Navbar() {
             <Button
               type="submit"
               variant="default"
-              size="sm"
               className="w-full"
               disabled={!searchQuery.trim()}
             >

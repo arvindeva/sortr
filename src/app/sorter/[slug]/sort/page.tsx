@@ -11,6 +11,7 @@ import { SortItem } from "@/lib/sorting";
 import { InteractiveMergeSort, SortState } from "@/lib/interactive-merge-sort";
 import LZString from "lz-string";
 import { Box } from "@/components/ui/box";
+import { PageHeader } from "@/components/ui/page-header";
 import { SortPageSkeleton } from "@/components/sort-page-skeleton";
 import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
 
@@ -503,7 +504,7 @@ export default function SortPage() {
 
           <Box variant="warning" size="md" className="mx-auto max-w-md">
             <div className="space-y-3 text-center">
-              <p className="text-sm font-medium">
+              <p className="font-medium">
                 If this screen persists, you may have a browser storage issue.
               </p>
               <p className="text-xs">
@@ -540,12 +541,12 @@ export default function SortPage() {
       <div className="mb-6 px-2 md:px-0">
         <Box variant="primary" size="md" className="mb-6 block">
           <div>
-            <h1 className="text-xl font-bold">{sorterData.sorter.title}</h1>
+            <PageHeader>{sorterData.sorter.title}</PageHeader>
           </div>
         </Box>
         {/* Progress and Actions - Compact */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-sm text-black dark:text-white">
+          <div className="flex items-center justify-between text-black dark:text-white">
             <span>
               {completedComparisons} comparisons • {progress}% complete
             </span>
@@ -557,7 +558,7 @@ export default function SortPage() {
                   size="sm"
                   onClick={handleUndo}
                   disabled={!canUndo}
-                  className="h-7 px-2 text-xs"
+                  className="h-7 px-2"
                 >
                   <Undo2 className="mr-1" size={12} />
                   Undo
@@ -568,7 +569,7 @@ export default function SortPage() {
                   size="sm"
                   onClick={handleReset}
                   disabled={completedComparisons === 0}
-                  className="h-7 px-2 text-xs"
+                  className="h-7 px-2"
                 >
                   <RotateCcw className="mr-1" size={12} />
                   Reset
@@ -627,7 +628,7 @@ export default function SortPage() {
         {/* VS Divider - neobrutalist styling, visible on all devices */}
         <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 transform">
           <div className="bg-main border-border shadow-shadow rounded-base border-2 px-3 py-2">
-            <span className="text-sm font-bold text-black">VS</span>
+            <span className="font-bold text-black">VS</span>
           </div>
         </div>
       </div>
