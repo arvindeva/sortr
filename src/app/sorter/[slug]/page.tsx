@@ -253,7 +253,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
+      <main className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
         {/* Sorter Header */}
         <section>
           <Box variant="primary" size="md" className="mb-6 block">

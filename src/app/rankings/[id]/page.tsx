@@ -220,7 +220,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
   const { result, sorter, selectedGroups } = data;
 
   return (
-    <div className="container mx-auto max-w-4xl overflow-hidden px-2 py-8 md:px-4">
+    <div className="container mx-auto max-w-6xl overflow-hidden px-2 py-8 md:px-4">
       {/* Header */}
       <div className="mb-8">
         {/* Main Header */}
@@ -268,8 +268,8 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   : `/sorter/${sorter.slug}/sort`
               }
             >
-              <RotateCcw className="mr-2" size={16} />
-              Sort Again
+              <Play size={16} />
+              Sort This
             </Link>
           </Button>
         </div>

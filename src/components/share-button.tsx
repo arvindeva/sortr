@@ -28,7 +28,10 @@ interface ShareButtonProps {
   };
 }
 
-export function ShareButton({ size = "sm", rankingData }: ShareButtonProps) {
+export function ShareButton({
+  size = "default",
+  rankingData,
+}: ShareButtonProps) {
   const { downloadImage, isGenerating } = useDownloadRankingImage();
 
   const handleCopyLink = () => {
@@ -49,7 +52,7 @@ export function ShareButton({ size = "sm", rankingData }: ShareButtonProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="neutral" size={size}>
-          <Share2 className="mr-2" size={16} />
+          <Share2 size={16} />
           Share
         </Button>
       </DropdownMenuTrigger>

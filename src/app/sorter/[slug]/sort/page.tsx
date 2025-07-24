@@ -439,7 +439,7 @@ export default function SortPage() {
 
   if (error || !sorterData) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="text-center">
           <p className="text-black dark:text-white">Failed to load sorter</p>
           <Button onClick={() => router.push(`/sorter/${sorterSlug}`)}>
@@ -452,7 +452,7 @@ export default function SortPage() {
 
   if (saving) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="text-center">
           <h1 className="mb-3 animate-pulse text-2xl font-bold">
             Saving Results...
@@ -492,7 +492,7 @@ export default function SortPage() {
     };
 
     return (
-      <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
+      <div className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
         <div className="space-y-6 text-center">
           <div>
             <p className="mb-2 text-lg text-black dark:text-white">
@@ -535,7 +535,7 @@ export default function SortPage() {
       : 0;
 
   return (
-    <div className="container mx-auto max-w-4xl px-0 py-8 text-black md:px-4 dark:text-white">
+    <div className="container mx-auto max-w-6xl px-0 py-8 text-black md:px-4 dark:text-white">
       {/* Header */}
       <div className="mb-6 px-2 md:px-0">
         <Box variant="primary" size="md" className="mb-6 block">

@@ -103,7 +103,7 @@ export default async function UserProfilePage({
   });
 
   return (
-    <main className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
+    <main className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
       {/* Profile Header */}
       <UserProfileHeader
         username={userData.username || ""}

@@ -38,7 +38,7 @@ export default async function Home() {
   const popularSorters = await getPopularSorters();
 
   return (
-    <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-4xl px-2 py-10 md:px-4">
+    <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-2 py-10 md:px-4">
       <section className="mx-auto mb-10 flex max-w-xl justify-center">
         <Box variant="primary" size="sm" className="text-center md:p-8">
           <h1 className="text-4xl font-bold tracking-wide md:mb-4 md:text-6xl">

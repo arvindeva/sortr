@@ -122,7 +122,7 @@ export default function FilterPage({ params }: FilterPageProps) {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="text-center">
           <h1 className="mb-3 animate-pulse text-2xl font-bold">
             Loading filters...
@@ -135,7 +135,7 @@ export default function FilterPage({ params }: FilterPageProps) {
 
   if (error) {
     return (
-      <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
+      <div className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
         <div className="py-12 text-center">
           <p className="mb-4 text-red-600">
             {error instanceof Error ? error.message : "An error occurred"}
@@ -148,7 +148,7 @@ export default function FilterPage({ params }: FilterPageProps) {
 
   if (!data) {
     return (
-      <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
+      <div className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
         <div className="py-12 text-center">
           <p className="text-muted-foreground mb-4">Sorter not found</p>
           <Button onClick={() => router.back()}>Go Back</Button>
@@ -166,7 +166,7 @@ export default function FilterPage({ params }: FilterPageProps) {
   }, 0);
 
   return (
-    <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
+    <div className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
       {/* Header */}
       <div className="mb-8">
         <div className="mb-4 flex items-center gap-4">

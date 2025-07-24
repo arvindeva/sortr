@@ -1,5 +1,5 @@
 "use client";
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut, signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { LoginButton } from "@/components/login-button";
@@ -7,16 +7,29 @@ import { ModeToggle } from "@/components/mode-toggle";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Menu, X, User, Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerClose,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerOverlay,
+  DrawerPortal,
+} from "@/components/ui/drawer";
 
 export function Navbar() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+  const mobileMenuFirstButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerContentRef = useRef<HTMLDivElement>(null);
 
   const { data: userData } = useQuery({
     queryKey: ["user", session?.user?.email],
@@ -30,6 +43,42 @@ export function Navbar() {
     },
     enabled: !!session?.user?.email,
   });
+
+  // Focus mobile search input when search opens
+  useEffect(() => {
+    if (mobileSearchOpen && mobileSearchInputRef.current) {
+      // Small delay to ensure the element is visible and ready for focus
+      const timeoutId = setTimeout(() => {
+        mobileSearchInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [mobileSearchOpen]);
+
+  // Focus management for mobile menu drawer
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      // Wait for drawer to finish its setup, then check if focus is already managed
+      const timeoutId = setTimeout(() => {
+        // Only focus if nothing in the drawer is already focused
+        const activeElement = document.activeElement;
+        const drawerContainer = drawerContentRef.current;
+
+        if (drawerContainer && !drawerContainer.contains(activeElement)) {
+          // Try focusing the first button, then fallback to container
+          if (mobileMenuFirstButtonRef.current) {
+            mobileMenuFirstButtonRef.current.focus();
+          } else if (drawerContentRef.current) {
+            drawerContentRef.current.focus();
+          }
+        }
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [mobileMenuOpen]);
+
+  // Close mobile menu when clicking outside (handled by overlay click)
+  // No need for document click listener since overlay handles it
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,14 +120,14 @@ export function Navbar() {
         {/* Create button - always visible */}
         {status === "loading" ? (
           <Button size="sm" variant="default" disabled>
-            <Plus className="mr-1" size={16} />
+            <Plus size={16} />
             Create a Sorter
           </Button>
         ) : session ? (
           <Button asChild size="sm" variant="default" className="group">
             <Link href="/create">
               <Plus
-                className="mr-1 transition-transform duration-200 group-hover:rotate-90"
+                className="transition-transform duration-200 group-hover:rotate-90"
                 size={16}
               />
               Create a Sorter
@@ -88,7 +137,7 @@ export function Navbar() {
           <Button asChild size="sm" variant="default" className="group">
             <Link href="/auth/signin">
               <Plus
-                className="mr-1 transition-transform duration-200 group-hover:rotate-90"
+                className="transition-transform duration-200 group-hover:rotate-90"
                 size={16}
               />
               Create a Sorter
@@ -139,7 +188,10 @@ export function Navbar() {
         <Button
           variant="default"
           size="icon"
-          onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+          onClick={() => {
+            setMobileSearchOpen(!mobileSearchOpen);
+            setMobileMenuOpen(false);
+          }}
           aria-label="Search"
         >
           <Search size={20} />
@@ -161,6 +213,7 @@ export function Navbar() {
             variant="default"
             size="icon"
             aria-label="Create a Sorter"
+            onClick={() => setMobileMenuOpen(false)}
           >
             <Link href="/create">
               <Plus size={20} />
@@ -172,6 +225,7 @@ export function Navbar() {
             variant="default"
             size="icon"
             aria-label="Create a Sorter"
+            onClick={() => setMobileMenuOpen(false)}
           >
             <Link href="/auth/signin">
               <Plus size={20} />
@@ -179,23 +233,92 @@ export function Navbar() {
           </Button>
         )}
         <ModeToggle />
-        <Button
-          variant="default"
-          size="icon"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
+        <Drawer
+          open={mobileMenuOpen}
+          onOpenChange={setMobileMenuOpen}
+          direction="top"
         >
-          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-        </Button>
-      </div>
+          <DrawerTrigger asChild>
+            <Button variant="default" size="icon" aria-label="Toggle menu">
+              <Menu size={20} />
+            </Button>
+          </DrawerTrigger>
 
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-black/50 md:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
+          <DrawerContent className="md:hidden">
+            <DrawerTitle className="sr-only">Navigation Menu</DrawerTitle>
+            <DrawerDescription className="sr-only">
+              Choose a navigation option from the list below
+            </DrawerDescription>
+
+            {/* Simplified navbar inside drawer */}
+            <div className="border-border bg-secondary-background flex items-center justify-between border-b-2 px-4 py-2">
+              <Link href="/">
+                <span className="text-2xl font-bold tracking-wide">sortr</span>
+              </Link>
+              <DrawerClose asChild>
+                <Button variant="default" size="icon" aria-label="Close menu">
+                  <X size={20} />
+                </Button>
+              </DrawerClose>
+            </div>
+
+            <div
+              ref={drawerContentRef}
+              className="flex flex-col gap-3 p-4"
+              tabIndex={-1}
+            >
+              {/* Browse link */}
+              <DrawerClose asChild>
+                <Button
+                  ref={mobileMenuFirstButtonRef}
+                  asChild
+                  variant="default"
+                  className="w-full"
+                >
+                  <Link href="/browse">Browse</Link>
+                </Button>
+              </DrawerClose>
+
+              {/* Auth buttons */}
+              {status === "loading" ? (
+                <Button variant="default" disabled className="w-full">
+                  Loading...
+                </Button>
+              ) : session ? (
+                <>
+                  {userData?.username ? (
+                    <DrawerClose asChild>
+                      <Button asChild variant="default" className="w-full">
+                        <Link href={`/user/${userData.username}`}>Profile</Link>
+                      </Button>
+                    </DrawerClose>
+                  ) : (
+                    <Button variant="default" disabled className="w-full">
+                      <User size={16} className="mr-2" />
+                      Profile
+                    </Button>
+                  )}
+                  <DrawerClose asChild>
+                    <Button
+                      variant="neutral"
+                      onClick={() => signOut()}
+                      className="w-full"
+                    >
+                      Logout
+                    </Button>
+                  </DrawerClose>
+                </>
+              ) : (
+                <DrawerClose asChild>
+                  <div>
+                    <LoginButton className="w-full" />
+                  </div>
+                </DrawerClose>
+              )}
+            </div>
+          </DrawerContent>
+        </Drawer>
+      </div>
 
       {/* Mobile Search Overlay */}
       {mobileSearchOpen && (
@@ -204,60 +327,6 @@ export function Navbar() {
           onClick={() => setMobileSearchOpen(false)}
         />
       )}
-
-      {/* Mobile Menu */}
-      <div
-        className={`border-border bg-secondary-background absolute top-full right-0 left-0 z-30 border-b-2 transition-all duration-300 ease-out md:hidden ${mobileMenuOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
-      >
-        <div className="flex flex-col gap-3 p-4">
-          {/* Browse link */}
-          <Button asChild variant="default" className="w-full">
-            <Link href="/browse" onClick={() => setMobileMenuOpen(false)}>
-              Browse
-            </Link>
-          </Button>
-
-          {/* Auth buttons */}
-          {status === "loading" ? (
-            <Button variant="default" disabled className="w-full">
-              Loading...
-            </Button>
-          ) : session ? (
-            <>
-              {userData?.username ? (
-                <Button asChild variant="default" className="w-full">
-                  <Link
-                    href={`/user/${userData.username}`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <User size={16} className="mr-2" />
-                    Profile
-                  </Link>
-                </Button>
-              ) : (
-                <Button variant="default" disabled className="w-full">
-                  <User size={16} className="mr-2" />
-                  Profile
-                </Button>
-              )}
-              <Button
-                variant="default"
-                onClick={() => {
-                  signOut();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full"
-              >
-                Logout
-              </Button>
-            </>
-          ) : (
-            <div onClick={() => setMobileMenuOpen(false)}>
-              <LoginButton />
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Mobile Search Input */}
       <div
@@ -268,11 +337,11 @@ export function Navbar() {
             <div className="relative">
               <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
+                ref={mobileSearchInputRef}
                 placeholder="Search sorters..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pr-3 pl-9"
-                autoFocus={mobileSearchOpen}
               />
             </div>
             <Button
