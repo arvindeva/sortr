@@ -81,8 +81,9 @@ export async function POST(request: NextRequest) {
     const avatarKey = getAvatarKey(userId);
     await uploadToR2(avatarKey, processedBuffer, "image/jpeg");
 
-    // Generate R2 public URL with cache-busting parameter
-    const avatarUrl = `${getR2PublicUrl(avatarKey)}?t=${Date.now()}`;
+    // Generate R2 public URL with cache-busting timestamp
+    const timestamp = Date.now();
+    const avatarUrl = `${getR2PublicUrl(avatarKey)}?t=${timestamp}`;
 
     // Update user's image URL in database
     await db.update(user).set({ image: avatarUrl }).where(eq(user.id, userId));

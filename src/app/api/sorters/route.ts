@@ -44,9 +44,12 @@ export async function POST(request: NextRequest) {
       const formData = await request.formData();
       const dataJson = formData.get("data") as string;
       coverImageFile = formData.get("coverImage") as File | null;
-      
+
       if (!dataJson) {
-        return NextResponse.json({ error: "Missing sorter data" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Missing sorter data" },
+          { status: 400 },
+        );
       }
 
       const body = JSON.parse(dataJson);
@@ -66,7 +69,9 @@ export async function POST(request: NextRequest) {
       // Validate file type
       if (!ALLOWED_COVER_TYPES.includes(coverImageFile.type)) {
         return NextResponse.json(
-          { error: "Only JPG, PNG, and WebP files are allowed for cover image" },
+          {
+            error: "Only JPG, PNG, and WebP files are allowed for cover image",
+          },
           { status: 400 },
         );
       }
@@ -118,13 +123,14 @@ export async function POST(request: NextRequest) {
       const bytes = await coverImageFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
       const processedBuffer = await processCoverImage(buffer);
-      
+
       // Generate cover key and upload processed image to R2
       const coverKey = getCoverKey(newSorter.id);
       await uploadToR2(coverKey, processedBuffer, "image/jpeg");
 
-      // Generate R2 public URL with cache-busting parameter
-      const finalCoverUrl = `${getR2PublicUrl(coverKey)}?t=${Date.now()}`;
+      // Generate R2 public URL with cache-busting timestamp
+      const timestamp = Date.now();
+      const finalCoverUrl = `${getR2PublicUrl(coverKey)}?t=${timestamp}`;
 
       // Update the sorter with the real cover image URL
       await db

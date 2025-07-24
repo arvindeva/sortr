@@ -60,7 +60,9 @@ export async function deleteFromR2(key: string): Promise<void> {
 export function getR2PublicUrl(key: string): string {
   // Check if a custom public URL is configured
   if (process.env.R2_PUBLIC_URL) {
-    return `${process.env.R2_PUBLIC_URL}/${key}`;
+    const url = `${process.env.R2_PUBLIC_URL}/${key}`;
+    console.log('Generated R2 URL:', url);
+    return url;
   }
 
   // Default R2.dev subdomain format
