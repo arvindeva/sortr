@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   Panel,
   PanelHeader,
@@ -44,6 +45,7 @@ interface ResultData {
     slug: string;
     description: string;
     category: string;
+    coverImageUrl?: string;
     useGroups: boolean;
     creatorUsername: string;
     createdAt: Date;
@@ -147,6 +149,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       slug: sorters.slug,
       description: sorters.description,
       category: sorters.category,
+      coverImageUrl: sorters.coverImageUrl,
       useGroups: sorters.useGroups,
       creatorUsername: user.username,
       createdAt: sorters.createdAt,
@@ -205,6 +208,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       slug: sorterData[0].slug,
       description: sorterData[0].description || "",
       category: sorterData[0].category || "",
+      coverImageUrl: sorterData[0].coverImageUrl,
       useGroups: sorterData[0].useGroups,
       creatorUsername: sorterData[0].creatorUsername || "Unknown User",
       createdAt: sorterData[0].createdAt,
@@ -226,77 +230,126 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
   const { result, sorter, selectedGroups } = data;
 
   return (
-    <div className="container mx-auto max-w-6xl overflow-hidden px-2 py-8 md:px-4">
+    <div className="container mx-auto max-w-6xl overflow-hidden px-2 py-2 md:px-4 md:py-8">
       {/* Header */}
-      <div className="mb-8">
-        {/* Main Header */}
-        <Box variant="primary" size="md" className="mb-6 block">
-          <div>
-            <Link href={`/sorter/${sorter.slug}`}>
-              <h1 className="mb-2 cursor-pointer text-lg font-bold hover:underline md:text-2xl">
-                {sorter.title}
-              </h1>
-            </Link>
-            <p className="font-medium">
-              sorted by{" "}
-              <Link
-                href={`/user/${result.username}`}
-                className="font-semibold hover:underline"
-              >
-                {result.username}
-              </Link>{" "}
-              at{" "}
-              {new Date(result.createdAt).toLocaleDateString("en-US", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
-            </p>
+      <section className="mb-3">
+        <div className="flex items-center space-x-3 py-4 md:space-x-6">
+          {/* Cover Image */}
+          <div className="border-border rounded-base flex h-28 w-28 items-center justify-center overflow-hidden border-2 md:h-48 md:w-48">
+            {sorter.coverImageUrl ? (
+              <img
+                src={sorter.coverImageUrl}
+                alt={`${sorter.title}'s cover`}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="bg-secondary-background text-main flex h-full w-full items-center justify-center">
+                <span className="text-4xl font-bold">
+                  {sorter.title.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
           </div>
-        </Box>
 
-        {/* Share and Sort Buttons */}
-        <div className="mb-6 flex flex-wrap gap-4">
-          <ShareButton
-            rankingData={{
-              sorterTitle: sorter.title,
-              username: result.username,
-              rankings: result.rankings,
-              createdAt: result.createdAt,
-              selectedGroups: selectedGroups?.map((group) => group.name),
-            }}
-          />
-          <Button asChild variant="default">
-            <Link
-              href={
-                sorter.useGroups
-                  ? `/sorter/${sorter.slug}/filters`
-                  : `/sorter/${sorter.slug}/sort`
-              }
-            >
-              <Play size={16} />
-              Sort This
-            </Link>
-          </Button>
-        </div>
-
-        {/* Filter badges - shown if groups were selected */}
-        {selectedGroups && selectedGroups.length > 0 && (
-          <div className="mb-4">
-            <p className="text-muted-foreground mb-2">
-              Groups sorted: {selectedGroups.length}{" "}
-              {selectedGroups.length === 1 ? "group" : "groups"}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {selectedGroups.map((group) => (
-                <Badge key={group.id} variant="neutral">
-                  {group.name}
-                </Badge>
-              ))}
+          {/* Ranking Info */}
+          <div className="flex-1">
+            <div className="mb-2 flex items-center gap-2">
+              <Link href={`/sorter/${sorter.slug}`}>
+                <PageHeader className="cursor-pointer hover:underline">
+                  {sorter.title}
+                </PageHeader>
+              </Link>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-medium">
+              <div className="flex items-center gap-1">
+                <span>sorted by</span>
+                <Link
+                  href={`/user/${result.username}`}
+                  className="font-bold hover:underline"
+                >
+                  {result.username}
+                </Link>
+              </div>
+              <div className="flex items-center gap-1">
+                <span>
+                  {new Date(result.createdAt).toLocaleDateString("en-US", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+            </div>
+            
+            {/* Desktop Action Buttons */}
+            <div className="mt-4 hidden items-center gap-4 md:flex">
+              <Button asChild variant="default">
+                <Link
+                  href={
+                    sorter.useGroups
+                      ? `/sorter/${sorter.slug}/filters`
+                      : `/sorter/${sorter.slug}/sort`
+                  }
+                >
+                  <Play size={16} />
+                  Sort This
+                </Link>
+              </Button>
+              <ShareButton
+                rankingData={{
+                  sorterTitle: sorter.title,
+                  username: result.username,
+                  rankings: result.rankings,
+                  createdAt: result.createdAt,
+                  selectedGroups: selectedGroups?.map((group) => group.name),
+                }}
+              />
             </div>
           </div>
-        )}
+        </div>
+      </section>
+
+      {/* Mobile Action Buttons */}
+      <div className="mb-6 flex flex-wrap gap-4 md:hidden">
+        <Button asChild variant="default">
+          <Link
+            href={
+              sorter.useGroups
+                ? `/sorter/${sorter.slug}/filters`
+                : `/sorter/${sorter.slug}/sort`
+            }
+          >
+            <Play size={16} />
+            Sort This
+          </Link>
+        </Button>
+        <ShareButton
+          rankingData={{
+            sorterTitle: sorter.title,
+            username: result.username,
+            rankings: result.rankings,
+            createdAt: result.createdAt,
+            selectedGroups: selectedGroups?.map((group) => group.name),
+          }}
+        />
       </div>
+
+      {/* Filter badges - shown if groups were selected */}
+      {selectedGroups && selectedGroups.length > 0 && (
+        <div className="mb-4">
+          <p className="text-muted-foreground mb-2">
+            Groups sorted: {selectedGroups.length}{" "}
+            {selectedGroups.length === 1 ? "group" : "groups"}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {selectedGroups.map((group) => (
+              <Badge key={group.id} variant="neutral">
+                {group.name}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Two Column Layout */}
       <div className="grid gap-8 md:grid-cols-3">
