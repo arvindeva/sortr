@@ -65,7 +65,7 @@ function PanelTitle({ className, ...props }: React.ComponentProps<"h3">) {
   return (
     <h3
       data-slot="panel-title"
-      className={cn("font-heading text-lg leading-none", className)}
+      className={cn("text-lg leading-none font-bold", className)}
       {...props}
     />
   );

@@ -42,7 +42,7 @@ function ComparisonCard({
 
       {/* Text area at bottom */}
       <div className="border-border border-t-2 px-4 py-6 text-center">
-        <h3 className="text-sm leading-tight font-semibold text-black md:text-lg">
+        <h3 className="leading-tight font-semibold text-black md:text-lg">
           {title}
         </h3>
       </div>

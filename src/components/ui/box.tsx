@@ -17,7 +17,7 @@ const boxVariants = cva(
         white: "bg-background text-foreground",
       },
       size: {
-        sm: "px-2 md:px-4 py-2 text-sm",
+        sm: "px-2 md:px-4 py-2 ",
         md: "px-2 md:px-6 py-3 text-base",
         lg: "px-2 md:px-8 py-4 text-lg",
         xl: "px-2 md:px-10 py-6 text-xl",

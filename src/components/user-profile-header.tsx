@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Box } from "@/components/ui/box";
+import { PageHeader } from "@/components/ui/page-header";
 import { EditUsernameButton } from "@/components/edit-username-button";
 import { Button } from "@/components/ui/button";
 import {
@@ -126,15 +127,11 @@ export function UserProfileHeader({
   const isLoading = uploadMutation.isPending || removeMutation.isPending;
 
   return (
-    <section className="mb-8">
-      <Box
-        variant="primary"
-        size="sm"
-        className="flex items-center space-x-6 py-4"
-      >
+    <section className="mb-4 md:mb-8">
+      <div className="flex items-center space-x-3 py-4 md:space-x-6">
         {/* Avatar */}
         <div className="relative">
-          <div className="border-border rounded-base flex h-16 w-16 items-center justify-center overflow-hidden border-2 md:h-24 md:w-24">
+          <div className="border-border rounded-base flex h-28 w-28 items-center justify-center overflow-hidden border-2 md:h-48 md:w-48">
             {currentImage ? (
               <img
                 src={currentImage}
@@ -165,9 +162,9 @@ export function UserProfileHeader({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
-                      variant="default"
+                      variant="neutralNoShadow"
                       size="icon"
-                      className="h-8 w-8 rounded-full"
+                      className="h-6 w-6"
                       disabled={isLoading}
                     >
                       {isLoading ? (
@@ -204,13 +201,13 @@ export function UserProfileHeader({
         {/* User Info */}
         <div className="flex-1">
           <div className="mb-2 flex items-center gap-2">
-            <h1 className="text-lg font-bold md:text-4xl">{username}</h1>
+            <PageHeader>{username}</PageHeader>
             {/* Edit Username Button - Only show for own profile */}
             {isOwnProfile && <EditUsernameButton currentUsername={username} />}
           </div>
-          <p className="text-md font-medium">User since {userSince}</p>
+          <p className="font-medium">User since {userSince}</p>
         </div>
-      </Box>
+      </div>
     </section>
   );
 }

@@ -12,7 +12,7 @@ const logoVariants = cva(
         accent: "bg-secondary-background text-foreground",
       },
       size: {
-        sm: "px-4 py-2 text-sm",
+        sm: "px-4 py-2 ",
         md: "px-6 py-3 text-base",
         lg: "px-8 py-4 text-lg",
         xl: "px-10 py-6 text-xl",

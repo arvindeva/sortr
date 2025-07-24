@@ -119,6 +119,7 @@
 @layer base {
   body {
     @apply text-foreground font-base bg-background;
+    font-size: var(--font-size-base);
   }
 
   h1,
@@ -159,5 +160,34 @@
   .shimmer {
     background-color: var(--secondary-background);
     animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  /* Responsive font sizing overrides - smaller text on mobile for better density */
+  :root {
+    /* Mobile-first: smaller font sizes */
+    --font-size-xs: 0.75rem; /* 12px - stays same across breakpoints */
+    --font-size-sm: 0.75rem; /* 12px on mobile (down from default 14px) */
+    --font-size-base: 0.875rem; /* 14px on mobile (down from default 16px) */
+  }
+
+  /* Desktop: larger font sizes (md breakpoint = 768px) */
+  @media (min-width: 768px) {
+    :root {
+      --font-size-sm: 0.75rem; /* 14px on desktop (Tailwind default) */
+      --font-size-base: 0.875rem; /* 16px on desktop (Tailwind default) */
+    }
+  }
+
+  /* Override Tailwind's font size utilities */
+  .text-xs {
+    font-size: var(--font-size-xs) !important;
+  }
+
+  .text-sm {
+    font-size: var(--font-size-sm) !important;
+  }
+
+  .text-base {
+    font-size: var(--font-size-base) !important;
   }
 }
