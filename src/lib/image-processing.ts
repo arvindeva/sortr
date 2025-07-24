@@ -159,7 +159,9 @@ export async function validateImageBuffer(buffer: Buffer): Promise<boolean> {
  * @param buffer - The image buffer to validate
  * @returns Promise<boolean> - Whether the image is valid
  */
-export async function validateCoverImageBuffer(buffer: Buffer): Promise<boolean> {
+export async function validateCoverImageBuffer(
+  buffer: Buffer,
+): Promise<boolean> {
   try {
     const image = sharp(buffer);
     const metadata = await image.metadata();

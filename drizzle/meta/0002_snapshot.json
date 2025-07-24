@@ -81,12 +81,8 @@
           "name": "account_userId_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -94,10 +90,7 @@
       "compositePrimaryKeys": {
         "account_provider_providerAccountId_pk": {
           "name": "account_provider_providerAccountId_pk",
-          "columns": [
-            "provider",
-            "providerAccountId"
-          ]
+          "columns": ["provider", "providerAccountId"]
         }
       },
       "uniqueConstraints": {},
@@ -134,12 +127,8 @@
           "name": "session_userId_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -193,12 +182,8 @@
           "name": "sorterGroups_sorterId_sorters_id_fk",
           "tableFrom": "sorterGroups",
           "tableTo": "sorters",
-          "columnsFrom": [
-            "sorterId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sorterId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -251,12 +236,8 @@
           "name": "sorterItems_sorterId_sorters_id_fk",
           "tableFrom": "sorterItems",
           "tableTo": "sorters",
-          "columnsFrom": [
-            "sorterId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sorterId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -264,12 +245,8 @@
           "name": "sorterItems_groupId_sorterGroups_id_fk",
           "tableFrom": "sorterItems",
           "tableTo": "sorterGroups",
-          "columnsFrom": [
-            "groupId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["groupId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -362,12 +339,8 @@
           "name": "sorters_userId_user_id_fk",
           "tableFrom": "sorters",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -377,9 +350,7 @@
         "sorters_slug_unique": {
           "name": "sorters_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -435,12 +406,8 @@
           "name": "sortingResults_sorterId_sorters_id_fk",
           "tableFrom": "sortingResults",
           "tableTo": "sorters",
-          "columnsFrom": [
-            "sorterId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sorterId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -448,12 +415,8 @@
           "name": "sortingResults_userId_user_id_fk",
           "tableFrom": "sortingResults",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -513,16 +476,12 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "user_username_unique": {
           "name": "user_username_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         }
       },
       "policies": {},

@@ -61,7 +61,7 @@ export function getR2PublicUrl(key: string): string {
   // Check if a custom public URL is configured
   if (process.env.R2_PUBLIC_URL) {
     const url = `${process.env.R2_PUBLIC_URL}/${key}`;
-    console.log('Generated R2 URL:', url);
+    console.log("Generated R2 URL:", url);
     return url;
   }
 
