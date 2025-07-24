@@ -28,6 +28,7 @@ export async function GET(
         category: sorters.category,
         slug: sorters.slug,
         useGroups: sorters.useGroups,
+        coverImageUrl: sorters.coverImageUrl,
         createdAt: sorters.createdAt,
         completionCount: sorters.completionCount,
         viewCount: sorters.viewCount,

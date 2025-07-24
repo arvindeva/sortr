@@ -48,6 +48,7 @@ interface Sorter {
   slug: string;
   description?: string;
   category?: string;
+  coverImageUrl?: string;
   useGroups: boolean;
   userId: string;
   createdAt: string;
@@ -257,8 +258,15 @@ export default async function SorterPage({ params }: SorterPageProps) {
         {/* Sorter Header */}
         <section>
           <Box variant="primary" size="md" className="mb-6 block">
-            <div>
-              <h1 className="text-xl font-bold">{sorter.title}</h1>
+            <div className="flex items-center gap-6">
+              <div className="border-border rounded-base flex h-16 w-16 items-center justify-center overflow-hidden border-2 md:h-32 md:w-32">
+                <img
+                  src={`${sorter.coverImageUrl}`}
+                  alt={`${sorter.title}'s cover`}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <h1 className="text-3xl font-bold">{sorter.title}</h1>
             </div>
           </Box>
 
