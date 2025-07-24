@@ -95,3 +95,12 @@ export function getR2PublicUrl(key: string): string {
 export function getAvatarKey(userId: string): string {
   return `avatars/${userId}.jpg`;
 }
+
+/**
+ * Generate cover image key for a sorter
+ * @param sorterId - The sorter ID
+ * @returns The cover image file key
+ */
+export function getCoverKey(sorterId: string): string {
+  return `covers/${sorterId}.jpg`;
+}

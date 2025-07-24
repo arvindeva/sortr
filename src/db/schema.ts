@@ -62,6 +62,7 @@ export const sorters = pgTable("sorters", {
   category: text("category"),
   slug: text("slug").notNull().unique(),
   useGroups: boolean("use_groups").default(false).notNull(),
+  coverImageUrl: text("cover_image_url"),
   userId: uuid("userId")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),

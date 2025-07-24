@@ -186,59 +186,21 @@ Requires configuration for:
 - **Category System Expansion**: Updated sorter categories with new options (Fashion, Academics, Anime & Manga, Tech, Internet, Travel, Nature, Hobbies, Vehicles), consolidated Movies & TV Shows, and streamlined category names for better organization and user experience.
 - **Avatar Upload System Implementation**: Built comprehensive user avatar management with Cloudflare R2 storage backend, Sharp server-side image processing (automatic center crop and 200x200 resize), client-side AvatarManager component with TanStack Query mutations, shimmer loading animations with pulsing effect, file validation (JPG/PNG/WebP, 1MB limit), dropdown menu interface (Upload/Remove), cache-busting timestamps for immediate updates, and proper error handling with toast notifications.
 
-## Avatar Management System
-
-### Architecture Overview
-
-The avatar system provides complete user profile image management with enterprise-grade cloud storage and professional image processing capabilities.
+## Image Upload System
 
 ### Technical Stack
 
 - **Storage**: Cloudflare R2 with S3-compatible API for scalable object storage
 - **Image Processing**: Sharp library for server-side image manipulation
 - **State Management**: TanStack Query for optimistic updates and cache management
-- **UI Components**: AvatarManager with dropdown interface and loading states
 - **File Validation**: Client and server-side validation for security and UX
 
 ### Image Processing Pipeline
 
 1. **Client Upload**: File selection with immediate validation (type, size)
-2. **Server Processing**: Sharp-based center crop and resize to 200x200 pixels
+2. **Server Processing**: Sharp-based center crop and resize to specified pixels
 3. **R2 Storage**: Upload to Cloudflare R2 with unique user-based keys
-4. **Database Update**: User record updated with public avatar URL
-5. **Cache Busting**: Timestamp parameters ensure immediate browser updates
-
-### File Specifications
-
-- **Supported Formats**: JPG, PNG, WebP
-- **Size Limit**: 1MB maximum file size
-- **Output Dimensions**: 200x200 pixels (center cropped)
-- **Naming Convention**: `avatars/{userId}.jpg` (always converted to JPG)
-
-### User Interface
-
-- **Trigger**: Pencil icon overlay on avatar container
-- **Menu Options**: Upload Avatar, Remove Avatar (if exists)
-- **Loading States**: Shimmer animation during image load, spinner overlay during upload
-- **Error Handling**: Toast notifications for validation errors and upload failures
-- **Responsive**: Optimized for mobile (16x16) and desktop (24x24) sizes
-
-### API Endpoints
-
-#### POST /api/upload-avatar
-
-- Accepts multipart form data with 'avatar' file field
-- Validates file type, size, and image format
-- Processes image with Sharp (center crop, resize, format conversion)
-- Uploads to R2 and updates user database record
-- Returns public avatar URL with cache-busting timestamp
-
-#### POST /api/remove-avatar
-
-- Authenticates user session
-- Deletes avatar file from R2 storage
-- Clears avatar URL from user database record
-- Returns success confirmation
+4. **Database Update**: Database updated with public avatar URL
 
 ### Security & Validation
 
@@ -255,31 +217,6 @@ The avatar system provides complete user profile image management with enterpris
 - **Cache Management**: R2 public URLs with timestamp cache-busting
 - **Shimmer Loading**: CSS-based animation reduces perceived loading time
 - **Error Recovery**: Graceful fallback to initial letter avatars
-
-### CSS Animations
-
-```css
-@keyframes shimmer {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-.shimmer {
-  background-color: var(--secondary-background);
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-```
-
-### Component Structure
-
-- **AvatarManager**: Main component with upload/remove logic
-- **UserProfileHeader**: Integrates AvatarManager with user info
-- **Dropdown Menu**: neobrutalism-styled interface for actions
-- **Loading States**: Multiple states for different scenarios (initial load, upload, error)
 
 ## Design System
 
@@ -304,16 +241,6 @@ Components are installed from the neobrutalism.dev registry:
 
 ```bash
 npx shadcn@latest add https://neobrutalism.dev/r/button.json
-npx shadcn@latest add https://neobrutalism.dev/r/card.json
-npx shadcn@latest add https://neobrutalism.dev/r/badge.json
-npx shadcn@latest add https://neobrutalism.dev/r/input.json
-npx shadcn@latest add https://neobrutalism.dev/r/textarea.json
-npx shadcn@latest add https://neobrutalism.dev/r/select.json
-npx shadcn@latest add https://neobrutalism.dev/r/switch.json
-npx shadcn@latest add https://neobrutalism.dev/r/progress.json
-npx shadcn@latest add https://neobrutalism.dev/r/skeleton.json
-npx shadcn@latest add https://neobrutalism.dev/r/dialog.json
-npx shadcn@latest add https://neobrutalism.dev/r/sonner.json
 ```
 
 Before implementing any UI component, check if it exists at https://neobrutalism.dev/components/ and use the official version with the installation command above. Only create custom implementations if the component doesn't exist on neobrutalism.dev.

@@ -39,10 +39,13 @@ import {
   GripVertical,
 } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
+import CoverImageUpload from "@/components/cover-image-upload";
 
 export default function CreateSorterForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
 
   const form = useForm<CreateSorterInput>({
     resolver: zodResolver(createSorterSchema),
@@ -57,6 +60,32 @@ export default function CreateSorterForm() {
   });
 
   const useGroups = form.watch("useGroups");
+
+  // Handle cover image selection
+  const handleCoverImageSelect = (file: File | null) => {
+    setCoverImageFile(file);
+    
+    if (file) {
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setCoverImagePreview(previewUrl);
+    } else {
+      // Clean up preview URL
+      if (coverImagePreview) {
+        URL.revokeObjectURL(coverImagePreview);
+      }
+      setCoverImagePreview(null);
+    }
+  };
+
+  // Clean up preview URL on component unmount
+  useEffect(() => {
+    return () => {
+      if (coverImagePreview) {
+        URL.revokeObjectURL(coverImagePreview);
+      }
+    };
+  }, [coverImagePreview]);
 
   // Initialize groups when switching to filters mode
   useEffect(() => {
@@ -212,13 +241,28 @@ export default function CreateSorterForm() {
         Object.assign(payload, { items: validItems });
       }
 
-      const response = await fetch("/api/sorters", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      let response;
+
+      if (coverImageFile) {
+        // Send as multipart form data with cover image
+        const formData = new FormData();
+        formData.append("data", JSON.stringify(payload));
+        formData.append("coverImage", coverImageFile);
+
+        response = await fetch("/api/sorters", {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        // Send as regular JSON
+        response = await fetch("/api/sorters", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+      }
 
       if (!response.ok) {
         const error = await response.json();
@@ -333,6 +377,14 @@ export default function CreateSorterForm() {
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+
+                {/* Cover Image Upload */}
+                <CoverImageUpload
+                  onImageSelect={handleCoverImageSelect}
+                  selectedFile={coverImageFile}
+                  previewUrl={coverImagePreview}
+                  disabled={isLoading}
                 />
 
                 {/* Filters Toggle */}

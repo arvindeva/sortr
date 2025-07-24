@@ -17,6 +17,7 @@ export const createSorterSchema = z
       .max(50, "Category must be 50 characters or less")
       .optional(),
     useGroups: z.boolean(),
+    coverImageUrl: z.string().url("Invalid cover image URL").optional(),
     groups: z
       .array(
         z.object({

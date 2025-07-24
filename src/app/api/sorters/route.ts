@@ -6,6 +6,14 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createSorterSchema } from "@/lib/validations";
 import { generateUniqueSlug, generateSorterSlug } from "@/lib/utils";
+import { uploadToR2, getCoverKey, getR2PublicUrl } from "@/lib/r2";
+import {
+  processCoverImage,
+  validateCoverImageBuffer,
+} from "@/lib/image-processing";
+
+const MAX_COVER_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_COVER_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,12 +34,70 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Parse and validate request body
-    const body = await request.json();
-    const validatedData = createSorterSchema.parse(body);
+    // Check if request contains multipart form data (with cover image)
+    const contentType = request.headers.get("content-type") || "";
+    let validatedData;
+    let coverImageFile: File | null = null;
+
+    if (contentType.includes("multipart/form-data")) {
+      // Handle multipart form data (with potential cover image)
+      const formData = await request.formData();
+      const dataJson = formData.get("data") as string;
+      coverImageFile = formData.get("coverImage") as File | null;
+      
+      if (!dataJson) {
+        return NextResponse.json({ error: "Missing sorter data" }, { status: 400 });
+      }
+
+      const body = JSON.parse(dataJson);
+      validatedData = createSorterSchema.parse(body);
+    } else {
+      // Handle regular JSON request
+      const body = await request.json();
+      validatedData = createSorterSchema.parse(body);
+    }
 
     // Generate slug for sorter
     const slug = generateSorterSlug(validatedData.title);
+
+    // Process cover image if provided
+    let coverImageUrl: string | null = null;
+    if (coverImageFile) {
+      // Validate file type
+      if (!ALLOWED_COVER_TYPES.includes(coverImageFile.type)) {
+        return NextResponse.json(
+          { error: "Only JPG, PNG, and WebP files are allowed for cover image" },
+          { status: 400 },
+        );
+      }
+
+      // Validate file size
+      if (coverImageFile.size > MAX_COVER_SIZE) {
+        return NextResponse.json(
+          { error: "Cover image size must be less than 10MB" },
+          { status: 400 },
+        );
+      }
+
+      // Convert file to buffer
+      const bytes = await coverImageFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      // Validate image buffer
+      const isValidImage = await validateCoverImageBuffer(buffer);
+      if (!isValidImage) {
+        return NextResponse.json(
+          { error: "Invalid cover image format or dimensions" },
+          { status: 400 },
+        );
+      }
+
+      // Process image: crop to square and resize to 300x300
+      const processedBuffer = await processCoverImage(buffer);
+
+      // We'll upload after creating the sorter to get the real ID
+      coverImageUrl = "PLACEHOLDER"; // Will be updated after sorter creation
+    }
 
     // Create sorter
     const [newSorter] = await db
@@ -42,9 +108,33 @@ export async function POST(request: NextRequest) {
         category: validatedData.category || null,
         slug: slug,
         useGroups: validatedData.useGroups || false,
+        coverImageUrl: validatedData.coverImageUrl || null,
         userId: userData[0].id,
       })
       .returning();
+
+    // Upload cover image if provided
+    if (coverImageFile && coverImageUrl === "PLACEHOLDER") {
+      const bytes = await coverImageFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const processedBuffer = await processCoverImage(buffer);
+      
+      // Generate cover key and upload processed image to R2
+      const coverKey = getCoverKey(newSorter.id);
+      await uploadToR2(coverKey, processedBuffer, "image/jpeg");
+
+      // Generate R2 public URL with cache-busting parameter
+      const finalCoverUrl = `${getR2PublicUrl(coverKey)}?t=${Date.now()}`;
+
+      // Update the sorter with the real cover image URL
+      await db
+        .update(sorters)
+        .set({ coverImageUrl: finalCoverUrl })
+        .where(eq(sorters.id, newSorter.id));
+
+      // Update the returned sorter object
+      newSorter.coverImageUrl = finalCoverUrl;
+    }
 
     if (validatedData.useGroups && validatedData.groups) {
       // Generate unique slugs for all groups

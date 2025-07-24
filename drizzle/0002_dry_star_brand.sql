@@ -1,0 +1,1 @@
+ALTER TABLE "sorters" ADD COLUMN "cover_image_url" text;
