@@ -1,5 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 // Initialize R2 client
 const r2Client = new S3Client({
@@ -91,17 +90,3 @@ export function getAvatarKey(userId: string): string {
   return `avatars/${userId}.jpg`;
 }
 
-/**
- * Generate a presigned URL for accessing an R2 object (fallback for testing)
- * @param key - The file key/path in the bucket
- * @returns Promise<string> - The presigned URL
- */
-export async function getR2PresignedUrl(key: string): Promise<string> {
-  const command = new GetObjectCommand({
-    Bucket: BUCKET_NAME,
-    Key: key,
-  });
-
-  // Generate presigned URL that expires in 1 hour
-  return await getSignedUrl(r2Client, command, { expiresIn: 3600 });
-}

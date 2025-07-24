@@ -5,7 +5,10 @@ import { db } from "@/db";
 import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { uploadToR2, getAvatarKey, getR2PublicUrl } from "@/lib/r2";
-import { processAvatarImage, validateImageBuffer } from "@/lib/image-processing";
+import {
+  processAvatarImage,
+  validateImageBuffer,
+} from "@/lib/image-processing";
 
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -39,10 +42,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get("avatar") as File;
 
     if (!file) {
-      return NextResponse.json(
-        { error: "No file provided" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
     // Validate file type
@@ -81,19 +81,11 @@ export async function POST(request: NextRequest) {
     const avatarKey = getAvatarKey(userId);
     await uploadToR2(avatarKey, processedBuffer, "image/jpeg");
 
-    // Generate public URL with cache-busting parameter
-    const baseUrl = process.env.R2_PUBLIC_URL 
-      ? getR2PublicUrl(avatarKey)
-      : `/api/avatar/${userId}`;
-    
-    // Add timestamp to prevent browser caching issues
-    const avatarUrl = `${baseUrl}?t=${Date.now()}`;
+    // Generate R2 public URL with cache-busting parameter
+    const avatarUrl = `${getR2PublicUrl(avatarKey)}?t=${Date.now()}`;
 
     // Update user's image URL in database
-    await db
-      .update(user)
-      .set({ image: avatarUrl })
-      .where(eq(user.id, userId));
+    await db.update(user).set({ image: avatarUrl }).where(eq(user.id, userId));
 
     return NextResponse.json({
       success: true,

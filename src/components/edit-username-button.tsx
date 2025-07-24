@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -18,20 +18,44 @@ interface EditUsernameButtonProps {
   currentUsername: string;
 }
 
+// Update username mutation
+const updateUsernameMutation = async (username: string) => {
+  const response = await fetch("/api/user", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to update username");
+  }
+
+  return data;
+};
+
 export function EditUsernameButton({
   currentUsername,
 }: EditUsernameButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [newUsername, setNewUsername] = useState(currentUsername);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+
+  const mutation = useMutation({
+    mutationFn: updateUsernameMutation,
+    onSuccess: (data) => {
+      // Redirect to new username URL with full page refresh
+      window.location.href = `/user/${data.username}`;
+    },
+  });
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (open) {
       setNewUsername(currentUsername);
-      setError(null);
+      mutation.reset(); // Clear any previous errors
     }
   };
 
@@ -43,36 +67,7 @@ export function EditUsernameButton({
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/user", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username: newUsername }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to update username");
-      }
-
-      // Immediately redirect to new username URL with full page refresh
-      // This prevents the brief moment where old username is still visible
-      window.location.href = `/user/${data.username}`;
-    } catch (error) {
-      console.error("Error updating username:", error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Failed to update username. Please try again.",
-      );
-      setIsLoading(false); // Only set loading false on error
-    }
+    mutation.mutate(newUsername);
   };
 
   return (
@@ -107,7 +102,7 @@ export function EditUsernameButton({
               onChange={(e) => setNewUsername(e.target.value)}
               placeholder="Enter new username"
               maxLength={20}
-              disabled={isLoading}
+              disabled={mutation.isPending}
               autoFocus
             />
             <div className="text-foreground mt-2 space-y-1 text-xs">
@@ -118,9 +113,11 @@ export function EditUsernameButton({
             </div>
           </div>
 
-          {error && (
+          {mutation.error && (
             <Badge variant="default" className="bg-red-500 text-white">
-              {error}
+              {mutation.error instanceof Error 
+                ? mutation.error.message 
+                : "Failed to update username. Please try again."}
             </Badge>
           )}
 
@@ -128,13 +125,13 @@ export function EditUsernameButton({
             <Button
               type="submit"
               disabled={
-                isLoading ||
+                mutation.isPending ||
                 !newUsername.trim() ||
                 newUsername === currentUsername
               }
               className="flex-1"
             >
-              {isLoading ? (
+              {mutation.isPending ? (
                 "Updating..."
               ) : (
                 <>
@@ -147,7 +144,7 @@ export function EditUsernameButton({
               type="button"
               variant="neutral"
               onClick={() => setIsOpen(false)}
-              disabled={isLoading}
+              disabled={mutation.isPending}
             >
               Cancel
             </Button>

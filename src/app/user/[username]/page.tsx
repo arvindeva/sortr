@@ -102,6 +102,9 @@ export default async function UserProfilePage({
     year: "numeric",
   });
 
+  // Use image URL directly from database
+  const currentImage = userData.image;
+
   return (
     <main className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
       {/* Profile Header */}
@@ -109,7 +112,7 @@ export default async function UserProfilePage({
         username={userData.username || ""}
         userSince={userSince}
         isOwnProfile={isOwnProfile}
-        currentImage={userData.image}
+        currentImage={currentImage}
       />
 
       {/* Sorters Section */}
