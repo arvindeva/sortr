@@ -208,7 +208,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       slug: sorterData[0].slug,
       description: sorterData[0].description || "",
       category: sorterData[0].category || "",
-      coverImageUrl: sorterData[0].coverImageUrl,
+      coverImageUrl: sorterData[0].coverImageUrl ?? undefined,
       useGroups: sorterData[0].useGroups,
       creatorUsername: sorterData[0].creatorUsername || "Unknown User",
       createdAt: sorterData[0].createdAt,
