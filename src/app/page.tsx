@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
+import { SorterCard } from "@/components/ui/sorter-card";
 import {
   Panel,
   PanelHeader,
@@ -35,16 +36,21 @@ async function getPopularSorters() {
 }
 
 export default async function Home() {
-  const popularSorters = await getPopularSorters();
+  const popularSortersRaw = await getPopularSorters();
+  const popularSorters = popularSortersRaw.map((sorter) => ({
+    ...sorter,
+    creatorUsername: sorter.creatorUsername ?? "Unknown",
+    category: sorter.category ?? undefined,
+  }));
 
   return (
     <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-2 py-10 md:px-4">
       <section className="mx-auto mb-10 flex max-w-xl justify-center">
         <Box variant="primary" size="sm" className="text-center md:p-8">
-          <h1 className="text-4xl font-bold tracking-wide md:mb-4 md:text-6xl">
+          <h1 className="text-4xl font-extrabold tracking-wide md:mb-4 md:text-7xl">
             sortr
           </h1>
-          <p className="text-sm font-medium md:text-lg">
+          <p className="font-medium md:text-lg">
             Create and share ranked lists for anything. <br></br>Inspired by{" "}
             <Link
               href={`https://execfera.github.io/charasort/`}
@@ -70,48 +76,9 @@ export default async function Home() {
                 </Box>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
                 {popularSorters.map((sorter) => (
-                  <Card key={sorter.id} className="md:min-h-[160px]">
-                    <CardHeader className="flex-1">
-                      <div className="flex-1">
-                        <div className="md:h-6rem flex flex-col">
-                          <CardTitle className="line-clamp-2 text-lg">
-                            <Link
-                              href={`/sorter/${sorter.slug}`}
-                              className="sorter-title-link hover:underline"
-                            >
-                              {sorter.title}
-                            </Link>
-                          </CardTitle>
-                          <p className="text-foreground text-sm font-medium">
-                            by{" "}
-                            <b>
-                              <Link
-                                href={`/user/${sorter.creatorUsername}`}
-                                className="sorter-title-link hover:underline"
-                              >
-                                {sorter.creatorUsername || "Unknown User"}
-                              </Link>
-                            </b>
-                          </p>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-foreground flex items-center justify-between text-sm font-medium">
-                        <div className="flex items-center gap-4">
-                          <span>{sorter.completionCount} completions</span>
-                          <span>{sorter.viewCount} views</span>
-                        </div>
-                        {sorter.category && (
-                          <Badge variant="default" className="hidden md:block">
-                            {sorter.category}
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <SorterCard key={sorter.id} sorter={sorter} />
                 ))}
               </div>
             )}
