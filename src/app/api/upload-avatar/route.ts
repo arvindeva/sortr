@@ -8,7 +8,7 @@ import { uploadToR2, getAvatarKey, getR2PublicUrl } from "@/lib/r2";
 import { processAvatarImage, validateImageBuffer } from "@/lib/image-processing";
 
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
-const ALLOWED_TYPES = ["image/jpeg", "image/png"];
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: "Only JPG and PNG files are allowed" },
+        { error: "Only JPG, PNG, and WebP files are allowed" },
         { status: 400 },
       );
     }
