@@ -226,6 +226,7 @@ The avatar system provides complete user profile image management with enterpris
 ### API Endpoints
 
 #### POST /api/upload-avatar
+
 - Accepts multipart form data with 'avatar' file field
 - Validates file type, size, and image format
 - Processes image with Sharp (center crop, resize, format conversion)
@@ -233,6 +234,7 @@ The avatar system provides complete user profile image management with enterpris
 - Returns public avatar URL with cache-busting timestamp
 
 #### POST /api/remove-avatar
+
 - Authenticates user session
 - Deletes avatar file from R2 storage
 - Clears avatar URL from user database record
@@ -258,8 +260,13 @@ The avatar system provides complete user profile image management with enterpris
 
 ```css
 @keyframes shimmer {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 .shimmer {
   background-color: var(--secondary-background);

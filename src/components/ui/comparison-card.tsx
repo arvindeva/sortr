@@ -17,7 +17,7 @@ function ComparisonCard({
   return (
     <div
       className={cn(
-        "bg-main rounded-base border-border shadow-shadow flex cursor-pointer flex-col overflow-hidden border-2 text-black transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md w-full max-w-[300px] md:w-[300px] md:max-w-none",
+        "bg-main rounded-base border-border shadow-shadow flex w-full max-w-[300px] cursor-pointer flex-col overflow-hidden border-2 text-black transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md md:w-[300px] md:max-w-none",
         className,
       )}
       onClick={onClick}

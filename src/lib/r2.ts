@@ -1,4 +1,8 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 
 // Initialize R2 client
 const r2Client = new S3Client({
@@ -58,25 +62,27 @@ export function getR2PublicUrl(key: string): string {
   if (process.env.R2_PUBLIC_URL) {
     return `${process.env.R2_PUBLIC_URL}/${key}`;
   }
-  
+
   // Default R2.dev subdomain format
   // For R2, the public URL is typically: https://pub-<hash>.r2.dev/<key>
   // But this requires setting up a public bucket or custom domain
-  
+
   // If no public URL configured, try the R2.dev format
   const bucketName = process.env.R2_BUCKET!;
-  
+
   // Extract account ID from R2_ENDPOINT if available
   const endpoint = process.env.R2_ENDPOINT;
   if (endpoint) {
     // R2_ENDPOINT format: https://<account_id>.r2.cloudflarestorage.com
-    const accountId = endpoint.match(/https:\/\/([^.]+)\.r2\.cloudflarestorage\.com/)?.[1];
+    const accountId = endpoint.match(
+      /https:\/\/([^.]+)\.r2\.cloudflarestorage\.com/,
+    )?.[1];
     if (accountId) {
       // This is a fallback - you'll need to configure R2 public access
       return `https://pub-${accountId}.r2.dev/${key}`;
     }
   }
-  
+
   // Final fallback (will likely not work without proper R2 public configuration)
   return `https://${bucketName}.r2.dev/${key}`;
 }
@@ -89,4 +95,3 @@ export function getR2PublicUrl(key: string): string {
 export function getAvatarKey(userId: string): string {
   return `avatars/${userId}.jpg`;
 }
-

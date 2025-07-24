@@ -71,7 +71,9 @@ export function UserProfileHeader({
       window.location.reload(); // Simple refresh
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Failed to upload avatar");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to upload avatar",
+      );
     },
   });
 
@@ -83,7 +85,9 @@ export function UserProfileHeader({
       window.location.reload(); // Simple refresh
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Failed to remove avatar");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to remove avatar",
+      );
     },
   });
 
@@ -96,7 +100,11 @@ export function UserProfileHeader({
     if (!file) return;
 
     // Validate file type
-    if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)) {
+    if (
+      !["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(
+        file.type,
+      )
+    ) {
       toast.error("Only JPG, PNG, and WebP files are allowed.");
       return;
     }
@@ -126,7 +134,7 @@ export function UserProfileHeader({
       >
         {/* Avatar */}
         <div className="relative">
-          <div className="border-border rounded-base flex h-16 w-16 items-center justify-center border-2 md:h-24 md:w-24 overflow-hidden">
+          <div className="border-border rounded-base flex h-16 w-16 items-center justify-center overflow-hidden border-2 md:h-24 md:w-24">
             {currentImage ? (
               <img
                 src={currentImage}
@@ -153,7 +161,7 @@ export function UserProfileHeader({
                 className="hidden"
               />
 
-              <div className="absolute -bottom-1 -right-1">
+              <div className="absolute -right-1 -bottom-1">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button

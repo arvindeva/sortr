@@ -10,12 +10,24 @@ export function LoginButton({ className }: LoginButtonProps) {
   const { data: session, status } = useSession();
 
   if (status === "loading") {
-    return <Button disabled className={className}>Loading...</Button>;
+    return (
+      <Button disabled className={className}>
+        Loading...
+      </Button>
+    );
   }
 
   if (session) {
-    return <Button onClick={() => signOut()} className={className}>Logout</Button>;
+    return (
+      <Button onClick={() => signOut()} className={className}>
+        Logout
+      </Button>
+    );
   }
 
-  return <Button onClick={() => signIn()} className={className}>Login with Email</Button>;
+  return (
+    <Button onClick={() => signIn()} className={className}>
+      Login with Email
+    </Button>
+  );
 }

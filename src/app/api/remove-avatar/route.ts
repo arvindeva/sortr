@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // Generate avatar key and delete from R2
     const avatarKey = getAvatarKey(userId);
-    
+
     try {
       await deleteFromR2(avatarKey);
     } catch (error) {
@@ -50,10 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user's image URL to null in database
-    await db
-      .update(user)
-      .set({ image: null })
-      .where(eq(user.id, userId));
+    await db.update(user).set({ image: null }).where(eq(user.id, userId));
 
     return NextResponse.json({
       success: true,

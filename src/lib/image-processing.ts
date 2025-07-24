@@ -10,20 +10,20 @@ export async function processAvatarImage(buffer: Buffer): Promise<Buffer> {
     // Get image metadata to determine dimensions
     const image = sharp(buffer);
     const metadata = await image.metadata();
-    
+
     if (!metadata.width || !metadata.height) {
       throw new Error("Could not determine image dimensions");
     }
 
     const { width, height } = metadata;
-    
+
     // Calculate square crop dimensions
     const side = Math.min(width, height);
-    
+
     // Calculate crop position (center crop)
     let left = 0;
     let top = 0;
-    
+
     if (width > height) {
       // Crop horizontal sides
       left = Math.floor((width - side) / 2);
@@ -44,12 +44,12 @@ export async function processAvatarImage(buffer: Buffer): Promise<Buffer> {
         height: side,
       })
       .resize(200, 200, {
-        fit: 'cover', // Ensure exact 200x200 dimensions
-        position: 'center'
+        fit: "cover", // Ensure exact 200x200 dimensions
+        position: "center",
       })
       .jpeg({
         quality: 90, // High quality JPEG
-        progressive: true
+        progressive: true,
       })
       .toBuffer();
 
@@ -69,24 +69,28 @@ export async function validateImageBuffer(buffer: Buffer): Promise<boolean> {
   try {
     const image = sharp(buffer);
     const metadata = await image.metadata();
-    
+
     // Check if it's a valid image format
-    const validFormats = ['jpeg', 'jpg', 'png', 'webp'];
+    const validFormats = ["jpeg", "jpg", "png", "webp"];
     if (!metadata.format || !validFormats.includes(metadata.format)) {
       return false;
     }
-    
+
     // Check minimum dimensions (should be at least 50x50)
-    if (!metadata.width || !metadata.height || 
-        metadata.width < 50 || metadata.height < 50) {
+    if (
+      !metadata.width ||
+      !metadata.height ||
+      metadata.width < 50 ||
+      metadata.height < 50
+    ) {
       return false;
     }
-    
+
     // Check maximum dimensions (reasonable limit: 5000x5000)
     if (metadata.width > 5000 || metadata.height > 5000) {
       return false;
     }
-    
+
     return true;
   } catch (error) {
     return false;
