@@ -17,7 +17,7 @@ function ComparisonCard({
   return (
     <div
       className={cn(
-        "bg-main rounded-base border-border shadow-shadow flex cursor-pointer flex-col overflow-hidden border-2 text-black transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md",
+        "bg-main rounded-base border-border shadow-shadow flex cursor-pointer flex-col overflow-hidden border-2 text-black transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md md:w-[300px]",
         className,
       )}
       onClick={onClick}
@@ -25,7 +25,7 @@ function ComparisonCard({
     >
       {/* Image area - flush with top */}
       {imageUrl ? (
-        <div className="aspect-square w-full overflow-hidden md:h-64">
+        <div className="aspect-square w-full overflow-hidden md:h-[300px]">
           <img
             src={imageUrl}
             alt={title}
@@ -33,8 +33,8 @@ function ComparisonCard({
           />
         </div>
       ) : (
-        <div className="bg-secondary-background flex aspect-square w-full items-center justify-center md:h-64">
-          <span className="text-lg font-bold text-black md:text-4xl">
+        <div className="bg-secondary-background flex aspect-square w-full items-center justify-center md:h-[300px]">
+          <span className="text-primary text-lg font-bold md:text-4xl">
             {title.charAt(0).toUpperCase()}
           </span>
         </div>
