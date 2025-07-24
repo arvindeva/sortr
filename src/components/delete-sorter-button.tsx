@@ -70,12 +70,12 @@ export function DeleteSorterButton({
       <DialogTrigger asChild>
         <Button
           variant="neutral"
-          size="lg"
+          size="default"
           className="group"
           title={`Delete "${sorterTitle}"`}
         >
           <Trash2
-            className="mr-2 transition-transform duration-200 group-hover:scale-110"
+            className="transition-transform duration-200 group-hover:scale-110"
             size={20}
           />
           Delete

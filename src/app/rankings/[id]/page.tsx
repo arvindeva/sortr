@@ -270,17 +270,8 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   {result.username}
                 </Link>
               </div>
-              <div className="flex items-center gap-1">
-                <span>
-                  {new Date(result.createdAt).toLocaleDateString("en-US", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
             </div>
-            
+
             {/* Desktop Action Buttons */}
             <div className="mt-4 hidden items-center gap-4 md:flex">
               <Button asChild variant="default">
@@ -310,7 +301,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
       </section>
 
       {/* Mobile Action Buttons */}
-      <div className="mb-6 flex flex-wrap gap-4 md:hidden">
+      <div className="mb-8 flex flex-wrap gap-4 md:hidden">
         <Button asChild variant="default">
           <Link
             href={

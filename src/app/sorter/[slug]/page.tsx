@@ -313,20 +313,30 @@ export default async function SorterPage({ params }: SorterPageProps) {
               {/* Desktop Action Buttons */}
               <div className="mt-4 hidden items-center gap-4 md:flex">
                 {sorter.useGroups ? (
-                  <Button asChild size="lg" variant="default" className="group">
+                  <Button
+                    asChild
+                    size="default"
+                    variant="default"
+                    className="group"
+                  >
                     <Link href={`/sorter/${sorter.slug}/filters`}>
                       <Play
-                        className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
+                        className="transition-transform duration-200 group-hover:translate-x-1"
                         size={20}
                       />
                       Sort Now
                     </Link>
                   </Button>
                 ) : (
-                  <Button asChild size="lg" variant="default" className="group">
+                  <Button
+                    asChild
+                    size="default"
+                    variant="default"
+                    className="group"
+                  >
                     <Link href={`/sorter/${sorter.slug}/sort`}>
                       <Play
-                        className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
+                        className="transition-transform duration-200 group-hover:translate-x-1"
                         size={20}
                       />
                       Sort now
@@ -349,20 +359,20 @@ export default async function SorterPage({ params }: SorterPageProps) {
         {/* Mobile Action Buttons */}
         <div className="mb-8 flex items-center gap-4 md:hidden">
           {sorter.useGroups ? (
-            <Button asChild size="lg" variant="default" className="group">
+            <Button asChild size="default" variant="default" className="group">
               <Link href={`/sorter/${sorter.slug}/filters`}>
                 <Play
-                  className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
+                  className="transition-transform duration-200 group-hover:translate-x-1"
                   size={20}
                 />
                 Sort Now
               </Link>
             </Button>
           ) : (
-            <Button asChild size="lg" variant="default" className="group">
+            <Button asChild size="default" variant="default" className="group">
               <Link href={`/sorter/${sorter.slug}/sort`}>
                 <Play
-                  className="mr-2 transition-transform duration-200 group-hover:translate-x-1"
+                  className="transition-transform duration-200 group-hover:translate-x-1"
                   size={20}
                 />
                 Sort now
