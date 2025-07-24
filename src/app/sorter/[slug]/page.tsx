@@ -505,7 +505,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                         </span>
                                       </div>
                                     )}
-                                    <span className="text-sm font-bold min-w-[1.5rem] text-center">
+                                    <span className="min-w-[1.5rem] text-center text-sm font-bold">
                                       {index + 1}.
                                     </span>
                                     <span className="font-medium break-words">

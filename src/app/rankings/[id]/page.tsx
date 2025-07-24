@@ -251,13 +251,13 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
 
         {/* Share and Sort Buttons */}
         <div className="mb-6 flex flex-wrap gap-4">
-          <ShareButton 
+          <ShareButton
             rankingData={{
               sorterTitle: sorter.title,
               username: result.username,
               rankings: result.rankings,
               createdAt: result.createdAt,
-              selectedGroups: selectedGroups?.map(group => group.name),
+              selectedGroups: selectedGroups?.map((group) => group.name),
             }}
           />
           <Button asChild variant="default">
@@ -316,50 +316,23 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
               <PanelTitle>Sorter Info</PanelTitle>
             </PanelHeader>
             <PanelContent variant="primary" className="p-2 md:p-6">
-                <div className="space-y-4">
-                  <div>
-                    <Link href={`/sorter/${sorter.slug}`} className="sorter-title-link hover:underline">
-                      <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
-                    </Link>
-                    <p className="text-sm">by <Link href={`/user/${sorter.creatorUsername}`} className="hover:underline font-medium">{sorter.creatorUsername}</Link></p>
-                  </div>
-
-                  <div>
-                    <span className="text-sm">
-                      Created at{" "}
-                      {new Date(sorter.createdAt).toLocaleDateString("en-US", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                  </div>
-
-                  {/* Category */}
-                  {sorter.category && (
-                    <div>
-                      <Badge variant="default">{sorter.category}</Badge>
-                    </div>
-                  )}
-                </div>
-            </PanelContent>
-          </Panel>
-        </div>
-      </div>
-
-      {/* Mobile: Info Card (shows at bottom on mobile) */}
-      <div className="mt-8 md:hidden">
-        <Panel variant="primary">
-          <PanelHeader variant="primary">
-            <PanelTitle>Sorter Info</PanelTitle>
-          </PanelHeader>
-          <PanelContent variant="primary" className="p-3 md:p-6">
               <div className="space-y-4">
                 <div>
-                  <Link href={`/sorter/${sorter.slug}`} className="sorter-title-link hover:underline">
+                  <Link
+                    href={`/sorter/${sorter.slug}`}
+                    className="sorter-title-link hover:underline"
+                  >
                     <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
                   </Link>
-                  <p className="text-sm">by <Link href={`/user/${sorter.creatorUsername}`} className="hover:underline font-medium">{sorter.creatorUsername}</Link></p>
+                  <p className="text-sm">
+                    by{" "}
+                    <Link
+                      href={`/user/${sorter.creatorUsername}`}
+                      className="font-medium hover:underline"
+                    >
+                      {sorter.creatorUsername}
+                    </Link>
+                  </p>
                 </div>
 
                 <div>
@@ -380,6 +353,55 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   </div>
                 )}
               </div>
+            </PanelContent>
+          </Panel>
+        </div>
+      </div>
+
+      {/* Mobile: Info Card (shows at bottom on mobile) */}
+      <div className="mt-8 md:hidden">
+        <Panel variant="primary">
+          <PanelHeader variant="primary">
+            <PanelTitle>Sorter Info</PanelTitle>
+          </PanelHeader>
+          <PanelContent variant="primary" className="p-3 md:p-6">
+            <div className="space-y-4">
+              <div>
+                <Link
+                  href={`/sorter/${sorter.slug}`}
+                  className="sorter-title-link hover:underline"
+                >
+                  <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
+                </Link>
+                <p className="text-sm">
+                  by{" "}
+                  <Link
+                    href={`/user/${sorter.creatorUsername}`}
+                    className="font-medium hover:underline"
+                  >
+                    {sorter.creatorUsername}
+                  </Link>
+                </p>
+              </div>
+
+              <div>
+                <span className="text-sm">
+                  Created at{" "}
+                  {new Date(sorter.createdAt).toLocaleDateString("en-US", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+
+              {/* Category */}
+              {sorter.category && (
+                <div>
+                  <Badge variant="default">{sorter.category}</Badge>
+                </div>
+              )}
+            </div>
           </PanelContent>
         </Panel>
       </div>
@@ -411,17 +433,18 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
               Development Preview: Downloadable Image Layout
             </h2>
             <p className="text-sm text-gray-500">
-              This preview shows what the downloaded image will look like. This section is only visible in development.
+              This preview shows what the downloaded image will look like. This
+              section is only visible in development.
             </p>
           </div>
-          
+
           <div className="overflow-auto bg-gray-100 p-4">
             <RankingImageLayout
               sorterTitle={sorter.title}
               username={result.username}
               rankings={result.rankings}
               createdAt={result.createdAt}
-              selectedGroups={selectedGroups?.map(group => group.name)}
+              selectedGroups={selectedGroups?.map((group) => group.name)}
             />
           </div>
         </div>

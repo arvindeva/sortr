@@ -64,7 +64,7 @@ export function Navbar() {
             placeholder="Search sorters..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-64 pl-9 pr-3"
+            className="w-64 pr-3 pl-9"
           />
         </form>
 
@@ -271,14 +271,14 @@ export function Navbar() {
                 placeholder="Search sorters..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3"
+                className="w-full pr-3 pl-9"
                 autoFocus={mobileSearchOpen}
               />
             </div>
-            <Button 
-              type="submit" 
-              variant="default" 
-              size="sm" 
+            <Button
+              type="submit"
+              variant="default"
+              size="sm"
               className="w-full"
               disabled={!searchQuery.trim()}
             >

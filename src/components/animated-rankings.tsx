@@ -29,7 +29,7 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
         >
           {/* Image */}
           {item.imageUrl ? (
-            <div className="rounded-base border-border h-10 w-10 md:h-16 md:w-16 flex-shrink-0 overflow-hidden border-2">
+            <div className="rounded-base border-border h-10 w-10 flex-shrink-0 overflow-hidden border-2 md:h-16 md:w-16">
               <img
                 src={item.imageUrl}
                 alt={item.title}
@@ -37,7 +37,7 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
               />
             </div>
           ) : (
-            <div className="rounded-base border-border bg-secondary-background flex h-10 w-10 md:h-16 md:w-16 flex-shrink-0 items-center justify-center border-2">
+            <div className="rounded-base border-border bg-secondary-background flex h-10 w-10 flex-shrink-0 items-center justify-center border-2 md:h-16 md:w-16">
               <span className="text-main text-sm font-bold">
                 {item.title.charAt(0).toUpperCase()}
               </span>
@@ -46,7 +46,7 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
 
           {/* Title with Rank */}
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm md:text-base font-medium break-words">
+            <h3 className="text-sm font-medium break-words md:text-base">
               {index + 1}.&nbsp;&nbsp;{item.title}
             </h3>
           </div>

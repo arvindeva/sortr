@@ -25,7 +25,11 @@ export function ProgressProvider() {
 
       if (link && link.href && link.href !== window.location.href) {
         // Don't show progress for download links
-        if (link.download || link.href.startsWith('blob:') || link.href.startsWith('data:')) {
+        if (
+          link.download ||
+          link.href.startsWith("blob:") ||
+          link.href.startsWith("data:")
+        ) {
           return;
         }
 

@@ -190,7 +190,7 @@ export default async function UserProfilePage({
                     href={`/rankings/${result.id}`}
                     className="card-link"
                   >
-                    <Card className="card cursor-pointer md:min-h-[180px] gap-2">
+                    <Card className="card cursor-pointer gap-2 md:min-h-[180px]">
                       <CardHeader className="flex flex-col justify-start">
                         <CardTitle className="line-clamp-2 text-lg leading-relaxed">
                           {result.sorterTitle || "Unknown Sorter"}
@@ -233,7 +233,7 @@ export default async function UserProfilePage({
                                       </span>
                                     </div>
                                   )}
-                                  <span className="text-sm font-bold min-w-[1.5rem] text-center">
+                                  <span className="min-w-[1.5rem] text-center text-sm font-bold">
                                     {index + 1}.
                                   </span>
                                   <span className="font-medium break-words">
@@ -244,7 +244,7 @@ export default async function UserProfilePage({
                             ));
                           })()}
                         </div>
-                        
+
                         {/* Date */}
                         <div className="text-foreground flex items-center justify-between text-sm font-medium">
                           <span>
@@ -254,7 +254,7 @@ export default async function UserProfilePage({
                                 day: "numeric",
                                 month: "long",
                                 year: "numeric",
-                              }
+                              },
                             )}
                           </span>
                         </div>

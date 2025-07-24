@@ -105,7 +105,9 @@ export default function SignInPage() {
   return (
     <Suspense
       fallback={
-        <div className="mt-20 flex items-center justify-center px-4">Loading...</div>
+        <div className="mt-20 flex items-center justify-center px-4">
+          Loading...
+        </div>
       }
     >
       <SignInContent />

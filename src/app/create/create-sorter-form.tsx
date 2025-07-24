@@ -305,7 +305,9 @@ export default function CreateSorterForm() {
                             <SelectValue placeholder="Select a category" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Movies & TV">Movies & TV</SelectItem>
+                            <SelectItem value="Movies & TV">
+                              Movies & TV
+                            </SelectItem>
                             <SelectItem value="Music">Music</SelectItem>
                             <SelectItem value="Video Games">
                               Video Games
@@ -315,7 +317,9 @@ export default function CreateSorterForm() {
                             <SelectItem value="Sports">Sports</SelectItem>
                             <SelectItem value="Fashion">Fashion</SelectItem>
                             <SelectItem value="Academics">Academics</SelectItem>
-                            <SelectItem value="Anime & Manga">Anime & Manga</SelectItem>
+                            <SelectItem value="Anime & Manga">
+                              Anime & Manga
+                            </SelectItem>
                             <SelectItem value="Tech">Tech</SelectItem>
                             <SelectItem value="Internet">Internet</SelectItem>
                             <SelectItem value="Travel">Travel</SelectItem>

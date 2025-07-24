@@ -58,7 +58,7 @@ export function ShareButton({ size = "sm", rankingData }: ShareButtonProps) {
           <Link2 className="mr-2" size={16} />
           Copy Link
         </DropdownMenuItem>
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={handleDownloadImage}
           disabled={isGenerating || !rankingData}
         >
