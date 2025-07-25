@@ -94,6 +94,7 @@ export default async function UserProfilePage({
     ...sorter,
     creatorUsername: userData.username || "Unknown",
     coverImageUrl: sorter.coverImageUrl ?? undefined,
+    category: sorter.category ?? undefined,
   }));
   const userResults = await getUserResults(userData.id);
 
