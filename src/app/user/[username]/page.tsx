@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/panel";
 import { authOptions } from "@/lib/auth";
 import { UserProfileHeader } from "@/components/user-profile-header";
+import { SorterCard } from "@/components/ui/sorter-card";
+import { SorterGrid } from "@/components/ui/sorter-grid";
 import { Eye, Trophy } from "lucide-react";
 
 // Force dynamic rendering for always-fresh user statistics
@@ -48,6 +50,7 @@ async function getUserSorters(userId: string) {
       createdAt: sorters.createdAt,
       completionCount: sorters.completionCount,
       viewCount: sorters.viewCount,
+      coverImageUrl: sorters.coverImageUrl,
     })
     .from(sorters)
     .where(eq(sorters.userId, userId))
@@ -86,7 +89,12 @@ export default async function UserProfilePage({
     notFound();
   }
 
-  const userSorters = await getUserSorters(userData.id);
+  const userSortersRaw = await getUserSorters(userData.id);
+  const userSorters = userSortersRaw.map((sorter) => ({
+    ...sorter,
+    creatorUsername: userData.username || "Unknown",
+    coverImageUrl: sorter.coverImageUrl ?? undefined,
+  }));
   const userResults = await getUserResults(userData.id);
 
   // Get current session to check if this is the current user's profile
@@ -134,38 +142,11 @@ export default async function UserProfilePage({
                 </Box>
               </div>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+              <SorterGrid>
                 {userSorters.map((sorter) => (
-                  <Link
-                    key={sorter.id}
-                    href={`/sorter/${sorter.slug}`}
-                    className="card-link"
-                  >
-                    <Card className="card cursor-pointer">
-                      <CardHeader className="flex flex-col justify-start">
-                        <CardTitle className="line-clamp-2 leading-relaxed">
-                          {sorter.title}
-                        </CardTitle>
-                        {sorter.category && (
-                          <Badge variant="default">{sorter.category}</Badge>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-foreground flex items-center gap-4 font-medium">
-                          <div className="flex items-center gap-1">
-                            <Eye size={16} />
-                            <span>{sorter.viewCount}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Trophy size={16} />
-                            <span>{sorter.completionCount}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                  <SorterCard key={sorter.id} sorter={sorter} />
                 ))}
-              </div>
+              </SorterGrid>
             )}
           </PanelContent>
         </Panel>

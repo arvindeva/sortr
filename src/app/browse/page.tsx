@@ -26,6 +26,7 @@ import { Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
 import { PageHeader } from "@/components/ui/page-header";
 import { SorterCard } from "@/components/ui/sorter-card";
+import { SorterGrid } from "@/components/ui/sorter-grid";
 
 interface BrowseResult {
   sorters: Array<{
@@ -37,6 +38,7 @@ interface BrowseResult {
     completionCount: number;
     viewCount: number;
     createdAt: string;
+    coverImageUrl?: string;
     creatorUsername: string;
   }>;
   totalCount: number;
@@ -284,11 +286,11 @@ function BrowseContent() {
             ) : (
               <>
                 {/* Results Grid */}
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
+                <SorterGrid>
                   {data.sorters.map((sorter) => (
                     <SorterCard key={sorter.id} sorter={sorter} />
                   ))}
-                </div>
+                </SorterGrid>
 
                 {/* Pagination */}
                 {data.totalPages > 1 && (

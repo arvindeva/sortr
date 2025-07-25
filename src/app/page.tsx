@@ -2,6 +2,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
 import { SorterCard } from "@/components/ui/sorter-card";
+import { SorterGrid } from "@/components/ui/sorter-grid";
 import {
   Panel,
   PanelHeader,
@@ -25,6 +26,7 @@ async function getPopularSorters() {
       category: sorters.category,
       completionCount: sorters.completionCount,
       viewCount: sorters.viewCount,
+      coverImageUrl: sorters.coverImageUrl,
       creatorUsername: user.username,
     })
     .from(sorters)
@@ -41,6 +43,7 @@ export default async function Home() {
     ...sorter,
     creatorUsername: sorter.creatorUsername ?? "Unknown",
     category: sorter.category ?? undefined,
+    coverImageUrl: sorter.coverImageUrl ?? undefined,
   }));
 
   return (
@@ -76,11 +79,11 @@ export default async function Home() {
                 </Box>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+              <SorterGrid>
                 {popularSorters.map((sorter) => (
                   <SorterCard key={sorter.id} sorter={sorter} />
                 ))}
-              </div>
+              </SorterGrid>
             )}
           </PanelContent>
         </Panel>

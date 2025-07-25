@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
         completionCount: sorters.completionCount,
         viewCount: sorters.viewCount,
         createdAt: sorters.createdAt,
+        coverImageUrl: sorters.coverImageUrl,
         creatorUsername: user.username,
       })
       .from(sorters)
