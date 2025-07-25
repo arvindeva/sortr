@@ -105,7 +105,7 @@ export function Navbar() {
       </Link>
 
       {/* Desktop Navigation */}
-      <div className="hidden items-center gap-6 md:flex">
+      <div className="hidden items-center gap-6 lg:flex">
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="relative">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
@@ -183,7 +183,7 @@ export function Navbar() {
       </div>
 
       {/* Mobile Menu Button */}
-      <div className="flex items-center gap-4 md:hidden">
+      <div className="flex items-center gap-4 lg:hidden">
         {/* Search button - mobile navbar */}
         <Button
           variant="default"
@@ -244,7 +244,7 @@ export function Navbar() {
             </Button>
           </DrawerTrigger>
 
-          <DrawerContent className="md:hidden">
+          <DrawerContent className="lg:hidden">
             <DrawerTitle className="sr-only">Navigation Menu</DrawerTitle>
             <DrawerDescription className="sr-only">
               Choose a navigation option from the list below
@@ -323,14 +323,14 @@ export function Navbar() {
       {/* Mobile Search Overlay */}
       {mobileSearchOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/50 md:hidden"
+          className="fixed inset-0 z-20 bg-black/50 lg:hidden"
           onClick={() => setMobileSearchOpen(false)}
         />
       )}
 
       {/* Mobile Search Input */}
       <div
-        className={`border-border bg-secondary-background absolute top-full right-0 left-0 z-30 border-b-2 transition-all duration-300 ease-out md:hidden ${mobileSearchOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
+        className={`border-border bg-secondary-background absolute top-full right-0 left-0 z-30 border-b-2 transition-all duration-300 ease-out lg:hidden ${mobileSearchOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
       >
         <div className="p-4">
           <form onSubmit={handleSearch} className="space-y-3">
