@@ -106,3 +106,22 @@ export function getAvatarKey(userId: string): string {
 export function getCoverKey(sorterId: string): string {
   return `covers/${sorterId}.jpg`;
 }
+
+/**
+ * Generate sorter item image key
+ * @param sorterId - The sorter ID
+ * @param itemSlug - The item slug (includes group prefix if applicable)
+ * @returns The sorter item image file key
+ */
+export function getSorterItemKey(sorterId: string, itemSlug: string): string {
+  return `sorters/${sorterId}/${itemSlug}.jpg`;
+}
+
+/**
+ * Extract sorter item key components for cleanup
+ * @param sorterId - The sorter ID
+ * @returns The prefix for all sorter item keys
+ */
+export function getSorterItemKeyPrefix(sorterId: string): string {
+  return `sorters/${sorterId}/`;
+}

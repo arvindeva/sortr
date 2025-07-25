@@ -5,15 +5,19 @@ import { sorters, sorterItems, sorterGroups, user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createSorterSchema } from "@/lib/validations";
-import { generateUniqueSlug, generateSorterSlug } from "@/lib/utils";
-import { uploadToR2, getCoverKey, getR2PublicUrl } from "@/lib/r2";
+import { generateUniqueSlug, generateSorterSlug, generateSorterItemSlug } from "@/lib/utils";
+import { uploadToR2, getCoverKey, getSorterItemKey, getR2PublicUrl } from "@/lib/r2";
 import {
   processCoverImage,
   validateCoverImageBuffer,
+  processSorterItemImage,
+  validateSorterItemImageBuffer,
 } from "@/lib/image-processing";
 
 const MAX_COVER_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_ITEM_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_COVER_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_ITEM_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,16 +38,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Check if request contains multipart form data (with cover image)
+    // Check if request contains multipart form data (with cover image and/or item images)
     const contentType = request.headers.get("content-type") || "";
     let validatedData;
     let coverImageFile: File | null = null;
+    let itemImageFiles: File[] = [];
 
     if (contentType.includes("multipart/form-data")) {
-      // Handle multipart form data (with potential cover image)
+      // Handle multipart form data (with potential cover image and item images)
       const formData = await request.formData();
       const dataJson = formData.get("data") as string;
       coverImageFile = formData.get("coverImage") as File | null;
+      
+      // Collect all item images - they come with keys like "itemImage_0", "itemImage_1", etc.
+      const itemImageEntries = Array.from(formData.entries()).filter(([key]) => 
+        key.startsWith("itemImage_")
+      );
+      itemImageFiles = itemImageEntries.map(([, file]) => file as File);
 
       if (!dataJson) {
         return NextResponse.json(
@@ -104,6 +115,53 @@ export async function POST(request: NextRequest) {
       coverImageUrl = "PLACEHOLDER"; // Will be updated after sorter creation
     }
 
+    // Validate and process item images if provided
+    const processedItemImages: { file: File; buffer: Buffer; name: string }[] = [];
+    for (const itemImageFile of itemImageFiles) {
+      // Validate file type
+      if (!ALLOWED_ITEM_IMAGE_TYPES.includes(itemImageFile.type)) {
+        return NextResponse.json(
+          {
+            error: `Only JPG, PNG, and WebP files are allowed for item images. Invalid file: ${itemImageFile.name}`,
+          },
+          { status: 400 },
+        );
+      }
+
+      // Validate file size
+      if (itemImageFile.size > MAX_ITEM_IMAGE_SIZE) {
+        return NextResponse.json(
+          { error: `Item image size must be less than 5MB. Invalid file: ${itemImageFile.name}` },
+          { status: 400 },
+        );
+      }
+
+      // Convert file to buffer
+      const bytes = await itemImageFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      // Validate image buffer
+      const isValidImage = await validateSorterItemImageBuffer(buffer);
+      if (!isValidImage) {
+        return NextResponse.json(
+          { error: `Invalid item image format or dimensions: ${itemImageFile.name}` },
+          { status: 400 },
+        );
+      }
+
+      // Process image: crop to square and resize to 300x300
+      const processedBuffer = await processSorterItemImage(buffer);
+      
+      // Extract item name from filename (remove extension)
+      const itemName = itemImageFile.name.replace(/\.[^/.]+$/, "");
+      
+      processedItemImages.push({
+        file: itemImageFile,
+        buffer: processedBuffer,
+        name: itemName,
+      });
+    }
+
     // Create sorter
     const [newSorter] = await db
       .insert(sorters)
@@ -142,46 +200,144 @@ export async function POST(request: NextRequest) {
       newSorter.coverImageUrl = finalCoverUrl;
     }
 
+    // Process items - the frontend now handles merging images with form items
+    // so we just need to process the form items and match them with uploaded images
+    const allProcessedItems: Array<{
+      title: string;
+      imageUrl?: string;
+      slug?: string;
+      groupName?: string;
+      hasImage: boolean;
+    }> = [];
+
+    // Add items from form data (which may already include image-based items)
     if (validatedData.useGroups && validatedData.groups) {
-      // Generate unique slugs for all groups
-      const groupNames = validatedData.groups.map((group) => group.name);
-      const existingSlugs: string[] = [];
-
-      // Create groups and their items
       for (const group of validatedData.groups) {
-        const slug = generateUniqueSlug(group.name, existingSlugs);
-        existingSlugs.push(slug);
-
-        const [newGroup] = await db
-          .insert(sorterGroups)
-          .values({
-            sorterId: newSorter.id,
-            name: group.name,
-            slug: slug,
-          })
-          .returning();
-
-        // Create items for this group
-        await db.insert(sorterItems).values(
-          group.items.map((item) => ({
-            sorterId: newSorter.id,
-            groupId: newGroup.id,
+        for (const item of group.items) {
+          allProcessedItems.push({
             title: item.title,
-            imageUrl: item.imageUrl || null,
-          })),
-        );
+            imageUrl: item.imageUrl,
+            groupName: group.name,
+            hasImage: false, // Will be determined by matching with uploaded images
+          });
+        }
+      }
+    } else if (validatedData.items) {
+      for (const item of validatedData.items) {
+        allProcessedItems.push({
+          title: item.title,
+          imageUrl: item.imageUrl,
+          hasImage: false, // Will be determined by matching with uploaded images
+        });
+      }
+    }
+
+    // Match uploaded images with form items by filename
+    // The frontend puts image filenames (without extension) as item titles
+    let imageIndex = 0;
+    for (let i = 0; i < allProcessedItems.length && imageIndex < processedItemImages.length; i++) {
+      const item = allProcessedItems[i];
+      const processedImage = processedItemImages[imageIndex];
+      
+      // Check if this item title matches the image filename (without extension)
+      if (item.title === processedImage.name) {
+        item.hasImage = true;
+        imageIndex++;
+      }
+    }
+
+    if (validatedData.useGroups) {
+      // Generate unique slugs for all groups
+      const groupNames = validatedData.groups?.map((group) => group.name) || [];
+      const existingSlugs: string[] = [];
+      const createdGroups: { [name: string]: string } = {}; // groupName -> groupId
+
+      // Create groups first
+      for (const groupName of groupNames) {
+        if (!createdGroups[groupName]) {
+          const slug = generateUniqueSlug(groupName, existingSlugs);
+          existingSlugs.push(slug);
+
+          const [newGroup] = await db
+            .insert(sorterGroups)
+            .values({
+              sorterId: newSorter.id,
+              name: groupName,
+              slug: slug,
+            })
+            .returning();
+
+          createdGroups[groupName] = newGroup.id;
+        }
+      }
+
+      // Create items for each group
+      let imageIndex = 0;
+      for (const item of allProcessedItems) {
+        if (item.groupName && createdGroups[item.groupName]) {
+          let finalImageUrl = item.imageUrl || null;
+          let itemSlug = null;
+
+          // Handle image upload if this item has an image
+          if (item.hasImage && imageIndex < processedItemImages.length) {
+            const processedImage = processedItemImages[imageIndex];
+            const groupSlug = existingSlugs.find((slug, index) => 
+              groupNames[index] === item.groupName
+            );
+            
+            itemSlug = generateSorterItemSlug(item.title, groupSlug);
+            const itemKey = getSorterItemKey(newSorter.id, itemSlug);
+            
+            // Upload to R2
+            await uploadToR2(itemKey, processedImage.buffer, "image/jpeg");
+            
+            // Generate public URL with cache-busting timestamp
+            const timestamp = Date.now();
+            finalImageUrl = `${getR2PublicUrl(itemKey)}?t=${timestamp}`;
+            
+            imageIndex++;
+          }
+
+          await db.insert(sorterItems).values({
+            sorterId: newSorter.id,
+            groupId: createdGroups[item.groupName],
+            title: item.title,
+            slug: itemSlug,
+            imageUrl: finalImageUrl,
+          });
+        }
       }
     } else {
-      // Create sorter items without groups (traditional mode)
-      if (validatedData.items) {
-        await db.insert(sorterItems).values(
-          validatedData.items.map((item) => ({
-            sorterId: newSorter.id,
-            groupId: null,
-            title: item.title,
-            imageUrl: item.imageUrl || null,
-          })),
-        );
+      // Create sorter items without groups (flat mode)
+      let imageIndex = 0;
+      for (const item of allProcessedItems) {
+        let finalImageUrl = item.imageUrl || null;
+        let itemSlug = null;
+
+        // Handle image upload if this item has an image
+        if (item.hasImage && imageIndex < processedItemImages.length) {
+          const processedImage = processedItemImages[imageIndex];
+          
+          itemSlug = generateSorterItemSlug(item.title);
+          const itemKey = getSorterItemKey(newSorter.id, itemSlug);
+          
+          // Upload to R2
+          await uploadToR2(itemKey, processedImage.buffer, "image/jpeg");
+          
+          // Generate public URL with cache-busting timestamp
+          const timestamp = Date.now();
+          finalImageUrl = `${getR2PublicUrl(itemKey)}?t=${timestamp}`;
+          
+          imageIndex++;
+        }
+
+        await db.insert(sorterItems).values({
+          sorterId: newSorter.id,
+          groupId: null,
+          title: item.title,
+          slug: itemSlug,
+          imageUrl: finalImageUrl,
+        });
       }
     }
 

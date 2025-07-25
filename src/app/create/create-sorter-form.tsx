@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,6 +37,8 @@ import {
   ChevronDown,
   ChevronUp,
   GripVertical,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
 import CoverImageUpload from "@/components/cover-image-upload";
@@ -48,6 +50,10 @@ export default function CreateSorterForm() {
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
     null,
   );
+  const [itemImagesData, setItemImagesData] = useState<
+    Array<{ file: File; preview: string } | null>
+  >([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<CreateSorterInput>({
     resolver: zodResolver(createSorterSchema),
@@ -57,7 +63,7 @@ export default function CreateSorterForm() {
       category: "",
       useGroups: false,
       groups: undefined,
-      items: [{ title: "" }, { title: "" }],
+      items: [], // Start with empty array instead of two empty fields
     } as CreateSorterInput,
   });
 
@@ -80,14 +86,100 @@ export default function CreateSorterForm() {
     }
   };
 
-  // Clean up preview URL on component unmount
+  // Handle item image selection and auto-populate form fields
+  const handleItemImagesChange = (files: File[]) => {
+    // Get current items and images - DON'T spread to preserve references
+    const currentItems = form.getValues("items") || [];
+
+    // Create image data for new files
+    const newImageData = files.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+
+    // Extract item names from filenames
+    const newItemTitles = files.map(
+      (file) => file.name.replace(/\.[^/.]+$/, ""), // Remove file extension
+    );
+
+    // Work with the current arrays directly to preserve references
+    const updatedItems = [...currentItems];
+
+    // Clone the images array more carefully to preserve all references
+    const updatedImagesData = itemImagesData.slice(); // Use slice() instead of spread
+    while (updatedImagesData.length < updatedItems.length) {
+      updatedImagesData.push(null);
+    }
+
+    let imageIndex = 0;
+
+    // First pass: Replace empty fields that DON'T already have images
+    for (let i = 0; i < updatedItems.length && imageIndex < files.length; i++) {
+      if (!updatedItems[i].title.trim() && !updatedImagesData[i]) {
+        // Replace empty field with image data (only if no existing image)
+        updatedItems[i] = { title: newItemTitles[imageIndex] };
+        updatedImagesData[i] = newImageData[imageIndex];
+        imageIndex++;
+      }
+    }
+
+    // Second pass: Add remaining images as new fields
+    while (imageIndex < files.length) {
+      updatedItems.push({ title: newItemTitles[imageIndex] });
+      updatedImagesData.push(newImageData[imageIndex]);
+      imageIndex++;
+    }
+
+    // Update both form and images
+    form.setValue("items", updatedItems);
+    setItemImagesData(updatedImagesData);
+  };
+
+  // Handle file input change
+  const handleFileInputChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = Array.from(event.target.files || []);
+
+    // Validate files
+    const validFiles = files.filter((file) => {
+      // Check file type
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        return false;
+      }
+      // Check file size (5MB limit)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length > 0) {
+      handleItemImagesChange(validFiles);
+    }
+
+    // Reset file input
+    if (event.target) {
+      event.target.value = "";
+    }
+  };
+
+  // Clean up preview URLs on component unmount
   useEffect(() => {
     return () => {
       if (coverImagePreview) {
         URL.revokeObjectURL(coverImagePreview);
       }
+      // Clean up item image previews
+      itemImagesData.forEach((imageData) => {
+        if (imageData) {
+          URL.revokeObjectURL(imageData.preview);
+        }
+      });
     };
-  }, [coverImagePreview]);
+  }, [coverImagePreview]); // REMOVED itemImagesData from dependencies!
 
   // Initialize groups when switching to filters mode
   useEffect(() => {
@@ -111,9 +203,9 @@ export default function CreateSorterForm() {
     } else {
       // Clear groups when not using them
       form.setValue("groups", undefined);
-      // Initialize items if they don't exist
-      if (!form.getValues("items") || form.getValues("items")?.length === 0) {
-        form.setValue("items", [{ title: "" }, { title: "" }]);
+      // Initialize items if they don't exist (start with empty array)
+      if (!form.getValues("items")) {
+        form.setValue("items", []);
       }
     }
   }, [useGroups, form]);
@@ -190,13 +282,26 @@ export default function CreateSorterForm() {
   // Add new item (traditional mode)
   const addItemHandler = () => {
     appendItem({ title: "" });
+    // Add null entry to images array to keep indices aligned
+    setItemImagesData([...itemImagesData, null]);
   };
 
   // Remove item (traditional mode)
   const removeItemHandler = (index: number) => {
-    if (itemFields.length > 2) {
-      removeItem(index);
+    // Allow removing items even if only 1 or 2 remain
+    // Clean up image preview if this item has an image
+    const imageData = itemImagesData[index];
+    if (imageData) {
+      URL.revokeObjectURL(imageData.preview);
     }
+
+    // Remove from images array at the specific index
+    const updatedImagesData = [...itemImagesData];
+    updatedImagesData.splice(index, 1);
+    setItemImagesData(updatedImagesData);
+
+    // Remove from form
+    removeItem(index);
   };
 
   // Handle form submission
@@ -245,11 +350,26 @@ export default function CreateSorterForm() {
 
       let response;
 
-      if (coverImageFile) {
-        // Send as multipart form data with cover image
+      // Get actual image files from itemImagesData
+      const actualImageFiles = itemImagesData
+        .filter(
+          (data): data is { file: File; preview: string } => data !== null,
+        )
+        .map((data) => data.file);
+
+      if (coverImageFile || actualImageFiles.length > 0) {
+        // Send as multipart form data with cover image and/or item images
         const formData = new FormData();
         formData.append("data", JSON.stringify(payload));
-        formData.append("coverImage", coverImageFile);
+
+        if (coverImageFile) {
+          formData.append("coverImage", coverImageFile);
+        }
+
+        // Add item images with indexed keys
+        actualImageFiles.forEach((file, index) => {
+          formData.append(`itemImage_${index}`, file);
+        });
 
         response = await fetch("/api/sorters", {
           method: "POST",
@@ -591,53 +711,115 @@ export default function CreateSorterForm() {
               ) : (
                 /* Traditional Mode */
                 <div>
-                  <div className="mb-4 flex items-center justify-between">
+                  <div className="mb-4">
                     <FormLabel>Items to Rank *</FormLabel>
-                    <Button
-                      type="button"
-                      variant="neutral"
-                      size="sm"
-                      onClick={addItemHandler}
-                      className="flex items-center gap-1"
-                    >
-                      <Plus size={16} />
-                      Add Item
-                    </Button>
+                    {/* Instructions and buttons */}
+                    <div className="mt-2 space-y-3">
+                      {/* Instructions */}
+                      <div className="space-y-1 text-sm">
+                        <p>
+                          <strong>Upload Images:</strong> Select multiple images
+                          to automatically create items. Filename (without
+                          extension) will be used as the item name. You can
+                          still change the name after selecting images.
+                        </p>
+                        <p>
+                          <strong>Add Item:</strong> Manually add text-only
+                          items.
+                        </p>
+                        <p className="text-xs">
+                          Supported formats: JPG, PNG, WebP • Max 5MB each •
+                          Empty fields will be replaced first when uploading
+                          images
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="neutral"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex items-center gap-1"
+                        >
+                          <ImageIcon size={16} />
+                          Upload Images
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="neutral"
+                          size="sm"
+                          onClick={addItemHandler}
+                          className="flex items-center gap-1"
+                        >
+                          <Plus size={16} />
+                          Add Item
+                        </Button>
+                      </div>
+                    </div>
                   </div>
 
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleFileInputChange}
+                    className="hidden"
+                  />
+
                   <div className="space-y-2">
-                    {itemFields.map((field, index) => (
-                      <FormField
-                        key={field.id}
-                        control={form.control}
-                        name={`items.${index}.title`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="flex items-center gap-2">
-                              <FormControl>
-                                <Input
-                                  placeholder={`Item ${index + 1}`}
-                                  {...field}
-                                />
-                              </FormControl>
-                              {itemFields.length > 2 && (
-                                <Button
-                                  type="button"
-                                  variant="neutralNoShadow"
-                                  size="sm"
-                                  onClick={() => removeItemHandler(index)}
-                                  title="Remove item"
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <X size={14} />
-                                </Button>
-                              )}
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    ))}
+                    {itemFields.length === 0 ? (
+                      <div className="py-8 text-center">
+                        <p>No items added yet</p>
+                        <p className="mt-1 text-sm">
+                          Click "Upload Images" or "Add Item" to get started
+                        </p>
+                      </div>
+                    ) : (
+                      itemFields.map((field, index) => (
+                        <FormField
+                          key={field.id}
+                          control={form.control}
+                          name={`items.${index}.title`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="flex items-center gap-2">
+                                {/* Image preview if available */}
+                                {itemImagesData[index] && (
+                                  <div className="flex-shrink-0">
+                                    <img
+                                      src={itemImagesData[index]!.preview}
+                                      alt={`Preview ${index + 1}`}
+                                      className="border-border h-10 w-10 rounded border-2 object-cover"
+                                    />
+                                  </div>
+                                )}
+                                <FormControl>
+                                  <Input
+                                    placeholder={`Item ${index + 1}`}
+                                    {...field}
+                                  />
+                                </FormControl>
+                                {itemFields.length > 0 && (
+                                  <Button
+                                    type="button"
+                                    variant="neutralNoShadow"
+                                    size="sm"
+                                    onClick={() => removeItemHandler(index)}
+                                    title="Remove item"
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <X size={14} />
+                                  </Button>
+                                )}
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      ))
+                    )}
                   </div>
 
                   <Box variant="accent" size="sm" className="mt-4">

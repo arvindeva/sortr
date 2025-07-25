@@ -192,3 +192,99 @@ export async function validateCoverImageBuffer(
     return false;
   }
 }
+
+/**
+ * Process sorter item image: crop to square and resize to 300x300
+ * @param buffer - The image buffer to process
+ * @returns Promise<Buffer> - The processed image buffer
+ */
+export async function processSorterItemImage(buffer: Buffer): Promise<Buffer> {
+  try {
+    // Get image metadata to determine dimensions
+    const image = sharp(buffer);
+    const metadata = await image.metadata();
+
+    if (!metadata.width || !metadata.height) {
+      throw new Error("Could not determine image dimensions");
+    }
+
+    const { width, height } = metadata;
+
+    // Calculate square crop dimensions (use the smaller dimension)
+    const side = Math.min(width, height);
+
+    // Calculate crop position (center crop)
+    let left = 0;
+    let top = 0;
+
+    if (width > height) {
+      // Image is landscape - crop from left and right
+      left = Math.floor((width - side) / 2);
+      top = 0;
+    } else if (height > width) {
+      // Image is portrait - crop from top and bottom
+      left = 0;
+      top = Math.floor((height - side) / 2);
+    }
+    // If width === height, already square (left = 0, top = 0)
+
+    // Process the image: first crop to square, then resize to 300x300
+    const processedBuffer = await image
+      .extract({
+        left,
+        top,
+        width: side,
+        height: side,
+      })
+      .resize(300, 300) // Resize to 300x300 for sorter items
+      .jpeg({
+        quality: 75, // Good balance of quality and file size for items
+        progressive: true,
+      })
+      .toBuffer();
+
+    return processedBuffer;
+  } catch (error) {
+    console.error("Sorter item image processing error:", error);
+    throw new Error("Failed to process sorter item image");
+  }
+}
+
+/**
+ * Validate sorter item image buffer
+ * @param buffer - The image buffer to validate
+ * @returns Promise<boolean> - Whether the image is valid
+ */
+export async function validateSorterItemImageBuffer(
+  buffer: Buffer,
+): Promise<boolean> {
+  try {
+    const image = sharp(buffer);
+    const metadata = await image.metadata();
+
+    // Check if it's a valid image format
+    const validFormats = ["jpeg", "jpg", "png", "webp"];
+    if (!metadata.format || !validFormats.includes(metadata.format)) {
+      return false;
+    }
+
+    // Check minimum dimensions (should be at least 50x50 for items)
+    if (
+      !metadata.width ||
+      !metadata.height ||
+      metadata.width < 50 ||
+      metadata.height < 50
+    ) {
+      return false;
+    }
+
+    // Check maximum dimensions (reasonable limit: 5000x5000)
+    if (metadata.width > 5000 || metadata.height > 5000) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    return false;
+  }
+}

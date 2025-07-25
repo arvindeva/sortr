@@ -22,6 +22,13 @@
       "when": 1753345737007,
       "tag": "0002_dry_star_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1753446683849,
+      "tag": "0003_perfect_thor",
+      "breakpoints": true
     }
   ]
 }

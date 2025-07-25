@@ -86,3 +86,32 @@ export function generateSorterSlug(title: string): string {
 
   return `${baseSlug}-${suffix}`;
 }
+
+/**
+ * Generate a sorter item slug with random suffix for uniqueness
+ * @param itemName The item name (usually from filename without extension)
+ * @param groupSlug Optional group slug for grouped sorters
+ * @returns A unique slug for the item
+ */
+export function generateSorterItemSlug(
+  itemName: string,
+  groupSlug?: string,
+): string {
+  // Create base slug from item name, limit to 40 characters to leave room for group prefix and suffix
+  let baseSlug = slugify(itemName);
+  if (baseSlug.length > 40) {
+    baseSlug = baseSlug.substring(0, 40);
+    // Remove trailing hyphen if we cut off mid-word
+    baseSlug = baseSlug.replace(/-$/, "");
+  }
+
+  // Generate 6-character random suffix for uniqueness
+  const suffix = generateRandomString(6);
+
+  // Combine with group slug if provided
+  if (groupSlug) {
+    return `${groupSlug}--${baseSlug}-${suffix}`;
+  }
+
+  return `${baseSlug}-${suffix}`;
+}

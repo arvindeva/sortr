@@ -1,0 +1,1 @@
+ALTER TABLE "sorterItems" ADD COLUMN "slug" text;

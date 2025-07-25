@@ -90,6 +90,7 @@ export const sorterItems = pgTable("sorterItems", {
     onDelete: "cascade",
   }),
   title: text("title").notNull(),
+  slug: text("slug"), // For R2 key tracking and URL generation
   imageUrl: text("imageUrl"),
 });
 
