@@ -78,6 +78,7 @@ export const sorterGroups = pgTable("sorterGroups", {
     .references(() => sorters.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   slug: text("slug").notNull(),
+  coverImageUrl: text("cover_image_url"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

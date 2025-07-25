@@ -53,6 +53,7 @@ export async function GET(
           id: sorterGroups.id,
           name: sorterGroups.name,
           slug: sorterGroups.slug,
+          coverImageUrl: sorterGroups.coverImageUrl,
           createdAt: sorterGroups.createdAt,
         })
         .from(sorterGroups)

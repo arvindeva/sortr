@@ -40,6 +40,7 @@ interface SorterItem {
 interface SorterGroup {
   id: string;
   name: string;
+  coverImageUrl?: string;
   items: SorterItem[];
 }
 
@@ -410,8 +411,28 @@ export default async function SorterPage({ params }: SorterPageProps) {
                     <div className="space-y-6">
                       {groups.map((group) => (
                         <div key={group.id} className="space-y-3">
-                          {/* Group Header */}
-                          <Badge variant="default">{group.name}</Badge>
+                          {/* Group Header with Cover Image */}
+                          <div className="flex items-center gap-3">
+                            {/* Group Cover Image */}
+                            {group.coverImageUrl ? (
+                              <div className="border-border rounded-base h-12 w-12 flex-shrink-0 overflow-hidden border-2">
+                                <img
+                                  src={group.coverImageUrl}
+                                  alt={`${group.name} cover`}
+                                  className="h-full w-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="border-border bg-secondary-background rounded-base flex h-12 w-12 flex-shrink-0 items-center justify-center border-2">
+                                <span className="text-main text-sm font-bold">
+                                  {group.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                            
+                            {/* Group Name Badge */}
+                            <Badge variant="default">{group.name}</Badge>
+                          </div>
 
                           {/* Items in Group */}
                           <div className="space-y-3">

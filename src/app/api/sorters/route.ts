@@ -43,9 +43,10 @@ export async function POST(request: NextRequest) {
     let validatedData;
     let coverImageFile: File | null = null;
     let itemImageFiles: File[] = [];
+    let groupCoverFiles: File[] = [];
 
     if (contentType.includes("multipart/form-data")) {
-      // Handle multipart form data (with potential cover image and item images)
+      // Handle multipart form data (with potential cover image, item images, and group cover images)
       const formData = await request.formData();
       const dataJson = formData.get("data") as string;
       coverImageFile = formData.get("coverImage") as File | null;
@@ -55,6 +56,12 @@ export async function POST(request: NextRequest) {
         key.startsWith("itemImage_")
       );
       itemImageFiles = itemImageEntries.map(([, file]) => file as File);
+
+      // Collect all group cover images - they come with keys like "groupCover_0", "groupCover_1", etc.
+      const groupCoverEntries = Array.from(formData.entries()).filter(([key]) => 
+        key.startsWith("groupCover_")
+      );
+      groupCoverFiles = groupCoverEntries.map(([, file]) => file as File);
 
       if (!dataJson) {
         return NextResponse.json(
@@ -268,6 +275,43 @@ export async function POST(request: NextRequest) {
             .returning();
 
           createdGroups[groupName] = newGroup.id;
+        }
+      }
+
+      // Process group cover images
+      if (groupCoverFiles.length > 0) {
+        let groupCoverIndex = 0;
+        for (let i = 0; i < groupNames.length && groupCoverIndex < groupCoverFiles.length; i++) {
+          const groupName = groupNames[i];
+          const groupCoverFile = groupCoverFiles[groupCoverIndex];
+          
+          if (groupCoverFile && createdGroups[groupName]) {
+            // Get group slug for this group
+            const groupSlug = existingSlugs[i];
+            
+            // Process cover image: crop to square and resize to 300x300
+            const bytes = await groupCoverFile.arrayBuffer();
+            const buffer = Buffer.from(bytes);
+            const processedBuffer = await processCoverImage(buffer); // Reuse existing cover image processing
+            
+            // Generate group cover key: [groupSlug--group-image]
+            const groupCoverSlug = `${groupSlug}--group-image`;
+            const groupCoverKey = getSorterItemKey(newSorter.id, groupCoverSlug); // Reuse existing key generation
+            
+            // Upload to R2
+            await uploadToR2(groupCoverKey, processedBuffer, "image/jpeg");
+            
+            // Generate public URL with cache-busting timestamp
+            const timestamp = Date.now();
+            const groupCoverUrl = `${getR2PublicUrl(groupCoverKey)}?t=${timestamp}`;
+            
+            // Update group with cover image URL
+            await db.update(sorterGroups)
+              .set({ coverImageUrl: groupCoverUrl })
+              .where(eq(sorterGroups.id, createdGroups[groupName]));
+            
+            groupCoverIndex++;
+          }
         }
       }
 

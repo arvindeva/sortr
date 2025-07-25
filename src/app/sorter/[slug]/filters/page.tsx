@@ -25,6 +25,7 @@ interface Group {
   id: string;
   name: string;
   slug: string;
+  coverImageUrl?: string;
   items: {
     id: string;
     title: string;
@@ -222,6 +223,22 @@ export default function FilterPage({ params }: FilterPageProps) {
                         checked={isSelected}
                         onCheckedChange={() => toggleGroup(group.slug)}
                       />
+                      {/* Group Cover Image */}
+                      {group.coverImageUrl ? (
+                        <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
+                          <img
+                            src={group.coverImageUrl}
+                            alt={`${group.name} cover`}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="border-border bg-secondary-background rounded-base flex h-6 w-6 flex-shrink-0 items-center justify-center border-2">
+                          <span className="text-main text-xs font-bold">
+                            {group.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
                       <label
                         htmlFor={`group-${group.id}`}
                         className="cursor-pointer font-medium"
