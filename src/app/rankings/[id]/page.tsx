@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { db } from "@/db";
-import { sortingResults, sorters, user, sorterGroups } from "@/db/schema";
+import { sortingResults, sorters, user, sorterGroups, sorterItems } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ interface RankedItem {
   id: string;
   title: string;
   imageUrl?: string;
+  groupImageUrl?: string;
 }
 
 interface ResultData {
@@ -42,7 +43,7 @@ interface ResultData {
   sorter: {
     id: string;
     title: string;
-    slug: string;
+    slug: string | null;
     description: string;
     category: string;
     coverImageUrl?: string;
@@ -51,6 +52,7 @@ interface ResultData {
     createdAt: Date;
     completionCount: number;
     viewCount: number;
+    isDeleted: boolean;
   };
   selectedGroups?: {
     id: string;
@@ -120,7 +122,7 @@ export async function generateMetadata({
 }
 
 async function getResultData(resultId: string): Promise<ResultData | null> {
-  // Get the sorting result with username
+  // Get the sorting result with username and snapshot data
   const resultData = await db
     .select({
       id: sortingResults.id,
@@ -129,6 +131,9 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       createdAt: sortingResults.createdAt,
       sorterId: sortingResults.sorterId,
       username: user.username,
+      // Sorter-level snapshots
+      sorterTitle: sortingResults.sorterTitle,
+      sorterCoverImageUrl: sortingResults.sorterCoverImageUrl,
     })
     .from(sortingResults)
     .leftJoin(user, eq(sortingResults.userId, user.id))
@@ -141,37 +146,84 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
 
   const result = resultData[0];
 
-  // Get the sorter data
-  const sorterData = await db
-    .select({
-      id: sorters.id,
-      title: sorters.title,
-      slug: sorters.slug,
-      description: sorters.description,
-      category: sorters.category,
-      coverImageUrl: sorters.coverImageUrl,
-      useGroups: sorters.useGroups,
-      creatorUsername: user.username,
-      createdAt: sorters.createdAt,
-      completionCount: sorters.completionCount,
-      viewCount: sorters.viewCount,
-    })
-    .from(sorters)
-    .leftJoin(user, eq(sorters.userId, user.id))
-    .where(eq(sorters.id, result.sorterId))
-    .limit(1);
-
-  if (sorterData.length === 0) {
-    return null;
+  // Try to get current sorter data (might be null if sorter was deleted)
+  let sorterData: any[] = [];
+  if (result.sorterId) {
+    sorterData = await db
+      .select({
+        id: sorters.id,
+        title: sorters.title,
+        slug: sorters.slug,
+        description: sorters.description,
+        category: sorters.category,
+        coverImageUrl: sorters.coverImageUrl,
+        useGroups: sorters.useGroups,
+        creatorUsername: user.username,
+        createdAt: sorters.createdAt,
+        completionCount: sorters.completionCount,
+        viewCount: sorters.viewCount,
+      })
+      .from(sorters)
+      .leftJoin(user, eq(sorters.userId, user.id))
+      .where(eq(sorters.id, result.sorterId))
+      .limit(1);
   }
 
+  // Use snapshot data if sorter was deleted or as fallback
+  const isDeleted = sorterData.length === 0;
+  const liveSorter = sorterData[0];
+  
+  // Create sorter data using snapshots with live data as fallback
+  const sorter = {
+    id: result.sorterId || "deleted",
+    title: result.sorterTitle || liveSorter?.title || "Deleted Sorter",
+    slug: liveSorter?.slug || null,
+    description: liveSorter?.description || "",
+    category: liveSorter?.category || "",
+    coverImageUrl: result.sorterCoverImageUrl || liveSorter?.coverImageUrl,
+    useGroups: liveSorter?.useGroups || false,
+    creatorUsername: liveSorter?.creatorUsername || "Unknown User",
+    createdAt: liveSorter?.createdAt || new Date(),
+    completionCount: liveSorter?.completionCount || 0,
+    viewCount: liveSorter?.viewCount || 0,
+    isDeleted,
+  };
+
   // Parse the rankings JSON
-  let rankings: RankedItem[];
+  let parsedRankings: RankedItem[];
   try {
-    rankings = JSON.parse(result.rankings);
+    parsedRankings = JSON.parse(result.rankings);
   } catch (error) {
     console.error("Failed to parse rankings JSON:", error);
     return null;
+  }
+
+  // If the sorter uses groups, fetch group image information for the ranked items
+  let rankings: RankedItem[] = parsedRankings;
+  if (sorter.useGroups) {
+    // Get item IDs from rankings
+    const itemIds = parsedRankings.map(item => item.id);
+    
+    // Fetch group image information for these items
+    const itemsWithGroupImages = await db
+      .select({
+        id: sorterItems.id,
+        groupCoverImageUrl: sorterGroups.coverImageUrl,
+      })
+      .from(sorterItems)
+      .leftJoin(sorterGroups, eq(sorterItems.groupId, sorterGroups.id))
+      .where(inArray(sorterItems.id, itemIds));
+
+    // Create a map of item ID to group image URL
+    const itemGroupImageMap = new Map(
+      itemsWithGroupImages.map(item => [item.id, item.groupCoverImageUrl])
+    );
+
+    // Add group image information to rankings
+    rankings = parsedRankings.map(item => ({
+      ...item,
+      groupImageUrl: itemGroupImageMap.get(item.id) || undefined,
+    }));
   }
 
   // Get selected groups if this result used groups
@@ -203,17 +255,18 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       username: result.username || "Anonymous",
     },
     sorter: {
-      id: sorterData[0].id,
-      title: sorterData[0].title,
-      slug: sorterData[0].slug,
-      description: sorterData[0].description || "",
-      category: sorterData[0].category || "",
-      coverImageUrl: sorterData[0].coverImageUrl ?? undefined,
-      useGroups: sorterData[0].useGroups,
-      creatorUsername: sorterData[0].creatorUsername || "Unknown User",
-      createdAt: sorterData[0].createdAt,
-      completionCount: sorterData[0].completionCount,
-      viewCount: sorterData[0].viewCount,
+      id: sorter.id,
+      title: sorter.title,
+      slug: sorter.slug,
+      description: sorter.description,
+      category: sorter.category,
+      coverImageUrl: sorter.coverImageUrl,
+      useGroups: sorter.useGroups,
+      creatorUsername: sorter.creatorUsername,
+      createdAt: sorter.createdAt,
+      completionCount: sorter.completionCount,
+      viewCount: sorter.viewCount,
+      isDeleted: sorter.isDeleted,
     },
     selectedGroups: selectedGroups.length > 0 ? selectedGroups : undefined,
   };
@@ -254,11 +307,20 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
           {/* Ranking Info */}
           <div className="flex-1">
             <div className="mb-2 flex items-center gap-2">
-              <Link href={`/sorter/${sorter.slug}`}>
-                <PageHeader className="cursor-pointer hover:underline">
+              {sorter.slug ? (
+                <Link href={`/sorter/${sorter.slug}`}>
+                  <PageHeader className="cursor-pointer hover:underline">
+                    {sorter.title}
+                  </PageHeader>
+                </Link>
+              ) : (
+                <PageHeader>
                   {sorter.title}
+                  <span className="ml-2 text-sm text-red-600 dark:text-red-400">
+                    (Deleted)
+                  </span>
                 </PageHeader>
-              </Link>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-medium">
               <div className="flex items-center gap-1">
@@ -274,18 +336,25 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
 
             {/* Desktop Action Buttons */}
             <div className="mt-4 hidden items-center gap-4 md:flex">
-              <Button asChild variant="default">
-                <Link
-                  href={
-                    sorter.useGroups
-                      ? `/sorter/${sorter.slug}/filters`
-                      : `/sorter/${sorter.slug}/sort`
-                  }
-                >
+              {sorter.slug ? (
+                <Button asChild variant="default">
+                  <Link
+                    href={
+                      sorter.useGroups
+                        ? `/sorter/${sorter.slug}/filters`
+                        : `/sorter/${sorter.slug}/sort`
+                    }
+                  >
+                    <Play size={16} />
+                    Sort This
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="neutral" disabled>
                   <Play size={16} />
-                  Sort This
-                </Link>
-              </Button>
+                  Sorter Deleted
+                </Button>
+              )}
               <ShareButton
                 rankingData={{
                   sorterTitle: sorter.title,
@@ -302,18 +371,25 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
 
       {/* Mobile Action Buttons */}
       <div className="mb-8 flex flex-wrap gap-4 md:hidden">
-        <Button asChild variant="default">
-          <Link
-            href={
-              sorter.useGroups
-                ? `/sorter/${sorter.slug}/filters`
-                : `/sorter/${sorter.slug}/sort`
-            }
-          >
+        {sorter.slug ? (
+          <Button asChild variant="default">
+            <Link
+              href={
+                sorter.useGroups
+                  ? `/sorter/${sorter.slug}/filters`
+                  : `/sorter/${sorter.slug}/sort`
+              }
+            >
+              <Play size={16} />
+              Sort This
+            </Link>
+          </Button>
+        ) : (
+          <Button variant="neutral" disabled>
             <Play size={16} />
-            Sort This
-          </Link>
-        </Button>
+            Sorter Deleted
+          </Button>
+        )}
         <ShareButton
           rankingData={{
             sorterTitle: sorter.title,
@@ -368,12 +444,21 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
             <PanelContent variant="primary" className="p-2 md:p-6">
               <div className="space-y-4">
                 <div>
-                  <Link
-                    href={`/sorter/${sorter.slug}`}
-                    className="sorter-title-link hover:underline"
-                  >
-                    <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
-                  </Link>
+                  {sorter.slug ? (
+                    <Link
+                      href={`/sorter/${sorter.slug}`}
+                      className="sorter-title-link hover:underline"
+                    >
+                      <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
+                    </Link>
+                  ) : (
+                    <h3 className="mb-1 text-lg font-bold">
+                      {sorter.title}{" "}
+                      <span className="text-sm text-red-600 dark:text-red-400">
+                        (Deleted)
+                      </span>
+                    </h3>
+                  )}
                   <p>
                     by{" "}
                     <Link
@@ -415,12 +500,21 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
           <PanelContent variant="primary" className="p-3 md:p-6">
             <div className="space-y-4">
               <div>
-                <Link
-                  href={`/sorter/${sorter.slug}`}
-                  className="sorter-title-link hover:underline"
-                >
-                  <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
-                </Link>
+                {sorter.slug ? (
+                  <Link
+                    href={`/sorter/${sorter.slug}`}
+                    className="sorter-title-link hover:underline"
+                  >
+                    <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
+                  </Link>
+                ) : (
+                  <h3 className="mb-1 text-lg font-bold">
+                    {sorter.title}{" "}
+                    <span className="text-sm text-red-600 dark:text-red-400">
+                      (Deleted)
+                    </span>
+                  </h3>
+                )}
                 <p>
                   by{" "}
                   <Link
@@ -454,21 +548,29 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
 
       {/* Actions */}
       <div className="mt-8 flex justify-center gap-4">
-        <Button asChild>
-          <Link
-            href={
-              sorter.useGroups
-                ? `/sorter/${sorter.slug}/filters`
-                : `/sorter/${sorter.slug}/sort`
-            }
-          >
-            <Play className="mr-2" size={16} />
-            Sort now
-          </Link>
-        </Button>
-        <Button asChild variant="neutral">
-          <Link href={`/sorter/${sorter.slug}`}>View Sorter Details</Link>
-        </Button>
+        {sorter.slug ? (
+          <>
+            <Button asChild>
+              <Link
+                href={
+                  sorter.useGroups
+                    ? `/sorter/${sorter.slug}/filters`
+                    : `/sorter/${sorter.slug}/sort`
+                }
+              >
+                <Play className="mr-2" size={16} />
+                Sort now
+              </Link>
+            </Button>
+            <Button asChild variant="neutral">
+              <Link href={`/sorter/${sorter.slug}`}>View Sorter Details</Link>
+            </Button>
+          </>
+        ) : (
+          <Button variant="neutral" disabled>
+            Original sorter no longer available
+          </Button>
+        )}
       </div>
 
       {/* Development Preview: Image Layout */}
