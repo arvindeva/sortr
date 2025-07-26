@@ -59,21 +59,30 @@ export async function GET(
         .from(sorterGroups)
         .where(eq(sorterGroups.sorterId, sorter.id));
 
-      // Get all items with their group IDs
+      // Get all items with their group IDs and group cover images
       const items = await db
         .select({
           id: sorterItems.id,
           title: sorterItems.title,
           imageUrl: sorterItems.imageUrl,
           groupId: sorterItems.groupId,
+          groupCoverImageUrl: sorterGroups.coverImageUrl,
         })
         .from(sorterItems)
+        .leftJoin(sorterGroups, eq(sorterItems.groupId, sorterGroups.id))
         .where(eq(sorterItems.sorterId, sorter.id));
 
       // Group items by group
       const groupsWithItems = groups.map((group) => ({
         ...group,
-        items: items.filter((item) => item.groupId === group.id),
+        items: items
+          .filter((item) => item.groupId === group.id)
+          .map((item) => ({
+            id: item.id,
+            title: item.title,
+            imageUrl: item.imageUrl,
+            groupImageUrl: item.groupCoverImageUrl,
+          })),
       }));
 
       return Response.json({
@@ -85,7 +94,12 @@ export async function GET(
           },
         },
         groups: groupsWithItems,
-        items: items, // Also return flat items list for backward compatibility
+        items: items.map((item) => ({
+          id: item.id,
+          title: item.title,
+          imageUrl: item.imageUrl,
+          groupImageUrl: item.groupCoverImageUrl,
+        })), // Also return flat items list for backward compatibility
       });
     } else {
       // Get sorter items (traditional mode)
@@ -167,18 +181,16 @@ export async function DELETE(
     }
 
     // Delete in the correct order (foreign key constraints)
-    // 1. Delete sorting results
-    await db
-      .delete(sortingResults)
-      .where(eq(sortingResults.sorterId, sorter.id));
+    // NOTE: We do NOT delete sortingResults - rankings must survive sorter deletion
+    // Rankings contain their own snapshots and should remain accessible
 
-    // 2. Delete sorter items
+    // 1. Delete sorter items
     await db.delete(sorterItems).where(eq(sorterItems.sorterId, sorter.id));
 
-    // 3. Delete sorter groups (if any)
+    // 2. Delete sorter groups (if any)
     await db.delete(sorterGroups).where(eq(sorterGroups.sorterId, sorter.id));
 
-    // 4. Finally delete the sorter
+    // 3. Finally delete the sorter
     await db.delete(sorters).where(eq(sorters.id, sorter.id));
 
     // Revalidate pages that show sorter data
