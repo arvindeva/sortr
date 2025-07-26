@@ -43,6 +43,13 @@
       "when": 1753506111941,
       "tag": "0005_bored_stark_industries",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1753528411074,
+      "tag": "0006_chunky_queen_noir",
+      "breakpoints": true
     }
   ]
 }

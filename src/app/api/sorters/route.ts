@@ -6,7 +6,9 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createSorterSchema } from "@/lib/validations";
 import { generateUniqueSlug, generateSorterSlug, generateSorterItemSlug } from "@/lib/utils";
-import { uploadToR2, getCoverKey, getSorterItemKey, getR2PublicUrl } from "@/lib/r2";
+import { uploadToR2, getCoverKey, getSorterItemKey, getR2PublicUrl, convertSessionKeyToSorterKey } from "@/lib/r2";
+import { getUploadSession, getSessionFiles, completeUploadSession } from "@/lib/session-manager";
+import type { UploadedFile } from "@/types/upload";
 import {
   processCoverImage,
   validateCoverImageBuffer,
@@ -18,6 +20,210 @@ const MAX_COVER_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_ITEM_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_COVER_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const ALLOWED_ITEM_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+async function handleUploadSessionRequest(body: any, userData: any) {
+  const { uploadSession: sessionId, uploadedFiles, ...sorterData } = body;
+
+  try {
+    // Validate upload session
+    const session = await getUploadSession(sessionId);
+    if (!session) {
+      return NextResponse.json(
+        { error: "Upload session not found or expired" },
+        { status: 400 }
+      );
+    }
+
+    // Validate session ownership
+    if (session.userId !== userData.id) {
+      return NextResponse.json(
+        { error: "Upload session does not belong to current user" },
+        { status: 403 }
+      );
+    }
+
+    // Get session files
+    const sessionFiles = await getSessionFiles(sessionId);
+    if (sessionFiles.length === 0) {
+      return NextResponse.json(
+        { error: "No files found in upload session" },
+        { status: 400 }
+      );
+    }
+
+    // Validate sorter data
+    const validatedData = createSorterSchema.parse(sorterData);
+
+    // Generate slug for sorter
+    const slug = generateSorterSlug(validatedData.title);
+    
+    // Get existing slugs to ensure uniqueness
+    const existingSorters = await db
+      .select({ slug: sorters.slug })
+      .from(sorters);
+    const existingSlugs = existingSorters.map(s => s.slug);
+
+    // Create the sorter
+    const [newSorter] = await db
+      .insert(sorters)
+      .values({
+        title: validatedData.title,
+        slug: generateUniqueSlug(slug, existingSlugs),
+        description: validatedData.description || null,
+        category: validatedData.category || null,
+        userId: userData.id,
+        coverImageUrl: null, // Will be updated if cover image exists
+      })
+      .returning();
+
+    let coverImageUrl: string | null = null;
+
+    // Process uploaded files and convert session keys to sorter keys
+    if (validatedData.useGroups && validatedData.groups) {
+      // Handle grouped sorter
+      await Promise.all(
+        validatedData.groups.map(async (group, groupIndex) => {
+          // Find group cover file if exists
+          const groupCoverFile = sessionFiles.find(
+            f => f.fileType === 'group-cover' && f.originalName.includes(`${groupIndex}`)
+          );
+
+          let groupCoverUrl: string | null = null;
+          if (groupCoverFile) {
+            const newKey = convertSessionKeyToSorterKey(
+              groupCoverFile.r2Key,
+              newSorter.id,
+              `group-${groupIndex}`
+            );
+            // Note: Files are already uploaded to R2, just need to update the key reference
+            groupCoverUrl = getR2PublicUrl(newKey);
+          }
+
+          // Create group
+          const groupSlug = generateSorterItemSlug(group.name);
+          const [newGroup] = await db
+            .insert(sorterGroups)
+            .values({
+              sorterId: newSorter.id,
+              name: group.name,
+              slug: groupSlug,
+              coverImageUrl: groupCoverUrl,
+            })
+            .returning();
+
+          // Create group items
+          await Promise.all(
+            group.items.map(async (item, itemIndex) => {
+              // Find corresponding item file
+              const itemFile = sessionFiles.find(
+                f => f.fileType === 'item' && 
+                f.originalName.includes(`group-${groupIndex}-item-${itemIndex}`)
+              );
+
+              let itemImageUrl: string | null = null;
+              if (itemFile) {
+                const newKey = convertSessionKeyToSorterKey(
+                  itemFile.r2Key,
+                  newSorter.id,
+                  `item-${itemIndex}`
+                );
+                itemImageUrl = getR2PublicUrl(newKey);
+              }
+
+              const itemSlug = generateSorterItemSlug(item.title);
+
+              await db.insert(sorterItems).values({
+                sorterId: newSorter.id,
+                groupId: newGroup.id,
+                title: item.title,
+                slug: itemSlug,
+                imageUrl: itemImageUrl,
+              });
+            })
+          );
+        })
+      );
+    } else if (validatedData.items) {
+      // Handle traditional sorter
+      await Promise.all(
+        validatedData.items.map(async (item, itemIndex) => {
+          // Find corresponding item file
+          const itemFile = sessionFiles.find(
+            f => f.fileType === 'item' && f.originalName.includes(`${itemIndex}`)
+          );
+
+          let itemImageUrl: string | null = null;
+          if (itemFile) {
+            const newKey = convertSessionKeyToSorterKey(
+              itemFile.r2Key,
+              newSorter.id,
+              `item-${itemIndex}`
+            );
+            itemImageUrl = getR2PublicUrl(newKey);
+          }
+
+          const itemSlug = generateSorterItemSlug(item.title);
+
+          await db.insert(sorterItems).values({
+            sorterId: newSorter.id,
+            groupId: null,
+            title: item.title,
+            slug: itemSlug,
+            imageUrl: itemImageUrl,
+          });
+        })
+      );
+    }
+
+    // Handle cover image
+    const coverFile = sessionFiles.find(f => f.fileType === 'cover');
+    if (coverFile) {
+      const newKey = convertSessionKeyToSorterKey(
+        coverFile.r2Key,
+        newSorter.id,
+        'cover'
+      );
+      coverImageUrl = getR2PublicUrl(newKey);
+
+      // Update sorter with cover image URL
+      await db
+        .update(sorters)
+        .set({ coverImageUrl })
+        .where(eq(sorters.id, newSorter.id));
+    }
+
+    // Mark upload session as complete
+    await completeUploadSession(sessionId);
+
+    return NextResponse.json({
+      id: newSorter.id,
+      slug: newSorter.slug,
+      title: newSorter.title,
+      description: newSorter.description,
+      category: newSorter.category,
+      coverImageUrl,
+      message: "Sorter created successfully with uploaded files",
+    });
+
+  } catch (error) {
+    console.error("Error creating sorter with upload session:", error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: "Validation error",
+          details: error.errors,
+        },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Failed to create sorter" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -84,6 +290,13 @@ export async function POST(request: NextRequest) {
     } else {
       // Handle regular JSON request
       const body = await request.json();
+      
+      // Check if this is an upload session request
+      if (body.uploadSession && body.uploadedFiles) {
+        // Validate upload session and handle file references
+        return await handleUploadSessionRequest(body, userData[0]);
+      }
+      
       validatedData = createSorterSchema.parse(body);
     }
 

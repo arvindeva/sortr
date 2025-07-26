@@ -50,6 +50,9 @@ import {
 } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
 import CoverImageUpload from "@/components/cover-image-upload";
+import { useDirectUpload } from "@/hooks/use-direct-upload";
+import { UploadProgressDialog } from "@/components/upload-progress-dialog";
+import type { UploadedFile } from "@/types/upload";
 
 export default function CreateSorterForm() {
   const router = useRouter();
@@ -78,6 +81,32 @@ export default function CreateSorterForm() {
   const [showProgressDialog, setShowProgressDialog] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+
+  // Direct upload hook
+  const directUpload = useDirectUpload({
+    onProgress: (progress) => {
+      // Update our progress display
+      setShowProgressDialog(true);
+      const phaseMessages = {
+        'requesting-tokens': 'Preparing upload...',
+        'uploading-files': `Uploading files... (${progress.files.filter(f => f.status === 'complete').length}/${progress.files.length})`,
+        'creating-sorter': 'Creating sorter...',
+        'complete': 'Upload complete!',
+        'failed': 'Upload failed'
+      };
+      setUploadStatus(phaseMessages[progress.phase] || 'Processing...');
+    },
+    onSuccess: async (uploadedFiles) => {
+      // Files uploaded successfully, now create sorter with references
+      const formData = form.getValues();
+      await createSorterWithUploadedFiles(formData, uploadedFiles);
+    },
+    onError: (error) => {
+      setIsUploading(false);
+      setShowProgressDialog(false);
+      console.error('Upload error:', error);
+    }
+  });
 
   const form = useForm<CreateSorterInput>({
     resolver: zodResolver(createSorterSchema),
@@ -651,13 +680,9 @@ export default function CreateSorterForm() {
   };
 
   // Upload with progress tracking using axios
-  const uploadWithProgress = async (data: CreateSorterInput) => {
-    setShowProgressDialog(true);
+  const uploadWithDirectR2 = async (data: CreateSorterInput) => {
     setIsUploading(true);
     setUploadStatus("Preparing upload...");
-
-    // Small delay to show the dialog before starting
-    await new Promise(resolve => setTimeout(resolve, 500));
 
     try {
       // Safety check for required fields
@@ -665,14 +690,77 @@ export default function CreateSorterForm() {
         throw new Error("Title is required");
       }
 
-      const payload = {
-        title: data.title.trim(),
-        description: data.description?.trim() || undefined,
-        category: data.category?.trim() || undefined,
-        useGroups: data.useGroups,
-      };
+      // Collect all files for upload
+      const filesToUpload: File[] = [];
 
-      if (data.useGroups && data.groups) {
+      // Add cover image if present
+      if (coverImageFile) {
+        filesToUpload.push(coverImageFile);
+      }
+
+      // Get actual image files from itemImagesData (traditional mode) or groupImagesData (grouped mode)
+      let actualImageFiles: File[] = [];
+
+      if (data.useGroups) {
+        // Flatten grouped images into a single array
+        actualImageFiles = groupImagesData
+          .flat()
+          .filter(
+            (data): data is { file: File; preview: string } => data !== null,
+          )
+          .map((data) => data.file);
+      } else {
+        // Traditional mode
+        actualImageFiles = itemImagesData
+          .filter(
+            (data): data is { file: File; preview: string } => data !== null,
+          )
+          .map((data) => data.file);
+      }
+
+      filesToUpload.push(...actualImageFiles);
+
+      // Get group cover files (only for grouped mode)
+      if (data.useGroups) {
+        const groupCoverImageFiles = groupCoverFiles.filter(
+          (file) => file !== null,
+        ) as File[];
+        filesToUpload.push(...groupCoverImageFiles);
+      }
+
+      if (filesToUpload.length === 0) {
+        // No files to upload, use direct creation
+        await uploadWithoutImages(data);
+        return;
+      }
+
+      // Upload files to R2 first
+      await directUpload.uploadFiles(filesToUpload);
+
+      // The onSuccess callback will handle sorter creation
+      
+    } catch (error) {
+      setIsUploading(false);
+      setShowProgressDialog(false);
+      console.error("Upload error:", error);
+      throw error;
+    }
+  };
+
+  const createSorterWithUploadedFiles = async (data: CreateSorterInput, uploadedFiles: UploadedFile[]) => {
+    try {
+      setUploadStatus("Creating sorter...");
+
+      const payload = {
+      title: data.title.trim(),
+      description: data.description?.trim() || undefined,
+      category: data.category?.trim() || undefined,
+      useGroups: data.useGroups,
+      uploadSession: directUpload.sessionId,
+      uploadedFiles: uploadedFiles
+    };
+
+    if (data.useGroups && data.groups) {
         // Filter out empty groups and items
         const validGroups = data.groups
           .filter((group) => group.name.trim())
@@ -717,73 +805,37 @@ export default function CreateSorterForm() {
           .map((data) => data.file);
       }
 
-      // Get group cover files (only for grouped mode)
-      let groupCoverImageFiles: File[] = [];
-      if (data.useGroups) {
-        groupCoverImageFiles = groupCoverFiles.filter(
-          (file) => file !== null,
-        ) as File[];
-      }
-
-      // Create multipart form data
-      const formData = new FormData();
-      formData.append("data", JSON.stringify(payload));
-
-      if (coverImageFile) {
-        formData.append("coverImage", coverImageFile);
-      }
-
-      // Add item images with indexed keys
-      actualImageFiles.forEach((file, index) => {
-        formData.append(`itemImage_${index}`, file);
-      });
-
-      // Add group cover images with indexed keys
-      groupCoverImageFiles.forEach((file, index) => {
-        formData.append(`groupCover_${index}`, file);
-      });
-
-      setUploadStatus("Uploading images...");
-
-      const response = await axios.post("/api/sorters", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        timeout: 60000, // 60 second timeout
-      });
-
-      setUploadStatus("Processing images...");
-      
-      // Small delay to show processing status
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
       setUploadStatus("Creating sorter...");
       
-      // Redirect to sorter page
-      router.push(`/sorter/${response.data.sorter.slug}`);
+      // Send sorter creation request with upload session reference
+      const response = await fetch("/api/sorters", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create sorter");
+      }
+
+      const result = await response.json();
+      
+      setUploadStatus("Upload complete!");
+      setShowProgressDialog(false);
+      setIsUploading(false);
+      
+      // Clean up local state and redirect
+      router.push(`/sorter/${result.slug}`);
     } catch (error) {
+      setIsUploading(false);
+      setShowProgressDialog(false);
       console.error("Error creating sorter:", error);
       
-      let errorMessage = "Failed to create sorter";
-      
-      if (axios.isAxiosError(error)) {
-        if (error.code === 'ECONNABORTED' || error.response?.status === 504) {
-          errorMessage = "Upload timeout - please try with fewer or smaller images";
-        } else if (error.response?.status === 413) {
-          errorMessage = "Files too large - please reduce image sizes";
-        } else if (error.response?.data?.error) {
-          errorMessage = error.response.data.error;
-        }
-      }
-      
-      setUploadStatus("Upload failed");
-      
-      // Show error for a moment then allow retry
-      setTimeout(() => {
-        setShowProgressDialog(false);
-        setIsUploading(false);
-        alert(errorMessage);
-      }, 2000);
+      const errorMessage = error instanceof Error ? error.message : "Failed to create sorter";
+      alert(errorMessage);
     }
   };
 
@@ -893,8 +945,8 @@ export default function CreateSorterForm() {
       groupCoverImageFiles.length > 0;
 
     if (hasImages) {
-      // Use axios with progress dialog for image uploads
-      await uploadWithProgress(data);
+      // Use direct R2 upload for image uploads
+      await uploadWithDirectR2(data);
     } else {
       // Use existing fast JSON upload for text-only sorters
       await uploadWithoutImages(data);
@@ -1483,14 +1535,14 @@ export default function CreateSorterForm() {
 
               {/* Submit */}
               <div className="flex gap-4">
-                <Button type="submit" disabled={isLoading || isUploading} className="flex-1">
+                <Button type="submit" disabled={isLoading || isUploading || directUpload.isUploading} className="flex-1">
                   {isLoading ? "Creating..." : "Create Sorter"}
                 </Button>
                 <Button
                   type="button"
                   variant="neutral"
                   onClick={() => router.back()}
-                  disabled={isLoading || isUploading}
+                  disabled={isLoading || isUploading || directUpload.isUploading}
                 >
                   Cancel
                 </Button>
@@ -1501,17 +1553,26 @@ export default function CreateSorterForm() {
       </Panel>
 
       {/* Upload Progress Dialog */}
-      <Dialog open={showProgressDialog} onOpenChange={() => {}}>
-        <DialogContent preventClose={true} className="sm:max-w-md">
-          <DialogHeader className="text-center sm:text-center">
-            <DialogTitle>Creating Sorter</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6 text-center">
-            <SortingBarsLoader size={60} />
-            <p className="text-sm">{uploadStatus}</p>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <UploadProgressDialog 
+        open={showProgressDialog || directUpload.isUploading}
+        progress={directUpload.progress}
+        onOpenChange={() => {}}
+      />
+
+      {/* Fallback for non-upload operations */}
+      {showProgressDialog && !directUpload.isUploading && (
+        <Dialog open={showProgressDialog} onOpenChange={() => {}}>
+          <DialogContent preventClose={true} className="sm:max-w-md">
+            <DialogHeader className="text-center sm:text-center">
+              <DialogTitle>Creating Sorter</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6 text-center">
+              <SortingBarsLoader size={60} />
+              <p className="text-sm">{uploadStatus}</p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

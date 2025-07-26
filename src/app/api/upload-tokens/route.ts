@@ -1,0 +1,153 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { db } from "@/db";
+import { uploadSessions, sessionFiles } from "@/db/schema";
+import { z } from "zod";
+import { generatePresignedUploadUrl, getSessionFileKey } from "@/lib/r2";
+import type { UploadTokenRequest, UploadTokenResponse, FileInfo } from "@/types/upload";
+
+// Validation constants
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB per file
+const MAX_FILES_PER_REQUEST = 25; // Reasonable limit for UI
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const SESSION_DURATION_MINUTES = 15;
+
+// Request validation schema
+const uploadTokenRequestSchema = z.object({
+  files: z.array(z.object({
+    name: z.string().min(1).max(255),
+    size: z.number().min(1).max(MAX_FILE_SIZE),
+    type: z.string().refine(type => ALLOWED_IMAGE_TYPES.includes(type), {
+      message: "Only JPG, PNG, and WebP files are allowed"
+    })
+  })).min(1).max(MAX_FILES_PER_REQUEST),
+  type: z.literal("sorter-creation") // Can extend later
+});
+
+export async function POST(request: NextRequest) {
+  try {
+    // Check authentication
+    const session = await getServerSession();
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get user from database
+    const userQuery = await db.query.user.findFirst({
+      where: (user, { eq }) => eq(user.email, session.user.email!)
+    });
+
+    if (!userQuery) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Parse and validate request body
+    const body = await request.json();
+    const validatedData = uploadTokenRequestSchema.parse(body);
+
+    // Create upload session
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + SESSION_DURATION_MINUTES);
+
+    const [uploadSession] = await db.insert(uploadSessions).values({
+      userId: userQuery.id,
+      status: "pending",
+      expiresAt,
+      metadata: {
+        type: validatedData.type,
+        fileCount: validatedData.files.length,
+        totalSize: validatedData.files.reduce((sum, file) => sum + file.size, 0)
+      }
+    }).returning();
+
+    // Generate pre-signed URLs for each file
+    const uploadUrls = await Promise.all(
+      validatedData.files.map(async (file: FileInfo, index: number) => {
+        // Determine file type based on naming patterns or position
+        // For now, we'll default to 'item' and let the client specify
+        const fileType = determineFileType(file.name, index);
+        
+        // Generate session-based key
+        const sessionKey = getSessionFileKey(
+          uploadSession.id,
+          fileType,
+          index,
+          file.name
+        );
+
+        // Generate pre-signed URL
+        const uploadUrl = await generatePresignedUploadUrl(
+          sessionKey,
+          file.type,
+          SESSION_DURATION_MINUTES * 60 // Convert to seconds
+        );
+
+        // Store file metadata in session
+        await db.insert(sessionFiles).values({
+          sessionId: uploadSession.id,
+          r2Key: sessionKey,
+          originalName: file.name,
+          fileType,
+          mimeType: file.type,
+          fileSize: file.size
+        });
+
+        return {
+          key: sessionKey,
+          uploadUrl,
+          fileType,
+          originalName: file.name
+        };
+      })
+    );
+
+    const response: UploadTokenResponse = {
+      uploadUrls,
+      sessionId: uploadSession.id,
+      expiresAt: uploadSession.expiresAt.toISOString()
+    };
+
+    return NextResponse.json(response);
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: "Validation error",
+          details: error.errors,
+        },
+        { status: 400 }
+      );
+    }
+
+    console.error("Error generating upload tokens:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Determine file type based on naming patterns
+ * This is a simple heuristic - can be enhanced later
+ */
+function determineFileType(
+  filename: string, 
+  index: number
+): 'cover' | 'item' | 'group-cover' {
+  const lower = filename.toLowerCase();
+  
+  // Check for cover image indicators
+  if (lower.includes('cover') || lower.includes('banner') || lower.includes('header')) {
+    return 'cover';
+  }
+  
+  // Check for group cover indicators
+  if (lower.includes('group') && (lower.includes('cover') || lower.includes('banner'))) {
+    return 'group-cover';
+  }
+  
+  // Default to item image
+  return 'item';
+}

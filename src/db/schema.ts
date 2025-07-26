@@ -6,6 +6,8 @@ import {
   integer,
   boolean,
   primaryKey,
+  varchar,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -105,4 +107,30 @@ export const sortingResults = pgTable("sortingResults", {
   sorterTitle: text("sorterTitle"), // Snapshot of sorter title at time of ranking
   sorterCoverImageUrl: text("sorterCoverImageUrl"), // Snapshot of sorter cover image at time of ranking
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// Upload sessions for tracking direct R2 uploads
+export const uploadSessions = pgTable("uploadSessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  status: varchar("status", { length: 20 }).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  metadata: jsonb("metadata"), // Additional session data
+});
+
+// Files uploaded within sessions (before being linked to sorters)
+export const sessionFiles = pgTable("sessionFiles", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sessionId: uuid("sessionId")
+    .notNull()
+    .references(() => uploadSessions.id, { onDelete: "cascade" }),
+  r2Key: varchar("r2Key", { length: 500 }).notNull(),
+  originalName: varchar("originalName", { length: 255 }).notNull(),
+  fileType: varchar("fileType", { length: 10 }).notNull(), // 'cover', 'item', 'group-cover'
+  mimeType: varchar("mimeType", { length: 50 }).notNull(),
+  fileSize: integer("fileSize").notNull(),
+  uploadedAt: timestamp("uploadedAt").defaultNow().notNull(),
 });

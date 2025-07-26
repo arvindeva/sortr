@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // Initialize R2 client
 const r2Client = new S3Client({
@@ -124,4 +125,72 @@ export function getSorterItemKey(sorterId: string, itemSlug: string): string {
  */
 export function getSorterItemKeyPrefix(sorterId: string): string {
   return `sorters/${sorterId}/`;
+}
+
+/**
+ * Generate pre-signed URL for direct R2 upload
+ * @param key - The file key/path in the bucket
+ * @param contentType - The MIME type of the file
+ * @param expiresIn - Expiration time in seconds (default: 15 minutes)
+ * @returns Promise<string> - The pre-signed upload URL
+ */
+export async function generatePresignedUploadUrl(
+  key: string,
+  contentType: string,
+  expiresIn: number = 900 // 15 minutes
+): Promise<string> {
+  const command = new PutObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: key,
+    ContentType: contentType,
+  });
+
+  return await getSignedUrl(r2Client, command, { expiresIn });
+}
+
+/**
+ * Generate session-based key for temporary uploads
+ * @param sessionId - The upload session ID
+ * @param fileType - Type of file (cover, item, group-cover)
+ * @param index - Index for multiple files of same type
+ * @param originalName - Original filename for reference
+ * @returns The session-based file key
+ */
+export function getSessionFileKey(
+  sessionId: string,
+  fileType: 'cover' | 'item' | 'group-cover',
+  index: number,
+  originalName: string
+): string {
+  // Extract file extension from original name
+  const extension = originalName.split('.').pop() || 'jpg';
+  return `sessions/${sessionId}/${fileType}/${index}.${extension}`;
+}
+
+/**
+ * Convert session file key to final sorter key
+ * @param sessionKey - The session-based key
+ * @param sorterId - The final sorter ID
+ * @param itemSlug - The item slug (for item files)
+ * @returns The final sorter file key
+ */
+export function convertSessionKeyToSorterKey(
+  sessionKey: string,
+  sorterId: string,
+  itemSlug?: string
+): string {
+  const parts = sessionKey.split('/');
+  const fileType = parts[2]; // cover, item, or group-cover
+  const filename = parts[3]; // index.extension
+  
+  switch (fileType) {
+    case 'cover':
+      return getCoverKey(sorterId);
+    case 'item':
+      return getSorterItemKey(sorterId, itemSlug || 'unknown');
+    case 'group-cover':
+      return getSorterItemKey(sorterId, itemSlug || 'group-cover');
+    default:
+      throw new Error(`Unknown file type: ${fileType}`);
+  }
 }
