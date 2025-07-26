@@ -1,0 +1,1 @@
+ALTER TABLE "sessionFiles" ALTER COLUMN "fileType" SET DATA TYPE varchar(20);

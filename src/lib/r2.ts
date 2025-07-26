@@ -2,11 +2,12 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // Initialize R2 client
-const r2Client = new S3Client({
+export const r2Client = new S3Client({
   region: process.env.R2_REGION || "auto",
   endpoint: process.env.R2_ENDPOINT,
   credentials: {
@@ -104,8 +105,8 @@ export function getAvatarKey(userId: string): string {
  * @param sorterId - The sorter ID
  * @returns The cover image file key
  */
-export function getCoverKey(sorterId: string): string {
-  return `covers/${sorterId}.jpg`;
+export function getCoverKey(sorterId: string, extension: string = 'jpg'): string {
+  return `sorters/${sorterId}/cover.${extension}`;
 }
 
 /**
@@ -114,8 +115,8 @@ export function getCoverKey(sorterId: string): string {
  * @param itemSlug - The item slug (includes group prefix if applicable)
  * @returns The sorter item image file key
  */
-export function getSorterItemKey(sorterId: string, itemSlug: string): string {
-  return `sorters/${sorterId}/${itemSlug}.jpg`;
+export function getSorterItemKey(sorterId: string, itemSlug: string, extension: string = 'jpg'): string {
+  return `sorters/${sorterId}/${itemSlug}.${extension}`;
 }
 
 /**
@@ -183,13 +184,16 @@ export function convertSessionKeyToSorterKey(
   const fileType = parts[2]; // cover, item, or group-cover
   const filename = parts[3]; // index.extension
   
+  // Extract the original file extension (client will handle JPG conversion)
+  const extension = filename.split('.').pop() || 'jpg';
+  
   switch (fileType) {
     case 'cover':
-      return getCoverKey(sorterId);
+      return getCoverKey(sorterId, extension);
     case 'item':
-      return getSorterItemKey(sorterId, itemSlug || 'unknown');
+      return getSorterItemKey(sorterId, itemSlug || 'unknown', extension);
     case 'group-cover':
-      return getSorterItemKey(sorterId, itemSlug || 'group-cover');
+      return getSorterItemKey(sorterId, itemSlug || 'group-cover', extension);
     default:
       throw new Error(`Unknown file type: ${fileType}`);
   }

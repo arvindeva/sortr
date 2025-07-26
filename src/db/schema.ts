@@ -129,7 +129,7 @@ export const sessionFiles = pgTable("sessionFiles", {
     .references(() => uploadSessions.id, { onDelete: "cascade" }),
   r2Key: varchar("r2Key", { length: 500 }).notNull(),
   originalName: varchar("originalName", { length: 255 }).notNull(),
-  fileType: varchar("fileType", { length: 10 }).notNull(), // 'cover', 'item', 'group-cover'
+  fileType: varchar("fileType", { length: 20 }).notNull(), // 'cover', 'item', 'group-cover'
   mimeType: varchar("mimeType", { length: 50 }).notNull(),
   fileSize: integer("fileSize").notNull(),
   uploadedAt: timestamp("uploadedAt").defaultNow().notNull(),

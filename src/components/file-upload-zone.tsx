@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { compressImages, isCompressibleImage, formatFileSize } from '@/lib/image-compression';
 
 interface FileUploadZoneProps {
   onFilesSelected: (files: File[]) => void;
@@ -12,6 +13,7 @@ interface FileUploadZoneProps {
   maxFileSize?: number;
   disabled?: boolean;
   existingFiles?: File[];
+  enableCompression?: boolean;
 }
 
 export function FileUploadZone({
@@ -20,11 +22,14 @@ export function FileUploadZone({
   maxFiles = 25,
   maxFileSize = 10 * 1024 * 1024, // 10MB
   disabled = false,
-  existingFiles = []
+  existingFiles = [],
+  enableCompression = true
 }: FileUploadZoneProps) {
   const [dragError, setDragError] = useState<string | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressionProgress, setCompressionProgress] = useState({ completed: 0, total: 0 });
 
-  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[], rejectedFiles: any[]) => {
     setDragError(null);
 
     if (rejectedFiles.length > 0) {
@@ -44,9 +49,41 @@ export function FileUploadZone({
         return;
       }
 
-      onFilesSelected(acceptedFiles);
+      // Compress images if enabled
+      if (enableCompression) {
+        const compressibleFiles = acceptedFiles.filter(isCompressibleImage);
+        const nonCompressibleFiles = acceptedFiles.filter(file => !isCompressibleImage(file));
+
+        if (compressibleFiles.length > 0) {
+          setIsCompressing(true);
+          setCompressionProgress({ completed: 0, total: compressibleFiles.length });
+
+          try {
+            const compressionResults = await compressImages(
+              compressibleFiles,
+              { quality: 0.85, maxWidth: 1920, maxHeight: 1920, format: 'jpeg' },
+              (completed, total) => {
+                setCompressionProgress({ completed, total });
+              }
+            );
+
+            const compressedFiles = compressionResults.map(result => result.file);
+            onFilesSelected([...compressedFiles, ...nonCompressibleFiles]);
+          } catch (error) {
+            console.error('Compression failed:', error);
+            setDragError('Image compression failed. Using original files.');
+            onFilesSelected(acceptedFiles);
+          } finally {
+            setIsCompressing(false);
+          }
+        } else {
+          onFilesSelected(acceptedFiles);
+        }
+      } else {
+        onFilesSelected(acceptedFiles);
+      }
     }
-  }, [onFilesSelected, maxFiles, existingFiles.length]);
+  }, [onFilesSelected, maxFiles, existingFiles.length, enableCompression]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -84,7 +121,14 @@ export function FileUploadZone({
             <div className="space-y-2">
               <div className="text-4xl">📁</div>
               
-              {isDragActive ? (
+              {isCompressing ? (
+                <div>
+                  <p className="text-lg font-medium">Compressing images...</p>
+                  <p className="text-sm text-muted-foreground">
+                    {compressionProgress.completed} of {compressionProgress.total} images processed
+                  </p>
+                </div>
+              ) : isDragActive ? (
                 <div>
                   <p className="text-lg font-medium">Drop files here...</p>
                   <p className="text-sm text-muted-foreground">Release to upload</p>
@@ -97,6 +141,11 @@ export function FileUploadZone({
                   <p className="text-sm text-muted-foreground">
                     or <span className="text-primary">click to browse</span>
                   </p>
+                  {enableCompression && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Images will be compressed to JPG format
+                    </p>
+                  )}
                 </div>
               )}
 

@@ -7,6 +7,7 @@ import { FormLabel } from "@/components/ui/form";
 import { Box } from "@/components/ui/box";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { compressImages, isCompressibleImage } from '@/lib/image-compression';
 
 interface CoverImageUploadProps {
   onImageSelect: (file: File | null) => void;
@@ -43,9 +44,24 @@ export default function CoverImageUpload({
     return true;
   };
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = async (file: File) => {
     if (validateFile(file)) {
-      onImageSelect(file);
+      try {
+        // Compress image if it's compressible
+        if (isCompressibleImage(file)) {
+          const compressionResults = await compressImages(
+            [file],
+            { quality: 0.85, exactSize: { width: 300, height: 300 }, format: 'jpeg' }
+          );
+          const compressedFile = compressionResults[0].file;
+          onImageSelect(compressedFile);
+        } else {
+          onImageSelect(file);
+        }
+      } catch (error) {
+        console.error('Cover image compression failed:', error);
+        onImageSelect(file);
+      }
     }
   };
 

@@ -38,6 +38,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
+import { compressImages, isCompressibleImage } from '@/lib/image-compression';
 import {
   Plus,
   X,
@@ -189,7 +190,7 @@ export default function CreateSorterForm() {
   };
 
   // Handle file input change
-  const handleFileInputChange = (
+  const handleFileInputChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = Array.from(event.target.files || []);
@@ -210,7 +211,25 @@ export default function CreateSorterForm() {
     });
 
     if (validFiles.length > 0) {
-      handleItemImagesChange(validFiles);
+      try {
+        // Compress images to JPG
+        const compressibleFiles = validFiles.filter(isCompressibleImage);
+        const nonCompressibleFiles = validFiles.filter(file => !isCompressibleImage(file));
+
+        if (compressibleFiles.length > 0) {
+          const compressionResults = await compressImages(
+            compressibleFiles,
+            { quality: 0.85, exactSize: { width: 300, height: 300 }, format: 'jpeg' }
+          );
+          const compressedFiles = compressionResults.map(result => result.file);
+          handleItemImagesChange([...compressedFiles, ...nonCompressibleFiles]);
+        } else {
+          handleItemImagesChange(validFiles);
+        }
+      } catch (error) {
+        console.error('Compression failed:', error);
+        handleItemImagesChange(validFiles);
+      }
     }
 
     // Reset file input
@@ -557,7 +576,7 @@ export default function CreateSorterForm() {
   };
 
   // Handle file input change for groups
-  const handleGroupFileInputChange = (
+  const handleGroupFileInputChange = async (
     groupIndex: number,
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -579,7 +598,25 @@ export default function CreateSorterForm() {
     });
 
     if (validFiles.length > 0) {
-      handleGroupImagesChange(groupIndex, validFiles);
+      try {
+        // Compress images to JPG
+        const compressibleFiles = validFiles.filter(isCompressibleImage);
+        const nonCompressibleFiles = validFiles.filter(file => !isCompressibleImage(file));
+
+        if (compressibleFiles.length > 0) {
+          const compressionResults = await compressImages(
+            compressibleFiles,
+            { quality: 0.85, exactSize: { width: 300, height: 300 }, format: 'jpeg' }
+          );
+          const compressedFiles = compressionResults.map(result => result.file);
+          handleGroupImagesChange(groupIndex, [...compressedFiles, ...nonCompressibleFiles]);
+        } else {
+          handleGroupImagesChange(groupIndex, validFiles);
+        }
+      } catch (error) {
+        console.error('Compression failed:', error);
+        handleGroupImagesChange(groupIndex, validFiles);
+      }
     }
 
     // Reset file input
@@ -624,7 +661,7 @@ export default function CreateSorterForm() {
   };
 
   // Handle group cover image file input change
-  const handleGroupCoverFileInputChange = (
+  const handleGroupCoverFileInputChange = async (
     groupIndex: number,
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -644,9 +681,26 @@ export default function CreateSorterForm() {
         alert("File size must be less than 10MB");
         return;
       }
-    }
 
-    handleGroupCoverImageSelect(groupIndex, file);
+      try {
+        // Compress image if it's compressible
+        if (isCompressibleImage(file)) {
+          const compressionResults = await compressImages(
+            [file],
+            { quality: 0.85, exactSize: { width: 300, height: 300 }, format: 'jpeg' }
+          );
+          const compressedFile = compressionResults[0].file;
+          handleGroupCoverImageSelect(groupIndex, compressedFile);
+        } else {
+          handleGroupCoverImageSelect(groupIndex, file);
+        }
+      } catch (error) {
+        console.error('Compression failed:', error);
+        handleGroupCoverImageSelect(groupIndex, file);
+      }
+    } else {
+      handleGroupCoverImageSelect(groupIndex, null);
+    }
 
     // Reset file input
     if (event.target) {
@@ -693,9 +747,15 @@ export default function CreateSorterForm() {
       // Collect all files for upload
       const filesToUpload: File[] = [];
 
-      // Add cover image if present
+      // Add cover image if present with special prefix to identify it
       if (coverImageFile) {
-        filesToUpload.push(coverImageFile);
+        // Create a new File with cover prefix to ensure proper type detection
+        const coverFile = new File(
+          [coverImageFile], 
+          `cover-${coverImageFile.name}`,
+          { type: coverImageFile.type }
+        );
+        filesToUpload.push(coverFile);
       }
 
       // Get actual image files from itemImagesData (traditional mode) or groupImagesData (grouped mode)
@@ -719,13 +779,24 @@ export default function CreateSorterForm() {
       }
 
       filesToUpload.push(...actualImageFiles);
+      
 
-      // Get group cover files (only for grouped mode)
+      // Get group cover files (only for grouped mode) with special prefix
       if (data.useGroups) {
         const groupCoverImageFiles = groupCoverFiles.filter(
           (file) => file !== null,
         ) as File[];
-        filesToUpload.push(...groupCoverImageFiles);
+        
+        // Add group-cover prefix to identify them as group covers
+        const prefixedGroupCovers = groupCoverImageFiles.map((file, index) => {
+          return new File(
+            [file],
+            `group-cover-${index}-${file.name}`,
+            { type: file.type }
+          );
+        });
+        
+        filesToUpload.push(...prefixedGroupCovers);
       }
 
       if (filesToUpload.length === 0) {
@@ -751,6 +822,9 @@ export default function CreateSorterForm() {
     try {
       setUploadStatus("Creating sorter...");
 
+      console.log('Direct upload sessionId:', directUpload.sessionId);
+      console.log('Uploaded files:', uploadedFiles);
+      
       const payload = {
       title: data.title.trim(),
       description: data.description?.trim() || undefined,
@@ -910,6 +984,7 @@ export default function CreateSorterForm() {
 
   // Handle form submission with smart upload detection
   const onSubmit = async (data: CreateSorterInput) => {
+    
     // Get actual image files from itemImagesData (traditional mode) or groupImagesData (grouped mode)
     let actualImageFiles: File[] = [];
 

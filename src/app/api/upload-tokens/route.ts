@@ -63,9 +63,9 @@ export async function POST(request: NextRequest) {
     // Generate pre-signed URLs for each file
     const uploadUrls = await Promise.all(
       validatedData.files.map(async (file: FileInfo, index: number) => {
-        // Determine file type based on naming patterns or position
-        // For now, we'll default to 'item' and let the client specify
-        const fileType = determineFileType(file.name, index);
+        // Determine file type based on position and naming patterns
+        // The client sends files in order: [cover?, ...items, ...groupCovers]
+        const fileType = determineFileType(file.name, index, validatedData.files.length);
         
         // Generate session-based key
         const sessionKey = getSessionFileKey(
@@ -134,18 +134,28 @@ export async function POST(request: NextRequest) {
  */
 function determineFileType(
   filename: string, 
-  index: number
+  index: number,
+  totalFiles: number
 ): 'cover' | 'item' | 'group-cover' {
   const lower = filename.toLowerCase();
-  
-  // Check for cover image indicators
-  if (lower.includes('cover') || lower.includes('banner') || lower.includes('header')) {
+  // Check for explicit cover image prefix (added by form)
+  if (lower.startsWith('cover-')) {
     return 'cover';
   }
   
-  // Check for group cover indicators
+  // Check for group cover prefix (added by form)
+  if (lower.startsWith('group-cover-')) {
+    return 'group-cover';
+  }
+  
+  // Check for other group cover indicators  
   if (lower.includes('group') && (lower.includes('cover') || lower.includes('banner'))) {
     return 'group-cover';
+  }
+  
+  // Check for other cover indicators
+  if (lower.includes('cover') || lower.includes('banner') || lower.includes('header')) {
+    return 'cover';
   }
   
   // Default to item image

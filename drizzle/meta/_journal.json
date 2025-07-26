@@ -50,6 +50,13 @@
       "when": 1753528411074,
       "tag": "0006_chunky_queen_noir",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1753553496856,
+      "tag": "0007_wonderful_vindicator",
+      "breakpoints": true
     }
   ]
 }
