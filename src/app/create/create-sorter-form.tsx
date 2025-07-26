@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +31,13 @@ import {
   PanelTitle,
   PanelContent,
 } from "@/components/ui/panel";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
 import {
   Plus,
   X,
@@ -65,6 +73,11 @@ export default function CreateSorterForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const groupFileInputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const groupCoverInputRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+  // Upload progress state
+  const [showProgressDialog, setShowProgressDialog] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<CreateSorterInput>({
     resolver: zodResolver(createSorterSchema),
@@ -241,6 +254,19 @@ export default function CreateSorterForm() {
       groupCoverInputRefs.current = [];
     }
   }, [useGroups, form]);
+
+  // Navigation protection during upload
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isUploading) {
+        e.preventDefault();
+        e.returnValue = "Upload in progress. Are you sure you want to leave?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isUploading]);
 
   // Field arrays for both modes
   const {
@@ -624,8 +650,132 @@ export default function CreateSorterForm() {
     removeItem(index);
   };
 
-  // Handle form submission
-  const onSubmit = async (data: CreateSorterInput) => {
+  // Upload with progress tracking using axios
+  const uploadWithProgress = async (data: CreateSorterInput) => {
+    setShowProgressDialog(true);
+    setIsUploading(true);
+    setUploadStatus("Preparing upload...");
+
+    // Small delay to show the dialog before starting
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    try {
+      // Safety check for required fields
+      if (!data.title || !data.title.trim()) {
+        throw new Error("Title is required");
+      }
+
+      const payload = {
+        title: data.title.trim(),
+        description: data.description?.trim() || undefined,
+        category: data.category?.trim() || undefined,
+        useGroups: data.useGroups,
+      };
+
+      if (data.useGroups && data.groups) {
+        // Filter out empty groups and items
+        const validGroups = data.groups
+          .filter((group) => group.name.trim())
+          .map((group) => ({
+            name: group.name.trim(),
+            items: group.items
+              .filter((item) => item.title.trim())
+              .map((item) => ({
+                title: item.title.trim(),
+              })),
+          }))
+          .filter((group) => group.items.length > 0);
+
+        Object.assign(payload, { groups: validGroups });
+      } else {
+        // Traditional mode
+        const validItems =
+          data.items
+            ?.filter((item) => item.title.trim())
+            .map((item) => ({ title: item.title.trim() })) || [];
+
+        Object.assign(payload, { items: validItems });
+      }
+
+      // Get actual image files from itemImagesData (traditional mode) or groupImagesData (grouped mode)
+      let actualImageFiles: File[] = [];
+
+      if (data.useGroups) {
+        // Flatten grouped images into a single array
+        actualImageFiles = groupImagesData
+          .flat()
+          .filter(
+            (data): data is { file: File; preview: string } => data !== null,
+          )
+          .map((data) => data.file);
+      } else {
+        // Traditional mode
+        actualImageFiles = itemImagesData
+          .filter(
+            (data): data is { file: File; preview: string } => data !== null,
+          )
+          .map((data) => data.file);
+      }
+
+      // Get group cover files (only for grouped mode)
+      let groupCoverImageFiles: File[] = [];
+      if (data.useGroups) {
+        groupCoverImageFiles = groupCoverFiles.filter(
+          (file) => file !== null,
+        ) as File[];
+      }
+
+      // Create multipart form data
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(payload));
+
+      if (coverImageFile) {
+        formData.append("coverImage", coverImageFile);
+      }
+
+      // Add item images with indexed keys
+      actualImageFiles.forEach((file, index) => {
+        formData.append(`itemImage_${index}`, file);
+      });
+
+      // Add group cover images with indexed keys
+      groupCoverImageFiles.forEach((file, index) => {
+        formData.append(`groupCover_${index}`, file);
+      });
+
+      setUploadStatus("Uploading images...");
+
+      const response = await axios.post("/api/sorters", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        timeout: 0, // No timeout for large uploads
+      });
+
+      setUploadStatus("Processing images...");
+      
+      // Small delay to show processing status
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setUploadStatus("Creating sorter...");
+      
+      // Redirect to sorter page
+      router.push(`/sorter/${response.data.sorter.slug}`);
+    } catch (error) {
+      console.error("Error creating sorter:", error);
+      setUploadStatus("Upload failed");
+      
+      // Show error for a moment then allow retry
+      setTimeout(() => {
+        setShowProgressDialog(false);
+        setIsUploading(false);
+        alert(error instanceof Error ? error.message : "Failed to create sorter");
+      }, 2000);
+    }
+  };
+
+  // Fast upload for text-only sorters (existing behavior)
+  const uploadWithoutImages = async (data: CreateSorterInput) => {
     setIsLoading(true);
 
     try {
@@ -668,73 +818,14 @@ export default function CreateSorterForm() {
         Object.assign(payload, { items: validItems });
       }
 
-      let response;
-
-      // Get actual image files from itemImagesData (traditional mode) or groupImagesData (grouped mode)
-      let actualImageFiles: File[] = [];
-
-      if (data.useGroups) {
-        // Flatten grouped images into a single array
-        actualImageFiles = groupImagesData
-          .flat()
-          .filter(
-            (data): data is { file: File; preview: string } => data !== null,
-          )
-          .map((data) => data.file);
-      } else {
-        // Traditional mode
-        actualImageFiles = itemImagesData
-          .filter(
-            (data): data is { file: File; preview: string } => data !== null,
-          )
-          .map((data) => data.file);
-      }
-
-      // Get group cover files (only for grouped mode)
-      let groupCoverImageFiles: File[] = [];
-      if (data.useGroups) {
-        groupCoverImageFiles = groupCoverFiles.filter(
-          (file) => file !== null,
-        ) as File[];
-      }
-
-      if (
-        coverImageFile ||
-        actualImageFiles.length > 0 ||
-        groupCoverImageFiles.length > 0
-      ) {
-        // Send as multipart form data with cover image, item images, and/or group cover images
-        const formData = new FormData();
-        formData.append("data", JSON.stringify(payload));
-
-        if (coverImageFile) {
-          formData.append("coverImage", coverImageFile);
-        }
-
-        // Add item images with indexed keys
-        actualImageFiles.forEach((file, index) => {
-          formData.append(`itemImage_${index}`, file);
-        });
-
-        // Add group cover images with indexed keys
-        groupCoverImageFiles.forEach((file, index) => {
-          formData.append(`groupCover_${index}`, file);
-        });
-
-        response = await fetch("/api/sorters", {
-          method: "POST",
-          body: formData,
-        });
-      } else {
-        // Send as regular JSON
-        response = await fetch("/api/sorters", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-      }
+      // Send as regular JSON
+      const response = await fetch("/api/sorters", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -749,6 +840,51 @@ export default function CreateSorterForm() {
       console.error("Error creating sorter:", error);
       alert(error instanceof Error ? error.message : "Failed to create sorter");
       setIsLoading(false); // Only set loading false on error
+    }
+  };
+
+  // Handle form submission with smart upload detection
+  const onSubmit = async (data: CreateSorterInput) => {
+    // Get actual image files from itemImagesData (traditional mode) or groupImagesData (grouped mode)
+    let actualImageFiles: File[] = [];
+
+    if (data.useGroups) {
+      // Flatten grouped images into a single array
+      actualImageFiles = groupImagesData
+        .flat()
+        .filter(
+          (data): data is { file: File; preview: string } => data !== null,
+        )
+        .map((data) => data.file);
+    } else {
+      // Traditional mode
+      actualImageFiles = itemImagesData
+        .filter(
+          (data): data is { file: File; preview: string } => data !== null,
+        )
+        .map((data) => data.file);
+    }
+
+    // Get group cover files (only for grouped mode)
+    let groupCoverImageFiles: File[] = [];
+    if (data.useGroups) {
+      groupCoverImageFiles = groupCoverFiles.filter(
+        (file) => file !== null,
+      ) as File[];
+    }
+
+    // Check if any images are present
+    const hasImages = 
+      coverImageFile || 
+      actualImageFiles.length > 0 || 
+      groupCoverImageFiles.length > 0;
+
+    if (hasImages) {
+      // Use axios with progress dialog for image uploads
+      await uploadWithProgress(data);
+    } else {
+      // Use existing fast JSON upload for text-only sorters
+      await uploadWithoutImages(data);
     }
   };
 
@@ -1334,14 +1470,14 @@ export default function CreateSorterForm() {
 
               {/* Submit */}
               <div className="flex gap-4">
-                <Button type="submit" disabled={isLoading} className="flex-1">
+                <Button type="submit" disabled={isLoading || isUploading} className="flex-1">
                   {isLoading ? "Creating..." : "Create Sorter"}
                 </Button>
                 <Button
                   type="button"
                   variant="neutral"
                   onClick={() => router.back()}
-                  disabled={isLoading}
+                  disabled={isLoading || isUploading}
                 >
                   Cancel
                 </Button>
@@ -1350,6 +1486,19 @@ export default function CreateSorterForm() {
           </Form>
         </PanelContent>
       </Panel>
+
+      {/* Upload Progress Dialog */}
+      <Dialog open={showProgressDialog} onOpenChange={() => {}}>
+        <DialogContent preventClose={true} className="sm:max-w-md">
+          <DialogHeader className="text-center sm:text-center">
+            <DialogTitle>Creating Sorter</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 text-center">
+            <SortingBarsLoader size={60} />
+            <p className="text-sm">{uploadStatus}</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

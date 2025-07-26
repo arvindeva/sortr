@@ -70,7 +70,16 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const body = JSON.parse(dataJson);
+      let body;
+      try {
+        body = JSON.parse(dataJson);
+      } catch (jsonError) {
+        console.error("JSON parse error:", jsonError, "Raw data:", dataJson);
+        return NextResponse.json(
+          { error: "Invalid JSON format in form data" },
+          { status: 400 },
+        );
+      }
       validatedData = createSorterSchema.parse(body);
     } else {
       // Handle regular JSON request
