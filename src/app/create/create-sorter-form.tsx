@@ -56,8 +56,12 @@ export default function CreateSorterForm() {
   const [groupImagesData, setGroupImagesData] = useState<
     Array<Array<{ file: File; preview: string } | null>>
   >([]);
-  const [groupCoverFiles, setGroupCoverFiles] = useState<Array<File | null>>([]);
-  const [groupCoverPreviews, setGroupCoverPreviews] = useState<Array<string | null>>([]);
+  const [groupCoverFiles, setGroupCoverFiles] = useState<Array<File | null>>(
+    [],
+  );
+  const [groupCoverPreviews, setGroupCoverPreviews] = useState<
+    Array<string | null>
+  >([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const groupFileInputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const groupCoverInputRefs = useRef<Array<HTMLInputElement | null>>([]);
@@ -202,33 +206,21 @@ export default function CreateSorterForm() {
     };
   }, [coverImagePreview]); // REMOVED itemImagesData and groupImagesData from dependencies!
 
-  // Initialize groups when switching to filters mode
+  // Initialize groups when switching to groups mode
   useEffect(() => {
     if (useGroups) {
-      // Initialize groups if they don't exist or are empty
+      // Initialize groups array as empty (user will add groups manually)
       const currentGroups = form.getValues("groups");
-      if (!currentGroups || currentGroups.length === 0) {
-        form.setValue("groups", [
-          {
-            name: "",
-            items: [{ title: "" }, { title: "" }],
-          },
-          {
-            name: "",
-            items: [{ title: "" }, { title: "" }],
-          },
-        ]);
-        // Initialize grouped images data to match groups structure
-        setGroupImagesData([
-          [null, null], // Group 0: 2 items
-          [null, null], // Group 1: 2 items
-        ]);
-        // Initialize group cover images
-        setGroupCoverFiles([null, null]);
-        setGroupCoverPreviews([null, null]);
-        // Initialize file input refs arrays
-        groupFileInputRefs.current = [null, null];
-        groupCoverInputRefs.current = [null, null];
+      if (!currentGroups) {
+        form.setValue("groups", []);
+        // Initialize empty grouped images data
+        setGroupImagesData([]);
+        // Initialize empty group cover images
+        setGroupCoverFiles([]);
+        setGroupCoverPreviews([]);
+        // Initialize empty file input refs arrays
+        groupFileInputRefs.current = [];
+        groupCoverInputRefs.current = [];
       }
       // Clear items array when using groups
       form.setValue("items", undefined);
@@ -277,10 +269,10 @@ export default function CreateSorterForm() {
       items: [{ title: "" }, { title: "" }],
     });
     // Add corresponding image data for new group
-    setGroupImagesData(prev => [...prev, [null, null]]);
+    setGroupImagesData((prev) => [...prev, [null, null]]);
     // Add group cover image data
-    setGroupCoverFiles(prev => [...prev, null]);
-    setGroupCoverPreviews(prev => [...prev, null]);
+    setGroupCoverFiles((prev) => [...prev, null]);
+    setGroupCoverPreviews((prev) => [...prev, null]);
     // Add file input refs for new group
     groupFileInputRefs.current.push(null);
     groupCoverInputRefs.current.push(null);
@@ -288,11 +280,11 @@ export default function CreateSorterForm() {
 
   // Remove group
   const removeGroupHandler = (index: number) => {
-    if (groupFields.length > 2) {
+    if (groupFields.length > 1) {
       // Clean up image previews for this group
       const groupImages = groupImagesData[index];
       if (groupImages) {
-        groupImages.forEach(imageData => {
+        groupImages.forEach((imageData) => {
           if (imageData) {
             URL.revokeObjectURL(imageData.preview);
           }
@@ -303,12 +295,12 @@ export default function CreateSorterForm() {
       if (coverPreview) {
         URL.revokeObjectURL(coverPreview);
       }
-      
+
       removeGroup(index);
       // Remove corresponding image data
-      setGroupImagesData(prev => prev.filter((_, i) => i !== index));
-      setGroupCoverFiles(prev => prev.filter((_, i) => i !== index));
-      setGroupCoverPreviews(prev => prev.filter((_, i) => i !== index));
+      setGroupImagesData((prev) => prev.filter((_, i) => i !== index));
+      setGroupCoverFiles((prev) => prev.filter((_, i) => i !== index));
+      setGroupCoverPreviews((prev) => prev.filter((_, i) => i !== index));
       // Remove file input refs
       groupFileInputRefs.current.splice(index, 1);
       groupCoverInputRefs.current.splice(index, 1);
@@ -320,27 +312,46 @@ export default function CreateSorterForm() {
     if (index > 0) {
       moveGroup(index, index - 1);
       // Move corresponding image data
-      setGroupImagesData(prev => {
+      setGroupImagesData((prev) => {
         const newData = [...prev];
-        [newData[index], newData[index - 1]] = [newData[index - 1], newData[index]];
+        [newData[index], newData[index - 1]] = [
+          newData[index - 1],
+          newData[index],
+        ];
         return newData;
       });
       // Move group cover data
-      setGroupCoverFiles(prev => {
+      setGroupCoverFiles((prev) => {
         const newData = [...prev];
-        [newData[index], newData[index - 1]] = [newData[index - 1], newData[index]];
+        [newData[index], newData[index - 1]] = [
+          newData[index - 1],
+          newData[index],
+        ];
         return newData;
       });
-      setGroupCoverPreviews(prev => {
+      setGroupCoverPreviews((prev) => {
         const newData = [...prev];
-        [newData[index], newData[index - 1]] = [newData[index - 1], newData[index]];
+        [newData[index], newData[index - 1]] = [
+          newData[index - 1],
+          newData[index],
+        ];
         return newData;
       });
       // Move file input refs
-      [groupFileInputRefs.current[index], groupFileInputRefs.current[index - 1]] = 
-        [groupFileInputRefs.current[index - 1], groupFileInputRefs.current[index]];
-      [groupCoverInputRefs.current[index], groupCoverInputRefs.current[index - 1]] = 
-        [groupCoverInputRefs.current[index - 1], groupCoverInputRefs.current[index]];
+      [
+        groupFileInputRefs.current[index],
+        groupFileInputRefs.current[index - 1],
+      ] = [
+        groupFileInputRefs.current[index - 1],
+        groupFileInputRefs.current[index],
+      ];
+      [
+        groupCoverInputRefs.current[index],
+        groupCoverInputRefs.current[index - 1],
+      ] = [
+        groupCoverInputRefs.current[index - 1],
+        groupCoverInputRefs.current[index],
+      ];
     }
   };
 
@@ -349,27 +360,46 @@ export default function CreateSorterForm() {
     if (index < groupFields.length - 1) {
       moveGroup(index, index + 1);
       // Move corresponding image data
-      setGroupImagesData(prev => {
+      setGroupImagesData((prev) => {
         const newData = [...prev];
-        [newData[index], newData[index + 1]] = [newData[index + 1], newData[index]];
+        [newData[index], newData[index + 1]] = [
+          newData[index + 1],
+          newData[index],
+        ];
         return newData;
       });
       // Move group cover data
-      setGroupCoverFiles(prev => {
+      setGroupCoverFiles((prev) => {
         const newData = [...prev];
-        [newData[index], newData[index + 1]] = [newData[index + 1], newData[index]];
+        [newData[index], newData[index + 1]] = [
+          newData[index + 1],
+          newData[index],
+        ];
         return newData;
       });
-      setGroupCoverPreviews(prev => {
+      setGroupCoverPreviews((prev) => {
         const newData = [...prev];
-        [newData[index], newData[index + 1]] = [newData[index + 1], newData[index]];
+        [newData[index], newData[index + 1]] = [
+          newData[index + 1],
+          newData[index],
+        ];
         return newData;
       });
       // Move file input refs
-      [groupFileInputRefs.current[index], groupFileInputRefs.current[index + 1]] = 
-        [groupFileInputRefs.current[index + 1], groupFileInputRefs.current[index]];
-      [groupCoverInputRefs.current[index], groupCoverInputRefs.current[index + 1]] = 
-        [groupCoverInputRefs.current[index + 1], groupCoverInputRefs.current[index]];
+      [
+        groupFileInputRefs.current[index],
+        groupFileInputRefs.current[index + 1],
+      ] = [
+        groupFileInputRefs.current[index + 1],
+        groupFileInputRefs.current[index],
+      ];
+      [
+        groupCoverInputRefs.current[index],
+        groupCoverInputRefs.current[index + 1],
+      ] = [
+        groupCoverInputRefs.current[index + 1],
+        groupCoverInputRefs.current[index],
+      ];
     }
   };
 
@@ -381,7 +411,7 @@ export default function CreateSorterForm() {
       { title: "" },
     ]);
     // Add null entry to images array for this group
-    setGroupImagesData(prev => {
+    setGroupImagesData((prev) => {
       const newData = [...prev];
       if (newData[groupIndex]) {
         newData[groupIndex] = [...newData[groupIndex], null];
@@ -405,10 +435,12 @@ export default function CreateSorterForm() {
         currentItems.filter((_, i) => i !== itemIndex),
       );
       // Remove from images array at the specific index
-      setGroupImagesData(prev => {
+      setGroupImagesData((prev) => {
         const newData = [...prev];
         if (newData[groupIndex]) {
-          newData[groupIndex] = newData[groupIndex].filter((_, i) => i !== itemIndex);
+          newData[groupIndex] = newData[groupIndex].filter(
+            (_, i) => i !== itemIndex,
+          );
         }
         return newData;
       });
@@ -462,7 +494,7 @@ export default function CreateSorterForm() {
 
     // Update both form and group images
     form.setValue(`groups.${groupIndex}.items`, updatedItems);
-    setGroupImagesData(prev => {
+    setGroupImagesData((prev) => {
       const newData = [...prev];
       newData[groupIndex] = updatedImagesData;
       return newData;
@@ -502,7 +534,10 @@ export default function CreateSorterForm() {
   };
 
   // Handle group cover image selection
-  const handleGroupCoverImageSelect = (groupIndex: number, file: File | null) => {
+  const handleGroupCoverImageSelect = (
+    groupIndex: number,
+    file: File | null,
+  ) => {
     // Clean up previous preview
     const oldPreview = groupCoverPreviews[groupIndex];
     if (oldPreview) {
@@ -510,7 +545,7 @@ export default function CreateSorterForm() {
     }
 
     // Update file
-    setGroupCoverFiles(prev => {
+    setGroupCoverFiles((prev) => {
       const newFiles = [...prev];
       newFiles[groupIndex] = file;
       return newFiles;
@@ -519,13 +554,13 @@ export default function CreateSorterForm() {
     // Update preview
     if (file) {
       const previewUrl = URL.createObjectURL(file);
-      setGroupCoverPreviews(prev => {
+      setGroupCoverPreviews((prev) => {
         const newPreviews = [...prev];
         newPreviews[groupIndex] = previewUrl;
         return newPreviews;
       });
     } else {
-      setGroupCoverPreviews(prev => {
+      setGroupCoverPreviews((prev) => {
         const newPreviews = [...prev];
         newPreviews[groupIndex] = null;
         return newPreviews;
@@ -637,7 +672,7 @@ export default function CreateSorterForm() {
 
       // Get actual image files from itemImagesData (traditional mode) or groupImagesData (grouped mode)
       let actualImageFiles: File[] = [];
-      
+
       if (data.useGroups) {
         // Flatten grouped images into a single array
         actualImageFiles = groupImagesData
@@ -658,10 +693,16 @@ export default function CreateSorterForm() {
       // Get group cover files (only for grouped mode)
       let groupCoverImageFiles: File[] = [];
       if (data.useGroups) {
-        groupCoverImageFiles = groupCoverFiles.filter(file => file !== null) as File[];
+        groupCoverImageFiles = groupCoverFiles.filter(
+          (file) => file !== null,
+        ) as File[];
       }
 
-      if (coverImageFile || actualImageFiles.length > 0 || groupCoverImageFiles.length > 0) {
+      if (
+        coverImageFile ||
+        actualImageFiles.length > 0 ||
+        groupCoverImageFiles.length > 0
+      ) {
         // Send as multipart form data with cover image, item images, and/or group cover images
         const formData = new FormData();
         formData.append("data", JSON.stringify(payload));
@@ -728,397 +769,447 @@ export default function CreateSorterForm() {
               }}
               className="space-y-6"
             >
-              {/* Basic Info */}
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Best Marvel Movies"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Describe what you're ranking..."
-                          rows={3}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <FormControl>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Movies & TV">
-                              Movies & TV
-                            </SelectItem>
-                            <SelectItem value="Music">Music</SelectItem>
-                            <SelectItem value="Video Games">
-                              Video Games
-                            </SelectItem>
-                            <SelectItem value="Books">Books</SelectItem>
-                            <SelectItem value="Food">Food</SelectItem>
-                            <SelectItem value="Sports">Sports</SelectItem>
-                            <SelectItem value="Fashion">Fashion</SelectItem>
-                            <SelectItem value="Academics">Academics</SelectItem>
-                            <SelectItem value="Anime & Manga">
-                              Anime & Manga
-                            </SelectItem>
-                            <SelectItem value="Tech">Tech</SelectItem>
-                            <SelectItem value="Internet">Internet</SelectItem>
-                            <SelectItem value="Travel">Travel</SelectItem>
-                            <SelectItem value="Nature">Nature</SelectItem>
-                            <SelectItem value="Hobbies">Hobbies</SelectItem>
-                            <SelectItem value="Vehicles">Vehicles</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Cover Image Upload */}
-                <CoverImageUpload
-                  onImageSelect={handleCoverImageSelect}
-                  selectedFile={coverImageFile}
-                  previewUrl={coverImagePreview}
-                  disabled={isLoading}
-                />
-
-                {/* Filters Toggle */}
-                <FormField
-                  control={form.control}
-                  name="useGroups"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Box
-                        variant="secondary"
-                        size="md"
-                        className="flex flex-row items-center justify-between"
-                      >
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">
-                            Use Filters
-                          </FormLabel>
-                          <div className="font-medium">
-                            Group items into filters for selective sorting
-                          </div>
-                        </div>
+              {/* Sorter Details Section */}
+              <div className="mb-6">
+                <h2 className="mb-4 text-xl font-semibold">Sorter Details</h2>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Title *</FormLabel>
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
+                          <Input
+                            placeholder="e.g., Best Marvel Movies"
+                            {...field}
                           />
                         </FormControl>
-                      </Box>
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe what you're ranking..."
+                            rows={3}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Movies & TV">
+                                Movies & TV
+                              </SelectItem>
+                              <SelectItem value="Music">Music</SelectItem>
+                              <SelectItem value="Video Games">
+                                Video Games
+                              </SelectItem>
+                              <SelectItem value="Books">Books</SelectItem>
+                              <SelectItem value="Food">Food</SelectItem>
+                              <SelectItem value="Sports">Sports</SelectItem>
+                              <SelectItem value="Fashion">Fashion</SelectItem>
+                              <SelectItem value="Academics">
+                                Academics
+                              </SelectItem>
+                              <SelectItem value="Anime & Manga">
+                                Anime & Manga
+                              </SelectItem>
+                              <SelectItem value="Tech">Tech</SelectItem>
+                              <SelectItem value="Internet">Internet</SelectItem>
+                              <SelectItem value="Travel">Travel</SelectItem>
+                              <SelectItem value="Nature">Nature</SelectItem>
+                              <SelectItem value="Hobbies">Hobbies</SelectItem>
+                              <SelectItem value="Vehicles">Vehicles</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Cover Image Upload */}
+                  <CoverImageUpload
+                    onImageSelect={handleCoverImageSelect}
+                    selectedFile={coverImageFile}
+                    previewUrl={coverImagePreview}
+                    disabled={isLoading}
+                  />
+
+                  {/* Filters Toggle */}
+                  <FormField
+                    control={form.control}
+                    name="useGroups"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Box
+                          variant="secondary"
+                          size="md"
+                          className="flex flex-row items-center justify-between"
+                        >
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                              Use Groups
+                            </FormLabel>
+                            <div className="font-medium">
+                              Filter items into groups for selective sorting
+                            </div>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </Box>
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
-              {/* Items Section */}
-              {useGroups ? (
-                /* Filters Mode */
-                <div>
-                  <div className="mb-4">
-                    <FormLabel>Filters *</FormLabel>
-                  </div>
+              {/* Items to Rank Section */}
+              <div className="mb-6">
+                <h2 className="mb-4 text-xl font-semibold">Items to Rank</h2>
+                {useGroups ? (
+                  /* Groups Mode */
+                  <div>
+                    <div className="mb-4">
+                      <FormLabel>Groups *</FormLabel>
+                      {/* Add Group button */}
+                      <div className="mt-2">
+                        <Button
+                          type="button"
+                          variant="neutral"
+                          size="sm"
+                          onClick={addGroup}
+                          className="flex items-center gap-1"
+                        >
+                          <Plus size={16} />
+                          Add Group
+                        </Button>
+                      </div>
+                    </div>
 
-                  {/* Instructions for grouped mode */}
-                  <div className="mb-4 space-y-1 text-sm">
-                    <p>
-                      <strong>Group Image:</strong> Upload a cover image for each group. Click "Group Image" button to select an image.
-                    </p>
-                    <p>
-                      <strong>Item Images:</strong> Click the camera icon next to each item to upload an image. Supported for individual items within groups.
-                    </p>
-                    <p>
-                      <strong>Add Item:</strong> Use + button to add more items to a group. Use trash icon to remove items.
-                    </p>
-                    <p className="text-xs">
-                      Supported formats: JPG, PNG, WebP • Max 5MB each • Images are optional for both groups and items
-                    </p>
-                  </div>
+                    <div className="space-y-8">
+                      {groupFields.length === 0 ? (
+                        <div className="py-8 text-center">
+                          <p>No groups added yet</p>
+                          <p className="mt-1 text-sm">
+                            Click "Add Group" to get started
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          {groupFields.map((groupField, groupIndex) => (
+                            <div key={groupField.id} className="space-y-4">
+                              {/* Group Number Heading */}
+                              <h3 className="text-lg font-semibold">
+                                Group {groupIndex + 1}
+                              </h3>
 
-                  <div className="mb-4">
-                    <Button
-                      type="button"
-                      variant="neutral"
-                      size="sm"
-                      onClick={addGroup}
-                      className="flex items-center gap-1"
-                    >
-                      <Plus size={16} />
-                      Add Filter
-                    </Button>
-                  </div>
+                              {/* Group Name Field */}
+                              <div className="relative ml-6">
+                                {/* Up/Down arrows - positioned absolutely */}
+                                <div className="absolute top-6 -left-8 flex flex-col gap-1">
+                                  <Button
+                                    type="button"
+                                    variant="neutral"
+                                    size="sm"
+                                    onClick={() => moveGroupUp(groupIndex)}
+                                    title="Move group up"
+                                    disabled={groupIndex === 0}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <ChevronUp size={14} />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="neutral"
+                                    size="sm"
+                                    onClick={() => moveGroupDown(groupIndex)}
+                                    title="Move group down"
+                                    disabled={
+                                      groupIndex === groupFields.length - 1
+                                    }
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <ChevronDown size={14} />
+                                  </Button>
+                                </div>
 
-                  <div className="space-y-8">
-                    {groupFields.map((groupField, groupIndex) => (
-                      <div key={groupField.id} className="space-y-4">
-                        {/* Group Number Heading */}
-                        <h3 className="text-lg font-semibold">Group {groupIndex + 1}</h3>
-                        
-                        {/* Group Header Row: [↑↓] Group Name [Upload Group Image] [Delete Group] */}
-                        <div className="flex items-center gap-2">
-                          {/* Up/Down arrows */}
-                          <div className="flex flex-col">
-                            {groupIndex > 0 ? (
-                              <Button
-                                type="button"
-                                variant="neutral"
-                                size="sm"
-                                onClick={() => moveGroupUp(groupIndex)}
-                                title="Move filter up"
-                                className="h-4 w-4 p-0"
-                              >
-                                <ChevronUp size={12} />
-                              </Button>
-                            ) : (
-                              <div className="h-4 w-4"></div>
-                            )}
-                            {groupIndex < groupFields.length - 1 ? (
-                              <Button
-                                type="button"
-                                variant="neutral"
-                                size="sm"
-                                onClick={() => moveGroupDown(groupIndex)}
-                                title="Move filter down"
-                                className="h-4 w-4 p-0"
-                              >
-                                <ChevronDown size={12} />
-                              </Button>
-                            ) : (
-                              <div className="h-4 w-4"></div>
-                            )}
-                          </div>
+                                <div>
+                                  <FormLabel>Group Name</FormLabel>
+                                </div>
+                                <div className="mt-1 flex items-center gap-2">
+                                  {/* Group Cover Image Preview */}
+                                  {groupCoverPreviews[groupIndex] && (
+                                    <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
+                                      <img
+                                        src={groupCoverPreviews[groupIndex]!}
+                                        alt="Group cover preview"
+                                        className="h-full w-full object-cover"
+                                      />
+                                    </div>
+                                  )}
 
-                          {/* Group Cover Image Preview */}
-                          {groupCoverPreviews[groupIndex] && (
-                            <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
-                              <img
-                                src={groupCoverPreviews[groupIndex]!}
-                                alt="Group cover preview"
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                          )}
-
-                          {/* Group Name Input */}
-                          <FormField
-                            control={form.control}
-                            name={`groups.${groupIndex}.name`}
-                            render={({ field }) => (
-                              <FormItem className="flex-1">
-                                <FormControl>
-                                  <Input
-                                    placeholder="Filter name"
-                                    {...field}
-                                    className="font-medium"
+                                  {/* Group Name Input */}
+                                  <FormField
+                                    control={form.control}
+                                    name={`groups.${groupIndex}.name`}
+                                    render={({ field }) => (
+                                      <FormItem className="flex-1">
+                                        <FormControl>
+                                          <Input
+                                            placeholder="Group name"
+                                            {...field}
+                                            className="font-medium"
+                                          />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
                                   />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
 
-                          {/* Upload Group Image Button */}
-                          <Button
-                            type="button"
-                            variant="neutral"
-                            size="sm"
-                            className="flex items-center gap-1"
-                            onClick={() => groupCoverInputRefs.current[groupIndex]?.click()}
-                            title="Upload group cover image"
-                          >
-                            <Camera size={14} />
-                            Group Image
-                          </Button>
-                          {/* Hidden file input for group cover */}
-                          <input
-                            ref={(el) => {
-                              groupCoverInputRefs.current[groupIndex] = el;
-                            }}
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={(e) => handleGroupCoverFileInputChange(groupIndex, e)}
-                            className="hidden"
-                          />
+                                  {/* Upload Group Image Button */}
+                                  <Button
+                                    type="button"
+                                    variant="neutral"
+                                    size="sm"
+                                    className="flex items-center gap-1"
+                                    onClick={() =>
+                                      groupCoverInputRefs.current[
+                                        groupIndex
+                                      ]?.click()
+                                    }
+                                    title="Upload group cover image"
+                                  >
+                                    <Camera size={14} />
+                                    Group Image
+                                  </Button>
+                                  {/* Hidden file input for group cover */}
+                                  <input
+                                    ref={(el) => {
+                                      groupCoverInputRefs.current[groupIndex] =
+                                        el;
+                                    }}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    onChange={(e) =>
+                                      handleGroupCoverFileInputChange(
+                                        groupIndex,
+                                        e,
+                                      )
+                                    }
+                                    className="hidden"
+                                  />
 
-                          {/* Delete Group Button */}
-                          {groupFields.length > 2 && (
+                                  {/* Delete Group Button */}
+                                  {groupFields.length > 1 && (
+                                    <Button
+                                      type="button"
+                                      variant="neutralNoShadow"
+                                      size="sm"
+                                      onClick={() =>
+                                        removeGroupHandler(groupIndex)
+                                      }
+                                      title="Remove group"
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <X size={14} />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Group Items Field */}
+                              <div className="ml-6">
+                                <FormLabel>Group Items</FormLabel>
+                                <div className="mt-1 space-y-2">
+                                  {/* Upload Images Button */}
+                                  <div>
+                                    <Button
+                                      type="button"
+                                      variant="neutral"
+                                      size="sm"
+                                      className="flex items-center gap-1"
+                                      onClick={() =>
+                                        groupFileInputRefs.current[
+                                          groupIndex
+                                        ]?.click()
+                                      }
+                                    >
+                                      <ImageIcon size={16} />
+                                      Upload Images
+                                    </Button>
+                                    {/* Hidden file input for this group */}
+                                    <input
+                                      ref={(el) => {
+                                        groupFileInputRefs.current[groupIndex] =
+                                          el;
+                                      }}
+                                      type="file"
+                                      multiple
+                                      accept="image/jpeg,image/png,image/webp"
+                                      onChange={(e) =>
+                                        handleGroupFileInputChange(
+                                          groupIndex,
+                                          e,
+                                        )
+                                      }
+                                      className="hidden"
+                                    />
+                                  </div>
+
+                                  {/* Items List */}
+                                  <div className="space-y-2">
+                                    {form
+                                      .watch(`groups.${groupIndex}.items`)
+                                      ?.map((_, itemIndex) => (
+                                        <FormField
+                                          key={itemIndex}
+                                          control={form.control}
+                                          name={`groups.${groupIndex}.items.${itemIndex}.title`}
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <div className="flex items-center gap-2">
+                                                {/* Image thumbnail */}
+                                                {groupImagesData[groupIndex]?.[
+                                                  itemIndex
+                                                ] && (
+                                                  <div className="flex-shrink-0">
+                                                    <img
+                                                      src={
+                                                        groupImagesData[
+                                                          groupIndex
+                                                        ][itemIndex]!.preview
+                                                      }
+                                                      alt={`Preview ${itemIndex + 1}`}
+                                                      className="border-border rounded-base h-10 w-10 border-2 object-cover"
+                                                    />
+                                                  </div>
+                                                )}
+                                                <FormControl>
+                                                  <Input
+                                                    placeholder={`Item ${itemIndex + 1}`}
+                                                    {...field}
+                                                  />
+                                                </FormControl>
+                                                {form.watch(
+                                                  `groups.${groupIndex}.items`,
+                                                ).length > 1 && (
+                                                  <Button
+                                                    type="button"
+                                                    variant="neutralNoShadow"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                      removeItemFromGroup(
+                                                        groupIndex,
+                                                        itemIndex,
+                                                      )
+                                                    }
+                                                    title="Remove item"
+                                                    className="h-6 w-6 p-0"
+                                                  >
+                                                    <X size={14} />
+                                                  </Button>
+                                                )}
+                                              </div>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
+                                      ))}
+                                    <Button
+                                      type="button"
+                                      variant="neutral"
+                                      size="sm"
+                                      onClick={() => addItemToGroup(groupIndex)}
+                                      className="flex items-center gap-1"
+                                    >
+                                      <Plus size={14} />
+                                      Add Item
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+
+                          {/* Add Group button below all groups */}
+                          <div className="pt-2">
                             <Button
                               type="button"
-                              variant="neutralNoShadow"
+                              variant="neutral"
                               size="sm"
-                              onClick={() => removeGroupHandler(groupIndex)}
-                              title="Remove filter"
-                              className="h-6 w-6 p-0"
+                              onClick={addGroup}
+                              className="flex items-center gap-1"
                             >
-                              <X size={14} />
+                              <Plus size={16} />
+                              Add Group
                             </Button>
-                          )}
-                        </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
 
-                        {/* Upload Images Button */}
-                        <div className="ml-6">
-                          <Button
-                            type="button"
-                            variant="neutral"
-                            size="sm"
-                            className="flex items-center gap-1"
-                            onClick={() => groupFileInputRefs.current[groupIndex]?.click()}
-                          >
-                            <ImageIcon size={16} />
-                            Upload Images
-                          </Button>
-                          {/* Hidden file input for this group */}
-                          <input
-                            ref={(el) => {
-                              groupFileInputRefs.current[groupIndex] = el;
-                            }}
-                            type="file"
-                            multiple
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={(e) => handleGroupFileInputChange(groupIndex, e)}
-                            className="hidden"
-                          />
-                        </div>
-
-                        {/* Items List */}
-                        <div className="ml-6 space-y-2">
-                          {form
-                            .watch(`groups.${groupIndex}.items`)
-                            ?.map((_, itemIndex) => (
-                              <FormField
-                                key={itemIndex}
-                                control={form.control}
-                                name={`groups.${groupIndex}.items.${itemIndex}.title`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <div className="flex items-center gap-2">
-                                      {/* Image thumbnail */}
-                                      {groupImagesData[groupIndex]?.[itemIndex] && (
-                                        <div className="flex-shrink-0">
-                                          <img
-                                            src={groupImagesData[groupIndex][itemIndex]!.preview}
-                                            alt={`Preview ${itemIndex + 1}`}
-                                            className="border-border h-10 w-10 rounded-base border-2 object-cover"
-                                          />
-                                        </div>
-                                      )}
-                                      <FormControl>
-                                        <Input
-                                          placeholder={`Item ${itemIndex + 1}`}
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      {form.watch(
-                                        `groups.${groupIndex}.items`,
-                                      ).length > 1 && (
-                                        <Button
-                                          type="button"
-                                          variant="neutralNoShadow"
-                                          size="sm"
-                                          onClick={() =>
-                                            removeItemFromGroup(
-                                              groupIndex,
-                                              itemIndex,
-                                            )
-                                          }
-                                          title="Remove item"
-                                          className="h-6 w-6 p-0"
-                                        >
-                                          <X size={14} />
-                                        </Button>
-                                      )}
-                                    </div>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            ))}
-                          <Button
-                            type="button"
-                            variant="neutral"
-                            size="sm"
-                            onClick={() => addItemToGroup(groupIndex)}
-                            className="flex items-center gap-1"
-                          >
-                            <Plus size={14} />
-                            Add Item
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                    {/* Instructions */}
+                    <div className="mt-4 space-y-1 text-sm">
+                      <p>
+                        <strong>Group Image:</strong> Upload a cover image for
+                        each group. Click "Group Image" button to select an
+                        image. Item with no image will use group image as
+                        placeholder.
+                      </p>
+                      <p>
+                        <strong>Upload Images:</strong> Select multiple images
+                        to automatically create items for a group. Filename
+                        (without extension) will be used as the item name. You
+                        can still change the name after selecting images.
+                      </p>
+                      <p>
+                        <strong>Add Item:</strong> Manually add text-only items.
+                      </p>
+                      <p className="text-xs">
+                        Supported formats: JPG, PNG, WebP • Max 5MB each •
+                        Images are optional for both groups and items
+                      </p>
+                    </div>
                   </div>
-
-                  <Box variant="accent" size="sm" className="mt-4">
-                    <p>
-                      Add at least 2 filters with 1 item each to create your
-                      sorter
-                    </p>
-                  </Box>
-                </div>
-              ) : (
-                /* Traditional Mode */
-                <div>
-                  <div className="mb-4">
-                    <FormLabel>Items to Rank *</FormLabel>
-                    {/* Instructions and buttons */}
-                    <div className="mt-2 space-y-3">
-                      {/* Instructions */}
-                      <div className="space-y-1 text-sm">
-                        <p>
-                          <strong>Upload Images:</strong> Select multiple images
-                          to automatically create items. Filename (without
-                          extension) will be used as the item name. You can
-                          still change the name after selecting images.
-                        </p>
-                        <p>
-                          <strong>Add Item:</strong> Manually add text-only
-                          items.
-                        </p>
-                        <p className="text-xs">
-                          Supported formats: JPG, PNG, WebP • Max 5MB each •
-                          Empty fields will be replaced first when uploading
-                          images
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
+                ) : (
+                  /* Traditional Mode */
+                  <div>
+                    <div className="mb-4">
+                      <FormLabel>Items *</FormLabel>
+                      {/* Buttons */}
+                      <div className="mt-2 flex items-center gap-2">
                         <Button
                           type="button"
                           variant="neutral"
@@ -1141,79 +1232,105 @@ export default function CreateSorterForm() {
                         </Button>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Hidden file input */}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handleFileInputChange}
-                    className="hidden"
-                  />
+                    {/* Hidden file input */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleFileInputChange}
+                      className="hidden"
+                    />
 
-                  <div className="space-y-2">
-                    {itemFields.length === 0 ? (
-                      <div className="py-8 text-center">
-                        <p>No items added yet</p>
-                        <p className="mt-1 text-sm">
-                          Click "Upload Images" or "Add Item" to get started
-                        </p>
-                      </div>
-                    ) : (
-                      itemFields.map((field, index) => (
-                        <FormField
-                          key={field.id}
-                          control={form.control}
-                          name={`items.${index}.title`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="flex items-center gap-2">
-                                {/* Image preview if available */}
-                                {itemImagesData[index] && (
-                                  <div className="flex-shrink-0">
-                                    <img
-                                      src={itemImagesData[index]!.preview}
-                                      alt={`Preview ${index + 1}`}
-                                      className="border-border h-10 w-10 rounded border-2 object-cover"
-                                    />
+                    <div className="space-y-2">
+                      {itemFields.length === 0 ? (
+                        <div className="py-8 text-center">
+                          <p>No items added yet</p>
+                          <p className="mt-1 text-sm">
+                            Click "Upload Images" or "Add Item" to get started
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          {itemFields.map((field, index) => (
+                            <FormField
+                              key={field.id}
+                              control={form.control}
+                              name={`items.${index}.title`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <div className="flex items-center gap-2">
+                                    {/* Image preview if available */}
+                                    {itemImagesData[index] && (
+                                      <div className="flex-shrink-0">
+                                        <img
+                                          src={itemImagesData[index]!.preview}
+                                          alt={`Preview ${index + 1}`}
+                                          className="border-border h-10 w-10 rounded border-2 object-cover"
+                                        />
+                                      </div>
+                                    )}
+                                    <FormControl>
+                                      <Input
+                                        placeholder={`Item ${index + 1}`}
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    {itemFields.length > 0 && (
+                                      <Button
+                                        type="button"
+                                        variant="neutralNoShadow"
+                                        size="sm"
+                                        onClick={() => removeItemHandler(index)}
+                                        title="Remove item"
+                                        className="h-6 w-6 p-0"
+                                      >
+                                        <X size={14} />
+                                      </Button>
+                                    )}
                                   </div>
-                                )}
-                                <FormControl>
-                                  <Input
-                                    placeholder={`Item ${index + 1}`}
-                                    {...field}
-                                  />
-                                </FormControl>
-                                {itemFields.length > 0 && (
-                                  <Button
-                                    type="button"
-                                    variant="neutralNoShadow"
-                                    size="sm"
-                                    onClick={() => removeItemHandler(index)}
-                                    title="Remove item"
-                                    className="h-6 w-6 p-0"
-                                  >
-                                    <X size={14} />
-                                  </Button>
-                                )}
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ))
-                    )}
-                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          ))}
+                          {/* Add Item button below all items */}
+                          <div className="pt-2">
+                            <Button
+                              type="button"
+                              variant="neutral"
+                              size="sm"
+                              onClick={addItemHandler}
+                              className="flex items-center gap-1"
+                            >
+                              <Plus size={16} />
+                              Add Item
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </div>
 
-                  <Box variant="accent" size="sm" className="mt-4">
-                    <p className="font-medium">
-                      Add at least 2 items to create your sorter
-                    </p>
-                  </Box>
-                </div>
-              )}
+                    {/* Instructions */}
+                    <div className="mt-4 space-y-1 text-sm">
+                      <p>
+                        <strong>Upload Images:</strong> Select multiple images
+                        to automatically create items. Filename (without
+                        extension) will be used as the item name. You can still
+                        change the name after selecting images.
+                      </p>
+                      <p>
+                        <strong>Add Item:</strong> Manually add text-only items.
+                      </p>
+                      <p className="text-xs">
+                        Supported formats: JPG, PNG, WebP • Max 5MB each • Empty
+                        fields will be replaced first when uploading images
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Submit */}
               <div className="flex gap-4">

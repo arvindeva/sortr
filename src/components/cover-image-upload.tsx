@@ -95,9 +95,7 @@ export default function CoverImageUpload({
             <ImageIcon size={48} className="text-muted-foreground mb-4" />
             <div className="mb-2">
               <p className="font-medium">Click to upload cover image</p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                JPG, PNG, or WebP up to 10MB
-              </p>
+              <p className="mt-1 text-xs">JPG, PNG, or WebP up to 10MB</p>
             </div>
             <Button
               type="button"
@@ -169,7 +167,7 @@ export default function CoverImageUpload({
       )}
 
       {/* Helper text */}
-      <p className="text-muted-foreground text-xs">
+      <p className="text-xs">
         The cover image will be displayed on your sorter's profile and in
         listings. Images are automatically cropped to square and resized.
       </p>
