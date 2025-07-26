@@ -97,11 +97,12 @@ export const sorterItems = pgTable("sorterItems", {
 
 export const sortingResults = pgTable("sortingResults", {
   id: uuid("id").defaultRandom().primaryKey(),
-  sorterId: uuid("sorterId")
-    .notNull()
-    .references(() => sorters.id, { onDelete: "cascade" }),
+  sorterId: uuid("sorterId").references(() => sorters.id, { onDelete: "set null" }), // Rankings survive sorter deletion
   userId: uuid("userId").references(() => user.id, { onDelete: "set null" }), // optional - for anonymous users
   rankings: text("rankings").notNull(), // JSON string of ranked items
   selectedGroups: text("selectedGroups"), // JSON string of selected group IDs (null if no groups used)
+  // Sorter-level snapshots for immutable rankings
+  sorterTitle: text("sorterTitle"), // Snapshot of sorter title at time of ranking
+  sorterCoverImageUrl: text("sorterCoverImageUrl"), // Snapshot of sorter cover image at time of ranking
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
