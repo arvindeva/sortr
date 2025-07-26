@@ -131,51 +131,53 @@ export async function POST(request: NextRequest) {
       coverImageUrl = "PLACEHOLDER"; // Will be updated after sorter creation
     }
 
-    // Validate and process item images if provided
+    // Validate and process item images in parallel
     const processedItemImages: { file: File; buffer: Buffer; name: string }[] = [];
-    for (const itemImageFile of itemImageFiles) {
-      // Validate file type
-      if (!ALLOWED_ITEM_IMAGE_TYPES.includes(itemImageFile.type)) {
-        return NextResponse.json(
-          {
-            error: `Only JPG, PNG, and WebP files are allowed for item images. Invalid file: ${itemImageFile.name}`,
-          },
-          { status: 400 },
-        );
-      }
+    
+    if (itemImageFiles.length > 0) {
+      const imageProcessingPromises = itemImageFiles.map(async (itemImageFile) => {
+        // Validate file type
+        if (!ALLOWED_ITEM_IMAGE_TYPES.includes(itemImageFile.type)) {
+          throw new Error(`Only JPG, PNG, and WebP files are allowed for item images. Invalid file: ${itemImageFile.name}`);
+        }
 
-      // Validate file size
-      if (itemImageFile.size > MAX_ITEM_IMAGE_SIZE) {
-        return NextResponse.json(
-          { error: `Item image size must be less than 5MB. Invalid file: ${itemImageFile.name}` },
-          { status: 400 },
-        );
-      }
+        // Validate file size
+        if (itemImageFile.size > MAX_ITEM_IMAGE_SIZE) {
+          throw new Error(`Item image size must be less than 5MB. Invalid file: ${itemImageFile.name}`);
+        }
 
-      // Convert file to buffer
-      const bytes = await itemImageFile.arrayBuffer();
-      const buffer = Buffer.from(bytes);
+        // Convert file to buffer
+        const bytes = await itemImageFile.arrayBuffer();
+        const buffer = Buffer.from(bytes);
 
-      // Validate image buffer
-      const isValidImage = await validateSorterItemImageBuffer(buffer);
-      if (!isValidImage) {
-        return NextResponse.json(
-          { error: `Invalid item image format or dimensions: ${itemImageFile.name}` },
-          { status: 400 },
-        );
-      }
+        // Validate image buffer
+        const isValidImage = await validateSorterItemImageBuffer(buffer);
+        if (!isValidImage) {
+          throw new Error(`Invalid item image format or dimensions: ${itemImageFile.name}`);
+        }
 
-      // Process image: crop to square and resize to 300x300
-      const processedBuffer = await processSorterItemImage(buffer);
-      
-      // Extract item name from filename (remove extension)
-      const itemName = itemImageFile.name.replace(/\.[^/.]+$/, "");
-      
-      processedItemImages.push({
-        file: itemImageFile,
-        buffer: processedBuffer,
-        name: itemName,
+        // Process image: crop to square and resize to 300x300
+        const processedBuffer = await processSorterItemImage(buffer);
+        
+        // Extract item name from filename (remove extension)
+        const itemName = itemImageFile.name.replace(/\.[^/.]+$/, "");
+        
+        return {
+          file: itemImageFile,
+          buffer: processedBuffer,
+          name: itemName,
+        };
       });
+
+      try {
+        const results = await Promise.all(imageProcessingPromises);
+        processedItemImages.push(...results);
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : "Failed to process images" },
+          { status: 400 },
+        );
+      }
     }
 
     // Create sorter

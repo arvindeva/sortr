@@ -749,7 +749,7 @@ export default function CreateSorterForm() {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        timeout: 0, // No timeout for large uploads
+        timeout: 60000, // 60 second timeout
       });
 
       setUploadStatus("Processing images...");
@@ -763,13 +763,26 @@ export default function CreateSorterForm() {
       router.push(`/sorter/${response.data.sorter.slug}`);
     } catch (error) {
       console.error("Error creating sorter:", error);
+      
+      let errorMessage = "Failed to create sorter";
+      
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED' || error.response?.status === 504) {
+          errorMessage = "Upload timeout - please try with fewer or smaller images";
+        } else if (error.response?.status === 413) {
+          errorMessage = "Files too large - please reduce image sizes";
+        } else if (error.response?.data?.error) {
+          errorMessage = error.response.data.error;
+        }
+      }
+      
       setUploadStatus("Upload failed");
       
       // Show error for a moment then allow retry
       setTimeout(() => {
         setShowProgressDialog(false);
         setIsUploading(false);
-        alert(error instanceof Error ? error.message : "Failed to create sorter");
+        alert(errorMessage);
       }, 2000);
     }
   };
