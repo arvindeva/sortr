@@ -3,6 +3,7 @@ export interface SortItem {
   id: string;
   title: string;
   imageUrl?: string;
+  groupImageUrl?: string;
 }
 
 export interface ComparisonPair {

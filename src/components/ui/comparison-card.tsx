@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 
 interface ComparisonCardProps extends React.ComponentProps<"div"> {
   imageUrl?: string;
+  groupImageUrl?: string;
   title: string;
   onClick?: () => void;
 }
@@ -10,10 +11,13 @@ interface ComparisonCardProps extends React.ComponentProps<"div"> {
 function ComparisonCard({
   className,
   imageUrl,
+  groupImageUrl,
   title,
   onClick,
   ...props
 }: ComparisonCardProps) {
+  // Use item image first, then group image, then letter placeholder
+  const displayImageUrl = imageUrl || groupImageUrl;
   return (
     <div
       className={cn(
@@ -24,10 +28,10 @@ function ComparisonCard({
       {...props}
     >
       {/* Image area - flush with top */}
-      {imageUrl ? (
+      {displayImageUrl ? (
         <div className="aspect-square w-full max-w-[300px] overflow-hidden md:h-[300px] md:max-w-none">
           <img
-            src={imageUrl}
+            src={displayImageUrl}
             alt={title}
             className="h-full w-full object-cover"
           />

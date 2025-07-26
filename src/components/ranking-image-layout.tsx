@@ -11,6 +11,7 @@ interface RankedItem {
   id: string;
   title: string;
   imageUrl?: string;
+  groupImageUrl?: string;
 }
 
 interface RankingImageLayoutProps {
@@ -138,9 +139,9 @@ export function RankingImageLayout({
                       justifyContent: "center",
                     }}
                   >
-                    {item.imageUrl ? (
+                    {(item.imageUrl || item.groupImageUrl) ? (
                       <img
-                        src={item.imageUrl}
+                        src={item.imageUrl || item.groupImageUrl}
                         alt={item.title}
                         style={{
                           width: "100%",
@@ -230,9 +231,9 @@ export function RankingImageLayout({
                         justifyContent: "center",
                       }}
                     >
-                      {item.imageUrl ? (
+                      {(item.imageUrl || item.groupImageUrl) ? (
                         <img
-                          src={item.imageUrl}
+                          src={item.imageUrl || item.groupImageUrl}
                           alt={item.title}
                           style={{
                             width: "100%",

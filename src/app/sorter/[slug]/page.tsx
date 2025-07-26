@@ -35,6 +35,7 @@ interface SorterItem {
   id: string;
   title: string;
   imageUrl?: string;
+  groupImageUrl?: string;
 }
 
 interface SorterGroup {
@@ -444,10 +445,10 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                 <RankingItemContent>
                                   <div className="flex min-w-0 items-center gap-3 overflow-hidden">
                                     {/* Thumbnail */}
-                                    {item.imageUrl ? (
+                                    {(item.imageUrl || item.groupImageUrl) ? (
                                       <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
                                         <img
-                                          src={item.imageUrl}
+                                          src={item.imageUrl || item.groupImageUrl}
                                           alt={item.title}
                                           className="h-full w-full object-cover"
                                         />
@@ -492,10 +493,10 @@ export default async function SorterPage({ params }: SorterPageProps) {
                         <RankingItemContent>
                           <div className="flex min-w-0 items-center gap-3 overflow-hidden">
                             {/* Thumbnail */}
-                            {item.imageUrl ? (
+                            {(item.imageUrl || item.groupImageUrl) ? (
                               <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
                                 <img
-                                  src={item.imageUrl}
+                                  src={item.imageUrl || item.groupImageUrl}
                                   alt={item.title}
                                   className="h-full w-full object-cover"
                                 />
@@ -560,10 +561,10 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                   className="flex items-center gap-2"
                                 >
                                   <div className="flex min-w-0 flex-1 items-center gap-2">
-                                    {item.imageUrl ? (
+                                    {(item.imageUrl || item.groupImageUrl) ? (
                                       <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
                                         <img
-                                          src={item.imageUrl}
+                                          src={item.imageUrl || item.groupImageUrl}
                                           alt={item.title}
                                           className="h-full w-full object-cover"
                                         />
