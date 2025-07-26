@@ -21,7 +21,26 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id || null;
 
-    // Save the sorting result
+    // Fetch current sorter data for snapshot
+    const sorterData = await db
+      .select({
+        title: sorters.title,
+        coverImageUrl: sorters.coverImageUrl,
+      })
+      .from(sorters)
+      .where(eq(sorters.id, sorterId))
+      .limit(1);
+
+    if (sorterData.length === 0) {
+      return Response.json(
+        { error: "Sorter not found" },
+        { status: 404 },
+      );
+    }
+
+    const { title: sorterTitle, coverImageUrl: sorterCoverImageUrl } = sorterData[0];
+
+    // Save the sorting result with sorter snapshot
     const result = await db
       .insert(sortingResults)
       .values({
@@ -29,6 +48,9 @@ export async function POST(request: NextRequest) {
         userId,
         rankings: JSON.stringify(rankings),
         selectedGroups: selectedGroups ? JSON.stringify(selectedGroups) : null,
+        // Sorter-level snapshots for immutable rankings
+        sorterTitle,
+        sorterCoverImageUrl,
       })
       .returning({ id: sortingResults.id });
 
