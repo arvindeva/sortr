@@ -4,7 +4,7 @@ config();
 
 import { db } from "@/db";
 import { sorters, sorterHistory, sortingResults } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 
 async function migrateToVersioning() {
   console.log("Starting migration to versioning system...");
@@ -35,7 +35,7 @@ async function migrateToVersioning() {
     // Set version = 1 for all existing rankings for backward compatibility
     const rankingsUpdate = await db.update(sortingResults)
       .set({ version: 1 })
-      .where(eq(sortingResults.version, null));
+      .where(isNull(sortingResults.version));
     
     console.log(`✓ Updated existing rankings to use version 1`);
     

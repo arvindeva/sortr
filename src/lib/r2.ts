@@ -257,7 +257,7 @@ export async function cleanupSorterVersion(sorterId: string, version: number): P
     });
     
     const response = await r2Client.send(listCommand);
-    const keys = response.Contents?.map(obj => obj.Key).filter(Boolean) || [];
+    const keys = response.Contents?.map(obj => obj.Key).filter((key): key is string => Boolean(key)) || [];
     
     for (const key of keys) {
       try {

@@ -58,6 +58,10 @@ interface ResultData {
     id: string;
     name: string;
   }[];
+  totalGroups?: {
+    id: string;
+    name: string;
+  }[];
 }
 
 export async function generateMetadata({

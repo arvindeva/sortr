@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { S3Client, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import { S3Client, ListObjectsV2Command, DeleteObjectsCommand, ListObjectsV2CommandOutput } from "@aws-sdk/client-s3";
 
 // Load environment variables
 dotenv.config();
@@ -37,16 +37,16 @@ async function listAllObjects(): Promise<string[]> {
   
   do {
     try {
-      const listCommand = new ListObjectsV2Command({
+      const listCommand: ListObjectsV2Command = new ListObjectsV2Command({
         Bucket: BUCKET_NAME,
         MaxKeys: 1000,
         ContinuationToken: continuationToken,
       });
       
-      const response = await r2Client.send(listCommand);
+      const response: ListObjectsV2CommandOutput = await r2Client.send(listCommand);
       const objects = response.Contents || [];
       
-      objects.forEach(obj => {
+      objects.forEach((obj: any) => {
         if (obj.Key) {
           allKeys.push(obj.Key);
         }
