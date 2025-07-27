@@ -122,7 +122,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
     
     if (validatedData.useGroups && validatedData.groups) {
       // Handle grouped sorter
-      const groupCoverFiles = uploadedFiles.filter(f => f.type === 'group-cover');
+      const groupCoverFiles = uploadedFiles.filter((f: UploadedFile) => f.type === 'group-cover');
       
       // Process groups sequentially to maintain correct file order
       for (let groupIndex = 0; groupIndex < validatedData.groups.length; groupIndex++) {
