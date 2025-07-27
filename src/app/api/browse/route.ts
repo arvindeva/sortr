@@ -24,6 +24,9 @@ export async function GET(request: NextRequest) {
     // Build WHERE conditions
     const conditions = [];
 
+    // ALWAYS filter out deleted sorters
+    conditions.push(eq(sorters.deleted, false));
+
     // Text search - search in title, description, and creator username
     if (query.trim()) {
       const searchTerm = `%${query.trim()}%`;
@@ -65,14 +68,9 @@ export async function GET(request: NextRequest) {
       .leftJoin(user, eq(sorters.userId, user.id))
       .$dynamic();
 
-    // Apply conditions if any
-    const finalQuery =
-      conditions.length > 0 ? baseQuery.where(and(...conditions)) : baseQuery;
-
-    const finalCountQuery =
-      conditions.length > 0
-        ? countQueryBase.where(and(...conditions))
-        : countQueryBase;
+    // Apply conditions (we always have at least the deleted filter)
+    const finalQuery = baseQuery.where(and(...conditions));
+    const finalCountQuery = countQueryBase.where(and(...conditions));
 
     // Apply sorting and pagination
     const sortedQuery =

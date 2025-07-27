@@ -8,6 +8,7 @@ import {
   primaryKey,
   varchar,
   jsonb,
+  unique,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -71,6 +72,8 @@ export const sorters = pgTable("sorters", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   completionCount: integer("completionCount").default(0).notNull(),
   viewCount: integer("viewCount").default(0).notNull(),
+  version: integer("version").default(1).notNull(),
+  deleted: boolean("deleted").default(false).notNull(),
 });
 
 export const sorterGroups = pgTable("sorterGroups", {
@@ -82,6 +85,7 @@ export const sorterGroups = pgTable("sorterGroups", {
   slug: text("slug").notNull(),
   coverImageUrl: text("cover_image_url"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+  version: integer("version").default(1).notNull(),
 });
 
 export const sorterItems = pgTable("sorterItems", {
@@ -95,6 +99,7 @@ export const sorterItems = pgTable("sorterItems", {
   title: text("title").notNull(),
   slug: text("slug"), // For R2 key tracking and URL generation
   imageUrl: text("imageUrl"),
+  version: integer("version").default(1).notNull(),
 });
 
 export const sortingResults = pgTable("sortingResults", {
@@ -107,6 +112,7 @@ export const sortingResults = pgTable("sortingResults", {
   sorterTitle: text("sorterTitle"), // Snapshot of sorter title at time of ranking
   sorterCoverImageUrl: text("sorterCoverImageUrl"), // Snapshot of sorter cover image at time of ranking
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+  version: integer("version"), // Nullable for backward compatibility
 });
 
 // Upload sessions for tracking direct R2 uploads
@@ -134,3 +140,16 @@ export const sessionFiles = pgTable("sessionFiles", {
   fileSize: integer("fileSize").notNull(),
   uploadedAt: timestamp("uploadedAt").defaultNow().notNull(),
 });
+
+// Historical sorter snapshots for immutable rankings
+export const sorterHistory = pgTable("sorterHistory", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sorterId: uuid("sorterId").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  coverImageUrl: text("coverImageUrl"),
+  version: integer("version").notNull(),
+  archivedAt: timestamp("archivedAt").defaultNow().notNull(),
+}, (table) => ({
+  uniqueVersion: unique().on(table.sorterId, table.version),
+}));

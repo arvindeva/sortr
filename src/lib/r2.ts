@@ -3,8 +3,12 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { db } from "@/db";
+import { sortingResults } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
 
 // Initialize R2 client
 export const r2Client = new S3Client({
@@ -108,7 +112,7 @@ export function getAvatarKey(userId: string): string {
 }
 
 /**
- * Generate cover image key for a sorter
+ * Generate cover image key for a sorter (legacy, use versioned keys for new uploads)
  * @param sorterId - The sorter ID
  * @returns The cover image file key
  */
@@ -117,7 +121,7 @@ export function getCoverKey(sorterId: string, extension: string = 'jpg'): string
 }
 
 /**
- * Generate sorter item image key
+ * Generate sorter item image key (legacy, use versioned keys for new uploads)
  * @param sorterId - The sorter ID
  * @param itemSlug - The item slug (includes group prefix if applicable)
  * @returns The sorter item image file key
@@ -176,32 +180,97 @@ export function getSessionFileKey(
 }
 
 /**
- * Convert session file key to final sorter key
- * @param sessionKey - The session-based key
- * @param sorterId - The final sorter ID
- * @param itemSlug - The item slug (for item files)
- * @returns The final sorter file key
+ * Generate versioned sorter image keys
+ */
+export function getVersionedCoverKey(sorterId: string, version: number, extension: string = 'jpg'): string {
+  return `sorters/${sorterId}/v${version}/cover.${extension}`;
+}
+
+export function getVersionedItemKey(sorterId: string, itemSlug: string, version: number, extension: string = 'jpg'): string {
+  return `sorters/${sorterId}/v${version}/${itemSlug}.${extension}`;
+}
+
+export function getVersionedGroupKey(sorterId: string, groupSlug: string, version: number, extension: string = 'jpg'): string {
+  return `sorters/${sorterId}/v${version}/group-${groupSlug}.${extension}`;
+}
+
+/**
+ * Convert session file key to versioned sorter key
+ * Updated for database versioning approach
  */
 export function convertSessionKeyToSorterKey(
   sessionKey: string,
   sorterId: string,
+  version: number, // NEW: Version parameter
   itemSlug?: string
 ): string {
   const parts = sessionKey.split('/');
   const fileType = parts[2]; // cover, item, or group-cover
   const filename = parts[3]; // index.extension
   
-  // Extract the original file extension (client will handle JPG conversion)
+  // Extract the original file extension
   const extension = filename.split('.').pop() || 'jpg';
   
   switch (fileType) {
     case 'cover':
-      return getCoverKey(sorterId, extension);
+      return getVersionedCoverKey(sorterId, version, extension);
     case 'item':
-      return getSorterItemKey(sorterId, itemSlug || 'unknown', extension);
+      return getVersionedItemKey(sorterId, itemSlug || 'unknown', version, extension);
     case 'group-cover':
-      return getSorterItemKey(sorterId, itemSlug || 'group-cover', extension);
+      return getVersionedGroupKey(sorterId, itemSlug || 'group-cover', version, extension);
     default:
       throw new Error(`Unknown file type: ${fileType}`);
+  }
+}
+
+/**
+ * Safe cleanup for specific sorter version (checks for ranking references)
+ */
+export async function cleanupSorterVersion(sorterId: string, version: number): Promise<{
+  deleted: string[];
+  preserved: string[];
+}> {
+  const deleted: string[] = [];
+  const preserved: string[] = [];
+  
+  try {
+    // Check if any rankings reference this version
+    const rankingsUsingVersion = await db
+      .select({ id: sortingResults.id })
+      .from(sortingResults)
+      .where(and(
+        eq(sortingResults.sorterId, sorterId),
+        eq(sortingResults.version, version)
+      ))
+      .limit(1);
+    
+    if (rankingsUsingVersion.length > 0) {
+      console.log(`Preserving version ${version} images due to existing rankings`);
+      return { deleted, preserved };
+    }
+    
+    // Safe to delete this version's images
+    const prefix = `sorters/${sorterId}/v${version}/`;
+    const listCommand = new ListObjectsV2Command({
+      Bucket: BUCKET_NAME,
+      Prefix: prefix,
+    });
+    
+    const response = await r2Client.send(listCommand);
+    const keys = response.Contents?.map(obj => obj.Key).filter(Boolean) || [];
+    
+    for (const key of keys) {
+      try {
+        await deleteFromR2(key);
+        deleted.push(key);
+      } catch (error) {
+        console.error(`Failed to delete ${key}:`, error);
+      }
+    }
+    
+    return { deleted, preserved };
+  } catch (error) {
+    console.error('Error during version cleanup:', error);
+    return { deleted, preserved };
   }
 }

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
-import { sorters, sorterItems, sorterGroups, user } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { sorters, sorterItems, sorterGroups, user, sorterHistory } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { createSorterSchema } from "@/lib/validations";
 import { generateUniqueSlug, generateSorterSlug, generateSorterItemSlug } from "@/lib/utils";
-import { uploadToR2, getCoverKey, getSorterItemKey, getR2PublicUrl, convertSessionKeyToSorterKey, r2Client } from "@/lib/r2";
+import { uploadToR2, getCoverKey, getSorterItemKey, getR2PublicUrl, convertSessionKeyToSorterKey, getVersionedCoverKey, getVersionedItemKey, getVersionedGroupKey, r2Client } from "@/lib/r2";
 import { getUploadSession, getSessionFiles, completeUploadSession } from "@/lib/session-manager";
 import type { UploadedFile } from "@/types/upload";
 import {
@@ -111,8 +111,18 @@ async function handleUploadSessionRequest(body: any, userData: any) {
         useGroups: validatedData.useGroups || false,
         userId: userData.id,
         coverImageUrl: null, // Will be updated if cover image exists
+        version: 1, // Start with version 1
       })
       .returning();
+
+    // NEW: Immediately add to sorterHistory as version 1
+    await db.insert(sorterHistory).values({
+      sorterId: newSorter.id,
+      title: newSorter.title,
+      description: newSorter.description,
+      coverImageUrl: null, // Will be updated if cover image exists
+      version: 1,
+    });
 
     let coverImageUrl: string | null = null;
 
@@ -143,6 +153,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
           const newKey = convertSessionKeyToSorterKey(
             groupCoverFile.key,
             newSorter.id,
+            1, // version 1
             `group-${groupIndex}-cover`
           );
           
@@ -178,6 +189,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
             const newKey = convertSessionKeyToSorterKey(
               itemFile.key,
               newSorter.id,
+              1, // version 1
               `${group.name.toLowerCase()}-${item.title.toLowerCase()}`.replace(/[^a-z0-9]/g, '-')
             );
             
@@ -225,6 +237,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
           const newKey = convertSessionKeyToSorterKey(
             itemFile.key,
             newSorter.id,
+            1, // version 1
             item.title.toLowerCase().replace(/[^a-z0-9]/g, '-')
           );
           
@@ -251,6 +264,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
       const newKey = convertSessionKeyToSorterKey(
         coverFile.key,
         newSorter.id,
+        1, // version 1
         'cover'
       );
       
@@ -263,6 +277,15 @@ async function handleUploadSessionRequest(body: any, userData: any) {
         .update(sorters)
         .set({ coverImageUrl })
         .where(eq(sorters.id, newSorter.id));
+
+      // NEW: Also update sorterHistory for version 1
+      await db
+        .update(sorterHistory)
+        .set({ coverImageUrl })
+        .where(and(
+          eq(sorterHistory.sorterId, newSorter.id),
+          eq(sorterHistory.version, 1)
+        ));
     }
 
     // Mark upload session as complete
@@ -489,8 +512,18 @@ export async function POST(request: NextRequest) {
         useGroups: validatedData.useGroups || false,
         coverImageUrl: validatedData.coverImageUrl || null,
         userId: userData[0].id,
+        version: 1, // Start with version 1
       })
       .returning();
+
+    // NEW: Immediately add to sorterHistory as version 1
+    await db.insert(sorterHistory).values({
+      sorterId: newSorter.id,
+      title: newSorter.title,
+      description: newSorter.description,
+      coverImageUrl: newSorter.coverImageUrl,
+      version: 1,
+    });
 
     // Upload cover image if provided
     if (coverImageFile && coverImageUrl === "PLACEHOLDER") {
@@ -498,8 +531,8 @@ export async function POST(request: NextRequest) {
       const buffer = Buffer.from(bytes);
       const processedBuffer = await processCoverImage(buffer);
 
-      // Generate cover key and upload processed image to R2
-      const coverKey = getCoverKey(newSorter.id);
+      // Generate versioned cover key and upload processed image to R2
+      const coverKey = getVersionedCoverKey(newSorter.id, 1);
       await uploadToR2(coverKey, processedBuffer, "image/jpeg");
 
       // Generate R2 public URL with cache-busting timestamp
@@ -511,6 +544,15 @@ export async function POST(request: NextRequest) {
         .update(sorters)
         .set({ coverImageUrl: finalCoverUrl })
         .where(eq(sorters.id, newSorter.id));
+
+      // NEW: Also update sorterHistory for version 1
+      await db
+        .update(sorterHistory)
+        .set({ coverImageUrl: finalCoverUrl })
+        .where(and(
+          eq(sorterHistory.sorterId, newSorter.id),
+          eq(sorterHistory.version, 1)
+        ));
 
       // Update the returned sorter object
       newSorter.coverImageUrl = finalCoverUrl;
@@ -603,9 +645,9 @@ export async function POST(request: NextRequest) {
             const buffer = Buffer.from(bytes);
             const processedBuffer = await processCoverImage(buffer); // Reuse existing cover image processing
             
-            // Generate group cover key: [groupSlug--group-image]
+            // Generate versioned group cover key: [groupSlug--group-image]
             const groupCoverSlug = `${groupSlug}--group-image`;
-            const groupCoverKey = getSorterItemKey(newSorter.id, groupCoverSlug); // Reuse existing key generation
+            const groupCoverKey = getVersionedGroupKey(newSorter.id, groupCoverSlug, 1);
             
             // Upload to R2
             await uploadToR2(groupCoverKey, processedBuffer, "image/jpeg");
@@ -639,7 +681,7 @@ export async function POST(request: NextRequest) {
             );
             
             itemSlug = generateSorterItemSlug(item.title, groupSlug);
-            const itemKey = getSorterItemKey(newSorter.id, itemSlug);
+            const itemKey = getVersionedItemKey(newSorter.id, itemSlug, 1);
             
             // Upload to R2
             await uploadToR2(itemKey, processedImage.buffer, "image/jpeg");
@@ -672,7 +714,7 @@ export async function POST(request: NextRequest) {
           const processedImage = processedItemImages[imageIndex];
           
           itemSlug = generateSorterItemSlug(item.title);
-          const itemKey = getSorterItemKey(newSorter.id, itemSlug);
+          const itemKey = getVersionedItemKey(newSorter.id, itemSlug, 1);
           
           // Upload to R2
           await uploadToR2(itemKey, processedImage.buffer, "image/jpeg");

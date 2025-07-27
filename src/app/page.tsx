@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/panel";
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import Link from "next/link";
 
 // Force dynamic rendering for always-fresh data
@@ -31,6 +31,7 @@ async function getPopularSorters() {
     })
     .from(sorters)
     .leftJoin(user, eq(sorters.userId, user.id))
+    .where(eq(sorters.deleted, false))
     .orderBy(desc(sorters.completionCount))
     .limit(10);
 

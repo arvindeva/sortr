@@ -21,11 +21,12 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id || null;
 
-    // Fetch current sorter data for snapshot
+    // Fetch current sorter data INCLUDING VERSION
     const sorterData = await db
       .select({
         title: sorters.title,
         coverImageUrl: sorters.coverImageUrl,
+        version: sorters.version, // NEW: Capture current version
       })
       .from(sorters)
       .where(eq(sorters.id, sorterId))
@@ -38,17 +39,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title: sorterTitle, coverImageUrl: sorterCoverImageUrl } = sorterData[0];
+    const { title: sorterTitle, coverImageUrl: sorterCoverImageUrl, version: sorterVersion } = sorterData[0];
 
-    // Save the sorting result with sorter snapshot
+    // Save the sorting result with VERSION
     const result = await db
       .insert(sortingResults)
       .values({
         sorterId,
         userId,
-        rankings: JSON.stringify(rankings),
+        rankings: JSON.stringify(rankings), // Contains versioned URLs already
         selectedGroups: selectedGroups ? JSON.stringify(selectedGroups) : null,
-        // Sorter-level snapshots for immutable rankings
+        version: sorterVersion, // NEW: Pin to specific version
+        // Sorter-level snapshots (for quick access)
         sorterTitle,
         sorterCoverImageUrl,
       })

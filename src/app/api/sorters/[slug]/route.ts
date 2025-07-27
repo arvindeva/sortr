@@ -5,8 +5,9 @@ import {
   sorterGroups,
   user,
   sortingResults,
+  sorterHistory,
 } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
@@ -37,7 +38,10 @@ export async function GET(
       })
       .from(sorters)
       .leftJoin(user, eq(sorters.userId, user.id))
-      .where(eq(sorters.slug, slug))
+      .where(and(
+        eq(sorters.slug, slug),
+        eq(sorters.deleted, false)
+      ))
       .limit(1);
 
     if (sorterData.length === 0) {
@@ -160,10 +164,16 @@ export async function DELETE(
       .select({
         id: sorters.id,
         title: sorters.title,
+        description: sorters.description,
+        coverImageUrl: sorters.coverImageUrl,
+        version: sorters.version,
         userId: sorters.userId,
       })
       .from(sorters)
-      .where(eq(sorters.slug, slug))
+      .where(and(
+        eq(sorters.slug, slug),
+        eq(sorters.deleted, false)
+      ))
       .limit(1);
 
     if (sorterData.length === 0) {
@@ -180,18 +190,33 @@ export async function DELETE(
       );
     }
 
-    // Delete in the correct order (foreign key constraints)
-    // NOTE: We do NOT delete sortingResults - rankings must survive sorter deletion
-    // Rankings contain their own snapshots and should remain accessible
+    // NEW VERSIONING-AWARE DELETION LOGIC
+    // We use SOFT DELETE to preserve data for rankings
+    
+    // 1. Archive current version to sorterHistory (if not already there)
+    try {
+      await db.insert(sorterHistory).values({
+        sorterId: sorter.id,
+        title: sorter.title,
+        description: sorter.description,
+        coverImageUrl: sorter.coverImageUrl,
+        version: sorter.version,
+      });
+      console.log(`Archived sorter ${sorter.id} v${sorter.version} to history before deletion`);
+    } catch (error) {
+      // Might already exist (unique constraint), that's OK
+      console.log(`Sorter ${sorter.id} v${sorter.version} already in history`);
+    }
 
-    // 1. Delete sorter items
-    await db.delete(sorterItems).where(eq(sorterItems.sorterId, sorter.id));
+    // 2. Soft delete the sorter (set deleted = true)
+    await db
+      .update(sorters)
+      .set({ deleted: true })
+      .where(eq(sorters.id, sorter.id));
 
-    // 2. Delete sorter groups (if any)
-    await db.delete(sorterGroups).where(eq(sorterGroups.sorterId, sorter.id));
-
-    // 3. Finally delete the sorter
-    await db.delete(sorters).where(eq(sorters.id, sorter.id));
+    // NOTE: We do NOT delete sorterItems, sorterGroups, or sorterHistory
+    // All versioned data remains in database for rankings to reference
+    // Future cleanup will only remove versions with no ranking references
 
     // Revalidate pages that show sorter data
     try {

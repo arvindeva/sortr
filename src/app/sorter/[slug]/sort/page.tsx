@@ -372,12 +372,14 @@ export default function SortPage() {
       // Save results
       setSaving(true);
 
-      // Get selected groups for saving with results
-      const selectedGroups = sorterData.sorter.useGroups
-        ? localStorage.getItem(`sorter_${sorterId}_selectedGroups`)
-        : null;
-
-      const selectedGroupIds = selectedGroups ? JSON.parse(selectedGroups) : [];
+      // Get selected group IDs based on URL parameters and sorter data
+      let selectedGroupIds: string[] = [];
+      if (sorterData.sorter.useGroups && sorterData.groups && currentGroupSlugs.length > 0) {
+        // Convert group slugs from URL to group IDs
+        selectedGroupIds = sorterData.groups
+          .filter((group) => currentGroupSlugs.includes(group.slug))
+          .map((group) => group.id);
+      }
 
       const response = await fetch("/api/sorting-results", {
         method: "POST",
@@ -471,10 +473,8 @@ export default function SortPage() {
         const keys = Object.keys(localStorage);
 
         // Filter and remove sorting-related keys
-        const sortingKeys = keys.filter(
-          (key) =>
-            key.startsWith("sorting-progress-") ||
-            (key.startsWith("sorter_") && key.endsWith("_selectedGroups")),
+        const sortingKeys = keys.filter((key) =>
+          key.startsWith("sorting-progress-"),
         );
 
         sortingKeys.forEach((key) => localStorage.removeItem(key));

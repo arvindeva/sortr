@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import { user, sorters, sortingResults } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +53,10 @@ async function getUserSorters(userId: string) {
       coverImageUrl: sorters.coverImageUrl,
     })
     .from(sorters)
-    .where(eq(sorters.userId, userId))
+    .where(and(
+      eq(sorters.userId, userId),
+      eq(sorters.deleted, false)
+    ))
     .orderBy(desc(sorters.createdAt));
 
   return userSorters;

@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import { sorters, sorterItems, sortingResults, user } from "@/db/schema";
-import { eq, sql, desc } from "drizzle-orm";
+import { eq, sql, desc, and } from "drizzle-orm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -136,9 +136,9 @@ export async function generateMetadata({
 async function getSorterWithItems(
   sorterSlug: string,
 ): Promise<SorterData | null> {
-  // First get the sorter ID from slug for the view count update
+  // First get the sorter ID and deleted status from slug
   const sorterIdQuery = await db
-    .select({ id: sorters.id })
+    .select({ id: sorters.id, deleted: sorters.deleted })
     .from(sorters)
     .where(eq(sorters.slug, sorterSlug))
     .limit(1);
@@ -147,11 +147,15 @@ async function getSorterWithItems(
     return null;
   }
 
-  // Increment view count
-  await db
-    .update(sorters)
-    .set({ viewCount: sql`${sorters.viewCount} + 1` })
-    .where(eq(sorters.id, sorterIdQuery[0].id));
+  const sorter = sorterIdQuery[0];
+
+  // Only increment view count for non-deleted sorters
+  if (!sorter.deleted) {
+    await db
+      .update(sorters)
+      .set({ viewCount: sql`${sorters.viewCount} + 1` })
+      .where(eq(sorters.id, sorter.id));
+  }
 
   // Use the API endpoint to get sorter data with groups support
   const response = await fetch(
