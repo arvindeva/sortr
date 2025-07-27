@@ -60,10 +60,17 @@ export async function deleteFromR2(key: string): Promise<void> {
  * @returns The public URL
  */
 export function getR2PublicUrl(key: string): string {
+  // Debug logging for environment variables
+  console.log('🔍 R2 Environment Debug:');
+  console.log('R2_PUBLIC_URL:', process.env.R2_PUBLIC_URL);
+  console.log('R2_PUBLIC_URL (JSON):', JSON.stringify(process.env.R2_PUBLIC_URL));
+  console.log('R2_BUCKET_NAME:', process.env.R2_BUCKET_NAME);
+  console.log('Key:', key);
+  
   // Check if a custom public URL is configured
   if (process.env.R2_PUBLIC_URL) {
     const url = `${process.env.R2_PUBLIC_URL}/${key}`;
-    console.log("Generated R2 URL:", url);
+    console.log("✅ Generated R2 URL:", url);
     return url;
   }
 
