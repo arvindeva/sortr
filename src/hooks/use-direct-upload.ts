@@ -138,6 +138,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
         });
 
         try {
+          console.log(`Uploading ${file.name} to:`, uploadUrl.uploadUrl);
           const uploadResponse = await fetch(uploadUrl.uploadUrl, {
             method: 'PUT',
             body: file,
@@ -146,7 +147,15 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
             }
           });
 
+          console.log(`Upload response for ${file.name}:`, {
+            status: uploadResponse.status,
+            statusText: uploadResponse.statusText,
+            ok: uploadResponse.ok
+          });
+
           if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            console.error(`Upload failed for ${file.name}:`, errorText);
             throw new Error(`Upload failed for ${file.name}: ${uploadResponse.statusText}`);
           }
 
