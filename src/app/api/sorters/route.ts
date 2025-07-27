@@ -128,7 +128,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
       for (let groupIndex = 0; groupIndex < validatedData.groups.length; groupIndex++) {
         const group = validatedData.groups[groupIndex];
         // Find group cover file for this specific group
-        const groupCoverFile = groupCoverFiles.find(file => {
+        const groupCoverFile = groupCoverFiles.find((file: UploadedFile) => {
           // Extract index from group-cover-{index}- prefix in originalName
           const match = file.originalName.match(/^group-cover-(\d+)-/);
           if (match) {
@@ -168,8 +168,8 @@ async function handleUploadSessionRequest(body: any, userData: any) {
           let itemImageUrl: string | null = null;
           
           // Find corresponding item file by name matching (like traditional sorters)
-          const itemFiles = uploadedFiles.filter(f => f.type === 'item');
-          const itemFile = itemFiles.find(file => {
+          const itemFiles = uploadedFiles.filter((f: UploadedFile) => f.type === 'item');
+          const itemFile = itemFiles.find((file: UploadedFile) => {
             const originalNameWithoutExt = file.originalName.replace(/\.[^/.]+$/, '');
             return originalNameWithoutExt === item.title;
           });
@@ -199,10 +199,10 @@ async function handleUploadSessionRequest(body: any, userData: any) {
       }
     } else if (validatedData.items) {
       // Handle traditional sorter
-      const itemFiles = uploadedFiles.filter(f => f.type === 'item');
+      const itemFiles = uploadedFiles.filter((f: UploadedFile) => f.type === 'item');
       
       // Sort item files by their session index to ensure correct order
-      itemFiles.sort((a, b) => {
+      itemFiles.sort((a: UploadedFile, b: UploadedFile) => {
         const indexA = parseInt(a.key.match(/\/item\/(\d+)\./)?.[1] || '0');
         const indexB = parseInt(b.key.match(/\/item\/(\d+)\./)?.[1] || '0');
         return indexA - indexB;
@@ -216,7 +216,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
         
         // Find a file that matches this item's title
         // Remove file extension from original name to match with item title
-        const itemFile = itemFiles.find(file => {
+        const itemFile = itemFiles.find((file: UploadedFile) => {
           const originalNameWithoutExt = file.originalName.replace(/\.[^/.]+$/, '');
           return originalNameWithoutExt === item.title;
         });
@@ -246,7 +246,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
     }
 
     // Handle cover image
-    const coverFile = uploadedFiles.find(f => f.type === 'cover');
+    const coverFile = uploadedFiles.find((f: UploadedFile) => f.type === 'cover');
     if (coverFile) {
       const newKey = convertSessionKeyToSorterKey(
         coverFile.key,

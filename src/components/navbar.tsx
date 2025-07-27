@@ -53,6 +53,7 @@ export function Navbar() {
       }, 100);
       return () => clearTimeout(timeoutId);
     }
+    return undefined;
   }, [mobileSearchOpen]);
 
   // Focus management for mobile menu drawer
@@ -75,6 +76,7 @@ export function Navbar() {
       }, 300);
       return () => clearTimeout(timeoutId);
     }
+    return undefined;
   }, [mobileMenuOpen]);
 
   // Close mobile menu when clicking outside (handled by overlay click)

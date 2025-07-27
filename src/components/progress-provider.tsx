@@ -16,9 +16,12 @@ export function ProgressProvider() {
       }, 200);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [pathname]);
 
   useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+
     const handleClick = (e: MouseEvent) => {
       const target = e.target as Element;
       const link = target.closest("a");
@@ -50,16 +53,17 @@ export function ProgressProvider() {
         setProgress(10);
 
         // Quick progress animation
-        const timer = setTimeout(() => {
+        timer = setTimeout(() => {
           setProgress(70);
         }, 100);
-
-        return () => clearTimeout(timer);
       }
     };
 
     document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
+    return () => {
+      document.removeEventListener("click", handleClick);
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   if (progress === 0) return null;
