@@ -38,7 +38,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
-import { compressImages, isCompressibleImage } from '@/lib/image-compression';
+import { compressImages, isCompressibleImage } from "@/lib/image-compression";
 import {
   Plus,
   X,
@@ -54,6 +54,7 @@ import CoverImageUpload from "@/components/cover-image-upload";
 import { useDirectUpload } from "@/hooks/use-direct-upload";
 import { UploadProgressDialog } from "@/components/upload-progress-dialog";
 import type { UploadedFile } from "@/types/upload";
+import { toast } from "sonner";
 
 export default function CreateSorterForm() {
   const router = useRouter();
@@ -89,13 +90,13 @@ export default function CreateSorterForm() {
       // Update our progress display
       setShowProgressDialog(true);
       const phaseMessages = {
-        'requesting-tokens': 'Preparing upload...',
-        'uploading-files': `Uploading files... (${progress.files.filter(f => f.status === 'complete').length}/${progress.files.length})`,
-        'creating-sorter': 'Creating sorter...',
-        'complete': 'Upload complete!',
-        'failed': 'Upload failed'
+        "requesting-tokens": "Preparing upload...",
+        "uploading-files": `Uploading files... (${progress.files.filter((f) => f.status === "complete").length}/${progress.files.length})`,
+        "creating-sorter": "Creating sorter...",
+        complete: "Upload complete!",
+        failed: "Upload failed",
       };
-      setUploadStatus(phaseMessages[progress.phase] || 'Processing...');
+      setUploadStatus(phaseMessages[progress.phase] || "Processing...");
     },
     onSuccess: async (uploadedFiles) => {
       // Files uploaded successfully, now create sorter with references
@@ -105,8 +106,8 @@ export default function CreateSorterForm() {
     onError: (error) => {
       setIsUploading(false);
       setShowProgressDialog(false);
-      console.error('Upload error:', error);
-    }
+      console.error("Upload error:", error);
+    },
   });
 
   const form = useForm<CreateSorterInput>({
@@ -196,38 +197,67 @@ export default function CreateSorterForm() {
     const files = Array.from(event.target.files || []);
 
     // Validate files
-    const validFiles = files.filter((file) => {
-      // Check file type
-      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const maxSize = 5 * 1024 * 1024;
+    const validFiles: File[] = [];
+    const invalidFiles: { file: File; reason: string }[] = [];
+
+    files.forEach((file) => {
       if (!allowedTypes.includes(file.type)) {
-        return false;
+        invalidFiles.push({ file, reason: "Invalid file type" });
+      } else if (file.size > maxSize) {
+        invalidFiles.push({ file, reason: "File too large" });
+      } else {
+        validFiles.push(file);
       }
-      // Check file size (5MB limit)
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        return false;
-      }
-      return true;
     });
 
+    // Show feedback about validation results
+    if (invalidFiles.length > 0) {
+      const typeErrors = invalidFiles.filter(
+        ({ reason }) => reason === "Invalid file type",
+      ).length;
+      const sizeErrors = invalidFiles.filter(
+        ({ reason }) => reason === "File too large",
+      ).length;
+
+      let errorMessage = `${invalidFiles.length} file(s) rejected: `;
+      const errorParts = [];
+      if (typeErrors > 0) errorParts.push(`${typeErrors} invalid type(s)`);
+      if (sizeErrors > 0) errorParts.push(`${sizeErrors} too large`);
+      errorMessage += errorParts.join(", ");
+      errorMessage += ". Only JPG, PNG, WebP under 5MB allowed.";
+
+      toast.error(errorMessage);
+    }
+
     if (validFiles.length > 0) {
+      if (invalidFiles.length === 0) {
+        toast.success(`${validFiles.length} file(s) added successfully`);
+      }
       try {
         // Compress images to JPG
         const compressibleFiles = validFiles.filter(isCompressibleImage);
-        const nonCompressibleFiles = validFiles.filter(file => !isCompressibleImage(file));
+        const nonCompressibleFiles = validFiles.filter(
+          (file) => !isCompressibleImage(file),
+        );
 
         if (compressibleFiles.length > 0) {
-          const compressionResults = await compressImages(
-            compressibleFiles,
-            { quality: 0.85, exactSize: { width: 300, height: 300 }, format: 'jpeg' }
+          const compressionResults = await compressImages(compressibleFiles, {
+            quality: 0.85,
+            exactSize: { width: 300, height: 300 },
+            format: "jpeg",
+          });
+          const compressedFiles = compressionResults.map(
+            (result) => result.file,
           );
-          const compressedFiles = compressionResults.map(result => result.file);
           handleItemImagesChange([...compressedFiles, ...nonCompressibleFiles]);
         } else {
           handleItemImagesChange(validFiles);
         }
       } catch (error) {
-        console.error('Compression failed:', error);
+        console.error("Compression failed:", error);
+        toast.error("Image compression failed, using original files");
         handleItemImagesChange(validFiles);
       }
     }
@@ -582,39 +612,73 @@ export default function CreateSorterForm() {
   ) => {
     const files = Array.from(event.target.files || []);
 
-    // Validate files (reuse existing validation logic)
-    const validFiles = files.filter((file) => {
-      // Check file type
-      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    // Validate files
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const maxSize = 5 * 1024 * 1024;
+    const validFiles: File[] = [];
+    const invalidFiles: { file: File; reason: string }[] = [];
+
+    files.forEach((file) => {
       if (!allowedTypes.includes(file.type)) {
-        return false;
+        invalidFiles.push({ file, reason: "Invalid file type" });
+      } else if (file.size > maxSize) {
+        invalidFiles.push({ file, reason: "File too large" });
+      } else {
+        validFiles.push(file);
       }
-      // Check file size (5MB limit)
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        return false;
-      }
-      return true;
     });
 
+    // Show feedback about validation results
+    if (invalidFiles.length > 0) {
+      const typeErrors = invalidFiles.filter(
+        ({ reason }) => reason === "Invalid file type",
+      ).length;
+      const sizeErrors = invalidFiles.filter(
+        ({ reason }) => reason === "File too large",
+      ).length;
+
+      let errorMessage = `${invalidFiles.length} file(s) rejected: `;
+      const errorParts = [];
+      if (typeErrors > 0) errorParts.push(`${typeErrors} invalid type(s)`);
+      if (sizeErrors > 0) errorParts.push(`${sizeErrors} too large`);
+      errorMessage += errorParts.join(", ");
+      errorMessage += ". Only JPG, PNG, WebP under 5MB allowed.";
+
+      toast.error(errorMessage);
+    }
+
     if (validFiles.length > 0) {
+      if (invalidFiles.length === 0) {
+        toast.success(
+          `${validFiles.length} file(s) added to group successfully`,
+        );
+      }
       try {
         // Compress images to JPG
         const compressibleFiles = validFiles.filter(isCompressibleImage);
-        const nonCompressibleFiles = validFiles.filter(file => !isCompressibleImage(file));
+        const nonCompressibleFiles = validFiles.filter(
+          (file) => !isCompressibleImage(file),
+        );
 
         if (compressibleFiles.length > 0) {
-          const compressionResults = await compressImages(
-            compressibleFiles,
-            { quality: 0.85, exactSize: { width: 300, height: 300 }, format: 'jpeg' }
+          const compressionResults = await compressImages(compressibleFiles, {
+            quality: 0.85,
+            exactSize: { width: 300, height: 300 },
+            format: "jpeg",
+          });
+          const compressedFiles = compressionResults.map(
+            (result) => result.file,
           );
-          const compressedFiles = compressionResults.map(result => result.file);
-          handleGroupImagesChange(groupIndex, [...compressedFiles, ...nonCompressibleFiles]);
+          handleGroupImagesChange(groupIndex, [
+            ...compressedFiles,
+            ...nonCompressibleFiles,
+          ]);
         } else {
           handleGroupImagesChange(groupIndex, validFiles);
         }
       } catch (error) {
-        console.error('Compression failed:', error);
+        console.error("Compression failed:", error);
+        toast.error("Image compression failed, using original files");
         handleGroupImagesChange(groupIndex, validFiles);
       }
     }
@@ -673,29 +737,31 @@ export default function CreateSorterForm() {
       const maxSize = 10 * 1024 * 1024; // 10MB
 
       if (!allowedTypes.includes(file.type)) {
-        alert("Only JPG, PNG, and WebP files are allowed");
+        toast.error("Only JPG, PNG, and WebP files are allowed");
         return;
       }
 
       if (file.size > maxSize) {
-        alert("File size must be less than 10MB");
+        toast.error("File size must be less than 10MB");
         return;
       }
 
       try {
         // Compress image if it's compressible
         if (isCompressibleImage(file)) {
-          const compressionResults = await compressImages(
-            [file],
-            { quality: 0.85, exactSize: { width: 300, height: 300 }, format: 'jpeg' }
-          );
+          const compressionResults = await compressImages([file], {
+            quality: 0.85,
+            exactSize: { width: 300, height: 300 },
+            format: "jpeg",
+          });
           const compressedFile = compressionResults[0].file;
           handleGroupCoverImageSelect(groupIndex, compressedFile);
         } else {
           handleGroupCoverImageSelect(groupIndex, file);
         }
       } catch (error) {
-        console.error('Compression failed:', error);
+        console.error("Compression failed:", error);
+        toast.error("Image compression failed, using original file");
         handleGroupCoverImageSelect(groupIndex, file);
       }
     } else {
@@ -739,11 +805,6 @@ export default function CreateSorterForm() {
     setUploadStatus("Preparing upload...");
 
     try {
-      // Safety check for required fields
-      if (!data.title || !data.title.trim()) {
-        throw new Error("Title is required");
-      }
-
       // Collect all files for upload
       const filesToUpload: File[] = [];
 
@@ -751,9 +812,9 @@ export default function CreateSorterForm() {
       if (coverImageFile) {
         // Create a new File with cover prefix to ensure proper type detection
         const coverFile = new File(
-          [coverImageFile], 
+          [coverImageFile],
           `cover-${coverImageFile.name}`,
-          { type: coverImageFile.type }
+          { type: coverImageFile.type },
         );
         filesToUpload.push(coverFile);
       }
@@ -779,23 +840,20 @@ export default function CreateSorterForm() {
       }
 
       filesToUpload.push(...actualImageFiles);
-      
 
       // Get group cover files (only for grouped mode) with special prefix
       if (data.useGroups) {
         const groupCoverImageFiles = groupCoverFiles.filter(
           (file) => file !== null,
         ) as File[];
-        
+
         // Add group-cover prefix to identify them as group covers
         const prefixedGroupCovers = groupCoverImageFiles.map((file, index) => {
-          return new File(
-            [file],
-            `group-cover-${index}-${file.name}`,
-            { type: file.type }
-          );
+          return new File([file], `group-cover-${index}-${file.name}`, {
+            type: file.type,
+          });
         });
-        
+
         filesToUpload.push(...prefixedGroupCovers);
       }
 
@@ -809,7 +867,6 @@ export default function CreateSorterForm() {
       await directUpload.uploadFiles(filesToUpload);
 
       // The onSuccess callback will handle sorter creation
-      
     } catch (error) {
       setIsUploading(false);
       setShowProgressDialog(false);
@@ -818,23 +875,26 @@ export default function CreateSorterForm() {
     }
   };
 
-  const createSorterWithUploadedFiles = async (data: CreateSorterInput, uploadedFiles: UploadedFile[]) => {
+  const createSorterWithUploadedFiles = async (
+    data: CreateSorterInput,
+    uploadedFiles: UploadedFile[],
+  ) => {
     try {
       setUploadStatus("Creating sorter...");
 
-      console.log('Direct upload sessionId:', directUpload.sessionId);
-      console.log('Uploaded files:', uploadedFiles);
-      
-      const payload = {
-      title: data.title.trim(),
-      description: data.description?.trim() || undefined,
-      category: data.category?.trim() || undefined,
-      useGroups: data.useGroups,
-      uploadSession: directUpload.sessionId,
-      uploadedFiles: uploadedFiles
-    };
+      console.log("Direct upload sessionId:", directUpload.sessionId);
+      console.log("Uploaded files:", uploadedFiles);
 
-    if (data.useGroups && data.groups) {
+      const payload = {
+        title: data.title?.trim() || "",
+        description: data.description?.trim() || undefined,
+        category: data.category?.trim() || undefined,
+        useGroups: data.useGroups,
+        uploadSession: directUpload.sessionId,
+        uploadedFiles: uploadedFiles,
+      };
+
+      if (data.useGroups && data.groups) {
         // Filter out empty groups and items
         const validGroups = data.groups
           .filter((group) => group.name.trim())
@@ -880,7 +940,7 @@ export default function CreateSorterForm() {
       }
 
       setUploadStatus("Creating sorter...");
-      
+
       // Send sorter creation request with upload session reference
       const response = await fetch("/api/sorters", {
         method: "POST",
@@ -896,18 +956,20 @@ export default function CreateSorterForm() {
       }
 
       const result = await response.json();
-      
+
       setUploadStatus("Redirecting to sorter...");
-      
+      toast.success("Sorter created successfully!");
+
       // Clean up local state and redirect
       router.push(`/sorter/${result.slug}`);
     } catch (error) {
       setIsUploading(false);
       setShowProgressDialog(false);
       console.error("Error creating sorter:", error);
-      
-      const errorMessage = error instanceof Error ? error.message : "Failed to create sorter";
-      alert(errorMessage);
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create sorter";
+      toast.error(errorMessage);
     }
   };
 
@@ -916,15 +978,8 @@ export default function CreateSorterForm() {
     setIsLoading(true);
 
     try {
-      // Safety check for required fields
-      if (!data.title || !data.title.trim()) {
-        alert("Title is required");
-        setIsLoading(false);
-        return;
-      }
-
       const payload = {
-        title: data.title.trim(),
+        title: data.title?.trim() || "",
         description: data.description?.trim() || undefined,
         category: data.category?.trim() || undefined,
         useGroups: data.useGroups,
@@ -971,18 +1026,20 @@ export default function CreateSorterForm() {
 
       const result = await response.json();
 
+      toast.success("Sorter created successfully!");
       // Redirect to sorter page (keep loading state during redirect)
       router.push(`/sorter/${result.sorter.slug}`);
     } catch (error) {
       console.error("Error creating sorter:", error);
-      alert(error instanceof Error ? error.message : "Failed to create sorter");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create sorter",
+      );
       setIsLoading(false); // Only set loading false on error
     }
   };
 
   // Handle form submission with smart upload detection
   const onSubmit = async (data: CreateSorterInput) => {
-    
     // Get actual image files from itemImagesData (traditional mode) or groupImagesData (grouped mode)
     let actualImageFiles: File[] = [];
 
@@ -1012,9 +1069,9 @@ export default function CreateSorterForm() {
     }
 
     // Check if any images are present
-    const hasImages = 
-      coverImageFile || 
-      actualImageFiles.length > 0 || 
+    const hasImages =
+      coverImageFile ||
+      actualImageFiles.length > 0 ||
       groupCoverImageFiles.length > 0;
 
     if (hasImages) {
@@ -1176,7 +1233,15 @@ export default function CreateSorterForm() {
                   /* Groups Mode */
                   <div>
                     <div className="mb-4">
-                      <FormLabel>Groups *</FormLabel>
+                      <FormLabel
+                        className={
+                          form.formState.errors.groups?.root || form.formState.errors.groups?.message
+                            ? "text-red-600 dark:text-red-400"
+                            : ""
+                        }
+                      >
+                        Groups *
+                      </FormLabel>
                       {/* Add Group button */}
                       <div className="mt-2">
                         <Button
@@ -1454,6 +1519,13 @@ export default function CreateSorterForm() {
                       )}
                     </div>
 
+                    {/* Groups validation error */}
+                    {(form.formState.errors.groups?.root || form.formState.errors.groups?.message) && (
+                      <div className="mt-4 text-red-600 dark:text-red-400">
+                        {form.formState.errors.groups?.root?.message || form.formState.errors.groups?.message}
+                      </div>
+                    )}
+
                     {/* Instructions */}
                     <div className="mt-4 space-y-1 text-sm">
                       <p>
@@ -1481,7 +1553,15 @@ export default function CreateSorterForm() {
                   /* Traditional Mode */
                   <div>
                     <div className="mb-4">
-                      <FormLabel>Items *</FormLabel>
+                      <FormLabel
+                        className={
+                          form.formState.errors.items?.root || form.formState.errors.items?.message
+                            ? "text-red-600 dark:text-red-400"
+                            : ""
+                        }
+                      >
+                        Items *
+                      </FormLabel>
                       {/* Buttons */}
                       <div className="mt-2 flex items-center gap-2">
                         <Button
@@ -1586,6 +1666,13 @@ export default function CreateSorterForm() {
                       )}
                     </div>
 
+                    {/* Items validation error */}
+                    {(form.formState.errors.items?.root || form.formState.errors.items?.message) && (
+                      <div className="mt-4 text-red-600 dark:text-red-400">
+                        {form.formState.errors.items?.root?.message || form.formState.errors.items?.message}
+                      </div>
+                    )}
+
                     {/* Instructions */}
                     <div className="mt-4 space-y-1 text-sm">
                       <p>
@@ -1606,16 +1693,36 @@ export default function CreateSorterForm() {
                 )}
               </div>
 
+              {/* Form-level validation errors */}
+              {form.formState.errors.root && (
+                <div className="rounded border-2 border-red-500 bg-red-50 p-3 text-red-700 dark:bg-red-950 dark:text-red-300">
+                  <p className="font-medium">Please fix the following:</p>
+                  <p className="text-sm">
+                    {form.formState.errors.root.message}
+                  </p>
+                </div>
+              )}
+
               {/* Submit */}
               <div className="flex gap-4">
-                <Button type="submit" disabled={isLoading || isUploading || directUpload.isUploading} className="flex-1">
-                  {isLoading ? "Creating..." : "Create Sorter"}
+                <Button
+                  type="submit"
+                  disabled={
+                    isLoading || isUploading || directUpload.isUploading
+                  }
+                  className="flex-1"
+                >
+                  {isLoading || isUploading || directUpload.isUploading
+                    ? "Creating..."
+                    : "Create Sorter"}
                 </Button>
                 <Button
                   type="button"
                   variant="neutral"
                   onClick={() => router.back()}
-                  disabled={isLoading || isUploading || directUpload.isUploading}
+                  disabled={
+                    isLoading || isUploading || directUpload.isUploading
+                  }
                 >
                   Cancel
                 </Button>
@@ -1626,7 +1733,7 @@ export default function CreateSorterForm() {
       </Panel>
 
       {/* Upload Progress Dialog */}
-      <UploadProgressDialog 
+      <UploadProgressDialog
         open={showProgressDialog || directUpload.isUploading}
         progress={directUpload.progress}
         onOpenChange={() => {}}
