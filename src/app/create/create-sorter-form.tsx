@@ -886,8 +886,19 @@ export default function CreateSorterForm() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create sorter");
+        let errorMessage = "Failed to create sorter";
+        try {
+          const error = await response.json();
+          errorMessage = error.error || errorMessage;
+        } catch (e) {
+          // Response is not JSON (likely HTML error page)
+          if (response.status === 504) {
+            errorMessage = "Server timeout - please try again with fewer images or smaller files";
+          } else {
+            errorMessage = `Server error (${response.status}): ${response.statusText}`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -959,8 +970,19 @@ export default function CreateSorterForm() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create sorter");
+        let errorMessage = "Failed to create sorter";
+        try {
+          const error = await response.json();
+          errorMessage = error.error || errorMessage;
+        } catch (e) {
+          // Response is not JSON (likely HTML error page)
+          if (response.status === 504) {
+            errorMessage = "Server timeout - please try again with fewer images or smaller files";
+          } else {
+            errorMessage = `Server error (${response.status}): ${response.statusText}`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
