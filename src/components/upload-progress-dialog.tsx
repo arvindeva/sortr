@@ -35,7 +35,7 @@ export function UploadProgressDialog({
   const getPhaseDescription = (phase: UploadProgress['phase']) => {
     switch (phase) {
       case 'requesting-tokens':
-        return 'Getting secure upload URLs';
+        return 'Preparring upload...';
       case 'uploading-files':
         const completedFiles = progress.files.filter(f => f.status === 'complete').length;
         const totalFiles = progress.files.length;

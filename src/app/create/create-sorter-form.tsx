@@ -897,9 +897,7 @@ export default function CreateSorterForm() {
 
       const result = await response.json();
       
-      setUploadStatus("Upload complete!");
-      setShowProgressDialog(false);
-      setIsUploading(false);
+      setUploadStatus("Redirecting to sorter...");
       
       // Clean up local state and redirect
       router.push(`/sorter/${result.slug}`);
