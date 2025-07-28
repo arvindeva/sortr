@@ -893,7 +893,7 @@ export default function CreateSorterForm() {
         } catch (e) {
           // Response is not JSON (likely HTML error page)
           if (response.status === 504) {
-            errorMessage = "Server timeout - please try again with fewer images or smaller files";
+            errorMessage = "Server timeout - please try again. If the issue persists, try creating a smaller sorter first.";
           } else {
             errorMessage = `Server error (${response.status}): ${response.statusText}`;
           }
@@ -977,7 +977,7 @@ export default function CreateSorterForm() {
         } catch (e) {
           // Response is not JSON (likely HTML error page)
           if (response.status === 504) {
-            errorMessage = "Server timeout - please try again with fewer images or smaller files";
+            errorMessage = "Server timeout - please try again. If the issue persists, try creating a smaller sorter first.";
           } else {
             errorMessage = `Server error (${response.status}): ${response.statusText}`;
           }
