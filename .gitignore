@@ -46,3 +46,6 @@ PLAN.md
 /screenshots
 
 /plan
+
+# Database backup files
+*_migration_backup_*.sql

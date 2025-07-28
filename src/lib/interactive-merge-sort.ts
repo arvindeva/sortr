@@ -1,5 +1,15 @@
 import { SortItem } from "@/lib/sorting";
 
+// Fisher-Yates shuffle algorithm for randomizing array order
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 function getComparisonKey(itemA: SortItem, itemB: SortItem): string {
   return [itemA.id, itemB.id].sort().join(",");
 }
@@ -15,6 +25,8 @@ export class InteractiveMergeSort {
   private totalComparisons = 0;
   private stateHistory: SortState[] = [];
   private currentItems: SortItem[] = [];
+  private hasStarted = false;
+  private shuffledOrder: SortItem[] = [];
   private onProgressUpdate?: (completed: number, total: number) => void;
   private onSaveProgress?: () => void;
   private onRestartRequested?: () => void;
@@ -26,6 +38,7 @@ export class InteractiveMergeSort {
   ) {
     if (savedChoices) {
       this.userChoices = new Map(savedChoices);
+      this.hasStarted = true; // If we have saved choices, sorting has started
     }
     this.comparisonCount = savedComparisonCount;
     if (savedStateHistory) {
@@ -82,6 +95,8 @@ export class InteractiveMergeSort {
     this.userChoices.clear();
     this.comparisonCount = 0;
     this.stateHistory = [];
+    this.hasStarted = false; // Reset to allow new randomization
+    this.shuffledOrder = [];
 
     // Update progress
     this.onProgressUpdate?.(0, this.totalComparisons);
@@ -95,14 +110,30 @@ export class InteractiveMergeSort {
     items: SortItem[],
     onNeedComparison: (itemA: SortItem, itemB: SortItem) => Promise<string>,
   ): Promise<SortItem[]> {
-    // Store items for recalculation during sorting
+    // Store original items for recalculation during sorting
     this.currentItems = items;
+
+    // Determine items to sort based on whether this is truly the first start
+    let itemsToSort: SortItem[];
+    
+    if (!this.hasStarted) {
+      // First time ever - shuffle and store the order
+      this.shuffledOrder = shuffleArray(items);
+      this.hasStarted = true;
+      itemsToSort = this.shuffledOrder;
+      
+      // Save the new shuffled order immediately
+      this.onSaveProgress?.();
+    } else {
+      // Already started (saved progress or undo) - use consistent order
+      itemsToSort = this.shuffledOrder.length > 0 ? this.shuffledOrder : items;
+    }
 
     // Calculate total comparisons needed by simulating the sort first
     this.totalComparisons = this.simulateSort(items);
     this.onProgressUpdate?.(this.comparisonCount, this.totalComparisons);
 
-    return await this.mergeSort(items, onNeedComparison);
+    return await this.mergeSort(itemsToSort, onNeedComparison);
   }
 
   private recalculateTotal(): void {
@@ -226,5 +257,16 @@ export class InteractiveMergeSort {
 
   getStateHistory(): SortState[] {
     return this.stateHistory;
+  }
+
+  getShuffledOrder(): SortItem[] {
+    return this.shuffledOrder;
+  }
+
+  setShuffledOrder(shuffledOrder: SortItem[]) {
+    this.shuffledOrder = shuffledOrder;
+    if (shuffledOrder.length > 0) {
+      this.hasStarted = true;
+    }
   }
 }

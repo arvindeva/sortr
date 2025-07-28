@@ -59,6 +59,7 @@ function serializeChoices(
   items: SortItem[],
   userChoices: Map<string, string>,
   stateHistory: any[],
+  shuffledOrder: SortItem[] = [],
 ): any {
   // Create item map for UUID to index conversion
   const itemMap = items.map((item) => item.id);
@@ -104,19 +105,27 @@ function serializeChoices(
     };
   });
 
+  // Convert shuffled order to indexed format
+  const shuffledOrderIndexes = shuffledOrder.map(item => {
+    const index = itemToIndex.get(item.id);
+    return index !== undefined ? index : -1;
+  }).filter(index => index !== -1);
+
   return {
     itemMap,
     choices,
     historyChoices,
+    shuffledOrderIndexes,
   };
 }
 
 // Convert indexed format back to UUID-based choices
-function deserializeChoices(serializedData: any): {
+function deserializeChoices(serializedData: any, allItems: SortItem[]): {
   userChoices: Map<string, string>;
   stateHistory: any[];
+  shuffledOrder: SortItem[];
 } {
-  const { itemMap, choices, historyChoices } = serializedData;
+  const { itemMap, choices, historyChoices, shuffledOrderIndexes } = serializedData;
 
   // Reconstruct user choices map
   const userChoices = new Map<string, string>();
@@ -150,7 +159,22 @@ function deserializeChoices(serializedData: any): {
     };
   });
 
-  return { userChoices, stateHistory };
+  // Reconstruct shuffled order
+  const shuffledOrder: SortItem[] = [];
+  if (shuffledOrderIndexes && shuffledOrderIndexes.length > 0) {
+    for (const index of shuffledOrderIndexes) {
+      const itemId = itemMap[index];
+      if (itemId) {
+        // Find the full SortItem from allItems
+        const fullItem = allItems.find(item => item.id === itemId);
+        if (fullItem) {
+          shuffledOrder.push(fullItem);
+        }
+      }
+    }
+  }
+
+  return { userChoices, stateHistory, shuffledOrder };
 }
 
 export default function SortPage() {
@@ -246,6 +270,7 @@ export default function SortPage() {
       let savedChoices: Map<string, string> | undefined;
       let savedComparisonCount = 0;
       let savedStateHistory: SortState[] | undefined;
+      let savedShuffledOrder: SortItem[] | undefined;
 
       if (savedState) {
         try {
@@ -258,9 +283,12 @@ export default function SortPage() {
 
             // Handle new optimized format
             if (parsed.optimized) {
-              const { userChoices, stateHistory } = deserializeChoices(parsed);
+              const { userChoices, stateHistory, shuffledOrder } = deserializeChoices(parsed, filteredItems);
               savedChoices = userChoices;
               savedStateHistory = stateHistory;
+              if (shuffledOrder.length > 0) {
+                savedShuffledOrder = shuffledOrder;
+              }
             } else {
               // Legacy format support
               savedChoices = new Map(parsed.userChoicesArray || []);
@@ -289,6 +317,11 @@ export default function SortPage() {
         savedStateHistory,
       );
 
+      // Restore shuffled order if available
+      if (savedShuffledOrder) {
+        sorterRef.current.setShuffledOrder(savedShuffledOrder);
+      }
+
       // Set up progress tracking
       sorterRef.current.setProgressCallback((completed, total) => {
         // Small delay to ensure DOM is ready for animation
@@ -307,6 +340,7 @@ export default function SortPage() {
             filteredItems,
             sorterRef.current.getUserChoices(),
             sorterRef.current.getStateHistory(),
+            sorterRef.current.getShuffledOrder(),
           );
 
           const stateToSave = {
