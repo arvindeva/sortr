@@ -1,6 +1,13 @@
 "use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Progress } from "@/components/ui/progress";
 import type { UploadProgress } from "@/types/upload";
 
@@ -10,56 +17,58 @@ interface UploadProgressDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export function UploadProgressDialog({ 
-  open, 
-  progress, 
-  onOpenChange 
+export function UploadProgressDialog({
+  open,
+  progress,
+  onOpenChange,
 }: UploadProgressDialogProps) {
   if (!progress) return null;
 
-  const getPhaseTitle = (phase: UploadProgress['phase']) => {
+  const getPhaseTitle = (phase: UploadProgress["phase"]) => {
     switch (phase) {
-      case 'requesting-tokens':
-        return 'Preparing upload...';
-      case 'uploading-files':
-        return 'Uploading files...';
-      case 'creating-sorter':
-        return 'Creating sorter...';
-      case 'complete':
-        return 'Upload complete!';
+      case "requesting-tokens":
+        return "Preparing upload...";
+      case "uploading-files":
+        return "Uploading files...";
+      case "creating-sorter":
+        return "Creating sorter...";
+      case "complete":
+        return "Upload complete!";
       default:
-        return 'Processing...';
+        return "Processing...";
     }
   };
 
-  const getPhaseDescription = (phase: UploadProgress['phase']) => {
+  const getPhaseDescription = (phase: UploadProgress["phase"]) => {
     switch (phase) {
-      case 'requesting-tokens':
-        return 'Preparring upload...';
-      case 'uploading-files':
-        const completedFiles = progress.files.filter(f => f.status === 'complete').length;
+      case "requesting-tokens":
+        return "Preparing upload...";
+      case "uploading-files":
+        const completedFiles = progress.files.filter(
+          (f) => f.status === "complete",
+        ).length;
         const totalFiles = progress.files.length;
         return `${completedFiles}/${totalFiles} files uploaded`;
-      case 'creating-sorter':
-        return 'Saving sorter data';
-      case 'complete':
-        return 'All files uploaded successfully!';
+      case "creating-sorter":
+        return "Saving sorter data";
+      case "complete":
+        return "All files uploaded successfully!";
       default:
-        return '';
+        return "";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'complete':
-        return '✅';
-      case 'uploading':
-        return '📤';
-      case 'failed':
-        return '❌';
-      case 'pending':
+      case "complete":
+        return "✅";
+      case "uploading":
+        return "📤";
+      case "failed":
+        return "❌";
+      case "pending":
       default:
-        return '⏳';
+        return "⏳";
     }
   };
 
@@ -68,8 +77,13 @@ export function UploadProgressDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{getPhaseTitle(progress.phase)}</DialogTitle>
+          <VisuallyHidden.Root>
+            <DialogDescription>
+              Upload progress for creating a new sorter with files
+            </DialogDescription>
+          </VisuallyHidden.Root>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Overall progress */}
           <div className="space-y-2">
@@ -77,24 +91,19 @@ export function UploadProgressDialog({
               <span>{getPhaseDescription(progress.phase)}</span>
               <span>{Math.round(progress.overallProgress)}%</span>
             </div>
-            <Progress value={progress.overallProgress} className="h-2" />
+            <Progress value={progress.overallProgress} className="h-4" />
           </div>
 
           {/* Individual file progress */}
-          {progress.phase === 'uploading-files' && (
+          {progress.phase === "uploading-files" && (
             <div className="space-y-2">
               <div className="text-sm font-medium">Files:</div>
-              <div className="max-h-32 overflow-y-auto space-y-1">
+              <div className="max-h-32 space-y-1 overflow-y-auto">
                 {progress.files.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <span>{getStatusIcon(file.status)}</span>
-                      <span className="truncate" title={file.name}>
-                        {file.name}
-                      </span>
-                    </div>
-                    <span className="text-muted-foreground ml-2">
-                      {file.status === 'uploading' ? `${file.progress}%` : ''}
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <span>{getStatusIcon(file.status)}</span>
+                    <span className="truncate" title={file.name}>
+                      {file.name}
                     </span>
                   </div>
                 ))}
@@ -103,9 +112,10 @@ export function UploadProgressDialog({
           )}
 
           {/* Error handling */}
-          {progress.files.some(f => f.status === 'failed') && (
-            <div className="text-sm text-destructive">
-              Some files failed to upload. You can retry or continue without them.
+          {progress.files.some((f) => f.status === "failed") && (
+            <div className="text-destructive text-sm">
+              Some files failed to upload. You can retry or continue without
+              them.
             </div>
           )}
         </div>

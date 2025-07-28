@@ -7,14 +7,14 @@ interface SortingBarsLoaderProps {
 
 export function SortingBarsLoader({
   className,
-  size = 80,
+  size = 120,
 }: SortingBarsLoaderProps) {
   return (
-    <div className={cn("flex justify-center", className)}>
+    <div className={cn("flex justify-center -mb-4", className)}>
       <svg
         width={size}
         height={size}
-        viewBox="0 0 50 50"
+        viewBox="0 0 50 40"
         style={{ transform: "scaleY(-1)" }}
         className="text-main"
       >

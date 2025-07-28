@@ -19,7 +19,7 @@ interface FileUploadZoneProps {
 export function FileUploadZone({
   onFilesSelected,
   acceptedFileTypes = ['image/jpeg', 'image/png', 'image/webp'],
-  maxFiles = 25,
+  maxFiles = 500,
   maxFileSize = 10 * 1024 * 1024, // 10MB
   disabled = false,
   existingFiles = [],

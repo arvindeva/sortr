@@ -36,7 +36,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
 import { compressImages, isCompressibleImage } from "@/lib/image-compression";
 import {
@@ -1235,7 +1237,8 @@ export default function CreateSorterForm() {
                     <div className="mb-4">
                       <FormLabel
                         className={
-                          form.formState.errors.groups?.root || form.formState.errors.groups?.message
+                          form.formState.errors.groups?.root ||
+                          form.formState.errors.groups?.message
                             ? "text-red-600 dark:text-red-400"
                             : ""
                         }
@@ -1520,9 +1523,11 @@ export default function CreateSorterForm() {
                     </div>
 
                     {/* Groups validation error */}
-                    {(form.formState.errors.groups?.root || form.formState.errors.groups?.message) && (
+                    {(form.formState.errors.groups?.root ||
+                      form.formState.errors.groups?.message) && (
                       <div className="mt-4 text-red-600 dark:text-red-400">
-                        {form.formState.errors.groups?.root?.message || form.formState.errors.groups?.message}
+                        {form.formState.errors.groups?.root?.message ||
+                          form.formState.errors.groups?.message}
                       </div>
                     )}
 
@@ -1555,7 +1560,8 @@ export default function CreateSorterForm() {
                     <div className="mb-4">
                       <FormLabel
                         className={
-                          form.formState.errors.items?.root || form.formState.errors.items?.message
+                          form.formState.errors.items?.root ||
+                          form.formState.errors.items?.message
                             ? "text-red-600 dark:text-red-400"
                             : ""
                         }
@@ -1667,9 +1673,11 @@ export default function CreateSorterForm() {
                     </div>
 
                     {/* Items validation error */}
-                    {(form.formState.errors.items?.root || form.formState.errors.items?.message) && (
+                    {(form.formState.errors.items?.root ||
+                      form.formState.errors.items?.message) && (
                       <div className="mt-4 text-red-600 dark:text-red-400">
-                        {form.formState.errors.items?.root?.message || form.formState.errors.items?.message}
+                        {form.formState.errors.items?.root?.message ||
+                          form.formState.errors.items?.message}
                       </div>
                     )}
 
@@ -1743,12 +1751,17 @@ export default function CreateSorterForm() {
       {showProgressDialog && !directUpload.isUploading && (
         <Dialog open={showProgressDialog} onOpenChange={() => {}}>
           <DialogContent preventClose={true} className="sm:max-w-md">
-            <DialogHeader className="text-center sm:text-center">
-              <DialogTitle>Creating Sorter</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6 text-center">
+            <VisuallyHidden.Root>
+              <DialogHeader>
+                <DialogTitle>Creating Sorter</DialogTitle>
+                <DialogDescription>
+                  Please wait while your sorter is being created
+                </DialogDescription>
+              </DialogHeader>
+            </VisuallyHidden.Root>
+            <div className="space-y-2 py-2 text-center">
               <SortingBarsLoader size={60} />
-              <p className="text-sm">{uploadStatus}</p>
+              <p className="text-lg font-semibold">{uploadStatus}</p>
             </div>
           </DialogContent>
         </Dialog>

@@ -8,7 +8,7 @@ import type { UploadTokenRequest, UploadTokenResponse, FileInfo } from "@/types/
 
 // Validation constants
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB per file
-const MAX_FILES_PER_REQUEST = 25; // Reasonable limit for UI
+const MAX_FILES_PER_REQUEST = 500; // Support comprehensive sorters while remaining practical
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const SESSION_DURATION_MINUTES = 15;
 
