@@ -362,12 +362,18 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-medium">
               <div className="flex items-center gap-1">
                 <span>sorted by</span>
-                <Link
-                  href={`/user/${result.username}`}
-                  className="font-bold hover:underline"
-                >
-                  {result.username}
-                </Link>
+                {result.username && result.username !== "Anonymous" ? (
+                  <Link
+                    href={`/user/${result.username}`}
+                    className="font-bold hover:underline"
+                  >
+                    {result.username}
+                  </Link>
+                ) : (
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Anonymous
+                  </span>
+                )}
               </div>
             </div>
 
@@ -500,12 +506,19 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   )}
                   <p>
                     by{" "}
-                    <Link
-                      href={`/user/${sorter.creatorUsername}`}
-                      className="font-medium hover:underline"
-                    >
-                      {sorter.creatorUsername}
-                    </Link>
+                    {sorter.creatorUsername &&
+                    sorter.creatorUsername !== "Unknown User" ? (
+                      <Link
+                        href={`/user/${sorter.creatorUsername}`}
+                        className="font-medium hover:underline"
+                      >
+                        {sorter.creatorUsername}
+                      </Link>
+                    ) : (
+                      <span className="font-medium text-gray-600 dark:text-gray-400">
+                        {sorter.creatorUsername}
+                      </span>
+                    )}
                   </p>
                 </div>
                 {/* Category */}
@@ -559,12 +572,19 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                 )}
                 <p>
                   by{" "}
-                  <Link
-                    href={`/user/${sorter.creatorUsername}`}
-                    className="font-medium hover:underline"
-                  >
-                    {sorter.creatorUsername}
-                  </Link>
+                  {sorter.creatorUsername &&
+                  sorter.creatorUsername !== "Unknown User" ? (
+                    <Link
+                      href={`/user/${sorter.creatorUsername}`}
+                      className="font-medium hover:underline"
+                    >
+                      {sorter.creatorUsername}
+                    </Link>
+                  ) : (
+                    <span className="font-medium text-gray-600 dark:text-gray-400">
+                      {sorter.creatorUsername}
+                    </span>
+                  )}
                 </p>
               </div>
               {/* Category */}

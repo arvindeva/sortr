@@ -84,6 +84,12 @@ export default async function UserProfilePage({
   params,
 }: UserProfilePageProps) {
   const { username } = await params;
+  
+  // Handle anonymous user case
+  if (username === "Anonymous" || username === "Unknown User") {
+    notFound();
+  }
+  
   const userData = await getUserByUsername(username);
 
   if (!userData) {

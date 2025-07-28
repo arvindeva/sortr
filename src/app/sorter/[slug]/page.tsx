@@ -555,7 +555,13 @@ export default async function SorterPage({ params }: SorterPageProps) {
                         <Card className="bg-background text-foreground card cursor-pointer gap-2">
                           <CardHeader>
                             {/* Username only */}
-                            <span className="font-bold">{result.username}</span>
+                            <span className={`font-bold ${
+                              result.username === "Anonymous" 
+                                ? "text-gray-600 dark:text-gray-400" 
+                                : ""
+                            }`}>
+                              {result.username}
+                            </span>
                           </CardHeader>
                           <CardContent>
                             {/* Top 3 Rankings */}
