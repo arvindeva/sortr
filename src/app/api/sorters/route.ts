@@ -178,6 +178,9 @@ async function handleUploadSessionRequest(body: any, userData: any) {
         for (const item of group.items) {
           let itemImageUrl: string | null = null;
           
+          // Generate unique slug for this item (used for both R2 key and database)
+          const itemSlug = generateSorterItemSlug(item.title, generateSorterItemSlug(group.name));
+          
           // Find corresponding item file by name matching (like traditional sorters)
           const itemFiles = uploadedFiles.filter((f: UploadedFile) => f.type === 'item');
           const itemFile = itemFiles.find((file: UploadedFile) => {
@@ -190,15 +193,13 @@ async function handleUploadSessionRequest(body: any, userData: any) {
               itemFile.key,
               newSorter.id,
               1, // version 1
-              `${group.name.toLowerCase()}-${item.title.toLowerCase()}`.replace(/[^a-z0-9]/g, '-')
+              itemSlug
             );
             
             // Copy file from session location to final location
             await copyR2Object(itemFile.key, newKey);
             itemImageUrl = getR2PublicUrl(newKey);
           }
-
-          const itemSlug = generateSorterItemSlug(item.title);
 
           await db.insert(sorterItems).values({
             sorterId: newSorter.id,
@@ -226,6 +227,9 @@ async function handleUploadSessionRequest(body: any, userData: any) {
       for (const item of validatedData.items) {
         let itemImageUrl: string | null = null;
         
+        // Generate unique slug for this item (used for both R2 key and database)
+        const itemSlug = generateSorterItemSlug(item.title);
+        
         // Find a file that matches this item's title
         // Remove file extension from original name to match with item title
         const itemFile = itemFiles.find((file: UploadedFile) => {
@@ -238,15 +242,13 @@ async function handleUploadSessionRequest(body: any, userData: any) {
             itemFile.key,
             newSorter.id,
             1, // version 1
-            item.title.toLowerCase().replace(/[^a-z0-9]/g, '-')
+            itemSlug
           );
           
           // Copy file from session location to final location
           await copyR2Object(itemFile.key, newKey);
           itemImageUrl = getR2PublicUrl(newKey);
         }
-
-        const itemSlug = generateSorterItemSlug(item.title);
 
         await db.insert(sorterItems).values({
           sorterId: newSorter.id,
