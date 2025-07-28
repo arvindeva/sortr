@@ -15,8 +15,9 @@ These scripts are designed to help you reset your development environment for fr
 Removes all sorter-related data from the database:
 
 **Tables Cleaned:**
+
 - `sessionFiles` - Uploaded files in sessions
-- `sorterHistory` - Historical sorter snapshots  
+- `sorterHistory` - Historical sorter snapshots
 - `sortingResults` - User ranking results
 - `sorterItems` - Individual sorter items
 - `sorterGroups` - Sorter group data
@@ -24,6 +25,7 @@ Removes all sorter-related data from the database:
 - `sorters` - Main sorter entities
 
 **Tables Preserved:**
+
 - `user` - User accounts
 - `account` - Authentication accounts
 - `session` - User sessions
@@ -36,10 +38,12 @@ Removes all sorter-related data from the database:
 Removes sorter-related files from R2 storage:
 
 **Folders Cleaned:**
+
 - `sessions/` - Temporary upload session files
 - `sorters/` - Sorter cover images and item images
 
 **Folders Preserved:**
+
 - `avatars/` - User avatar images
 
 ### 3. Complete Cleanup (`cleanup-dev-all.ts`)
@@ -63,16 +67,18 @@ Runs both database and R2 cleanup scripts in sequence with confirmation prompt.
 ## 🚀 Usage
 
 ### Quick Complete Cleanup
+
 ```bash
 npm run cleanup:all
 ```
 
 ### Individual Operations
+
 ```bash
 # Clean database only
 npm run cleanup:db
 
-# Clean R2 storage only  
+# Clean R2 storage only
 npm run cleanup:r2
 ```
 
@@ -86,24 +92,29 @@ npm run cleanup:r2
 ## 🔧 Environment Requirements
 
 ### Required for All Scripts:
+
 - `DEV_CLEANUP_ENABLED=true` - **Must be explicitly set to 'true'**
 - `NODE_ENV` - Must be one of: `development`, `dev`, `local`, `test` (optional but recommended)
 
 ### For Database Cleanup:
+
 - `DATABASE_URL` - Must meet these criteria:
   - **MUST contain** one of: `localhost`, `127.0.0.1`, `::1`, `.dev`, `-dev`, `dev.`, `dev-`, `development`
   - **MUST NOT contain** any of: `prod`, `production`, `live`, `staging`
 
 ### For R2 Cleanup:
+
 - `R2_BUCKET_NAME` - Must meet these criteria:
   - **MUST** end with `-dev`, start with `dev-`, contain `.dev`, contain `development`, or be exactly `dev`
   - **MUST NOT contain** any of: `prod`, `production`, `live`, `staging`
-- `R2_ACCOUNT_ID` 
+- `R2_ACCOUNT_ID`
 - `R2_ACCESS_KEY_ID`
 - `R2_SECRET_ACCESS_KEY`
 
 ### ⚠️ **Critical Setup Note:**
+
 Add this to your `.env` file:
+
 ```bash
 DEV_CLEANUP_ENABLED=true
 NODE_ENV=development

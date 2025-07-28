@@ -10,7 +10,7 @@ export function SortingBarsLoader({
   size = 120,
 }: SortingBarsLoaderProps) {
   return (
-    <div className={cn("flex justify-center -mb-4", className)}>
+    <div className={cn("-mb-4 flex justify-center", className)}>
       <svg
         width={size}
         height={size}

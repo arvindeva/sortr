@@ -104,7 +104,9 @@ export const sorterItems = pgTable("sorterItems", {
 
 export const sortingResults = pgTable("sortingResults", {
   id: uuid("id").defaultRandom().primaryKey(),
-  sorterId: uuid("sorterId").references(() => sorters.id, { onDelete: "set null" }), // Rankings survive sorter deletion
+  sorterId: uuid("sorterId").references(() => sorters.id, {
+    onDelete: "set null",
+  }), // Rankings survive sorter deletion
   userId: uuid("userId").references(() => user.id, { onDelete: "set null" }), // optional - for anonymous users
   rankings: text("rankings").notNull(), // JSON string of ranked items
   selectedGroups: text("selectedGroups"), // JSON string of selected group IDs (null if no groups used)
@@ -142,14 +144,18 @@ export const sessionFiles = pgTable("sessionFiles", {
 });
 
 // Historical sorter snapshots for immutable rankings
-export const sorterHistory = pgTable("sorterHistory", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  sorterId: uuid("sorterId").notNull(),
-  title: text("title").notNull(),
-  description: text("description"),
-  coverImageUrl: text("coverImageUrl"),
-  version: integer("version").notNull(),
-  archivedAt: timestamp("archivedAt").defaultNow().notNull(),
-}, (table) => ({
-  uniqueVersion: unique().on(table.sorterId, table.version),
-}));
+export const sorterHistory = pgTable(
+  "sorterHistory",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sorterId: uuid("sorterId").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    coverImageUrl: text("coverImageUrl"),
+    version: integer("version").notNull(),
+    archivedAt: timestamp("archivedAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    uniqueVersion: unique().on(table.sorterId, table.version),
+  }),
+);

@@ -139,7 +139,7 @@ export function RankingImageLayout({
                       justifyContent: "center",
                     }}
                   >
-                    {(item.imageUrl || item.groupImageUrl) ? (
+                    {item.imageUrl || item.groupImageUrl ? (
                       <img
                         src={item.imageUrl || item.groupImageUrl}
                         alt={item.title}
@@ -231,7 +231,7 @@ export function RankingImageLayout({
                         justifyContent: "center",
                       }}
                     >
-                      {(item.imageUrl || item.groupImageUrl) ? (
+                      {item.imageUrl || item.groupImageUrl ? (
                         <img
                           src={item.imageUrl || item.groupImageUrl}
                           alt={item.title}

@@ -65,7 +65,9 @@ function DialogContent({
           className,
         )}
         onEscapeKeyDown={preventClose ? (e) => e.preventDefault() : undefined}
-        onPointerDownOutside={preventClose ? (e) => e.preventDefault() : undefined}
+        onPointerDownOutside={
+          preventClose ? (e) => e.preventDefault() : undefined
+        }
         onInteractOutside={preventClose ? (e) => e.preventDefault() : undefined}
         {...props}
       >

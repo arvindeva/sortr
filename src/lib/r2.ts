@@ -65,12 +65,15 @@ export async function deleteFromR2(key: string): Promise<void> {
  */
 export function getR2PublicUrl(key: string): string {
   // Debug logging for environment variables
-  console.log('🔍 R2 Environment Debug:');
-  console.log('R2_PUBLIC_URL:', process.env.R2_PUBLIC_URL);
-  console.log('R2_PUBLIC_URL (JSON):', JSON.stringify(process.env.R2_PUBLIC_URL));
-  console.log('R2_BUCKET_NAME:', process.env.R2_BUCKET_NAME);
-  console.log('Key:', key);
-  
+  console.log("🔍 R2 Environment Debug:");
+  console.log("R2_PUBLIC_URL:", process.env.R2_PUBLIC_URL);
+  console.log(
+    "R2_PUBLIC_URL (JSON):",
+    JSON.stringify(process.env.R2_PUBLIC_URL),
+  );
+  console.log("R2_BUCKET_NAME:", process.env.R2_BUCKET_NAME);
+  console.log("Key:", key);
+
   // Check if a custom public URL is configured
   if (process.env.R2_PUBLIC_URL) {
     const url = `${process.env.R2_PUBLIC_URL}/${key}`;
@@ -116,7 +119,10 @@ export function getAvatarKey(userId: string): string {
  * @param sorterId - The sorter ID
  * @returns The cover image file key
  */
-export function getCoverKey(sorterId: string, extension: string = 'jpg'): string {
+export function getCoverKey(
+  sorterId: string,
+  extension: string = "jpg",
+): string {
   return `sorters/${sorterId}/cover.${extension}`;
 }
 
@@ -126,7 +132,11 @@ export function getCoverKey(sorterId: string, extension: string = 'jpg'): string
  * @param itemSlug - The item slug (includes group prefix if applicable)
  * @returns The sorter item image file key
  */
-export function getSorterItemKey(sorterId: string, itemSlug: string, extension: string = 'jpg'): string {
+export function getSorterItemKey(
+  sorterId: string,
+  itemSlug: string,
+  extension: string = "jpg",
+): string {
   return `sorters/${sorterId}/${itemSlug}.${extension}`;
 }
 
@@ -149,7 +159,7 @@ export function getSorterItemKeyPrefix(sorterId: string): string {
 export async function generatePresignedUploadUrl(
   key: string,
   contentType: string,
-  expiresIn: number = 900 // 15 minutes
+  expiresIn: number = 900, // 15 minutes
 ): Promise<string> {
   const command = new PutObjectCommand({
     Bucket: BUCKET_NAME,
@@ -170,27 +180,41 @@ export async function generatePresignedUploadUrl(
  */
 export function getSessionFileKey(
   sessionId: string,
-  fileType: 'cover' | 'item' | 'group-cover',
+  fileType: "cover" | "item" | "group-cover",
   index: number,
-  originalName: string
+  originalName: string,
 ): string {
   // Extract file extension from original name
-  const extension = originalName.split('.').pop() || 'jpg';
+  const extension = originalName.split(".").pop() || "jpg";
   return `sessions/${sessionId}/${fileType}/${index}.${extension}`;
 }
 
 /**
  * Generate versioned sorter image keys
  */
-export function getVersionedCoverKey(sorterId: string, version: number, extension: string = 'jpg'): string {
+export function getVersionedCoverKey(
+  sorterId: string,
+  version: number,
+  extension: string = "jpg",
+): string {
   return `sorters/${sorterId}/v${version}/cover.${extension}`;
 }
 
-export function getVersionedItemKey(sorterId: string, itemSlug: string, version: number, extension: string = 'jpg'): string {
+export function getVersionedItemKey(
+  sorterId: string,
+  itemSlug: string,
+  version: number,
+  extension: string = "jpg",
+): string {
   return `sorters/${sorterId}/v${version}/${itemSlug}.${extension}`;
 }
 
-export function getVersionedGroupKey(sorterId: string, groupSlug: string, version: number, extension: string = 'jpg'): string {
+export function getVersionedGroupKey(
+  sorterId: string,
+  groupSlug: string,
+  version: number,
+  extension: string = "jpg",
+): string {
   return `sorters/${sorterId}/v${version}/group-${groupSlug}.${extension}`;
 }
 
@@ -202,22 +226,32 @@ export function convertSessionKeyToSorterKey(
   sessionKey: string,
   sorterId: string,
   version: number, // NEW: Version parameter
-  itemSlug?: string
+  itemSlug?: string,
 ): string {
-  const parts = sessionKey.split('/');
+  const parts = sessionKey.split("/");
   const fileType = parts[2]; // cover, item, or group-cover
   const filename = parts[3]; // index.extension
-  
+
   // Extract the original file extension
-  const extension = filename.split('.').pop() || 'jpg';
-  
+  const extension = filename.split(".").pop() || "jpg";
+
   switch (fileType) {
-    case 'cover':
+    case "cover":
       return getVersionedCoverKey(sorterId, version, extension);
-    case 'item':
-      return getVersionedItemKey(sorterId, itemSlug || 'unknown', version, extension);
-    case 'group-cover':
-      return getVersionedGroupKey(sorterId, itemSlug || 'group-cover', version, extension);
+    case "item":
+      return getVersionedItemKey(
+        sorterId,
+        itemSlug || "unknown",
+        version,
+        extension,
+      );
+    case "group-cover":
+      return getVersionedGroupKey(
+        sorterId,
+        itemSlug || "group-cover",
+        version,
+        extension,
+      );
     default:
       throw new Error(`Unknown file type: ${fileType}`);
   }
@@ -226,39 +260,49 @@ export function convertSessionKeyToSorterKey(
 /**
  * Safe cleanup for specific sorter version (checks for ranking references)
  */
-export async function cleanupSorterVersion(sorterId: string, version: number): Promise<{
+export async function cleanupSorterVersion(
+  sorterId: string,
+  version: number,
+): Promise<{
   deleted: string[];
   preserved: string[];
 }> {
   const deleted: string[] = [];
   const preserved: string[] = [];
-  
+
   try {
     // Check if any rankings reference this version
     const rankingsUsingVersion = await db
       .select({ id: sortingResults.id })
       .from(sortingResults)
-      .where(and(
-        eq(sortingResults.sorterId, sorterId),
-        eq(sortingResults.version, version)
-      ))
+      .where(
+        and(
+          eq(sortingResults.sorterId, sorterId),
+          eq(sortingResults.version, version),
+        ),
+      )
       .limit(1);
-    
+
     if (rankingsUsingVersion.length > 0) {
-      console.log(`Preserving version ${version} images due to existing rankings`);
+      console.log(
+        `Preserving version ${version} images due to existing rankings`,
+      );
       return { deleted, preserved };
     }
-    
+
     // Safe to delete this version's images
     const prefix = `sorters/${sorterId}/v${version}/`;
     const listCommand = new ListObjectsV2Command({
       Bucket: BUCKET_NAME,
       Prefix: prefix,
     });
-    
+
     const response = await r2Client.send(listCommand);
-    const keys = response.Contents?.map(obj => obj.Key).filter((key): key is string => Boolean(key)) || [];
-    
+    const keys =
+      response.Contents?.map((obj) => obj.Key).filter((key): key is string =>
+        Boolean(key),
+      ) || [];
+
     for (const key of keys) {
       try {
         await deleteFromR2(key);
@@ -267,10 +311,10 @@ export async function cleanupSorterVersion(sorterId: string, version: number): P
         console.error(`Failed to delete ${key}:`, error);
       }
     }
-    
+
     return { deleted, preserved };
   } catch (error) {
-    console.error('Error during version cleanup:', error);
+    console.error("Error during version cleanup:", error);
     return { deleted, preserved };
   }
 }

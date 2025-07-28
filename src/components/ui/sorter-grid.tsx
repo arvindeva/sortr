@@ -7,11 +7,11 @@ interface SorterGridProps {
   className?: string;
 }
 
-export function SorterGrid({ 
-  children, 
-  minCardWidth = 200, 
+export function SorterGrid({
+  children,
+  minCardWidth = 200,
   gap = "1rem",
-  className = "" 
+  className = "",
 }: SorterGridProps) {
   const gridStyle = {
     display: "grid",
@@ -21,10 +21,7 @@ export function SorterGrid({
   };
 
   return (
-    <div 
-      style={gridStyle}
-      className={className}
-    >
+    <div style={gridStyle} className={className}>
       {children}
     </div>
   );

@@ -29,7 +29,7 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
           className={`bg-background text-foreground rounded-base border-border shadow-shadow flex items-center gap-3 overflow-hidden border-2 p-2 md:p-4`}
         >
           {/* Image */}
-          {(item.imageUrl || item.groupImageUrl) ? (
+          {item.imageUrl || item.groupImageUrl ? (
             <div className="rounded-base border-border h-10 w-10 flex-shrink-0 overflow-hidden border-2 md:h-16 md:w-16">
               <img
                 src={item.imageUrl || item.groupImageUrl}

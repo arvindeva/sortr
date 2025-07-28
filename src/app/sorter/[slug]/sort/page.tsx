@@ -374,7 +374,11 @@ export default function SortPage() {
 
       // Get selected group IDs based on URL parameters and sorter data
       let selectedGroupIds: string[] = [];
-      if (sorterData.sorter.useGroups && sorterData.groups && currentGroupSlugs.length > 0) {
+      if (
+        sorterData.sorter.useGroups &&
+        sorterData.groups &&
+        currentGroupSlugs.length > 0
+      ) {
         // Convert group slugs from URL to group IDs
         selectedGroupIds = sorterData.groups
           .filter((group) => currentGroupSlugs.includes(group.slug))

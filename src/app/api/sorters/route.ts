@@ -1,13 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
-import { sorters, sorterItems, sorterGroups, user, sorterHistory } from "@/db/schema";
+import {
+  sorters,
+  sorterItems,
+  sorterGroups,
+  user,
+  sorterHistory,
+} from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { createSorterSchema } from "@/lib/validations";
-import { generateUniqueSlug, generateSorterSlug, generateSorterItemSlug } from "@/lib/utils";
-import { uploadToR2, getCoverKey, getSorterItemKey, getR2PublicUrl, convertSessionKeyToSorterKey, getVersionedCoverKey, getVersionedItemKey, getVersionedGroupKey, r2Client } from "@/lib/r2";
-import { getUploadSession, getSessionFiles, completeUploadSession } from "@/lib/session-manager";
+import {
+  generateUniqueSlug,
+  generateSorterSlug,
+  generateSorterItemSlug,
+} from "@/lib/utils";
+import {
+  uploadToR2,
+  getCoverKey,
+  getSorterItemKey,
+  getR2PublicUrl,
+  convertSessionKeyToSorterKey,
+  getVersionedCoverKey,
+  getVersionedItemKey,
+  getVersionedGroupKey,
+  r2Client,
+} from "@/lib/r2";
+import {
+  getUploadSession,
+  getSessionFiles,
+  completeUploadSession,
+} from "@/lib/session-manager";
 import type { UploadedFile } from "@/types/upload";
 import {
   processCoverImage,
@@ -26,13 +50,17 @@ const ALLOWED_ITEM_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
  */
 async function copyR2Object(sourceKey: string, destKey: string): Promise<void> {
   try {
-    const { GetObjectCommand, PutObjectCommand } = await import("@aws-sdk/client-s3");
-    
+    const { GetObjectCommand, PutObjectCommand } = await import(
+      "@aws-sdk/client-s3"
+    );
+
     // Get the object from the source location
-    const sourceObject = await r2Client.send(new GetObjectCommand({
-      Bucket: process.env.R2_BUCKET!,
-      Key: sourceKey,
-    }));
+    const sourceObject = await r2Client.send(
+      new GetObjectCommand({
+        Bucket: process.env.R2_BUCKET!,
+        Key: sourceKey,
+      }),
+    );
 
     if (!sourceObject.Body) {
       throw new Error(`Source object not found: ${sourceKey}`);
@@ -42,24 +70,26 @@ async function copyR2Object(sourceKey: string, destKey: string): Promise<void> {
     const bodyBytes = await sourceObject.Body.transformToByteArray();
 
     // Upload to the destination location (no processing)
-    await r2Client.send(new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET!,
-      Key: destKey,
-      Body: bodyBytes,
-      ContentType: sourceObject.ContentType, // Preserve original content type
-      CacheControl: 'public, max-age=31536000', // 1 year cache
-    }));
-
+    await r2Client.send(
+      new PutObjectCommand({
+        Bucket: process.env.R2_BUCKET!,
+        Key: destKey,
+        Body: bodyBytes,
+        ContentType: sourceObject.ContentType, // Preserve original content type
+        CacheControl: "public, max-age=31536000", // 1 year cache
+      }),
+    );
   } catch (error) {
-    console.error(`Failed to copy file from ${sourceKey} to ${destKey}:`, error);
+    console.error(
+      `Failed to copy file from ${sourceKey} to ${destKey}:`,
+      error,
+    );
     throw error;
   }
 }
 
 async function handleUploadSessionRequest(body: any, userData: any) {
   const { uploadSession: sessionId, uploadedFiles, ...sorterData } = body;
-  
-  
 
   try {
     // Validate upload session
@@ -67,7 +97,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
     if (!session) {
       return NextResponse.json(
         { error: "Upload session not found or expired" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -75,7 +105,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
     if (session.userId !== userData.id) {
       return NextResponse.json(
         { error: "Upload session does not belong to current user" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -84,7 +114,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
     if (uploadedFiles.length === 0) {
       return NextResponse.json(
         { error: "No files found in upload session" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -93,12 +123,12 @@ async function handleUploadSessionRequest(body: any, userData: any) {
 
     // Generate slug for sorter
     const slug = generateSorterSlug(validatedData.title);
-    
+
     // Get existing slugs to ensure uniqueness
     const existingSorters = await db
       .select({ slug: sorters.slug })
       .from(sorters);
-    const existingSlugs = existingSorters.map(s => s.slug);
+    const existingSlugs = existingSorters.map((s) => s.slug);
 
     // Create the sorter
     const [newSorter] = await db
@@ -128,14 +158,19 @@ async function handleUploadSessionRequest(body: any, userData: any) {
 
     // Process uploaded files and convert session keys to sorter keys
     let currentItemIndex = 0;
-    
-    
+
     if (validatedData.useGroups && validatedData.groups) {
       // Handle grouped sorter
-      const groupCoverFiles = uploadedFiles.filter((f: UploadedFile) => f.type === 'group-cover');
-      
+      const groupCoverFiles = uploadedFiles.filter(
+        (f: UploadedFile) => f.type === "group-cover",
+      );
+
       // Process groups sequentially to maintain correct file order
-      for (let groupIndex = 0; groupIndex < validatedData.groups.length; groupIndex++) {
+      for (
+        let groupIndex = 0;
+        groupIndex < validatedData.groups.length;
+        groupIndex++
+      ) {
         const group = validatedData.groups[groupIndex];
         // Find group cover file for this specific group
         const groupCoverFile = groupCoverFiles.find((file: UploadedFile) => {
@@ -154,9 +189,9 @@ async function handleUploadSessionRequest(body: any, userData: any) {
             groupCoverFile.key,
             newSorter.id,
             1, // version 1
-            `group-${groupIndex}-cover`
+            `group-${groupIndex}-cover`,
           );
-          
+
           // Copy file from session location to final location
           await copyR2Object(groupCoverFile.key, newKey);
           groupCoverUrl = getR2PublicUrl(newKey);
@@ -177,25 +212,33 @@ async function handleUploadSessionRequest(body: any, userData: any) {
         // Create group items sequentially
         for (const item of group.items) {
           let itemImageUrl: string | null = null;
-          
+
           // Generate unique slug for this item (used for both R2 key and database)
-          const itemSlug = generateSorterItemSlug(item.title, generateSorterItemSlug(group.name));
-          
+          const itemSlug = generateSorterItemSlug(
+            item.title,
+            generateSorterItemSlug(group.name),
+          );
+
           // Find corresponding item file by name matching (like traditional sorters)
-          const itemFiles = uploadedFiles.filter((f: UploadedFile) => f.type === 'item');
+          const itemFiles = uploadedFiles.filter(
+            (f: UploadedFile) => f.type === "item",
+          );
           const itemFile = itemFiles.find((file: UploadedFile) => {
-            const originalNameWithoutExt = file.originalName.replace(/\.[^/.]+$/, '');
+            const originalNameWithoutExt = file.originalName.replace(
+              /\.[^/.]+$/,
+              "",
+            );
             return originalNameWithoutExt === item.title;
           });
-          
+
           if (itemFile) {
             const newKey = convertSessionKeyToSorterKey(
               itemFile.key,
               newSorter.id,
               1, // version 1
-              itemSlug
+              itemSlug,
             );
-            
+
             // Copy file from session location to final location
             await copyR2Object(itemFile.key, newKey);
             itemImageUrl = getR2PublicUrl(newKey);
@@ -212,39 +255,44 @@ async function handleUploadSessionRequest(body: any, userData: any) {
       }
     } else if (validatedData.items) {
       // Handle traditional sorter
-      const itemFiles = uploadedFiles.filter((f: UploadedFile) => f.type === 'item');
-      
+      const itemFiles = uploadedFiles.filter(
+        (f: UploadedFile) => f.type === "item",
+      );
+
       // Sort item files by their session index to ensure correct order
       itemFiles.sort((a: UploadedFile, b: UploadedFile) => {
-        const indexA = parseInt(a.key.match(/\/item\/(\d+)\./)?.[1] || '0');
-        const indexB = parseInt(b.key.match(/\/item\/(\d+)\./)?.[1] || '0');
+        const indexA = parseInt(a.key.match(/\/item\/(\d+)\./)?.[1] || "0");
+        const indexB = parseInt(b.key.match(/\/item\/(\d+)\./)?.[1] || "0");
         return indexA - indexB;
       });
-      
+
       // Process items and match them to files by original name
       // The files are created from uploaded images, and items should match those original names
-      
+
       for (const item of validatedData.items) {
         let itemImageUrl: string | null = null;
-        
+
         // Generate unique slug for this item (used for both R2 key and database)
         const itemSlug = generateSorterItemSlug(item.title);
-        
+
         // Find a file that matches this item's title
         // Remove file extension from original name to match with item title
         const itemFile = itemFiles.find((file: UploadedFile) => {
-          const originalNameWithoutExt = file.originalName.replace(/\.[^/.]+$/, '');
+          const originalNameWithoutExt = file.originalName.replace(
+            /\.[^/.]+$/,
+            "",
+          );
           return originalNameWithoutExt === item.title;
         });
-        
+
         if (itemFile) {
           const newKey = convertSessionKeyToSorterKey(
             itemFile.key,
             newSorter.id,
             1, // version 1
-            itemSlug
+            itemSlug,
           );
-          
+
           // Copy file from session location to final location
           await copyR2Object(itemFile.key, newKey);
           itemImageUrl = getR2PublicUrl(newKey);
@@ -261,15 +309,17 @@ async function handleUploadSessionRequest(body: any, userData: any) {
     }
 
     // Handle cover image
-    const coverFile = uploadedFiles.find((f: UploadedFile) => f.type === 'cover');
+    const coverFile = uploadedFiles.find(
+      (f: UploadedFile) => f.type === "cover",
+    );
     if (coverFile) {
       const newKey = convertSessionKeyToSorterKey(
         coverFile.key,
         newSorter.id,
         1, // version 1
-        'cover'
+        "cover",
       );
-      
+
       // Copy file from session location to final location
       await copyR2Object(coverFile.key, newKey);
       coverImageUrl = getR2PublicUrl(newKey);
@@ -284,10 +334,12 @@ async function handleUploadSessionRequest(body: any, userData: any) {
       await db
         .update(sorterHistory)
         .set({ coverImageUrl })
-        .where(and(
-          eq(sorterHistory.sorterId, newSorter.id),
-          eq(sorterHistory.version, 1)
-        ));
+        .where(
+          and(
+            eq(sorterHistory.sorterId, newSorter.id),
+            eq(sorterHistory.version, 1),
+          ),
+        );
     }
 
     // Mark upload session as complete
@@ -302,23 +354,22 @@ async function handleUploadSessionRequest(body: any, userData: any) {
       coverImageUrl,
       message: "Sorter created successfully with uploaded files",
     });
-
   } catch (error) {
     console.error("Error creating sorter with upload session:", error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
           error: "Validation error",
           details: error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: "Failed to create sorter" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -354,16 +405,16 @@ export async function POST(request: NextRequest) {
       const formData = await request.formData();
       const dataJson = formData.get("data") as string;
       coverImageFile = formData.get("coverImage") as File | null;
-      
+
       // Collect all item images - they come with keys like "itemImage_0", "itemImage_1", etc.
-      const itemImageEntries = Array.from(formData.entries()).filter(([key]) => 
-        key.startsWith("itemImage_")
+      const itemImageEntries = Array.from(formData.entries()).filter(([key]) =>
+        key.startsWith("itemImage_"),
       );
       itemImageFiles = itemImageEntries.map(([, file]) => file as File);
 
       // Collect all group cover images - they come with keys like "groupCover_0", "groupCover_1", etc.
-      const groupCoverEntries = Array.from(formData.entries()).filter(([key]) => 
-        key.startsWith("groupCover_")
+      const groupCoverEntries = Array.from(formData.entries()).filter(([key]) =>
+        key.startsWith("groupCover_"),
       );
       groupCoverFiles = groupCoverEntries.map(([, file]) => file as File);
 
@@ -388,7 +439,7 @@ export async function POST(request: NextRequest) {
     } else {
       // Handle regular JSON request
       const body = await request.json();
-      
+
       // Check if this is an upload session request
       // If uploadSession is null but we have uploadedFiles, extract sessionId from the file keys
       let sessionId = body.uploadSession;
@@ -400,13 +451,13 @@ export async function POST(request: NextRequest) {
           sessionId = match[1];
         }
       }
-      
+
       if (sessionId && body.uploadedFiles) {
         // Add the sessionId back to the body
         const bodyWithSession = { ...body, uploadSession: sessionId };
         return await handleUploadSessionRequest(bodyWithSession, userData[0]);
       }
-      
+
       validatedData = createSorterSchema.parse(body);
     }
 
@@ -455,49 +506,63 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate and process item images in parallel
-    const processedItemImages: { file: File; buffer: Buffer; name: string }[] = [];
-    
+    const processedItemImages: { file: File; buffer: Buffer; name: string }[] =
+      [];
+
     if (itemImageFiles.length > 0) {
-      const imageProcessingPromises = itemImageFiles.map(async (itemImageFile) => {
-        // Validate file type
-        if (!ALLOWED_ITEM_IMAGE_TYPES.includes(itemImageFile.type)) {
-          throw new Error(`Only JPG, PNG, and WebP files are allowed for item images. Invalid file: ${itemImageFile.name}`);
-        }
+      const imageProcessingPromises = itemImageFiles.map(
+        async (itemImageFile) => {
+          // Validate file type
+          if (!ALLOWED_ITEM_IMAGE_TYPES.includes(itemImageFile.type)) {
+            throw new Error(
+              `Only JPG, PNG, and WebP files are allowed for item images. Invalid file: ${itemImageFile.name}`,
+            );
+          }
 
-        // Validate file size
-        if (itemImageFile.size > MAX_ITEM_IMAGE_SIZE) {
-          throw new Error(`Item image size must be less than 5MB. Invalid file: ${itemImageFile.name}`);
-        }
+          // Validate file size
+          if (itemImageFile.size > MAX_ITEM_IMAGE_SIZE) {
+            throw new Error(
+              `Item image size must be less than 5MB. Invalid file: ${itemImageFile.name}`,
+            );
+          }
 
-        // Convert file to buffer
-        const bytes = await itemImageFile.arrayBuffer();
-        const buffer = Buffer.from(bytes);
+          // Convert file to buffer
+          const bytes = await itemImageFile.arrayBuffer();
+          const buffer = Buffer.from(bytes);
 
-        // Validate image buffer
-        const isValidImage = await validateSorterItemImageBuffer(buffer);
-        if (!isValidImage) {
-          throw new Error(`Invalid item image format or dimensions: ${itemImageFile.name}`);
-        }
+          // Validate image buffer
+          const isValidImage = await validateSorterItemImageBuffer(buffer);
+          if (!isValidImage) {
+            throw new Error(
+              `Invalid item image format or dimensions: ${itemImageFile.name}`,
+            );
+          }
 
-        // Process image: crop to square and resize to 300x300
-        const processedBuffer = await processSorterItemImage(buffer);
-        
-        // Extract item name from filename (remove extension)
-        const itemName = itemImageFile.name.replace(/\.[^/.]+$/, "");
-        
-        return {
-          file: itemImageFile,
-          buffer: processedBuffer,
-          name: itemName,
-        };
-      });
+          // Process image: crop to square and resize to 300x300
+          const processedBuffer = await processSorterItemImage(buffer);
+
+          // Extract item name from filename (remove extension)
+          const itemName = itemImageFile.name.replace(/\.[^/.]+$/, "");
+
+          return {
+            file: itemImageFile,
+            buffer: processedBuffer,
+            name: itemName,
+          };
+        },
+      );
 
       try {
         const results = await Promise.all(imageProcessingPromises);
         processedItemImages.push(...results);
       } catch (error) {
         return NextResponse.json(
-          { error: error instanceof Error ? error.message : "Failed to process images" },
+          {
+            error:
+              error instanceof Error
+                ? error.message
+                : "Failed to process images",
+          },
           { status: 400 },
         );
       }
@@ -551,10 +616,12 @@ export async function POST(request: NextRequest) {
       await db
         .update(sorterHistory)
         .set({ coverImageUrl: finalCoverUrl })
-        .where(and(
-          eq(sorterHistory.sorterId, newSorter.id),
-          eq(sorterHistory.version, 1)
-        ));
+        .where(
+          and(
+            eq(sorterHistory.sorterId, newSorter.id),
+            eq(sorterHistory.version, 1),
+          ),
+        );
 
       // Update the returned sorter object
       newSorter.coverImageUrl = finalCoverUrl;
@@ -595,10 +662,14 @@ export async function POST(request: NextRequest) {
     // Match uploaded images with form items by filename
     // The frontend puts image filenames (without extension) as item titles
     let imageIndex = 0;
-    for (let i = 0; i < allProcessedItems.length && imageIndex < processedItemImages.length; i++) {
+    for (
+      let i = 0;
+      i < allProcessedItems.length && imageIndex < processedItemImages.length;
+      i++
+    ) {
       const item = allProcessedItems[i];
       const processedImage = processedItemImages[imageIndex];
-      
+
       // Check if this item title matches the image filename (without extension)
       if (item.title === processedImage.name) {
         item.hasImage = true;
@@ -634,35 +705,44 @@ export async function POST(request: NextRequest) {
       // Process group cover images
       if (groupCoverFiles.length > 0) {
         let groupCoverIndex = 0;
-        for (let i = 0; i < groupNames.length && groupCoverIndex < groupCoverFiles.length; i++) {
+        for (
+          let i = 0;
+          i < groupNames.length && groupCoverIndex < groupCoverFiles.length;
+          i++
+        ) {
           const groupName = groupNames[i];
           const groupCoverFile = groupCoverFiles[groupCoverIndex];
-          
+
           if (groupCoverFile && createdGroups[groupName]) {
             // Get group slug for this group
             const groupSlug = existingSlugs[i];
-            
+
             // Process cover image: crop to square and resize to 300x300
             const bytes = await groupCoverFile.arrayBuffer();
             const buffer = Buffer.from(bytes);
             const processedBuffer = await processCoverImage(buffer); // Reuse existing cover image processing
-            
+
             // Generate versioned group cover key: [groupSlug--group-image]
             const groupCoverSlug = `${groupSlug}--group-image`;
-            const groupCoverKey = getVersionedGroupKey(newSorter.id, groupCoverSlug, 1);
-            
+            const groupCoverKey = getVersionedGroupKey(
+              newSorter.id,
+              groupCoverSlug,
+              1,
+            );
+
             // Upload to R2
             await uploadToR2(groupCoverKey, processedBuffer, "image/jpeg");
-            
+
             // Generate public URL with cache-busting timestamp
             const timestamp = Date.now();
             const groupCoverUrl = `${getR2PublicUrl(groupCoverKey)}?t=${timestamp}`;
-            
+
             // Update group with cover image URL
-            await db.update(sorterGroups)
+            await db
+              .update(sorterGroups)
               .set({ coverImageUrl: groupCoverUrl })
               .where(eq(sorterGroups.id, createdGroups[groupName]));
-            
+
             groupCoverIndex++;
           }
         }
@@ -678,20 +758,20 @@ export async function POST(request: NextRequest) {
           // Handle image upload if this item has an image
           if (item.hasImage && imageIndex < processedItemImages.length) {
             const processedImage = processedItemImages[imageIndex];
-            const groupSlug = existingSlugs.find((slug, index) => 
-              groupNames[index] === item.groupName
+            const groupSlug = existingSlugs.find(
+              (slug, index) => groupNames[index] === item.groupName,
             );
-            
+
             itemSlug = generateSorterItemSlug(item.title, groupSlug);
             const itemKey = getVersionedItemKey(newSorter.id, itemSlug, 1);
-            
+
             // Upload to R2
             await uploadToR2(itemKey, processedImage.buffer, "image/jpeg");
-            
+
             // Generate public URL with cache-busting timestamp
             const timestamp = Date.now();
             finalImageUrl = `${getR2PublicUrl(itemKey)}?t=${timestamp}`;
-            
+
             imageIndex++;
           }
 
@@ -714,17 +794,17 @@ export async function POST(request: NextRequest) {
         // Handle image upload if this item has an image
         if (item.hasImage && imageIndex < processedItemImages.length) {
           const processedImage = processedItemImages[imageIndex];
-          
+
           itemSlug = generateSorterItemSlug(item.title);
           const itemKey = getVersionedItemKey(newSorter.id, itemSlug, 1);
-          
+
           // Upload to R2
           await uploadToR2(itemKey, processedImage.buffer, "image/jpeg");
-          
+
           // Generate public URL with cache-busting timestamp
           const timestamp = Date.now();
           finalImageUrl = `${getR2PublicUrl(itemKey)}?t=${timestamp}`;
-          
+
           imageIndex++;
         }
 

@@ -17,9 +17,12 @@ interface SorterCardProps {
 
 export function SorterCard({ sorter, className }: SorterCardProps) {
   const firstLetter = sorter.title.charAt(0).toUpperCase();
-  
+
   return (
-    <Link href={`/sorter/${sorter.slug}`} className={`block w-full ${className || ""}`}>
+    <Link
+      href={`/sorter/${sorter.slug}`}
+      className={`block w-full ${className || ""}`}
+    >
       <Card className="group relative aspect-square overflow-hidden transition-all hover:scale-[1.02]">
         {/* Background Image or Placeholder */}
         <div className="absolute inset-0">
@@ -31,18 +34,18 @@ export function SorterCard({ sorter, className }: SorterCardProps) {
               }}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-background dark:bg-secondary">
-              <span className="text-6xl font-bold text-main -translate-y-6">
+            <div className="bg-background dark:bg-secondary flex h-full w-full items-center justify-center">
+              <span className="text-main -translate-y-6 text-6xl font-bold">
                 {firstLetter}
               </span>
             </div>
           )}
         </div>
-        
+
         {/* Title Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 bg-main p-3">
-          <div className="flex h-8 justify-center items-center">
-            <h3 className="line-clamp-2 text-sm font-semibold text-background dark:text-foreground leading-tight text-center">
+        <div className="bg-main absolute right-0 bottom-0 left-0 p-3">
+          <div className="flex h-8 items-center justify-center">
+            <h3 className="text-background dark:text-foreground line-clamp-2 text-center text-sm leading-tight font-semibold">
               {sorter.title}
             </h3>
           </div>

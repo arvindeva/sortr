@@ -19,7 +19,7 @@ Instead of copying images on every ranking, we version the database records and 
 ```sql
 -- All tables now have version columns
 sorters: version, deleted
-sorterItems: version  
+sorterItems: version
 sorterGroups: version
 sortingResults: version
 
@@ -42,13 +42,15 @@ sorters/123/v2/item-abc.jpg     ← Only changed items get new versions
 ## 📁 Files Modified/Created
 
 ### New Files
+
 - `drizzle/0008_dizzy_magus.sql` - Main database migration
-- `drizzle/0009_indices_for_versioning.sql` - Performance indices  
+- `drizzle/0009_indices_for_versioning.sql` - Performance indices
 - `scripts/migrate-to-versioning.ts` - Data migration script
 - `src/lib/version-cleanup.ts` - Reference-counted cleanup utilities
 - `RANKINGS_SNAPSHOTS_IMPLEMENTATION.md` - This summary
 
 ### Modified Files
+
 - `src/db/schema.ts` - Added version columns and sorterHistory table
 - `src/app/rankings/[id]/page.tsx` - **CRITICAL**: Fixed to use version-specific queries
 - `src/app/api/sorting-results/route.ts` - Store sorter version in rankings
@@ -58,9 +60,11 @@ sorters/123/v2/item-abc.jpg     ← Only changed items get new versions
 ## 🔧 Key Implementation Details
 
 ### 1. Ranking Display Fix (Critical)
+
 **File**: `src/app/rankings/[id]/page.tsx`
 
 **Before**: Fetched live group images, causing broken rankings when sorters were edited.
+
 ```typescript
 // ❌ OLD: Live group image fetching
 const itemsWithGroupImages = await db.select()
@@ -70,22 +74,28 @@ const itemsWithGroupImages = await db.select()
 ```
 
 **After**: Always query historical data by version.
+
 ```typescript
 // ✅ NEW: Version-specific historical queries
-const historicalData = await db.select()
+const historicalData = await db
+  .select()
   .from(sorterHistory)
-  .where(and(
-    eq(sorterHistory.sorterId, result.sorterId),
-    eq(sorterHistory.version, result.version) // Locked to specific version!
-  ));
+  .where(
+    and(
+      eq(sorterHistory.sorterId, result.sorterId),
+      eq(sorterHistory.version, result.version), // Locked to specific version!
+    ),
+  );
 ```
 
 ### 2. Version Storage in Rankings
+
 **File**: `src/app/api/sorting-results/route.ts`
 
 ```typescript
 // Store current sorter version with ranking
-const { version: sorterVersion } = await db.select()
+const { version: sorterVersion } = await db
+  .select()
   .from(sorters)
   .where(eq(sorters.id, sorterId));
 
@@ -96,6 +106,7 @@ await db.insert(sortingResults).values({
 ```
 
 ### 3. Immediate History Creation
+
 **File**: `src/app/api/sorters/route.ts`
 
 ```typescript
@@ -116,6 +127,7 @@ await db.insert(sorterHistory).values({
 ```
 
 ### 4. Versioned R2 Paths
+
 **File**: `src/lib/r2.ts`
 
 ```typescript
@@ -133,7 +145,7 @@ export async function cleanupSorterVersion(sorterId: string, version: number): P
       eq(sortingResults.sorterId, sorterId),
       eq(sortingResults.version, version)
     ));
-    
+
   if (rankingsUsingVersion.length === 0) {
     // Safe to delete...
   }
@@ -143,16 +155,19 @@ export async function cleanupSorterVersion(sorterId: string, version: number): P
 ## 🚀 Benefits Achieved
 
 ### Storage Efficiency
+
 - **90% reduction** in image storage vs file copying approach
 - Only stores unique versions, not duplicates per ranking
 - Reference-counted cleanup removes unused versions
 
 ### Performance
+
 - **0ms ranking creation overhead** (no file copying)
 - **Faster ranking display** (direct version queries)
 - **CDN cache resolution** (unique versioned paths)
 
 ### Immutability Guarantee
+
 - **Perfect snapshot isolation** - rankings never change
 - **Works with deleted sorters** - data preserved in sorterHistory
 - **Scales with popularity** not edit frequency
@@ -160,10 +175,12 @@ export async function cleanupSorterVersion(sorterId: string, version: number): P
 ## 📊 Storage Comparison
 
 **Old approach (file copying)**:
+
 - Sorter with 20 items × 300KB = 6MB per ranking
 - 100 rankings = 600MB storage
 
 **New approach (versioning)**:
+
 - Version 1: 6MB images + database rows
 - 100 rankings of v1: **6MB total storage** (shared!)
 - Only changed items get new versions
@@ -171,6 +188,7 @@ export async function cleanupSorterVersion(sorterId: string, version: number): P
 ## 🎯 Migration Strategy
 
 ### Simplified Post-R2-Cleanup Migration
+
 Since R2 storage was already cleaned up, migration is straightforward:
 
 1. **Database Schema**: Add version columns and sorterHistory table ✅
@@ -198,7 +216,7 @@ npx tsx scripts/migrate-to-versioning.ts
 The system is designed to support future sorter editing:
 
 1. **Edit Flow**: Increment version, create new versioned images, update sorterHistory
-2. **Smart Cleanup**: Reference-counted deletion of unused versions  
+2. **Smart Cleanup**: Reference-counted deletion of unused versions
 3. **Background Jobs**: Periodic cleanup of orphaned versions
 
 ## ✅ Success Criteria Met
@@ -215,7 +233,7 @@ The system is designed to support future sorter editing:
 The rankings snapshots feature is **ready for production deployment**. The implementation:
 
 - ✅ Solves the core immutability problem
-- ✅ Provides significant performance and storage benefits  
+- ✅ Provides significant performance and storage benefits
 - ✅ Uses proven enterprise patterns (database versioning)
 - ✅ Handles all edge cases (deletions, cache persistence, etc.)
 - ✅ Sets foundation for future edit operations

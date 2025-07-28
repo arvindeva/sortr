@@ -38,10 +38,7 @@ export async function GET(
       })
       .from(sorters)
       .leftJoin(user, eq(sorters.userId, user.id))
-      .where(and(
-        eq(sorters.slug, slug),
-        eq(sorters.deleted, false)
-      ))
+      .where(and(eq(sorters.slug, slug), eq(sorters.deleted, false)))
       .limit(1);
 
     if (sorterData.length === 0) {
@@ -170,10 +167,7 @@ export async function DELETE(
         userId: sorters.userId,
       })
       .from(sorters)
-      .where(and(
-        eq(sorters.slug, slug),
-        eq(sorters.deleted, false)
-      ))
+      .where(and(eq(sorters.slug, slug), eq(sorters.deleted, false)))
       .limit(1);
 
     if (sorterData.length === 0) {
@@ -192,7 +186,7 @@ export async function DELETE(
 
     // NEW VERSIONING-AWARE DELETION LOGIC
     // We use SOFT DELETE to preserve data for rankings
-    
+
     // 1. Archive current version to sorterHistory (if not already there)
     try {
       await db.insert(sorterHistory).values({
@@ -202,7 +196,9 @@ export async function DELETE(
         coverImageUrl: sorter.coverImageUrl,
         version: sorter.version,
       });
-      console.log(`Archived sorter ${sorter.id} v${sorter.version} to history before deletion`);
+      console.log(
+        `Archived sorter ${sorter.id} v${sorter.version} to history before deletion`,
+      );
     } catch (error) {
       // Might already exist (unique constraint), that's OK
       console.log(`Sorter ${sorter.id} v${sorter.version} already in history`);

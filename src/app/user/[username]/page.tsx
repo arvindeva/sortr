@@ -53,10 +53,7 @@ async function getUserSorters(userId: string) {
       coverImageUrl: sorters.coverImageUrl,
     })
     .from(sorters)
-    .where(and(
-      eq(sorters.userId, userId),
-      eq(sorters.deleted, false)
-    ))
+    .where(and(eq(sorters.userId, userId), eq(sorters.deleted, false)))
     .orderBy(desc(sorters.createdAt));
 
   return userSorters;

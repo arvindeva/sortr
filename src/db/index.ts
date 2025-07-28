@@ -3,9 +3,9 @@ import { Client } from "pg";
 import * as schema from "./schema";
 
 // Ensure dotenv is loaded in non-Next.js environments
-if (!process.env.DATABASE_URL && typeof window === 'undefined') {
+if (!process.env.DATABASE_URL && typeof window === "undefined") {
   try {
-    require('dotenv').config();
+    require("dotenv").config();
   } catch (e) {
     // dotenv not available, that's okay
   }

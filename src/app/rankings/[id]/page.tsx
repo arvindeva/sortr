@@ -1,7 +1,14 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { db } from "@/db";
-import { sortingResults, sorters, user, sorterGroups, sorterItems, sorterHistory } from "@/db/schema";
+import {
+  sortingResults,
+  sorters,
+  user,
+  sorterGroups,
+  sorterItems,
+  sorterHistory,
+} from "@/db/schema";
 import { eq, inArray, and } from "drizzle-orm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -161,10 +168,12 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
         coverImageUrl: sorterHistory.coverImageUrl,
       })
       .from(sorterHistory)
-      .where(and(
-        eq(sorterHistory.sorterId, result.sorterId),
-        eq(sorterHistory.version, result.version)
-      ))
+      .where(
+        and(
+          eq(sorterHistory.sorterId, result.sorterId),
+          eq(sorterHistory.version, result.version),
+        ),
+      )
       .limit(1);
   }
 
@@ -192,13 +201,13 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
   // Create sorter data using historical data with live metadata
   const liveSorter = liveSorterData[0];
   const historical = historicalData[0];
-  
+
   const sorter = {
     // Use historical data for content (guaranteed to exist for all versions)
     title: historical?.title || result.sorterTitle || "Deleted Sorter",
     description: historical?.description || "",
     coverImageUrl: historical?.coverImageUrl || result.sorterCoverImageUrl,
-    
+
     // Use live data for metadata and navigation
     id: result.sorterId || "deleted",
     slug: liveSorter?.slug || null,
@@ -228,11 +237,11 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
   // Query by version to ensure we get the group names as they were at ranking time
   let selectedGroups: { id: string; name: string }[] = [];
   let totalGroups: { id: string; name: string }[] = [];
-  
+
   if (result.selectedGroups && result.sorterId && result.version) {
     try {
       const selectedGroupIds: string[] = JSON.parse(result.selectedGroups);
-      
+
       // Get all groups available for this sorter version (for comparison)
       const allGroupsData = await db
         .select({
@@ -240,13 +249,15 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
           name: sorterGroups.name,
         })
         .from(sorterGroups)
-        .where(and(
-          eq(sorterGroups.sorterId, result.sorterId),
-          eq(sorterGroups.version, result.version)
-        ));
-      
+        .where(
+          and(
+            eq(sorterGroups.sorterId, result.sorterId),
+            eq(sorterGroups.version, result.version),
+          ),
+        );
+
       totalGroups = allGroupsData;
-      
+
       if (selectedGroupIds.length > 0) {
         const groupsData = await db
           .select({
@@ -254,11 +265,13 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
             name: sorterGroups.name,
           })
           .from(sorterGroups)
-          .where(and(
-            inArray(sorterGroups.id, selectedGroupIds),
-            eq(sorterGroups.sorterId, result.sorterId),
-            eq(sorterGroups.version, result.version)
-          ));
+          .where(
+            and(
+              inArray(sorterGroups.id, selectedGroupIds),
+              eq(sorterGroups.sorterId, result.sorterId),
+              eq(sorterGroups.version, result.version),
+            ),
+          );
 
         selectedGroups = groupsData;
       }
@@ -424,7 +437,6 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         />
       </div>
 
-
       {/* Two Column Layout */}
       <div className="grid gap-8 md:grid-cols-3">
         {/* Left Column - Rankings (spans 2 columns on desktop) */}
@@ -438,21 +450,21 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
               className="overflow-hidden p-2 md:p-6"
             >
               {/* Smart Group Badges - only show when subset of groups used */}
-              {selectedGroups && 
-               totalGroups && 
-               selectedGroups.length > 0 && 
-               selectedGroups.length < totalGroups.length && (
-                <div className="mb-6">
-                  <div className="flex flex-wrap gap-2">
-                    {selectedGroups.map((group) => (
-                      <Badge key={group.id} variant="neutral">
-                        {group.name}
-                      </Badge>
-                    ))}
+              {selectedGroups &&
+                totalGroups &&
+                selectedGroups.length > 0 &&
+                selectedGroups.length < totalGroups.length && (
+                  <div className="mb-6">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedGroups.map((group) => (
+                        <Badge key={group.id} variant="neutral">
+                          {group.name}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-              
+                )}
+
               <AnimatedRankings rankings={result.rankings} />
             </PanelContent>
           </Panel>
@@ -479,7 +491,8 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                       {sorter.title}
                       {sorter.isDeleted && (
                         <span className="text-sm text-red-600 dark:text-red-400">
-                          {" "}(Deleted)
+                          {" "}
+                          (Deleted)
                         </span>
                       )}
                     </h3>
@@ -537,7 +550,8 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                     {sorter.title}
                     {sorter.isDeleted && (
                       <span className="text-sm text-red-600 dark:text-red-400">
-                        {" "}(Deleted)
+                        {" "}
+                        (Deleted)
                       </span>
                     )}
                   </h3>

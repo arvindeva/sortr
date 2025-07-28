@@ -33,13 +33,14 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (sorterData.length === 0) {
-      return Response.json(
-        { error: "Sorter not found" },
-        { status: 404 },
-      );
+      return Response.json({ error: "Sorter not found" }, { status: 404 });
     }
 
-    const { title: sorterTitle, coverImageUrl: sorterCoverImageUrl, version: sorterVersion } = sorterData[0];
+    const {
+      title: sorterTitle,
+      coverImageUrl: sorterCoverImageUrl,
+      version: sorterVersion,
+    } = sorterData[0];
 
     // Save the sorting result with VERSION
     const result = await db

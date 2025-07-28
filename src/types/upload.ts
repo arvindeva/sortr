@@ -7,15 +7,15 @@ export interface FileInfo {
 }
 
 export interface SignedUploadUrl {
-  key: string;          // R2 object key
-  uploadUrl: string;    // Pre-signed PUT URL
-  fileType: 'cover' | 'item' | 'group-cover';
+  key: string; // R2 object key
+  uploadUrl: string; // Pre-signed PUT URL
+  fileType: "cover" | "item" | "group-cover";
   originalName: string;
 }
 
 export interface UploadTokenRequest {
   files: FileInfo[];
-  type: 'sorter-creation'; // Can extend for other upload types later
+  type: "sorter-creation"; // Can extend for other upload types later
 }
 
 export interface UploadTokenResponse {
@@ -26,11 +26,11 @@ export interface UploadTokenResponse {
 
 export interface UploadedFile {
   key: string;
-  type: 'cover' | 'item' | 'group-cover';
+  type: "cover" | "item" | "group-cover";
   originalName: string;
   success: boolean;
-  itemIndex?: number;    // For linking to specific items
-  groupIndex?: number;   // For linking to specific groups
+  itemIndex?: number; // For linking to specific items
+  groupIndex?: number; // For linking to specific groups
 }
 
 export interface CreateSorterWithUploads {
@@ -44,18 +44,23 @@ export interface CreateSorterWithUploads {
     items: { title: string }[];
   }[];
   items?: { title: string }[];
-  
+
   // New upload-related fields
-  uploadSession?: string;        // Session ID from upload tokens
+  uploadSession?: string; // Session ID from upload tokens
   uploadedFiles?: UploadedFile[]; // Results from direct uploads
 }
 
 export interface UploadProgress {
-  phase: 'requesting-tokens' | 'uploading-files' | 'creating-sorter' | 'complete' | 'failed';
+  phase:
+    | "requesting-tokens"
+    | "uploading-files"
+    | "creating-sorter"
+    | "complete"
+    | "failed";
   files: {
     name: string;
     progress: number;
-    status: 'pending' | 'uploading' | 'complete' | 'failed';
+    status: "pending" | "uploading" | "complete" | "failed";
     error?: string;
   }[];
   overallProgress: number;
@@ -65,7 +70,7 @@ export interface UploadProgress {
 export interface UploadSession {
   id: string;
   userId: string;
-  status: 'pending' | 'uploading' | 'complete' | 'expired' | 'failed';
+  status: "pending" | "uploading" | "complete" | "expired" | "failed";
   createdAt: Date;
   expiresAt: Date;
   metadata?: Record<string, any>;
@@ -76,7 +81,7 @@ export interface SessionFile {
   sessionId: string;
   r2Key: string;
   originalName: string;
-  fileType: 'cover' | 'item' | 'group-cover';
+  fileType: "cover" | "item" | "group-cover";
   mimeType: string;
   fileSize: number;
   uploadedAt: Date;
@@ -84,7 +89,7 @@ export interface SessionFile {
 
 // Error types for upload handling
 export interface UploadError {
-  type: 'validation' | 'network' | 'server' | 'r2' | 'timeout';
+  type: "validation" | "network" | "server" | "r2" | "timeout";
   message: string;
   file?: string;
   retryable: boolean;
