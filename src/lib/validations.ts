@@ -38,7 +38,6 @@ export const createSorterSchema = z
             .min(1, "Each group must have at least 1 item"),
         }),
       )
-      .min(2, "At least 2 groups are required")
       .optional(),
     items: z
       .array(
