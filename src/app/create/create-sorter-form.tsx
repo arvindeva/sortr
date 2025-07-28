@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/dialog";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
-import { compressImages, isCompressibleImage } from "@/lib/image-compression";
+// Note: Image compression is now handled by the upload hook
 import {
   Plus,
   X,
@@ -237,31 +237,8 @@ export default function CreateSorterForm() {
       if (invalidFiles.length === 0) {
         toast.success(`${validFiles.length} file(s) added successfully`);
       }
-      try {
-        // Compress images to JPG
-        const compressibleFiles = validFiles.filter(isCompressibleImage);
-        const nonCompressibleFiles = validFiles.filter(
-          (file) => !isCompressibleImage(file),
-        );
-
-        if (compressibleFiles.length > 0) {
-          const compressionResults = await compressImages(compressibleFiles, {
-            quality: 0.85,
-            exactSize: { width: 300, height: 300 },
-            format: "jpeg",
-          });
-          const compressedFiles = compressionResults.map(
-            (result) => result.file,
-          );
-          handleItemImagesChange([...compressedFiles, ...nonCompressibleFiles]);
-        } else {
-          handleItemImagesChange(validFiles);
-        }
-      } catch (error) {
-        console.error("Compression failed:", error);
-        toast.error("Image compression failed, using original files");
-        handleItemImagesChange(validFiles);
-      }
+      // Pass original files directly - let the upload hook handle image processing
+      handleItemImagesChange(validFiles);
     }
 
     // Reset file input
@@ -655,34 +632,8 @@ export default function CreateSorterForm() {
           `${validFiles.length} file(s) added to group successfully`,
         );
       }
-      try {
-        // Compress images to JPG
-        const compressibleFiles = validFiles.filter(isCompressibleImage);
-        const nonCompressibleFiles = validFiles.filter(
-          (file) => !isCompressibleImage(file),
-        );
-
-        if (compressibleFiles.length > 0) {
-          const compressionResults = await compressImages(compressibleFiles, {
-            quality: 0.85,
-            exactSize: { width: 300, height: 300 },
-            format: "jpeg",
-          });
-          const compressedFiles = compressionResults.map(
-            (result) => result.file,
-          );
-          handleGroupImagesChange(groupIndex, [
-            ...compressedFiles,
-            ...nonCompressibleFiles,
-          ]);
-        } else {
-          handleGroupImagesChange(groupIndex, validFiles);
-        }
-      } catch (error) {
-        console.error("Compression failed:", error);
-        toast.error("Image compression failed, using original files");
-        handleGroupImagesChange(groupIndex, validFiles);
-      }
+      // Pass original files directly - let the upload hook handle image processing
+      handleGroupImagesChange(groupIndex, validFiles);
     }
 
     // Reset file input
@@ -748,24 +699,8 @@ export default function CreateSorterForm() {
         return;
       }
 
-      try {
-        // Compress image if it's compressible
-        if (isCompressibleImage(file)) {
-          const compressionResults = await compressImages([file], {
-            quality: 0.85,
-            exactSize: { width: 300, height: 300 },
-            format: "jpeg",
-          });
-          const compressedFile = compressionResults[0].file;
-          handleGroupCoverImageSelect(groupIndex, compressedFile);
-        } else {
-          handleGroupCoverImageSelect(groupIndex, file);
-        }
-      } catch (error) {
-        console.error("Compression failed:", error);
-        toast.error("Image compression failed, using original file");
-        handleGroupCoverImageSelect(groupIndex, file);
-      }
+      // Pass original file directly - let the upload hook handle image processing
+      handleGroupCoverImageSelect(groupIndex, file);
     } else {
       handleGroupCoverImageSelect(groupIndex, null);
     }

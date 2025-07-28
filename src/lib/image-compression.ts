@@ -17,6 +17,15 @@ export interface CompressionResult {
   compressionRatio: number;
 }
 
+export interface MultiSizeResult {
+  file: File;
+  originalSize: number;
+  compressedSize: number;
+  compressionRatio: number;
+  suffix: string;
+  size: { width: number; height: number };
+}
+
 /**
  * Compress an image file using Canvas API
  */
@@ -192,6 +201,61 @@ export function isCompressibleImage(file: File): boolean {
     file.type.startsWith("image/") &&
     ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)
   );
+}
+
+/**
+ * Generate multiple sizes of an image
+ */
+export async function generateImageSizes(
+  file: File,
+  sizes: Array<{ width: number; height: number; suffix: string }>,
+  options: Omit<CompressionOptions, 'maxWidth' | 'maxHeight' | 'exactSize'> = {},
+): Promise<MultiSizeResult[]> {
+  const { quality = 0.85, format = "jpeg" } = options;
+  
+  const results: MultiSizeResult[] = [];
+  
+  // Process sizes in parallel for better performance
+  const sizePromises = sizes.map(async (sizeConfig) => {
+    const compressionOptions: CompressionOptions = {
+      quality,
+      format,
+      exactSize: { width: sizeConfig.width, height: sizeConfig.height },
+    };
+    
+    const result = await compressImage(file, compressionOptions);
+    
+    return {
+      ...result,
+      suffix: sizeConfig.suffix,
+      size: { width: sizeConfig.width, height: sizeConfig.height },
+    } as MultiSizeResult;
+  });
+  
+  const resolvedResults = await Promise.all(sizePromises);
+  results.push(...resolvedResults);
+  
+  return results;
+}
+
+/**
+ * Generate sorter item images in standard sizes (thumbnail + full)
+ */
+export async function generateSorterItemSizes(
+  file: File,
+  options: Omit<CompressionOptions, 'maxWidth' | 'maxHeight' | 'exactSize'> = {},
+): Promise<{ thumbnail: MultiSizeResult; full: MultiSizeResult }> {
+  const sizes = [
+    { width: 64, height: 64, suffix: 'thumb' },
+    { width: 300, height: 300, suffix: '' }, // No suffix for full size
+  ];
+  
+  const results = await generateImageSizes(file, sizes, options);
+  
+  return {
+    thumbnail: results.find(r => r.suffix === 'thumb')!,
+    full: results.find(r => r.suffix === '')!,
+  };
 }
 
 /**

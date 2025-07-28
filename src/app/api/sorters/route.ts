@@ -219,11 +219,11 @@ async function handleUploadSessionRequest(body: any, userData: any) {
             generateSorterItemSlug(group.name),
           );
 
-          // Find corresponding item file by name matching (like traditional sorters)
+          // Find all files that match this item's title (thumbnail + full)
           const itemFiles = uploadedFiles.filter(
             (f: UploadedFile) => f.type === "item",
           );
-          const itemFile = itemFiles.find((file: UploadedFile) => {
+          const matchingFiles = itemFiles.filter((file: UploadedFile) => {
             const originalNameWithoutExt = file.originalName.replace(
               /\.[^/.]+$/,
               "",
@@ -231,17 +231,25 @@ async function handleUploadSessionRequest(body: any, userData: any) {
             return originalNameWithoutExt === item.title;
           });
 
-          if (itemFile) {
-            const newKey = convertSessionKeyToSorterKey(
-              itemFile.key,
-              newSorter.id,
-              1, // version 1
-              itemSlug,
-            );
+          if (matchingFiles.length > 0) {
+            // Process both thumbnail and full-size files
+            for (const file of matchingFiles) {
+              const newKey = convertSessionKeyToSorterKey(
+                file.key,
+                newSorter.id,
+                1, // version 1
+                itemSlug,
+              );
 
-            // Copy file from session location to final location
-            await copyR2Object(itemFile.key, newKey);
-            itemImageUrl = getR2PublicUrl(newKey);
+              // Copy file from session location to final location
+              await copyR2Object(file.key, newKey);
+              
+              // Store the full-size URL (the one without -thumb in the key)
+              // The UI will derive the thumbnail URL using getImageUrl()
+              if (!file.key.includes('-thumb')) {
+                itemImageUrl = getR2PublicUrl(newKey);
+              }
+            }
           }
 
           await db.insert(sorterItems).values({
@@ -275,9 +283,9 @@ async function handleUploadSessionRequest(body: any, userData: any) {
         // Generate unique slug for this item (used for both R2 key and database)
         const itemSlug = generateSorterItemSlug(item.title);
 
-        // Find a file that matches this item's title
+        // Find all files that match this item's title (thumbnail + full)
         // Remove file extension from original name to match with item title
-        const itemFile = itemFiles.find((file: UploadedFile) => {
+        const matchingFiles = itemFiles.filter((file: UploadedFile) => {
           const originalNameWithoutExt = file.originalName.replace(
             /\.[^/.]+$/,
             "",
@@ -285,17 +293,25 @@ async function handleUploadSessionRequest(body: any, userData: any) {
           return originalNameWithoutExt === item.title;
         });
 
-        if (itemFile) {
-          const newKey = convertSessionKeyToSorterKey(
-            itemFile.key,
-            newSorter.id,
-            1, // version 1
-            itemSlug,
-          );
+        if (matchingFiles.length > 0) {
+          // Process both thumbnail and full-size files
+          for (const file of matchingFiles) {
+            const newKey = convertSessionKeyToSorterKey(
+              file.key,
+              newSorter.id,
+              1, // version 1
+              itemSlug,
+            );
 
-          // Copy file from session location to final location
-          await copyR2Object(itemFile.key, newKey);
-          itemImageUrl = getR2PublicUrl(newKey);
+            // Copy file from session location to final location
+            await copyR2Object(file.key, newKey);
+            
+            // Store the full-size URL (the one without -thumb in the key)
+            // The UI will derive the thumbnail URL using getImageUrl()
+            if (!file.key.includes('-thumb')) {
+              itemImageUrl = getR2PublicUrl(newKey);
+            }
+          }
         }
 
         await db.insert(sorterItems).values({

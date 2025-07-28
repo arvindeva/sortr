@@ -64,21 +64,9 @@ export async function deleteFromR2(key: string): Promise<void> {
  * @returns The public URL
  */
 export function getR2PublicUrl(key: string): string {
-  // Debug logging for environment variables
-  console.log("🔍 R2 Environment Debug:");
-  console.log("R2_PUBLIC_URL:", process.env.R2_PUBLIC_URL);
-  console.log(
-    "R2_PUBLIC_URL (JSON):",
-    JSON.stringify(process.env.R2_PUBLIC_URL),
-  );
-  console.log("R2_BUCKET_NAME:", process.env.R2_BUCKET_NAME);
-  console.log("Key:", key);
-
   // Check if a custom public URL is configured
   if (process.env.R2_PUBLIC_URL) {
-    const url = `${process.env.R2_PUBLIC_URL}/${key}`;
-    console.log("✅ Generated R2 URL:", url);
-    return url;
+    return `${process.env.R2_PUBLIC_URL}/${key}`;
   }
 
   // Default R2.dev subdomain format
@@ -183,10 +171,12 @@ export function getSessionFileKey(
   fileType: "cover" | "item" | "group-cover",
   index: number,
   originalName: string,
+  suffix?: string,
 ): string {
-  // Extract file extension from original name
-  const extension = originalName.split(".").pop() || "jpg";
-  return `sessions/${sessionId}/${fileType}/${index}.${extension}`;
+  // All images are converted to JPEG during compression, so always use .jpg extension
+  const extension = "jpg";
+  const baseName = `${index}${suffix || ''}`;
+  return `sessions/${sessionId}/${fileType}/${baseName}.${extension}`;
 }
 
 /**
@@ -239,9 +229,14 @@ export function convertSessionKeyToSorterKey(
     case "cover":
       return getVersionedCoverKey(sorterId, version, extension);
     case "item":
+      // Check if this is a thumbnail file (has -thumb suffix in filename)
+      const baseFilename = filename.replace(/\.[^/.]+$/, ""); // Remove extension
+      const isThumb = baseFilename.includes("-thumb");
+      const finalSlug = isThumb ? `${itemSlug}-thumb` : itemSlug;
+      
       return getVersionedItemKey(
         sorterId,
-        itemSlug || "unknown",
+        finalSlug || "unknown",
         version,
         extension,
       );

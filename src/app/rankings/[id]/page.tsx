@@ -26,6 +26,7 @@ import { ArrowLeft, Trophy, RotateCcw, Play, Eye } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
 import { RankingImageLayout } from "@/components/ranking-image-layout";
+import { getImageUrl } from "@/lib/image-utils";
 
 interface RankingsPageProps {
   params: Promise<{

@@ -6,6 +6,7 @@ import {
   PanelTitle,
   PanelContent,
 } from "@/components/ui/panel";
+import { getImageUrl } from "@/lib/image-utils";
 
 interface RankedItem {
   id: string;
@@ -141,7 +142,7 @@ export function RankingImageLayout({
                   >
                     {item.imageUrl || item.groupImageUrl ? (
                       <img
-                        src={item.imageUrl || item.groupImageUrl}
+                        src={getImageUrl(item.imageUrl || item.groupImageUrl, 'full')}
                         alt={item.title}
                         style={{
                           width: "100%",
@@ -233,7 +234,7 @@ export function RankingImageLayout({
                     >
                       {item.imageUrl || item.groupImageUrl ? (
                         <img
-                          src={item.imageUrl || item.groupImageUrl}
+                          src={getImageUrl(item.imageUrl || item.groupImageUrl, 'full')}
                           alt={item.title}
                           style={{
                             width: "100%",

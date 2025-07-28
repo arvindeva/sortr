@@ -8,6 +8,7 @@ import type {
   UploadTokenRequest,
   UploadTokenResponse,
   FileInfo,
+  SignedUploadUrl,
 } from "@/types/upload";
 
 // Validation constants
@@ -75,18 +76,63 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    // Generate pre-signed URLs for each file
-    const uploadUrls = await Promise.all(
-      validatedData.files.map(async (file: FileInfo, index: number) => {
-        // Determine file type based on position and naming patterns
-        // The client sends files in order: [cover?, ...items, ...groupCovers]
-        const fileType = determineFileType(
-          file.name,
-          index,
-          validatedData.files.length,
-        );
+    // Generate pre-signed URLs for each file (with dual sizes for items)
+    const uploadUrls: SignedUploadUrl[] = [];
+    
+    for (let index = 0; index < validatedData.files.length; index++) {
+      const file = validatedData.files[index];
+      
+      // Determine file type based on position and naming patterns
+      const fileType = determineFileType(
+        file.name,
+        index,
+        validatedData.files.length,
+      );
 
-        // Generate session-based key
+      if (fileType === 'item') {
+        // Generate both thumbnail and full size URLs for items
+        const sizes = [
+          { suffix: '-thumb', size: 'thumbnail' as const },
+          { suffix: '', size: 'full' as const },
+        ];
+
+        for (const sizeConfig of sizes) {
+          // Generate session-based key with size suffix
+          const sessionKey = getSessionFileKey(
+            uploadSession.id,
+            fileType,
+            index,
+            file.name,
+            sizeConfig.suffix,
+          );
+
+          // Generate pre-signed URL
+          const uploadUrl = await generatePresignedUploadUrl(
+            sessionKey,
+            file.type,
+            SESSION_DURATION_MINUTES * 60,
+          );
+
+          // Store file metadata in session
+          await db.insert(sessionFiles).values({
+            sessionId: uploadSession.id,
+            r2Key: sessionKey,
+            originalName: file.name,
+            fileType,
+            mimeType: file.type,
+            fileSize: file.size, // Client will provide actual size after compression
+          });
+
+          uploadUrls.push({
+            key: sessionKey,
+            uploadUrl,
+            fileType,
+            originalName: file.name,
+            size: sizeConfig.size,
+          });
+        }
+      } else {
+        // Single URL for cover and group-cover images
         const sessionKey = getSessionFileKey(
           uploadSession.id,
           fileType,
@@ -94,14 +140,12 @@ export async function POST(request: NextRequest) {
           file.name,
         );
 
-        // Generate pre-signed URL
         const uploadUrl = await generatePresignedUploadUrl(
           sessionKey,
           file.type,
-          SESSION_DURATION_MINUTES * 60, // Convert to seconds
+          SESSION_DURATION_MINUTES * 60,
         );
 
-        // Store file metadata in session
         await db.insert(sessionFiles).values({
           sessionId: uploadSession.id,
           r2Key: sessionKey,
@@ -111,14 +155,14 @@ export async function POST(request: NextRequest) {
           fileSize: file.size,
         });
 
-        return {
+        uploadUrls.push({
           key: sessionKey,
           uploadUrl,
           fileType,
           originalName: file.name,
-        };
-      }),
-    );
+        });
+      }
+    }
 
     const response: UploadTokenResponse = {
       uploadUrls,

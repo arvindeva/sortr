@@ -20,6 +20,7 @@ import { RankingItem, RankingItemContent } from "@/components/ui/ranking-item";
 import { Play, User, Calendar, Eye, Trophy, Trash2 } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { DeleteSorterButton } from "@/components/delete-sorter-button";
+import { getImageUrl } from "@/lib/image-utils";
 
 // Force dynamic rendering for real-time view counts and recent results
 export const dynamic = "force-dynamic";
@@ -452,9 +453,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                     {item.imageUrl || item.groupImageUrl ? (
                                       <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
                                         <img
-                                          src={
-                                            item.imageUrl || item.groupImageUrl
-                                          }
+                                          src={getImageUrl(item.imageUrl || item.groupImageUrl, 'thumbnail')}
                                           alt={item.title}
                                           className="h-full w-full object-cover"
                                         />
@@ -502,7 +501,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                             {item.imageUrl || item.groupImageUrl ? (
                               <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
                                 <img
-                                  src={item.imageUrl || item.groupImageUrl}
+                                  src={getImageUrl(item.imageUrl || item.groupImageUrl, 'thumbnail')}
                                   alt={item.title}
                                   className="h-full w-full object-cover"
                                 />
@@ -570,9 +569,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                     {item.imageUrl || item.groupImageUrl ? (
                                       <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
                                         <img
-                                          src={
-                                            item.imageUrl || item.groupImageUrl
-                                          }
+                                          src={getImageUrl(item.imageUrl || item.groupImageUrl, 'thumbnail')}
                                           alt={item.title}
                                           className="h-full w-full object-cover"
                                         />

@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { generateSorterItemSizes, isCompressibleImage } from "@/lib/image-compression";
 import type {
   UploadTokenRequest,
   UploadTokenResponse,
@@ -81,7 +82,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
       }));
 
       try {
-        // Phase 1: Request upload tokens
+        // Phase 1: Process images and generate multiple sizes
         updateProgress({
           phase: "requesting-tokens",
           files: files.map((file) => ({
@@ -90,9 +91,66 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
             status: "pending",
           })),
           overallProgress: 0,
-          statusMessage: "Preparing upload...",
+          statusMessage: "Processing images...",
         });
 
+        // Process images to generate multiple sizes
+        const processedFiles: { originalFile: File; thumbnail?: File; full?: File }[] = [];
+        
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          
+          // Update progress for this file being processed
+          updateProgress({
+            phase: "requesting-tokens",
+            files: files.map((f, idx) => ({
+              name: f.name,
+              progress: idx < i ? 100 : idx === i ? 50 : 0,
+              status: idx < i ? "complete" : idx === i ? "uploading" : "pending",
+            })),
+            overallProgress: (i / files.length) * 5, // Use 5% for processing
+            statusMessage: `Processing ${file.name}...`,
+          });
+
+          if (isCompressibleImage(file)) {
+            try {
+              // Generate both thumbnail and full size for item images
+              const { thumbnail, full } = await generateSorterItemSizes(file);
+              processedFiles.push({
+                originalFile: file,
+                thumbnail: thumbnail.file,
+                full: full.file,
+              });
+            } catch (error) {
+              console.error(`Failed to process ${file.name}:`, error);
+              // Fallback: use original file
+              processedFiles.push({
+                originalFile: file,
+                full: file,
+              });
+            }
+          } else {
+            // Non-image files (shouldn't happen, but handle gracefully)
+            processedFiles.push({
+              originalFile: file,
+              full: file,
+            });
+          }
+        }
+
+        // Phase 2: Request upload tokens
+        updateProgress({
+          phase: "requesting-tokens",
+          files: files.map((file) => ({
+            name: file.name,
+            progress: 100,
+            status: "complete",
+          })),
+          overallProgress: 5,
+          statusMessage: "Requesting upload tokens...",
+        });
+
+        // Create file infos for token request (still based on original files)
         const fileInfos = files.map((file) => ({
           name: file.name,
           size: file.size,
@@ -119,7 +177,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
 
         setState((prev) => ({ ...prev, sessionId: tokenData.sessionId }));
 
-        // Phase 2: Upload files to R2
+        // Phase 3: Upload files to R2
         updateProgress({
           phase: "uploading-files",
           files: files.map((file) => ({
@@ -133,9 +191,18 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
 
         const uploadResults: UploadedFile[] = [];
 
+        // Group upload URLs by original file
+        const urlsByOriginalFile = new Map<string, typeof tokenData.uploadUrls>();
+        tokenData.uploadUrls.forEach(url => {
+          const existing = urlsByOriginalFile.get(url.originalName) || [];
+          existing.push(url);
+          urlsByOriginalFile.set(url.originalName, existing);
+        });
+
         for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const uploadUrl = tokenData.uploadUrls[i];
+          const originalFile = files[i];
+          const processedFile = processedFiles[i];
+          const uploadUrls = urlsByOriginalFile.get(originalFile.name) || [];
 
           // Update this file to uploading status
           updateProgress({
@@ -147,54 +214,80 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
                 idx < i ? "complete" : idx === i ? "uploading" : "pending",
             })),
             overallProgress: 10 + (i / files.length) * 80,
-            statusMessage: `Uploading ${file.name}...`,
+            statusMessage: `Uploading ${originalFile.name}...`,
           });
 
           try {
-            console.log(`Uploading ${file.name} to:`, uploadUrl.uploadUrl);
-            const uploadResponse = await fetch(uploadUrl.uploadUrl, {
-              method: "PUT",
-              body: file,
-              headers: {
-                "Content-Type": file.type,
-              },
-            });
+            let fileUploadsSuccessful = 0;
+            let totalUploads = 0;
 
-            console.log(`Upload response for ${file.name}:`, {
-              status: uploadResponse.status,
-              statusText: uploadResponse.statusText,
-              ok: uploadResponse.ok,
-            });
+            // Upload all sizes for this file
+            for (const uploadUrl of uploadUrls) {
+              totalUploads++;
+              
+              // Determine which file to upload based on size
+              let fileToUpload: File;
+              if (uploadUrl.size === 'thumbnail' && processedFile.thumbnail) {
+                fileToUpload = processedFile.thumbnail;
+              } else if (uploadUrl.size === 'full' && processedFile.full) {
+                fileToUpload = processedFile.full;
+              } else {
+                // Fallback to original file
+                fileToUpload = originalFile;
+              }
 
-            if (!uploadResponse.ok) {
-              const errorText = await uploadResponse.text();
-              console.error(`Upload failed for ${file.name}:`, errorText);
-              throw new Error(
-                `Upload failed for ${file.name}: ${uploadResponse.statusText}`,
-              );
+              console.log(`Uploading ${originalFile.name} (${uploadUrl.size || 'single'}) to:`, uploadUrl.uploadUrl);
+              
+              const uploadResponse = await fetch(uploadUrl.uploadUrl, {
+                method: "PUT",
+                body: fileToUpload,
+                headers: {
+                  "Content-Type": fileToUpload.type,
+                },
+              });
+
+              console.log(`Upload response for ${originalFile.name} (${uploadUrl.size || 'single'}):`, {
+                status: uploadResponse.status,
+                statusText: uploadResponse.statusText,
+                ok: uploadResponse.ok,
+              });
+
+              if (!uploadResponse.ok) {
+                const errorText = await uploadResponse.text();
+                console.error(`Upload failed for ${originalFile.name} (${uploadUrl.size || 'single'}):`, errorText);
+                throw new Error(
+                  `Upload failed for ${originalFile.name}: ${uploadResponse.statusText}`,
+                );
+              }
+
+              fileUploadsSuccessful++;
+
+              // Track all uploads (thumbnail and full) in results
+              const uploadedFile: UploadedFile = {
+                key: uploadUrl.key,
+                type: uploadUrl.fileType as "cover" | "item" | "group-cover",
+                originalName: uploadUrl.originalName,
+                success: true,
+              };
+              uploadResults.push(uploadedFile);
             }
 
-            // Mark this file as complete
-            const uploadedFile: UploadedFile = {
-              key: uploadUrl.key,
-              type: uploadUrl.fileType as "cover" | "item" | "group-cover",
-              originalName: uploadUrl.originalName,
-              success: true,
-            };
-
-            uploadResults.push(uploadedFile);
-
-            // Update progress for completed file
-            updateProgress({
-              phase: "uploading-files",
-              files: files.map((f, idx) => ({
-                name: f.name,
-                progress: idx <= i ? 100 : 0,
-                status: idx <= i ? "complete" : "pending",
-              })),
-              overallProgress: 10 + ((i + 1) / files.length) * 80,
-              statusMessage: `Uploaded ${file.name}`,
-            });
+            // Only mark as complete if all uploads for this file succeeded
+            if (fileUploadsSuccessful === totalUploads) {
+              // Update progress for completed file
+              updateProgress({
+                phase: "uploading-files",
+                files: files.map((f, idx) => ({
+                  name: f.name,
+                  progress: idx <= i ? 100 : 0,
+                  status: idx <= i ? "complete" : "pending",
+                })),
+                overallProgress: 10 + ((i + 1) / files.length) * 80,
+                statusMessage: `Uploaded ${originalFile.name}`,
+              });
+            } else {
+              throw new Error(`Not all uploads completed for ${originalFile.name}`);
+            }
           } catch (error) {
             // Mark this file as failed but continue with others
             updateProgress({
@@ -205,10 +298,10 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
                 status: idx < i ? "complete" : idx === i ? "failed" : "pending",
               })),
               overallProgress: 10 + ((i + 1) / files.length) * 80,
-              statusMessage: `Failed to upload ${file.name}`,
+              statusMessage: `Failed to upload ${originalFile.name}`,
             });
 
-            console.error(`Failed to upload ${file.name}:`, error);
+            console.error(`Failed to upload ${originalFile.name}:`, error);
             // Continue with next file instead of failing completely
           }
         }

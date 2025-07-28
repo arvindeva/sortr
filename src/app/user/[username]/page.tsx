@@ -18,6 +18,7 @@ import { UserProfileHeader } from "@/components/user-profile-header";
 import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
 import { Eye, Trophy } from "lucide-react";
+import { getImageUrl } from "@/lib/image-utils";
 
 // Force dynamic rendering for always-fresh user statistics
 export const dynamic = "force-dynamic";
@@ -208,7 +209,7 @@ export default async function UserProfilePage({
                                   {item.imageUrl ? (
                                     <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
                                       <img
-                                        src={item.imageUrl}
+                                        src={getImageUrl(item.imageUrl, 'thumbnail')}
                                         alt={item.title}
                                         className="h-full w-full object-cover"
                                       />

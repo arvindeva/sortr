@@ -11,6 +11,7 @@ export interface SignedUploadUrl {
   uploadUrl: string; // Pre-signed PUT URL
   fileType: "cover" | "item" | "group-cover";
   originalName: string;
+  size?: "thumbnail" | "full"; // For multi-size item images
 }
 
 export interface UploadTokenRequest {
