@@ -100,10 +100,10 @@ export default function CreateSorterForm() {
       };
       setUploadStatus(phaseMessages[progress.phase] || "Processing...");
     },
-    onSuccess: async (uploadedFiles) => {
+    onSuccess: async (uploadedFiles, abortController) => {
       // Files uploaded successfully, now create sorter with references
       const formData = form.getValues();
-      await createSorterWithUploadedFiles(formData, uploadedFiles);
+      await createSorterWithUploadedFiles(formData, uploadedFiles, abortController);
     },
     onError: (error) => {
       setIsUploading(false);
@@ -815,10 +815,9 @@ export default function CreateSorterForm() {
   const createSorterWithUploadedFiles = async (
     data: CreateSorterInput,
     uploadedFiles: UploadedFile[],
+    abortController: AbortController | null,
   ) => {
     try {
-      setUploadStatus("Creating sorter...");
-
       console.log("Direct upload sessionId:", directUpload.sessionId);
       console.log("Uploaded files:", uploadedFiles);
 
@@ -876,8 +875,6 @@ export default function CreateSorterForm() {
           .map((data) => data.file);
       }
 
-      setUploadStatus("Creating sorter...");
-
       // Send sorter creation request with upload session reference
       const response = await fetch("/api/sorters", {
         method: "POST",
@@ -885,6 +882,7 @@ export default function CreateSorterForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
+        signal: abortController?.signal,
       });
 
       if (!response.ok) {
@@ -894,19 +892,23 @@ export default function CreateSorterForm() {
 
       const result = await response.json();
 
-      setUploadStatus("Redirecting to sorter...");
       toast.success("Sorter created successfully!");
 
       // Clean up local state and redirect
       router.push(`/sorter/${result.slug}`);
     } catch (error) {
-      setIsUploading(false);
-      setShowProgressDialog(false);
+      // Handle AbortError specifically
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Creation was cancelled - don't show error, hook will handle cleanup
+        return;
+      }
+      
       console.error("Error creating sorter:", error);
 
       const errorMessage =
         error instanceof Error ? error.message : "Failed to create sorter";
       toast.error(errorMessage);
+      throw error; // Re-throw so the hook can handle cleanup
     }
   };
 
@@ -1679,7 +1681,19 @@ export default function CreateSorterForm() {
       <UploadProgressDialog
         open={showProgressDialog || directUpload.isUploading}
         progress={directUpload.progress}
-        onOpenChange={() => {}}
+        onOpenChange={(open) => {
+          if (!open) {
+            // User clicked X - cancel upload
+            directUpload.cancel();
+            setShowProgressDialog(false);
+            setIsUploading(false);
+            
+            // Form state remains intact - no reset needed
+            
+            // Optional: Show cancellation feedback
+            toast.info("Upload cancelled");
+          }
+        }}
       />
 
       {/* Fallback for non-upload operations */}

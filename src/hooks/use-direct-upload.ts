@@ -10,7 +10,7 @@ import type {
 
 interface DirectUploadOptions {
   onProgress?: (progress: UploadProgress) => void;
-  onSuccess?: (uploadedFiles: UploadedFile[]) => void;
+  onSuccess?: (uploadedFiles: UploadedFile[], abortController: AbortController | null) => void;
   onError?: (error: string) => void;
 }
 
@@ -20,6 +20,7 @@ interface DirectUploadState {
   error: string | null;
   sessionId: string | null;
   uploadedFiles: UploadedFile[];
+  abortController: AbortController | null;
 }
 
 export function useDirectUpload(options: DirectUploadOptions = {}) {
@@ -30,6 +31,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
     error: null,
     sessionId: null,
     uploadedFiles: [],
+    abortController: null,
   });
 
   const updateProgress = useCallback(
@@ -65,10 +67,13 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
         return;
       }
 
+      const abortController = new AbortController();
+      
       setState((prev) => ({
         ...prev,
         isUploading: true,
         error: null,
+        abortController,
         progress: {
           phase: "requesting-tokens",
           files: files.map((file) => ({
@@ -166,6 +171,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
             files: fileInfos,
             type: "sorter-creation",
           } as UploadTokenRequest),
+          signal: abortController.signal,
         });
 
         if (!tokenResponse.ok) {
@@ -232,8 +238,8 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
               } else if (uploadUrl.size === 'full' && processedFile.full) {
                 fileToUpload = processedFile.full;
               } else {
-                // Fallback to original file
-                fileToUpload = originalFile;
+                // For single-URL uploads (covers, group covers), use processed full size
+                fileToUpload = processedFile.full || originalFile;
               }
 
               console.log(`Uploading ${originalFile.name} (${uploadUrl.size || 'single'}) to:`, uploadUrl.uploadUrl);
@@ -244,6 +250,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
                 headers: {
                   "Content-Type": fileToUpload.type,
                 },
+                signal: abortController.signal,
               });
 
               console.log(`Upload response for ${originalFile.name} (${uploadUrl.size || 'single'}):`, {
@@ -289,6 +296,12 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
               throw new Error(`Not all uploads completed for ${originalFile.name}`);
             }
           } catch (error) {
+            // If this is an abort error, the upload was cancelled
+            if (error instanceof Error && error.name === 'AbortError') {
+              // Upload was cancelled - exit immediately
+              throw error;
+            }
+            
             // Mark this file as failed but continue with others
             updateProgress({
               phase: "uploading-files",
@@ -320,20 +333,78 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
           statusMessage: "Upload complete!",
         });
 
+        // Update progress to creating-sorter phase before calling onSuccess
+        updateProgress({
+          phase: "creating-sorter",
+          files: files.map((file) => ({
+            name: file.name,
+            progress: 100,
+            status: "complete",
+          })),
+          overallProgress: 95,
+          statusMessage: "Creating sorter...",
+        });
+
         setState((prev) => ({
           ...prev,
-          isUploading: false,
           uploadedFiles: uploadResults,
         }));
 
-        options.onSuccess?.(uploadResults);
+        // Keep isUploading true during sorter creation
+        if (options.onSuccess) {
+          try {
+            await options.onSuccess(uploadResults, abortController);
+            
+            // Only set isUploading to false after successful completion
+            setState((prev) => ({
+              ...prev,
+              isUploading: false,
+            }));
+          } catch (error) {
+            // If onSuccess fails, handle it as an error
+            if (error instanceof Error && error.name === 'AbortError') {
+              // Was cancelled during sorter creation
+              return;
+            }
+            
+            // Re-throw to be caught by the main catch block
+            throw error;
+          }
+        } else {
+          // No onSuccess callback, just set isUploading to false
+          setState((prev) => ({
+            ...prev,
+            isUploading: false,
+          }));
+        }
       } catch (error) {
+        // Handle AbortError specifically
+        if (error instanceof Error && error.name === 'AbortError') {
+          // Upload was cancelled - don't call onError, just exit silently
+          return;
+        }
+        
         console.error("Upload error:", error);
         setError(error instanceof Error ? error.message : "Upload failed");
       }
     },
     [session, updateProgress, setError, options.onSuccess],
   );
+
+  const cancel = useCallback(() => {
+    if (state.abortController) {
+      state.abortController.abort();
+    }
+    
+    setState({
+      isUploading: false,
+      progress: null,
+      error: null,
+      sessionId: null,
+      uploadedFiles: [],
+      abortController: null,
+    });
+  }, [state.abortController]);
 
   const reset = useCallback(() => {
     setState({
@@ -342,12 +413,14 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
       error: null,
       sessionId: null,
       uploadedFiles: [],
+      abortController: null,
     });
   }, []);
 
   return {
     ...state,
     uploadFiles,
+    cancel,
     reset,
   };
 }

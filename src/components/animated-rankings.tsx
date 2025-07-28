@@ -33,7 +33,9 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
           {item.imageUrl || item.groupImageUrl ? (
             <div className="rounded-base border-border h-10 w-10 flex-shrink-0 overflow-hidden border-2 md:h-16 md:w-16">
               <img
-                src={getImageUrl(item.imageUrl || item.groupImageUrl, 'thumbnail')}
+                src={item.imageUrl 
+                  ? getImageUrl(item.imageUrl, 'thumbnail')
+                  : getImageUrl(item.groupImageUrl, 'full')}
                 alt={item.title}
                 className="h-full w-full object-cover"
               />

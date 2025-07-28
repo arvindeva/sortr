@@ -453,7 +453,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                     {item.imageUrl || item.groupImageUrl ? (
                                       <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
                                         <img
-                                          src={getImageUrl(item.imageUrl || item.groupImageUrl, 'thumbnail')}
+                                          src={item.imageUrl 
+                                            ? getImageUrl(item.imageUrl, 'thumbnail')
+                                            : getImageUrl(item.groupImageUrl, 'full')}
                                           alt={item.title}
                                           className="h-full w-full object-cover"
                                         />
@@ -501,7 +503,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
                             {item.imageUrl || item.groupImageUrl ? (
                               <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
                                 <img
-                                  src={getImageUrl(item.imageUrl || item.groupImageUrl, 'thumbnail')}
+                                  src={item.imageUrl 
+                                    ? getImageUrl(item.imageUrl, 'thumbnail')
+                                    : getImageUrl(item.groupImageUrl, 'full')}
                                   alt={item.title}
                                   className="h-full w-full object-cover"
                                 />
@@ -575,7 +579,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                     {item.imageUrl || item.groupImageUrl ? (
                                       <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
                                         <img
-                                          src={getImageUrl(item.imageUrl || item.groupImageUrl, 'thumbnail')}
+                                          src={item.imageUrl 
+                                            ? getImageUrl(item.imageUrl, 'thumbnail')
+                                            : getImageUrl(item.groupImageUrl, 'full')}
                                           alt={item.title}
                                           className="h-full w-full object-cover"
                                         />
