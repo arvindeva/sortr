@@ -809,8 +809,24 @@ export default function CreateSorterForm() {
         return;
       }
 
-      // Upload files to R2 first
-      await directUpload.uploadFiles(filesToUpload);
+      // Track original files for display purposes (matching the structure of filesToUpload)
+      const originalFilesForDisplay: File[] = [];
+      // Add original cover file for display
+      if (coverImageFile) {
+        originalFilesForDisplay.push(coverImageFile);
+      }
+      // Add original image files for display
+      originalFilesForDisplay.push(...actualImageFiles);
+      // Add original group cover files for display
+      if (data.useGroups) {
+        const groupCoverImageFiles = groupCoverFiles.filter(
+          (file) => file !== null,
+        ) as File[];
+        originalFilesForDisplay.push(...groupCoverImageFiles);
+      }
+
+      // Upload files to R2 first, passing both processed and original files
+      await directUpload.uploadFiles(filesToUpload, originalFilesForDisplay);
 
       // The onSuccess callback will handle sorter creation
     } catch (error) {

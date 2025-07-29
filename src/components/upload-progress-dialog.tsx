@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Progress } from "@/components/ui/progress";
+import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
 import type { UploadProgress } from "@/types/upload";
 
 interface UploadProgressDialogProps {
@@ -93,9 +94,17 @@ export function UploadProgressDialog({
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>{getPhaseDescription(progress.phase)}</span>
-              <span>{Math.round(progress.overallProgress)}%</span>
+              {progress.determinate && (
+                <span>{Math.round(progress.overallProgress)}%</span>
+              )}
             </div>
-            <Progress value={progress.overallProgress} className="h-4" />
+            {progress.determinate ? (
+              <Progress value={progress.overallProgress} className="h-4" />
+            ) : (
+              <div className="flex justify-center py-2">
+                <SortingBarsLoader />
+              </div>
+            )}
           </div>
 
           {/* Individual file progress */}

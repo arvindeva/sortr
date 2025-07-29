@@ -59,13 +59,15 @@ export interface UploadProgress {
     | "complete"
     | "failed";
   files: {
-    name: string;
+    name: string; // Display name (original file name for UX)
+    processedName?: string; // Internal name with unique suffix (optional for backward compatibility)
     progress: number;
     status: "pending" | "uploading" | "complete" | "failed";
     error?: string;
   }[];
   overallProgress: number;
   statusMessage: string;
+  determinate: boolean; // true = show percentage, false = show indeterminate loading
 }
 
 export interface UploadSession {

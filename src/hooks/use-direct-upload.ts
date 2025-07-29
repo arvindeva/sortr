@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { generateSorterItemSizes, isCompressibleImage } from "@/lib/image-compression";
+import { chunkArray } from "@/lib/utils";
 import type {
   UploadTokenRequest,
   UploadTokenResponse,
@@ -56,7 +57,9 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
   );
 
   const uploadFiles = useCallback(
-    async (files: File[]) => {
+    async (files: File[], originalFiles?: File[]) => {
+      // If originalFiles not provided, use files for backward compatibility
+      const displayFiles = originalFiles || files;
       if (!session?.user) {
         setError("You must be logged in to upload files");
         return;
@@ -76,13 +79,15 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
         abortController,
         progress: {
           phase: "requesting-tokens",
-          files: files.map((file) => ({
-            name: file.name,
+          files: displayFiles.map((displayFile, index) => ({
+            name: displayFile.name,
+            processedName: files[index]?.name,
             progress: 0,
             status: "pending",
           })),
           overallProgress: 0,
           statusMessage: "Preparing upload...",
+          determinate: false,
         },
       }));
 
@@ -90,13 +95,15 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
         // Phase 1: Process images and generate multiple sizes
         updateProgress({
           phase: "requesting-tokens",
-          files: files.map((file) => ({
-            name: file.name,
+          files: displayFiles.map((displayFile, index) => ({
+            name: displayFile.name,
+            processedName: files[index]?.name,
             progress: 0,
             status: "pending",
           })),
           overallProgress: 0,
           statusMessage: "Processing images...",
+          determinate: false,
         });
 
         // Process images to generate multiple sizes
@@ -108,13 +115,15 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
           // Update progress for this file being processed
           updateProgress({
             phase: "requesting-tokens",
-            files: files.map((f, idx) => ({
-              name: f.name,
+            files: displayFiles.map((displayFile, idx) => ({
+              name: displayFile.name,
+              processedName: files[idx]?.name,
               progress: idx < i ? 100 : idx === i ? 50 : 0,
               status: idx < i ? "complete" : idx === i ? "uploading" : "pending",
             })),
             overallProgress: (i / files.length) * 5, // Use 5% for processing
-            statusMessage: `Processing ${file.name}...`,
+            statusMessage: `Processing ${displayFiles[i]?.name || file.name}...`,
+            determinate: false,
           });
 
           if (isCompressibleImage(file)) {
@@ -146,13 +155,15 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
         // Phase 2: Request upload tokens
         updateProgress({
           phase: "requesting-tokens",
-          files: files.map((file) => ({
-            name: file.name,
+          files: displayFiles.map((displayFile, index) => ({
+            name: displayFile.name,
+            processedName: files[index]?.name,
             progress: 100,
             status: "complete",
           })),
           overallProgress: 5,
           statusMessage: "Requesting upload tokens...",
+          determinate: false,
         });
 
         // Create file infos for token request (still based on original files)
@@ -186,21 +197,37 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
         // Phase 3: Upload files to R2
         updateProgress({
           phase: "uploading-files",
-          files: files.map((file) => ({
-            name: file.name,
+          files: displayFiles.map((displayFile, index) => ({
+            name: displayFile.name,
+            processedName: files[index]?.name,
             progress: 0,
             status: "pending",
           })),
           overallProgress: 10,
           statusMessage: "Uploading files to R2...",
+          determinate: true,
         });
 
         const uploadResults: UploadedFile[] = [];
 
-        // Process upload URLs sequentially to maintain 1:1 correlation with original files
-        // Each original file should have exactly its own upload URLs (thumbnail + full for items, or single for covers)
+        // Prepare upload tasks for parallel processing
+        interface UploadTask {
+          originalFile: File;
+          processedFile: { originalFile: File; thumbnail?: File; full?: File };
+          uploadUrls: Array<{
+            uploadUrl: string;
+            key: string;
+            fileType: string;
+            originalName: string;
+            size?: string;
+          }>;
+          fileIndex: number;
+        }
+
+        const uploadTasks: UploadTask[] = [];
         let urlIndex = 0;
 
+        // Prepare all upload tasks first
         for (let i = 0; i < files.length; i++) {
           const originalFile = files[i];
           const processedFile = processedFiles[i];
@@ -222,139 +249,180 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
             );
           }
 
-          // Update this file to uploading status
-          updateProgress({
-            phase: "uploading-files",
-            files: files.map((f, idx) => ({
-              name: f.name,
-              progress: idx < i ? 100 : idx === i ? 0 : 0,
-              status:
-                idx < i ? "complete" : idx === i ? "uploading" : "pending",
-            })),
-            overallProgress: 10 + (i / files.length) * 80,
-            statusMessage: `Uploading ${originalFile.name}...`,
+          uploadTasks.push({
+            originalFile,
+            processedFile,
+            uploadUrls,
+            fileIndex: i,
+          });
+        }
+
+        // Process uploads in parallel batches
+        const CONCURRENT_UPLOADS = 6; // Conservative concurrency for stability
+        const uploadBatches = chunkArray(uploadTasks, CONCURRENT_UPLOADS);
+        let completedTasks = 0;
+
+        for (let batchIndex = 0; batchIndex < uploadBatches.length; batchIndex++) {
+          const batch = uploadBatches[batchIndex];
+          
+          console.log(`Processing upload batch ${batchIndex + 1}/${uploadBatches.length} (${batch.length} files)`);
+
+          // Create upload promises for this batch
+          const batchPromises = batch.map(async (task) => {
+            try {
+              const taskResults: UploadedFile[] = [];
+              
+              // Upload all sizes for this file
+              for (const uploadUrl of task.uploadUrls) {
+                // Determine which file to upload based on size
+                let fileToUpload: File;
+                if (uploadUrl.size === 'thumbnail' && task.processedFile.thumbnail) {
+                  fileToUpload = task.processedFile.thumbnail;
+                } else if (uploadUrl.size === 'full' && task.processedFile.full) {
+                  fileToUpload = task.processedFile.full;
+                } else {
+                  // For single-URL uploads (covers, group covers), use processed full size
+                  fileToUpload = task.processedFile.full || task.originalFile;
+                }
+
+                console.log(`Uploading ${task.originalFile.name} (${uploadUrl.size || 'single'}) to:`, uploadUrl.uploadUrl);
+                
+                const uploadResponse = await fetch(uploadUrl.uploadUrl, {
+                  method: "PUT",
+                  body: fileToUpload,
+                  headers: {
+                    "Content-Type": fileToUpload.type,
+                  },
+                  signal: abortController.signal,
+                });
+
+                console.log(`Upload response for ${task.originalFile.name} (${uploadUrl.size || 'single'}):`, {
+                  status: uploadResponse.status,
+                  statusText: uploadResponse.statusText,
+                  ok: uploadResponse.ok,
+                });
+
+                if (!uploadResponse.ok) {
+                  const errorText = await uploadResponse.text();
+                  console.error(`Upload failed for ${task.originalFile.name} (${uploadUrl.size || 'single'}):`, errorText);
+                  throw new Error(
+                    `Upload failed for ${task.originalFile.name}: ${uploadResponse.statusText}`,
+                  );
+                }
+
+                // Track all uploads (thumbnail and full) in results
+                const uploadedFile: UploadedFile = {
+                  key: uploadUrl.key,
+                  type: uploadUrl.fileType as "cover" | "item" | "group-cover",
+                  originalName: uploadUrl.originalName,
+                  success: true,
+                };
+                taskResults.push(uploadedFile);
+              }
+
+              return {
+                success: true,
+                task,
+                results: taskResults,
+                error: null,
+              };
+            } catch (error) {
+              console.error(`Failed to upload ${task.originalFile.name}:`, error);
+              return {
+                success: false,
+                task,
+                results: [],
+                error: error instanceof Error ? error.message : 'Unknown error',
+              };
+            }
           });
 
-          try {
-            let fileUploadsSuccessful = 0;
-            let totalUploads = 0;
-
-            // Upload all sizes for this file
-            for (const uploadUrl of uploadUrls) {
-              totalUploads++;
+          // Wait for all uploads in this batch to complete
+          const batchResults = await Promise.allSettled(batchPromises);
+          
+          // Process batch results
+          for (const result of batchResults) {
+            if (result.status === 'fulfilled') {
+              const taskResult = result.value;
               
-              // Determine which file to upload based on size
-              let fileToUpload: File;
-              if (uploadUrl.size === 'thumbnail' && processedFile.thumbnail) {
-                fileToUpload = processedFile.thumbnail;
-              } else if (uploadUrl.size === 'full' && processedFile.full) {
-                fileToUpload = processedFile.full;
+              if (taskResult.success) {
+                // Add successful uploads to results
+                uploadResults.push(...taskResult.results);
+                completedTasks++;
+                
+                // Update progress for this file
+                updateProgress({
+                  phase: "uploading-files",
+                  files: displayFiles.map((displayFile, idx) => ({
+                    name: displayFile.name,
+                    processedName: files[idx]?.name,
+                    progress: uploadTasks.find(t => t.fileIndex === idx) ? 100 : 0,
+                    status: uploadResults.some(r => r.originalName === files[idx]?.name) ? "complete" : 
+                           uploadTasks.slice(0, completedTasks).some(t => t.fileIndex === idx) ? "complete" : "pending",
+                  })),
+                  overallProgress: 10 + (completedTasks / files.length) * 80,
+                  statusMessage: `Uploaded ${displayFiles[taskResult.task.fileIndex]?.name || taskResult.task.originalFile.name}`,
+                  determinate: true,
+                });
               } else {
-                // For single-URL uploads (covers, group covers), use processed full size
-                fileToUpload = processedFile.full || originalFile;
+                // Handle failed upload
+                completedTasks++;
+                
+                // Check if this is an abort error
+                if (taskResult.error?.includes('AbortError')) {
+                  throw new Error('AbortError');
+                }
+                
+                updateProgress({
+                  phase: "uploading-files",
+                  files: displayFiles.map((displayFile, idx) => ({
+                    name: displayFile.name,
+                    processedName: files[idx]?.name,
+                    progress: 0,
+                    status: uploadResults.some(r => r.originalName === files[idx]?.name) ? "complete" :
+                           taskResult.task.fileIndex === idx ? "failed" : "pending",
+                  })),
+                  overallProgress: 10 + (completedTasks / files.length) * 80,
+                  statusMessage: `Failed to upload ${displayFiles[taskResult.task.fileIndex]?.name || taskResult.task.originalFile.name}`,
+                  determinate: true,
+                });
               }
-
-              console.log(`Uploading ${originalFile.name} (${uploadUrl.size || 'single'}) to:`, uploadUrl.uploadUrl);
-              
-              const uploadResponse = await fetch(uploadUrl.uploadUrl, {
-                method: "PUT",
-                body: fileToUpload,
-                headers: {
-                  "Content-Type": fileToUpload.type,
-                },
-                signal: abortController.signal,
-              });
-
-              console.log(`Upload response for ${originalFile.name} (${uploadUrl.size || 'single'}):`, {
-                status: uploadResponse.status,
-                statusText: uploadResponse.statusText,
-                ok: uploadResponse.ok,
-              });
-
-              if (!uploadResponse.ok) {
-                const errorText = await uploadResponse.text();
-                console.error(`Upload failed for ${originalFile.name} (${uploadUrl.size || 'single'}):`, errorText);
-                throw new Error(
-                  `Upload failed for ${originalFile.name}: ${uploadResponse.statusText}`,
-                );
-              }
-
-              fileUploadsSuccessful++;
-
-              // Track all uploads (thumbnail and full) in results
-              const uploadedFile: UploadedFile = {
-                key: uploadUrl.key,
-                type: uploadUrl.fileType as "cover" | "item" | "group-cover",
-                originalName: uploadUrl.originalName,
-                success: true,
-              };
-              uploadResults.push(uploadedFile);
-            }
-
-            // Only mark as complete if all uploads for this file succeeded
-            if (fileUploadsSuccessful === totalUploads) {
-              // Update progress for completed file
-              updateProgress({
-                phase: "uploading-files",
-                files: files.map((f, idx) => ({
-                  name: f.name,
-                  progress: idx <= i ? 100 : 0,
-                  status: idx <= i ? "complete" : "pending",
-                })),
-                overallProgress: 10 + ((i + 1) / files.length) * 80,
-                statusMessage: `Uploaded ${originalFile.name}`,
-              });
             } else {
-              throw new Error(`Not all uploads completed for ${originalFile.name}`);
+              // Promise rejected (shouldn't happen due to try-catch, but handle it)
+              console.error('Unexpected batch promise rejection:', result.reason);
+              completedTasks++;
             }
-          } catch (error) {
-            // If this is an abort error, the upload was cancelled
-            if (error instanceof Error && error.name === 'AbortError') {
-              // Upload was cancelled - exit immediately
-              throw error;
-            }
-            
-            // Mark this file as failed but continue with others
-            updateProgress({
-              phase: "uploading-files",
-              files: files.map((f, idx) => ({
-                name: f.name,
-                progress: idx < i ? 100 : idx === i ? 0 : 0,
-                status: idx < i ? "complete" : idx === i ? "failed" : "pending",
-              })),
-              overallProgress: 10 + ((i + 1) / files.length) * 80,
-              statusMessage: `Failed to upload ${originalFile.name}`,
-            });
-
-            console.error(`Failed to upload ${originalFile.name}:`, error);
-            // Continue with next file instead of failing completely
           }
         }
 
         // Phase 3: Complete
         updateProgress({
           phase: "complete",
-          files: files.map((file, idx) => ({
-            name: file.name,
+          files: displayFiles.map((displayFile, idx) => ({
+            name: displayFile.name,
+            processedName: files[idx]?.name,
             progress: 100,
-            status: uploadResults.some((r) => r.originalName === file.name)
+            status: uploadResults.some((r) => r.originalName === files[idx]?.name)
               ? "complete"
               : "failed",
           })),
           overallProgress: 100,
           statusMessage: "Upload complete!",
+          determinate: true,
         });
 
         // Update progress to creating-sorter phase before calling onSuccess
         updateProgress({
           phase: "creating-sorter",
-          files: files.map((file) => ({
-            name: file.name,
+          files: displayFiles.map((displayFile, index) => ({
+            name: displayFile.name,
+            processedName: files[index]?.name,
             progress: 100,
             status: "complete",
           })),
           overallProgress: 95,
           statusMessage: "Creating sorter...",
+          determinate: false,
         });
 
         setState((prev) => ({
