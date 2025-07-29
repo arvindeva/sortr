@@ -52,6 +52,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
+import { generateUniqueId, addSuffixToFileName } from "@/lib/utils";
 import CoverImageUpload from "@/components/cover-image-upload";
 import { useDirectUpload } from "@/hooks/use-direct-upload";
 import { UploadProgressDialog } from "@/components/upload-progress-dialog";
@@ -776,7 +777,15 @@ export default function CreateSorterForm() {
           .map((data) => data.file);
       }
 
-      filesToUpload.push(...actualImageFiles);
+      // CRITICAL FIX: Add unique suffixes to each file for proper correlation
+      // This ensures each file can be uniquely identified during processing
+      const filesWithUniqueSuffixes = actualImageFiles.map((file) => {
+        const uniqueId = generateUniqueId();
+        const newFileName = addSuffixToFileName(file.name, uniqueId);
+        return new File([file], newFileName, { type: file.type });
+      });
+
+      filesToUpload.push(...filesWithUniqueSuffixes);
 
       // Get group cover files (only for grouped mode) with special prefix
       if (data.useGroups) {

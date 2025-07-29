@@ -6,6 +6,58 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Generate a unique 6-character alphanumeric ID
+ * @returns A 6-character unique identifier (e.g., "a1b2c3")
+ */
+export function generateUniqueId(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+/**
+ * Add unique suffix to file name for correlation tracking
+ * @param fileName Original file name (e.g., "image.png")
+ * @param uniqueId Unique identifier to add
+ * @returns Modified file name (e.g., "image-a1b2c3.png")
+ */
+export function addSuffixToFileName(fileName: string, uniqueId: string): string {
+  const lastDotIndex = fileName.lastIndexOf('.');
+  if (lastDotIndex === -1) {
+    // No extension
+    return `${fileName}-${uniqueId}`;
+  }
+  
+  const nameWithoutExt = fileName.substring(0, lastDotIndex);
+  const extension = fileName.substring(lastDotIndex);
+  return `${nameWithoutExt}-${uniqueId}${extension}`;
+}
+
+/**
+ * Extract unique ID from a file name with suffix
+ * @param fileName File name with suffix (e.g., "image-a1b2c3.png")
+ * @returns The unique ID (e.g., "a1b2c3") or null if not found
+ */
+export function extractIdFromFileName(fileName: string): string | null {
+  // Match pattern: -[6 alphanumeric chars] before file extension or end of string
+  const match = fileName.match(/-([a-z0-9]{6})(?:\.[^.]+)?$/);
+  return match ? match[1] : null;
+}
+
+/**
+ * Remove unique ID suffix from file name to get original name
+ * @param fileName File name with suffix (e.g., "image-a1b2c3.png")
+ * @returns Original file name (e.g., "image.png")
+ */
+export function removeIdFromFileName(fileName: string): string {
+  // Remove pattern: -[6 alphanumeric chars] before file extension
+  return fileName.replace(/-[a-z0-9]{6}(?=\.[^.]+$|$)/, '');
+}
+
+/**
  * Generate a URL-friendly slug from a string
  * @param text The text to convert to a slug
  * @returns A URL-friendly slug

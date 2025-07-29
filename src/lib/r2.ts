@@ -313,3 +313,129 @@ export async function cleanupSorterVersion(
     return { deleted, preserved };
   }
 }
+
+/**
+ * Utility function to chunk an array into smaller batches
+ */
+function chunkArray<T>(array: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+}
+
+/**
+ * Copy a single R2 object (internal utility for parallel operations)
+ */
+async function copyR2Object(sourceKey: string, destKey: string): Promise<void> {
+  try {
+    const { GetObjectCommand, PutObjectCommand } = await import(
+      "@aws-sdk/client-s3"
+    );
+
+    // Get the object from the source location
+    const sourceObject = await r2Client.send(
+      new GetObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: sourceKey,
+      }),
+    );
+
+    if (!sourceObject.Body) {
+      throw new Error(`Source object not found: ${sourceKey}`);
+    }
+
+    // Convert the body to a buffer
+    const bodyBytes = await sourceObject.Body.transformToByteArray();
+
+    // Upload to the destination location (no processing)
+    await r2Client.send(
+      new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: destKey,
+        Body: bodyBytes,
+        ContentType: sourceObject.ContentType, // Preserve original content type
+        CacheControl: "public, max-age=31536000", // 1 year cache
+      }),
+    );
+  } catch (error) {
+    console.error(
+      `Failed to copy file from ${sourceKey} to ${destKey}:`,
+      error,
+    );
+    throw error;
+  }
+}
+
+/**
+ * Copy multiple R2 objects in parallel with concurrency limiting
+ */
+export async function copyR2ObjectsInParallel(
+  operations: Array<{ sourceKey: string; destKey: string }>,
+  concurrency = 10
+): Promise<Array<{ success: boolean; sourceKey: string; destKey: string; error?: string }>> {
+  if (operations.length === 0) {
+    return [];
+  }
+
+  console.log(`Starting parallel R2 copy of ${operations.length} objects with concurrency ${concurrency}`);
+  const startTime = Date.now();
+
+  const results: Array<{ success: boolean; sourceKey: string; destKey: string; error?: string }> = [];
+  
+  // Process operations in batches to control concurrency
+  const batches = chunkArray(operations, concurrency);
+  
+  for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+    const batch = batches[batchIndex];
+    console.log(`Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} operations)`);
+    
+    // Execute all operations in this batch in parallel
+    const batchPromises = batch.map(async (operation) => {
+      try {
+        await copyR2Object(operation.sourceKey, operation.destKey);
+        return {
+          success: true,
+          sourceKey: operation.sourceKey,
+          destKey: operation.destKey,
+        };
+      } catch (error) {
+        console.error(`Failed to copy ${operation.sourceKey} -> ${operation.destKey}:`, error);
+        return {
+          success: false,
+          sourceKey: operation.sourceKey,
+          destKey: operation.destKey,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    });
+    
+    // Wait for all operations in this batch to complete
+    const batchResults = await Promise.allSettled(batchPromises);
+    
+    // Extract results from Promise.allSettled
+    for (const result of batchResults) {
+      if (result.status === 'fulfilled') {
+        results.push(result.value);
+      } else {
+        // This shouldn't happen since we're catching errors in the individual promises
+        console.error('Unexpected batch promise rejection:', result.reason);
+        results.push({
+          success: false,
+          sourceKey: 'unknown',
+          destKey: 'unknown',
+          error: 'Batch promise rejection',
+        });
+      }
+    }
+  }
+  
+  const duration = Date.now() - startTime;
+  const successCount = results.filter(r => r.success).length;
+  const failureCount = results.length - successCount;
+  
+  console.log(`Parallel R2 copy completed in ${duration}ms: ${successCount} success, ${failureCount} failures`);
+  
+  return results;
+}

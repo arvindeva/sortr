@@ -197,18 +197,30 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
 
         const uploadResults: UploadedFile[] = [];
 
-        // Group upload URLs by original file
-        const urlsByOriginalFile = new Map<string, typeof tokenData.uploadUrls>();
-        tokenData.uploadUrls.forEach(url => {
-          const existing = urlsByOriginalFile.get(url.originalName) || [];
-          existing.push(url);
-          urlsByOriginalFile.set(url.originalName, existing);
-        });
+        // Process upload URLs sequentially to maintain 1:1 correlation with original files
+        // Each original file should have exactly its own upload URLs (thumbnail + full for items, or single for covers)
+        let urlIndex = 0;
 
         for (let i = 0; i < files.length; i++) {
           const originalFile = files[i];
           const processedFile = processedFiles[i];
-          const uploadUrls = urlsByOriginalFile.get(originalFile.name) || [];
+          
+          // Determine how many URLs this file should have based on type
+          // Items get 2 URLs (thumbnail + full), covers/group-covers get 1 URL
+          const isItemFile = !originalFile.name.toLowerCase().startsWith('cover-') && 
+                           !originalFile.name.toLowerCase().startsWith('group-cover-');
+          const expectedUrlCount = isItemFile ? 2 : 1;
+          
+          // Get exactly the URLs for this file
+          const uploadUrls = tokenData.uploadUrls.slice(urlIndex, urlIndex + expectedUrlCount);
+          urlIndex += expectedUrlCount;
+          
+          // Validate that we have the expected number of URLs
+          if (uploadUrls.length !== expectedUrlCount) {
+            throw new Error(
+              `Expected ${expectedUrlCount} upload URLs for ${originalFile.name}, but got ${uploadUrls.length}`
+            );
+          }
 
           // Update this file to uploading status
           updateProgress({
