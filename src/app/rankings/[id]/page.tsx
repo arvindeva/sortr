@@ -337,8 +337,65 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
 
   const { result, sorter, selectedGroups, totalGroups, isOwner } = data;
 
+  // JSON-LD structured data for rankings
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Review",
+    itemReviewed: {
+      "@type": "Survey",
+      name: sorter.title,
+      description: sorter.description || `Rank and sort items in "${sorter.title}"`,
+      ...(sorter.slug && { url: `${process.env.NEXTAUTH_URL}/sorter/${sorter.slug}` }),
+      about: sorter.category || "Ranking",
+      creator: {
+        "@type": "Person",
+        name: sorter.creatorUsername || "Unknown User",
+      },
+      interactionStatistic: [
+        {
+          "@type": "InteractionCounter",
+          interactionType: "https://schema.org/ViewAction",
+          userInteractionCount: sorter.viewCount,
+        },
+        {
+          "@type": "InteractionCounter",
+          interactionType: "https://schema.org/CompleteAction",
+          userInteractionCount: sorter.completionCount,
+        },
+      ],
+    },
+    author: {
+      "@type": "Person",
+      name: result.username || "Anonymous",
+    },
+    dateCreated: result.createdAt.toISOString(),
+    name: `${sorter.title} Rankings by ${result.username}`,
+    description: `Personalized ranking of ${sorter.title} by ${result.username}. View the complete ranked list of items.`,
+    url: `${process.env.NEXTAUTH_URL}/rankings/${result.id}`,
+    mainEntity: {
+      "@type": "ItemList",
+      name: `${sorter.title} Rankings`,
+      description: `Ranked list of items from ${sorter.title}`,
+      numberOfItems: result.rankings.length,
+      itemListElement: result.rankings.slice(0, 10).map((item, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: item.title,
+        ...(item.imageUrl && { image: item.imageUrl }),
+      })),
+    },
+    ...(selectedGroups && selectedGroups.length > 0 && {
+      about: selectedGroups.map(group => group.name).join(", "),
+    }),
+  };
+
   return (
-    <div className="container mx-auto max-w-6xl overflow-hidden px-2 py-2 md:px-4 md:py-8">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="container mx-auto max-w-6xl overflow-hidden px-2 py-2 md:px-4 md:py-8">
       {/* Header */}
       <section className="mb-3">
         <div className="flex items-center space-x-3 py-4 md:space-x-6">
@@ -692,5 +749,6 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         </div>
       )}
     </div>
+    </>
   );
 }
