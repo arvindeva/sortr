@@ -43,9 +43,9 @@ export function SorterCard({ sorter, className }: SorterCardProps) {
         </div>
 
         {/* Title Overlay */}
-        <div className="bg-main absolute right-0 bottom-0 left-0 p-3">
-          <div className="flex h-8 items-center justify-center">
-            <h3 className="text-background dark:text-foreground line-clamp-2 text-center text-sm leading-tight font-semibold">
+        <div className="bg-main absolute right-0 bottom-0 left-0 p-1.5 sm:p-3">
+          <div className="flex h-6 sm:h-8 items-center justify-center">
+            <h3 className="text-background dark:text-foreground line-clamp-2 text-center text-xs sm:text-sm leading-tight font-semibold">
               {sorter.title}
             </h3>
           </div>
