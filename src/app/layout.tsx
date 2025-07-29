@@ -15,9 +15,10 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || "https://sortr.dev"),
-  title: "sortr - Create and Share Ranked Lists",
-  description:
-    "Create and share ranked lists for anything through pairwise comparison. Build custom rankings, sort items by preference, and discover popular sorters across movies, music, games, and more.",
+  title: {
+    template: "%s | sortr",
+    default: "sortr - Create a Sorter for Anything",
+  },
   keywords: [
     "ranking",
     "sorter",
@@ -40,28 +41,6 @@ export const metadata: Metadata = {
     ],
   },
   manifest: "/site.webmanifest",
-  openGraph: {
-    title: "sortr - Create and Share Ranked Lists",
-    description:
-      "Create and share ranked lists for anything through pairwise comparison. Build custom rankings, sort items by preference, and discover popular sorters.",
-    type: "website",
-    siteName: "sortr",
-    images: [
-      {
-        url: "/og-home.png", // We'll create this later
-        width: 1200,
-        height: 630,
-        alt: "sortr - Create and share ranked lists",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "sortr - Create and Share Ranked Lists",
-    description:
-      "Create and share ranked lists for anything through pairwise comparison. Build custom rankings and discover popular sorters.",
-    images: ["/og-home.png"],
-  },
 };
 
 export default function RootLayout({
