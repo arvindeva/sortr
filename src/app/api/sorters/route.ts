@@ -98,6 +98,9 @@ async function handleUploadSessionRequest(body: any, userData: any) {
     const itemImageUrls = new Map<string, string>(); // itemTitle -> imageUrl (for database transaction)
     const copyOperations: Array<{ sourceKey: string; destKey: string; originalKey: string; isMainFile: boolean }> = []; // Track operations for parallel execution
     
+    // CRITICAL FIX: Declare coverImageUrl at function scope so it's accessible in the database transaction
+    let coverImageUrl: string | null = null;
+    
     try {
       // Create temporary sorterId for key generation (we'll use a deterministic approach)
       const tempSorterId = `temp-${Date.now()}`;
@@ -112,7 +115,6 @@ async function handleUploadSessionRequest(body: any, userData: any) {
       
       // Collect cover file operation
       const coverFile = uploadedFiles.find((f: UploadedFile) => f.type === "cover");
-      let coverImageUrl: string | null = null;
       if (coverFile) {
         console.log(`Processing cover file: ${coverFile.originalName}`);
         const newKey = convertSessionKeyToSorterKey(coverFile.key, tempSorterId, 1, "cover");
@@ -329,7 +331,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
           category: validatedData.category || null,
           useGroups: validatedData.useGroups || false,
           userId: userData.id,
-          coverImageUrl: null, // Will be updated if cover image exists
+          coverImageUrl, // Use pre-computed cover image URL from Phase 1
           version: 1, // Start with version 1
         })
         .returning();
@@ -339,11 +341,9 @@ async function handleUploadSessionRequest(body: any, userData: any) {
         sorterId: newSorter.id,
         title: newSorter.title,
         description: newSorter.description,
-        coverImageUrl: null, // Will be updated if cover image exists
+        coverImageUrl, // Use pre-computed cover image URL from Phase 1
         version: 1,
       });
-
-      let coverImageUrl: string | null = null;
 
       // Process uploaded files and convert session keys to sorter keys
       let currentItemIndex = 0;
@@ -443,24 +443,8 @@ async function handleUploadSessionRequest(body: any, userData: any) {
         }
       }
 
-      // Update sorter with cover image URL if exists (already processed in Phase 1)
-      if (coverImageUrl) {
-        await tx
-          .update(sorters)
-          .set({ coverImageUrl })
-          .where(eq(sorters.id, newSorter.id));
-
-        // Also update sorterHistory for version 1
-        await tx
-          .update(sorterHistory)
-          .set({ coverImageUrl })
-          .where(
-            and(
-              eq(sorterHistory.sorterId, newSorter.id),
-              eq(sorterHistory.version, 1),
-            ),
-          );
-      }
+      // Cover image URL is already set during sorter creation above
+      // No need to update it separately since it was pre-computed in Phase 1
 
       // Return data from transaction
       return {
