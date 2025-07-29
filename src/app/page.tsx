@@ -51,9 +51,10 @@ async function getSorterStats() {
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const sorterCount = await getSorterStats();
-    
+
     const title = "sortr - Create a Sorter for Anything";
-    const description = "Create and share a sorter for anything to rank items from best to worst.";
+    const description =
+      "Create and share a sorter for anything to rank items from best to worst.";
 
     return {
       title: {
@@ -87,10 +88,12 @@ export async function generateMetadata(): Promise<Metadata> {
       title: {
         absolute: "sortr - Create a Sorter for Anything",
       },
-      description: "Create and share a sorter for anything to rank items from best to worst.",
+      description:
+        "Create and share a sorter for anything to rank items from best to worst.",
       openGraph: {
         title: "sortr - Create a Sorter for Anything",
-        description: "Create and share a sorter for anything to rank items from best to worst.",
+        description:
+          "Create and share a sorter for anything to rank items from best to worst.",
         type: "website",
         siteName: "sortr",
         images: ["/og-home.png"],
@@ -98,7 +101,8 @@ export async function generateMetadata(): Promise<Metadata> {
       twitter: {
         card: "summary_large_image",
         title: "sortr - Create a Sorter for Anything",
-        description: "Create and share a sorter for anything to rank items from best to worst.",
+        description:
+          "Create and share a sorter for anything to rank items from best to worst.",
         images: ["/og-home.png"],
       },
     };
@@ -119,7 +123,8 @@ export default async function Home() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "sortr",
-    description: "Create and share a sorter for anything to rank items from best to worst",
+    description:
+      "Create and share a sorter for anything to rank items from best to worst",
     url: process.env.NEXTAUTH_URL || "https://sortr.dev",
     potentialAction: {
       "@type": "SearchAction",
@@ -167,50 +172,50 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-2 py-10 md:px-4">
-      <section className="mx-auto mb-10 flex max-w-xl justify-center">
-        <Box variant="primary" size="sm" className="text-center md:p-8">
-          <h1 className="text-4xl font-extrabold tracking-wide md:mb-4 md:text-7xl">
-            sortr
-          </h1>
-          <p className="text-xl font-bold md:text-2xl mb-2">
-            Create a Sorter for Anything
-          </p>
-          <p className="font-medium md:text-lg">
-            Inspired by{" "}
-            <Link
-              href={`https://execfera.github.io/charasort/`}
-              target="_blank"
-              className="text-blue-800 underline dark:text-blue-800"
-            >
-              charasort
-            </Link>
-            .
-          </p>
-        </Box>
-      </section>
-      <section className="w-full">
-        <Panel variant="primary">
-          <PanelHeader variant="primary">
-            <PanelTitle>Popular Sorters</PanelTitle>
-          </PanelHeader>
-          <PanelContent variant="primary" className="p-2 md:p-6">
-            {popularSorters.length === 0 ? (
-              <div className="text-center">
-                <Box variant="warning" size="md">
-                  <p className="font-medium">No sorters available yet.</p>
-                </Box>
-              </div>
-            ) : (
-              <SorterGrid>
-                {popularSorters.map((sorter) => (
-                  <SorterCard key={sorter.id} sorter={sorter} />
-                ))}
-              </SorterGrid>
-            )}
-          </PanelContent>
-        </Panel>
-      </section>
-    </main>
+        <section className="mx-auto mb-10 flex max-w-xl justify-center">
+          <Box variant="primary" size="sm" className="text-center md:p-8">
+            <h1 className="text-4xl font-extrabold tracking-wide md:mb-4 md:text-7xl">
+              sortr
+            </h1>
+            <p className="mb-2 text-lg font-bold md:mb-4 md:text-xl">
+              Create a Sorter for Anything
+            </p>
+            <p className="font-medium md:text-lg">
+              Inspired by{" "}
+              <Link
+                href={`https://execfera.github.io/charasort/`}
+                target="_blank"
+                className="text-blue-800 underline dark:text-blue-800"
+              >
+                charasort
+              </Link>
+              .
+            </p>
+          </Box>
+        </section>
+        <section className="w-full">
+          <Panel variant="primary">
+            <PanelHeader variant="primary">
+              <PanelTitle>Popular Sorters</PanelTitle>
+            </PanelHeader>
+            <PanelContent variant="primary" className="p-2 md:p-6">
+              {popularSorters.length === 0 ? (
+                <div className="text-center">
+                  <Box variant="warning" size="md">
+                    <p className="font-medium">No sorters available yet.</p>
+                  </Box>
+                </div>
+              ) : (
+                <SorterGrid>
+                  {popularSorters.map((sorter) => (
+                    <SorterCard key={sorter.id} sorter={sorter} />
+                  ))}
+                </SorterGrid>
+              )}
+            </PanelContent>
+          </Panel>
+        </section>
+      </main>
     </>
   );
 }
