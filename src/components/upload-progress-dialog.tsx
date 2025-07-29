@@ -10,6 +10,7 @@ import {
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Progress } from "@/components/ui/progress";
 import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
+import { Check } from "lucide-react";
 import type { UploadProgress } from "@/types/upload";
 
 interface UploadProgressDialogProps {
@@ -100,6 +101,17 @@ export function UploadProgressDialog({
             </div>
             {progress.determinate ? (
               <Progress value={progress.overallProgress} className="h-4" />
+            ) : progress.statusMessage === "Redirecting to sorter..." ? (
+              <div className="flex justify-center py-2">
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full border-2 border-main bg-main flex items-center justify-center animate-pulse">
+                    <Check 
+                      className="w-8 h-8 text-background animate-bounce" 
+                      strokeWidth={3}
+                    />
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="flex justify-center py-2">
                 <SortingBarsLoader />

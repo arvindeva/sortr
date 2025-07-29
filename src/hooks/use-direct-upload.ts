@@ -435,6 +435,20 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
           try {
             await options.onSuccess(uploadResults, abortController);
             
+            // After sorter creation is complete, show redirecting message
+            updateProgress({
+              phase: "complete",
+              files: displayFiles.map((displayFile, idx) => ({
+                name: displayFile.name,
+                processedName: files[idx]?.name,
+                progress: 100,
+                status: "complete",
+              })),
+              overallProgress: 100,
+              statusMessage: "Redirecting to sorter...",
+              determinate: false,
+            });
+            
             // Only set isUploading to false after successful completion
             setState((prev) => ({
               ...prev,

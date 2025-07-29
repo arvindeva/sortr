@@ -1743,25 +1743,6 @@ export default function CreateSorterForm() {
         }}
       />
 
-      {/* Fallback for non-upload operations */}
-      {showProgressDialog && !directUpload.isUploading && (
-        <Dialog open={showProgressDialog} onOpenChange={() => {}}>
-          <DialogContent preventClose={true} className="sm:max-w-md">
-            <VisuallyHidden.Root>
-              <DialogHeader>
-                <DialogTitle>Creating Sorter</DialogTitle>
-                <DialogDescription>
-                  Please wait while your sorter is being created
-                </DialogDescription>
-              </DialogHeader>
-            </VisuallyHidden.Root>
-            <div className="space-y-2 py-2 text-center">
-              <SortingBarsLoader size={60} />
-              <p className="text-lg font-semibold">{uploadStatus}</p>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 }
