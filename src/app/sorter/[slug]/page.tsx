@@ -453,9 +453,17 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                     {item.imageUrl || item.groupImageUrl ? (
                                       <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
                                         <img
-                                          src={item.imageUrl 
-                                            ? getImageUrl(item.imageUrl, 'thumbnail')
-                                            : getImageUrl(item.groupImageUrl, 'full')}
+                                          src={
+                                            item.imageUrl
+                                              ? getImageUrl(
+                                                  item.imageUrl,
+                                                  "thumbnail",
+                                                )
+                                              : getImageUrl(
+                                                  item.groupImageUrl,
+                                                  "full",
+                                                )
+                                          }
                                           alt={item.title}
                                           className="h-full w-full object-cover"
                                         />
@@ -503,9 +511,11 @@ export default async function SorterPage({ params }: SorterPageProps) {
                             {item.imageUrl || item.groupImageUrl ? (
                               <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
                                 <img
-                                  src={item.imageUrl 
-                                    ? getImageUrl(item.imageUrl, 'thumbnail')
-                                    : getImageUrl(item.groupImageUrl, 'full')}
+                                  src={
+                                    item.imageUrl
+                                      ? getImageUrl(item.imageUrl, "thumbnail")
+                                      : getImageUrl(item.groupImageUrl, "full")
+                                  }
                                   alt={item.title}
                                   className="h-full w-full object-cover"
                                 />
@@ -544,7 +554,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
               <PanelContent variant="primary" className="p-2 md:p-6">
                 {recentResults.length === 0 ? (
                   <Box variant="warning" size="md">
-                    <p className="font-medium italic">
+                    <p className="text-base font-medium italic">
                       No rankings yet. Be the first to complete this sorter!
                     </p>
                   </Box>
@@ -559,11 +569,13 @@ export default async function SorterPage({ params }: SorterPageProps) {
                         <Card className="bg-background text-foreground card cursor-pointer gap-2">
                           <CardHeader>
                             {/* Username only */}
-                            <span className={`font-bold ${
-                              result.username === "Anonymous" 
-                                ? "text-gray-600 dark:text-gray-400" 
-                                : ""
-                            }`}>
+                            <span
+                              className={`font-bold ${
+                                result.username === "Anonymous"
+                                  ? "text-gray-600 dark:text-gray-400"
+                                  : ""
+                              }`}
+                            >
                               {result.username}
                             </span>
                           </CardHeader>
@@ -579,9 +591,17 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                     {item.imageUrl || item.groupImageUrl ? (
                                       <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
                                         <img
-                                          src={item.imageUrl 
-                                            ? getImageUrl(item.imageUrl, 'thumbnail')
-                                            : getImageUrl(item.groupImageUrl, 'full')}
+                                          src={
+                                            item.imageUrl
+                                              ? getImageUrl(
+                                                  item.imageUrl,
+                                                  "thumbnail",
+                                                )
+                                              : getImageUrl(
+                                                  item.groupImageUrl,
+                                                  "full",
+                                                )
+                                          }
                                           alt={item.title}
                                           className="h-full w-full object-cover"
                                         />

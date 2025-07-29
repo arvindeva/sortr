@@ -78,10 +78,10 @@ export async function POST(request: NextRequest) {
 
     // Generate pre-signed URLs for each file (with dual sizes for items)
     const uploadUrls: SignedUploadUrl[] = [];
-    
+
     for (let index = 0; index < validatedData.files.length; index++) {
       const file = validatedData.files[index];
-      
+
       // Determine file type based on position and naming patterns
       const fileType = determineFileType(
         file.name,
@@ -89,11 +89,11 @@ export async function POST(request: NextRequest) {
         validatedData.files.length,
       );
 
-      if (fileType === 'item') {
+      if (fileType === "item") {
         // Generate both thumbnail and full size URLs for items
         const sizes = [
-          { suffix: '-thumb', size: 'thumbnail' as const },
-          { suffix: '', size: 'full' as const },
+          { suffix: "-thumb", size: "thumbnail" as const },
+          { suffix: "", size: "full" as const },
         ];
 
         for (const sizeConfig of sizes) {

@@ -84,12 +84,12 @@ export default async function UserProfilePage({
   params,
 }: UserProfilePageProps) {
   const { username } = await params;
-  
+
   // Handle anonymous user case
   if (username === "Anonymous" || username === "Unknown User") {
     notFound();
   }
-  
+
   const userData = await getUserByUsername(username);
 
   if (!userData) {
@@ -169,8 +169,8 @@ export default async function UserProfilePage({
           <PanelContent variant="primary" className="p-2 md:p-6">
             {userResults.length === 0 ? (
               <div className="text-center">
-                <Box variant="warning" size="lg">
-                  <p className="mb-4 text-lg font-medium">No rankings yet.</p>
+                <Box variant="warning" size="md">
+                  <p className="mb-4 font-medium">No rankings yet.</p>
                   <p className="font-medium">
                     Complete some sorting sessions to see rankings!
                   </p>
@@ -215,7 +215,10 @@ export default async function UserProfilePage({
                                   {item.imageUrl ? (
                                     <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
                                       <img
-                                        src={getImageUrl(item.imageUrl, 'thumbnail')}
+                                        src={getImageUrl(
+                                          item.imageUrl,
+                                          "thumbnail",
+                                        )}
                                         alt={item.title}
                                         className="h-full w-full object-cover"
                                       />

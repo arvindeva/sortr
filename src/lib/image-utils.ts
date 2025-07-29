@@ -8,16 +8,19 @@
  * @param size - The desired size ('thumbnail' for 64px, 'full' for 300px)
  * @returns The appropriate image URL
  */
-export function getImageUrl(baseUrl: string | null | undefined, size: 'thumbnail' | 'full'): string {
+export function getImageUrl(
+  baseUrl: string | null | undefined,
+  size: "thumbnail" | "full",
+): string {
   // Handle null/undefined URLs
   if (!baseUrl) {
-    return '/placeholder.jpg'; // You can customize this placeholder path
+    return "/placeholder.jpg"; // You can customize this placeholder path
   }
 
-  if (size === 'thumbnail') {
+  if (size === "thumbnail") {
     // Generate thumbnail URL by adding -thumb suffix and ensuring .jpg extension
     // All images are stored as JPEG regardless of original format
-    return baseUrl.replace(/\.([^.]+)$/, '-thumb.jpg');
+    return baseUrl.replace(/\.([^.]+)$/, "-thumb.jpg");
   }
 
   // Full size is the base URL (keep original extension for backward compatibility)
@@ -32,7 +35,7 @@ export function getImageUrl(baseUrl: string | null | undefined, size: 'thumbnail
  */
 export function hasThumbSupport(baseUrl: string | null | undefined): boolean {
   if (!baseUrl) return false;
-  
+
   // New images will follow the pattern, legacy images won't have -thumb variants
   // For now, we'll assume all images have thumbnail support and gracefully fallback
   return true;
@@ -44,7 +47,7 @@ export function hasThumbSupport(baseUrl: string | null | undefined): boolean {
  * @returns The fallback URL (same as base URL for now)
  */
 export function getFallbackUrl(baseUrl: string | null | undefined): string {
-  return baseUrl || '/placeholder.jpg';
+  return baseUrl || "/placeholder.jpg";
 }
 
 /**
@@ -53,11 +56,11 @@ export function getFallbackUrl(baseUrl: string | null | undefined): string {
  * @returns srcSet string for responsive images
  */
 export function generateSrcSet(baseUrl: string | null | undefined): string {
-  if (!baseUrl) return '';
-  
-  const thumbnailUrl = getImageUrl(baseUrl, 'thumbnail');
-  const fullUrl = getImageUrl(baseUrl, 'full');
-  
+  if (!baseUrl) return "";
+
+  const thumbnailUrl = getImageUrl(baseUrl, "thumbnail");
+  const fullUrl = getImageUrl(baseUrl, "full");
+
   return `${thumbnailUrl} 64w, ${fullUrl} 300w`;
 }
 
@@ -66,15 +69,17 @@ export function generateSrcSet(baseUrl: string | null | undefined): string {
  * @param displaySize - The display context
  * @returns sizes attribute value
  */
-export function getSizesAttribute(displaySize: 'small' | 'medium' | 'large'): string {
+export function getSizesAttribute(
+  displaySize: "small" | "medium" | "large",
+): string {
   switch (displaySize) {
-    case 'small':
-      return '(max-width: 768px) 24px, 40px'; // Mobile: 24px, Desktop: 40px
-    case 'medium':
-      return '(max-width: 768px) 48px, 64px'; // Mobile: 48px, Desktop: 64px
-    case 'large':
-      return '(max-width: 768px) 200px, 300px'; // Mobile: 200px, Desktop: 300px
+    case "small":
+      return "(max-width: 768px) 24px, 40px"; // Mobile: 24px, Desktop: 40px
+    case "medium":
+      return "(max-width: 768px) 48px, 64px"; // Mobile: 48px, Desktop: 64px
+    case "large":
+      return "(max-width: 768px) 200px, 300px"; // Mobile: 200px, Desktop: 300px
     default:
-      return '64px';
+      return "64px";
   }
 }

@@ -29,9 +29,9 @@ export function UploadProgressDialog({
   const getPhaseTitle = (phase: UploadProgress["phase"]) => {
     switch (phase) {
       case "requesting-tokens":
-        return "Preparing upload...";
+        return "Creating sorter...";
       case "uploading-files":
-        return "Uploading files...";
+        return "Uploading Images...";
       case "creating-sorter":
         return "Creating sorter...";
       case "complete":
@@ -50,9 +50,9 @@ export function UploadProgressDialog({
           (f) => f.status === "complete",
         ).length;
         const totalFiles = progress.files.length;
-        return `${completedFiles}/${totalFiles} files uploaded`;
+        return `${completedFiles}/${totalFiles} images uploaded`;
       case "creating-sorter":
-        return "Saving sorter data";
+        return "Processing sorter...";
       case "complete":
         return "All files uploaded successfully!";
       default:
@@ -76,7 +76,7 @@ export function UploadProgressDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
+      <DialogContent
         className="sm:max-w-md"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
@@ -104,9 +104,9 @@ export function UploadProgressDialog({
             ) : progress.statusMessage === "Redirecting to sorter..." ? (
               <div className="flex justify-center py-2">
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-full border-2 border-main bg-main flex items-center justify-center animate-pulse">
-                    <Check 
-                      className="w-8 h-8 text-background animate-bounce" 
+                  <div className="border-main bg-main flex h-12 w-12 animate-pulse items-center justify-center rounded-full border-2">
+                    <Check
+                      className="text-background h-8 w-8 animate-bounce"
                       strokeWidth={3}
                     />
                   </div>

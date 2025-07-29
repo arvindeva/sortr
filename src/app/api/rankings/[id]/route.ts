@@ -6,7 +6,7 @@ import { eq, and } from "drizzle-orm";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Check authentication
@@ -48,23 +48,22 @@ export async function DELETE(
     if (ranking[0].userId !== currentUserId) {
       return NextResponse.json(
         { error: "You can only delete your own rankings" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // Delete the ranking (hard deletion as requested)
     await db.delete(sortingResults).where(eq(sortingResults.id, id));
 
-    return NextResponse.json({ 
-      success: true, 
-      message: "Ranking deleted successfully" 
+    return NextResponse.json({
+      success: true,
+      message: "Ranking deleted successfully",
     });
-    
   } catch (error) {
     console.error("Error deleting ranking:", error);
     return NextResponse.json(
       { error: "Failed to delete ranking" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

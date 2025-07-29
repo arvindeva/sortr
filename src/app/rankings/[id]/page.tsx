@@ -140,14 +140,14 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
   // Get current user session to check ownership
   const session = await getServerSession();
   let currentUserId: string | null = null;
-  
+
   if (session?.user?.email) {
     const currentUserData = await db
       .select({ id: user.id })
       .from(user)
       .where(eq(user.email, session.user.email))
       .limit(1);
-    
+
     if (currentUserData.length > 0) {
       currentUserId = currentUserData[0].id;
     }
