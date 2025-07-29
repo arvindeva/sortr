@@ -104,7 +104,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
       
       // Debug: Log the uploaded files we're starting with
       console.log(`Starting file collection with ${uploadedFiles.length} uploaded files:`);
-      const filesByType = uploadedFiles.reduce((acc, file) => {
+      const filesByType = uploadedFiles.reduce((acc: Record<string, number>, file: UploadedFile) => {
         acc[file.type] = (acc[file.type] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
@@ -171,7 +171,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
     // Each file now has a unique suffix (e.g., "alice-a1b2c3.png") for proper correlation
     const filesByUniqueId = new Map<string, UploadedFile[]>();
     
-    itemFiles.forEach(file => {
+    itemFiles.forEach((file: UploadedFile) => {
       const uniqueId = extractIdFromFileName(file.originalName);
       if (uniqueId) {
         if (!filesByUniqueId.has(uniqueId)) {
