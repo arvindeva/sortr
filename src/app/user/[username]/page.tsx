@@ -115,8 +115,8 @@ export async function generateMetadata({
       .from(sortingResults)
       .where(eq(sortingResults.userId, userData.id));
 
-    const title = `${username}'s Profile | sortr`;
-    const description = `View ${username}'s profile on sortr. ${sorterCount.count} sorters created, ${rankingCount.count} rankings completed. Discover their favorite rankings and sorting activities.`;
+    const title = `${username}'s Profile`;
+    const description = `View ${username}'s sorters on sortr. ${sorterCount.count} sorters created, ${rankingCount.count} rankings completed. Create and share a sorter for anything to rank items from best to worst.`;
 
     const userSince = new Date(
       userData.emailVerified || new Date(),
@@ -152,8 +152,8 @@ export async function generateMetadata({
   } catch (error) {
     console.error("Error generating user metadata:", error);
     return {
-      title: `${username}'s Profile | sortr`,
-      description: `View ${username}'s profile on sortr. Discover their created sorters and ranking activities.`,
+      title: `${username}'s Profile`,
+      description: `View ${username}'s sorters on sortr. Create and share a sorter for anything to rank items from best to worst.`,
     };
   }
 }
@@ -207,11 +207,11 @@ export default async function UserProfilePage({
     name: userData.username || "Unknown User",
     url: `${process.env.NEXTAUTH_URL || "https://sortr.dev"}/user/${userData.username}`,
     ...(currentImage && { image: currentImage }),
-    description: `${userData.username}'s profile on sortr. Created ${userSorters.length} sorters and completed ${userResults.length} rankings.`,
+    description: `${userData.username}'s sorters on sortr. Created ${userSorters.length} sorters and completed ${userResults.length} rankings.`,
     mainEntityOfPage: {
       "@type": "ProfilePage",
       name: `${userData.username}'s Profile`,
-      description: `View ${userData.username}'s created sorters and rankings on sortr`,
+      description: `View ${userData.username}'s sorters on sortr`,
     },
     ...(userSorters.length > 0 && {
       hasOccupation: {
@@ -219,7 +219,7 @@ export default async function UserProfilePage({
         hasOccupation: {
           "@type": "Occupation",
           name: "Content Creator",
-          description: "Creates ranking sorters on sortr",
+          description: "Creates sorters on sortr",
         },
       },
     }),

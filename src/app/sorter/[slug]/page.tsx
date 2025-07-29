@@ -90,15 +90,15 @@ export async function generateMetadata({
   const { sorter, items, groups } = data;
 
   // Create dynamic title
-  const title = `${sorter.title} | sortr`;
+  const title = sorter.title;
 
   // Create description
-  let description = `Rank and sort items in "${sorter.title}"`;
+  let description = `Sorter for "${sorter.title}"`;
   if (sorter.description) {
     description = sorter.description;
   }
   if (sorter.category) {
-    description += ` - ${sorter.category} ranking on sortr`;
+    description += ` - ${sorter.category} sorter on sortr`;
   }
 
   // Count total items
@@ -106,7 +106,7 @@ export async function generateMetadata({
     ? groups.reduce((total, group) => total + group.items.length, 0)
     : items.length;
 
-  const fullDescription = `${description}. Sort ${itemCount} items through pairwise comparison and create your personalized ranking.`;
+  const fullDescription = `${description}. Sort ${itemCount} items through pairwise comparison and create your personalized results.`;
 
   return {
     title,
@@ -234,7 +234,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
     "@type": "Survey",
     name: sorter.title,
     description:
-      sorter.description || `Rank and sort items in "${sorter.title}"`,
+      sorter.description || `Sorter for "${sorter.title}"`,
     url: `${process.env.NEXTAUTH_URL}/sorter/${sorter.slug}`,
     dateCreated: sorter.createdAt,
     creator: {

@@ -51,14 +51,15 @@ async function getSorterStats() {
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const sorterCount = await getSorterStats();
-    
-    const title = "sortr - Create and Share Ranked Lists";
-    const description = sorterCount > 0 
-      ? `Create and share ranked lists through pairwise comparison. Join ${sorterCount}+ sorters and discover popular rankings across movies, music, games, and more.`
-      : "Create and share ranked lists through pairwise comparison. Build custom rankings, sort items by preference, and discover popular sorters.";
+
+    const title = "sortr - Create a Sorter for Anything";
+    const description =
+      "Create and share a sorter for anything to rank items from best to worst.";
 
     return {
-      title,
+      title: {
+        absolute: title, // Use absolute to override the template
+      },
       description,
       openGraph: {
         title,
@@ -84,8 +85,26 @@ export async function generateMetadata(): Promise<Metadata> {
   } catch (error) {
     console.error("Error generating homepage metadata:", error);
     return {
-      title: "sortr - Create and Share Ranked Lists",
-      description: "Create and share ranked lists through pairwise comparison. Build custom rankings, sort items by preference, and discover popular sorters.",
+      title: {
+        absolute: "sortr - Create a Sorter for Anything",
+      },
+      description:
+        "Create and share a sorter for anything to rank items from best to worst.",
+      openGraph: {
+        title: "sortr - Create a Sorter for Anything",
+        description:
+          "Create and share a sorter for anything to rank items from best to worst.",
+        type: "website",
+        siteName: "sortr",
+        images: ["/og-home.png"],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: "sortr - Create a Sorter for Anything",
+        description:
+          "Create and share a sorter for anything to rank items from best to worst.",
+        images: ["/og-home.png"],
+      },
     };
   }
 }
@@ -104,7 +123,8 @@ export default async function Home() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "sortr",
-    description: "Create and share ranked lists through pairwise comparison",
+    description:
+      "Create and share a sorter for anything to rank items from best to worst",
     url: process.env.NEXTAUTH_URL || "https://sortr.dev",
     potentialAction: {
       "@type": "SearchAction",
@@ -117,7 +137,7 @@ export default async function Home() {
     mainEntity: {
       "@type": "ItemList",
       name: "Popular Sorters",
-      description: "Most popular ranking sorters on sortr",
+      description: "Most popular sorters on sortr",
       numberOfItems: popularSorters.length,
       itemListElement: popularSorters.slice(0, 5).map((sorter, index) => ({
         "@type": "ListItem",
@@ -125,7 +145,7 @@ export default async function Home() {
         item: {
           "@type": "Survey",
           name: sorter.title,
-          description: `Ranking sorter for ${sorter.title}`,
+          description: `Sorter for ${sorter.title}`,
           url: `${process.env.NEXTAUTH_URL || "https://sortr.dev"}/sorter/${sorter.slug}`,
           about: sorter.category || "Ranking",
           interactionStatistic: [
@@ -152,47 +172,50 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-2 py-10 md:px-4">
-      <section className="mx-auto mb-10 flex max-w-xl justify-center">
-        <Box variant="primary" size="sm" className="text-center md:p-8">
-          <h1 className="text-4xl font-extrabold tracking-wide md:mb-4 md:text-7xl">
-            sortr
-          </h1>
-          <p className="font-medium md:text-lg">
-            Create and share ranked lists for anything. <br></br>Inspired by{" "}
-            <Link
-              href={`https://execfera.github.io/charasort/`}
-              target="_blank"
-              className="text-blue-800 underline dark:text-blue-800"
-            >
-              charasort
-            </Link>
-            .
-          </p>
-        </Box>
-      </section>
-      <section className="w-full">
-        <Panel variant="primary">
-          <PanelHeader variant="primary">
-            <PanelTitle>Popular Sorters</PanelTitle>
-          </PanelHeader>
-          <PanelContent variant="primary" className="p-2 md:p-6">
-            {popularSorters.length === 0 ? (
-              <div className="text-center">
-                <Box variant="warning" size="md">
-                  <p className="font-medium">No sorters available yet.</p>
-                </Box>
-              </div>
-            ) : (
-              <SorterGrid>
-                {popularSorters.map((sorter) => (
-                  <SorterCard key={sorter.id} sorter={sorter} />
-                ))}
-              </SorterGrid>
-            )}
-          </PanelContent>
-        </Panel>
-      </section>
-    </main>
+        <section className="mx-auto mb-10 flex max-w-xl justify-center">
+          <Box variant="primary" size="sm" className="text-center md:p-8">
+            <h1 className="text-4xl font-extrabold tracking-wide md:mb-4 md:text-7xl">
+              sortr
+            </h1>
+            <p className="mb-2 text-lg font-bold md:mb-4 md:text-xl">
+              Create a Sorter for Anything
+            </p>
+            <p className="font-medium md:text-lg">
+              Inspired by{" "}
+              <Link
+                href={`https://execfera.github.io/charasort/`}
+                target="_blank"
+                className="text-blue-800 underline dark:text-blue-800"
+              >
+                charasort
+              </Link>
+              .
+            </p>
+          </Box>
+        </section>
+        <section className="w-full">
+          <Panel variant="primary">
+            <PanelHeader variant="primary">
+              <PanelTitle>Popular Sorters</PanelTitle>
+            </PanelHeader>
+            <PanelContent variant="primary" className="p-2 md:p-6">
+              {popularSorters.length === 0 ? (
+                <div className="text-center">
+                  <Box variant="warning" size="md">
+                    <p className="font-medium">No sorters available yet.</p>
+                  </Box>
+                </div>
+              ) : (
+                <SorterGrid>
+                  {popularSorters.map((sorter) => (
+                    <SorterCard key={sorter.id} sorter={sorter} />
+                  ))}
+                </SorterGrid>
+              )}
+            </PanelContent>
+          </Panel>
+        </section>
+      </main>
     </>
   );
 }

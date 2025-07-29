@@ -85,15 +85,15 @@ export async function generateMetadata({
 
     if (!data) {
       return {
-        title: "Rankings Not Found | sortr",
+        title: "Rankings Not Found",
         description: "The requested ranking could not be found.",
       };
     }
 
     const { result, sorter } = data;
 
-    // Create content-first title: "Sorter Title Rankings by Username | sortr"
-    const title = `${sorter.title} Rankings by ${result.username} | sortr`;
+    // Create content-first title: "Sorter Title Rankings by Username"
+    const title = `${sorter.title} Rankings by ${result.username}`;
 
     // Get top 3 items for description
     const top3 = result.rankings.slice(0, 3);
@@ -130,7 +130,7 @@ export async function generateMetadata({
   } catch (error) {
     console.error("Error generating metadata for rankings page:", error);
     return {
-      title: "Rankings | sortr",
+      title: "Rankings",
       description: "View rankings on sortr.",
     };
   }
@@ -344,7 +344,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
     itemReviewed: {
       "@type": "Survey",
       name: sorter.title,
-      description: sorter.description || `Rank and sort items in "${sorter.title}"`,
+      description: sorter.description || `Sorter for ${sorter.title}`,
       ...(sorter.slug && { url: `${process.env.NEXTAUTH_URL}/sorter/${sorter.slug}` }),
       about: sorter.category || "Ranking",
       creator: {
@@ -370,12 +370,12 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
     },
     dateCreated: result.createdAt.toISOString(),
     name: `${sorter.title} Rankings by ${result.username}`,
-    description: `Personalized ranking of ${sorter.title} by ${result.username}. View the complete ranked list of items.`,
+    description: `Personalized sorter results for ${sorter.title} by ${result.username}. View the complete ranked list of items.`,
     url: `${process.env.NEXTAUTH_URL}/rankings/${result.id}`,
     mainEntity: {
       "@type": "ItemList",
       name: `${sorter.title} Rankings`,
-      description: `Ranked list of items from ${sorter.title}`,
+      description: `Sorted list of items from ${sorter.title}`,
       numberOfItems: result.rankings.length,
       itemListElement: result.rankings.slice(0, 10).map((item, index) => ({
         "@type": "ListItem",
