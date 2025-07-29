@@ -1,27 +1,23 @@
 import React from "react";
+import { cn } from "@/lib/utils";
 
 interface SorterGridProps {
   children: React.ReactNode;
-  minCardWidth?: number;
-  gap?: string;
   className?: string;
 }
 
 export function SorterGrid({
   children,
-  minCardWidth = 200,
-  gap = "1rem",
   className = "",
 }: SorterGridProps) {
-  const gridStyle = {
-    display: "grid",
-    gridTemplateColumns: `repeat(auto-fill, minmax(${minCardWidth}px, 1fr))`,
-    gap: gap,
-    justifyContent: "center",
-  };
-
   return (
-    <div style={gridStyle} className={className}>
+    <div 
+      className={cn(
+        "grid gap-2 sm:gap-4 justify-center",
+        "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
+        className
+      )}
+    >
       {children}
     </div>
   );
