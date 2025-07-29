@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import { user, sorters, sortingResults } from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, count } from "drizzle-orm";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -80,16 +81,93 @@ async function getUserResults(userId: string) {
   return userResults;
 }
 
+export async function generateMetadata({
+  params,
+}: UserProfilePageProps): Promise<Metadata> {
+  const { username } = await params;
+
+  // Handle anonymous user case
+  if (username === "Anonymous" || username === "Unknown User") {
+    return {
+      title: "User Not Found | sortr",
+      description: "The requested user profile could not be found.",
+    };
+  }
+
+  try {
+    const userData = await getUserByUsername(username);
+
+    if (!userData) {
+      return {
+        title: "User Not Found | sortr",
+        description: "The requested user profile could not be found.",
+      };
+    }
+
+    // Get user stats
+    const [sorterCount] = await db
+      .select({ count: count() })
+      .from(sorters)
+      .where(and(eq(sorters.userId, userData.id), eq(sorters.deleted, false)));
+
+    const [rankingCount] = await db
+      .select({ count: count() })
+      .from(sortingResults)
+      .where(eq(sortingResults.userId, userData.id));
+
+    const title = `${username}'s Profile | sortr`;
+    const description = `View ${username}'s profile on sortr. ${sorterCount.count} sorters created, ${rankingCount.count} rankings completed. Discover their favorite rankings and sorting activities.`;
+
+    const userSince = new Date(
+      userData.emailVerified || new Date(),
+    ).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "profile",
+        siteName: "sortr",
+        images: [
+          {
+            url: "/og-user.png",
+            width: 1200,
+            height: 630,
+            alt: `${username}'s Profile on sortr`,
+          },
+        ],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: ["/og-user.png"],
+      },
+    };
+  } catch (error) {
+    console.error("Error generating user metadata:", error);
+    return {
+      title: `${username}'s Profile | sortr`,
+      description: `View ${username}'s profile on sortr. Discover their created sorters and ranking activities.`,
+    };
+  }
+}
+
 export default async function UserProfilePage({
   params,
 }: UserProfilePageProps) {
   const { username } = await params;
-  
+
   // Handle anonymous user case
   if (username === "Anonymous" || username === "Unknown User") {
     notFound();
   }
-  
+
   const userData = await getUserByUsername(username);
 
   if (!userData) {
@@ -122,8 +200,38 @@ export default async function UserProfilePage({
   // Use image URL directly from database
   const currentImage = userData.image;
 
+  // JSON-LD structured data for user profile
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: userData.username || "Unknown User",
+    url: `${process.env.NEXTAUTH_URL || "https://sortr.dev"}/user/${userData.username}`,
+    ...(currentImage && { image: currentImage }),
+    description: `${userData.username}'s profile on sortr. Created ${userSorters.length} sorters and completed ${userResults.length} rankings.`,
+    mainEntityOfPage: {
+      "@type": "ProfilePage",
+      name: `${userData.username}'s Profile`,
+      description: `View ${userData.username}'s created sorters and rankings on sortr`,
+    },
+    ...(userSorters.length > 0 && {
+      hasOccupation: {
+        "@type": "Role",
+        hasOccupation: {
+          "@type": "Occupation",
+          name: "Content Creator",
+          description: "Creates ranking sorters on sortr",
+        },
+      },
+    }),
+  };
+
   return (
-    <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
       {/* Profile Header */}
       <UserProfileHeader
         username={userData.username || ""}
@@ -169,8 +277,8 @@ export default async function UserProfilePage({
           <PanelContent variant="primary" className="p-2 md:p-6">
             {userResults.length === 0 ? (
               <div className="text-center">
-                <Box variant="warning" size="lg">
-                  <p className="mb-4 text-lg font-medium">No rankings yet.</p>
+                <Box variant="warning" size="md">
+                  <p className="mb-4 font-medium">No rankings yet.</p>
                   <p className="font-medium">
                     Complete some sorting sessions to see rankings!
                   </p>
@@ -215,7 +323,10 @@ export default async function UserProfilePage({
                                   {item.imageUrl ? (
                                     <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
                                       <img
-                                        src={getImageUrl(item.imageUrl, 'thumbnail')}
+                                        src={getImageUrl(
+                                          item.imageUrl,
+                                          "thumbnail",
+                                        )}
                                         alt={item.title}
                                         className="h-full w-full object-cover"
                                       />
@@ -248,5 +359,6 @@ export default async function UserProfilePage({
         </Panel>
       </section>
     </main>
+    </>
   );
 }

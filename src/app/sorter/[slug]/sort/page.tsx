@@ -106,10 +106,12 @@ function serializeChoices(
   });
 
   // Convert shuffled order to indexed format
-  const shuffledOrderIndexes = shuffledOrder.map(item => {
-    const index = itemToIndex.get(item.id);
-    return index !== undefined ? index : -1;
-  }).filter(index => index !== -1);
+  const shuffledOrderIndexes = shuffledOrder
+    .map((item) => {
+      const index = itemToIndex.get(item.id);
+      return index !== undefined ? index : -1;
+    })
+    .filter((index) => index !== -1);
 
   return {
     itemMap,
@@ -120,12 +122,16 @@ function serializeChoices(
 }
 
 // Convert indexed format back to UUID-based choices
-function deserializeChoices(serializedData: any, allItems: SortItem[]): {
+function deserializeChoices(
+  serializedData: any,
+  allItems: SortItem[],
+): {
   userChoices: Map<string, string>;
   stateHistory: any[];
   shuffledOrder: SortItem[];
 } {
-  const { itemMap, choices, historyChoices, shuffledOrderIndexes } = serializedData;
+  const { itemMap, choices, historyChoices, shuffledOrderIndexes } =
+    serializedData;
 
   // Reconstruct user choices map
   const userChoices = new Map<string, string>();
@@ -166,7 +172,7 @@ function deserializeChoices(serializedData: any, allItems: SortItem[]): {
       const itemId = itemMap[index];
       if (itemId) {
         // Find the full SortItem from allItems
-        const fullItem = allItems.find(item => item.id === itemId);
+        const fullItem = allItems.find((item) => item.id === itemId);
         if (fullItem) {
           shuffledOrder.push(fullItem);
         }
@@ -283,7 +289,8 @@ export default function SortPage() {
 
             // Handle new optimized format
             if (parsed.optimized) {
-              const { userChoices, stateHistory, shuffledOrder } = deserializeChoices(parsed, filteredItems);
+              const { userChoices, stateHistory, shuffledOrder } =
+                deserializeChoices(parsed, filteredItems);
               savedChoices = userChoices;
               savedStateHistory = stateHistory;
               if (shuffledOrder.length > 0) {

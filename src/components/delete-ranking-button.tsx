@@ -42,14 +42,13 @@ export function DeleteRankingButton({
       }
 
       toast.success("Ranking deleted successfully");
-      
+
       // Redirect to homepage
       router.push("/");
-      
     } catch (error) {
       console.error("Error deleting ranking:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete ranking"
+        error instanceof Error ? error.message : "Failed to delete ranking",
       );
       setIsDeleting(false);
     }
@@ -72,8 +71,8 @@ export function DeleteRankingButton({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button 
-            variant="neutral" 
+          <Button
+            variant="neutral"
             onClick={() => setIsOpen(false)}
             disabled={isDeleting}
           >

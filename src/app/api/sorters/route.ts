@@ -50,7 +50,6 @@ const MAX_ITEM_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_COVER_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const ALLOWED_ITEM_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-
 async function handleUploadSessionRequest(body: any, userData: any) {
   const { uploadSession: sessionId, uploadedFiles, ...sorterData } = body;
 
@@ -96,116 +95,238 @@ async function handleUploadSessionRequest(body: any, userData: any) {
     // Phase 1: Collect all R2 copy operations, then execute in parallel
     const fileUrlMappings = new Map<string, string>(); // originalKey -> publicUrl
     const itemImageUrls = new Map<string, string>(); // itemTitle -> imageUrl (for database transaction)
-    const copyOperations: Array<{ sourceKey: string; destKey: string; originalKey: string; isMainFile: boolean }> = []; // Track operations for parallel execution
-    
+    const copyOperations: Array<{
+      sourceKey: string;
+      destKey: string;
+      originalKey: string;
+      isMainFile: boolean;
+    }> = []; // Track operations for parallel execution
+
     // CRITICAL FIX: Declare coverImageUrl at function scope so it's accessible in the database transaction
     let coverImageUrl: string | null = null;
-    
+
     try {
       // Create temporary sorterId for key generation (we'll use a deterministic approach)
       const tempSorterId = `temp-${Date.now()}`;
-      
+
       // Debug: Log the uploaded files we're starting with
-      console.log(`Starting file collection with ${uploadedFiles.length} uploaded files:`);
-      const filesByType = uploadedFiles.reduce((acc: Record<string, number>, file: UploadedFile) => {
-        acc[file.type] = (acc[file.type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-      console.log('Files by type:', filesByType);
-      
+      console.log(
+        `Starting file collection with ${uploadedFiles.length} uploaded files:`,
+      );
+      const filesByType = uploadedFiles.reduce(
+        (acc: Record<string, number>, file: UploadedFile) => {
+          acc[file.type] = (acc[file.type] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+      console.log("Files by type:", filesByType);
+
       // Collect cover file operation
-      const coverFile = uploadedFiles.find((f: UploadedFile) => f.type === "cover");
+      const coverFile = uploadedFiles.find(
+        (f: UploadedFile) => f.type === "cover",
+      );
       if (coverFile) {
         console.log(`Processing cover file: ${coverFile.originalName}`);
-        const newKey = convertSessionKeyToSorterKey(coverFile.key, tempSorterId, 1, "cover");
+        const newKey = convertSessionKeyToSorterKey(
+          coverFile.key,
+          tempSorterId,
+          1,
+          "cover",
+        );
         copyOperations.push({
           sourceKey: coverFile.key,
           destKey: newKey,
           originalKey: coverFile.key,
-          isMainFile: true
+          isMainFile: true,
         });
         coverImageUrl = getR2PublicUrl(newKey);
         fileUrlMappings.set(coverFile.key, coverImageUrl);
-        console.log(`Added 1 cover operation. Total operations: ${copyOperations.length}`);
+        console.log(
+          `Added 1 cover operation. Total operations: ${copyOperations.length}`,
+        );
       }
 
-    // Collect group cover file operations
-    if (validatedData.useGroups && validatedData.groups) {
-      const groupCoverFiles = uploadedFiles.filter((f: UploadedFile) => f.type === "group-cover");
-      console.log(`Processing ${validatedData.groups.length} groups with ${groupCoverFiles.length} group cover files`);
-      
-      for (let groupIndex = 0; groupIndex < validatedData.groups.length; groupIndex++) {
-        const groupCoverFile = groupCoverFiles.find((file: UploadedFile) => {
-          const match = file.originalName.match(/^group-cover-(\d+)-/);
-          if (match) {
-            const fileGroupIndex = parseInt(match[1]);
-            return fileGroupIndex === groupIndex;
-          }
-          return false;
-        });
+      // Collect group cover file operations
+      if (validatedData.useGroups && validatedData.groups) {
+        const groupCoverFiles = uploadedFiles.filter(
+          (f: UploadedFile) => f.type === "group-cover",
+        );
+        console.log(
+          `Processing ${validatedData.groups.length} groups with ${groupCoverFiles.length} group cover files`,
+        );
 
-        if (groupCoverFile) {
-          console.log(`Processing group cover ${groupIndex}: ${groupCoverFile.originalName}`);
-          const newKey = convertSessionKeyToSorterKey(
-            groupCoverFile.key,
-            tempSorterId,
-            1,
-            `group-${groupIndex}-cover`,
-          );
-          copyOperations.push({
-            sourceKey: groupCoverFile.key,
-            destKey: newKey,
-            originalKey: groupCoverFile.key,
-            isMainFile: true
+        for (
+          let groupIndex = 0;
+          groupIndex < validatedData.groups.length;
+          groupIndex++
+        ) {
+          const groupCoverFile = groupCoverFiles.find((file: UploadedFile) => {
+            const match = file.originalName.match(/^group-cover-(\d+)-/);
+            if (match) {
+              const fileGroupIndex = parseInt(match[1]);
+              return fileGroupIndex === groupIndex;
+            }
+            return false;
           });
-          const groupCoverUrl = getR2PublicUrl(newKey);
-          fileUrlMappings.set(groupCoverFile.key, groupCoverUrl);
-          console.log(`Added 1 group cover operation. Total operations: ${copyOperations.length}`);
-        }
-      }
-    }
 
-    // Collect item file operations
-    const itemFiles = uploadedFiles.filter((f: UploadedFile) => f.type === "item");
-    console.log(`Processing ${itemFiles.length} item files`);
-    
-    // CRITICAL FIX: Group files by unique suffix instead of name-based matching
-    // Each file now has a unique suffix (e.g., "alice-a1b2c3.png") for proper correlation
-    const filesByUniqueId = new Map<string, UploadedFile[]>();
-    
-    itemFiles.forEach((file: UploadedFile) => {
-      const uniqueId = extractIdFromFileName(file.originalName);
-      if (uniqueId) {
-        if (!filesByUniqueId.has(uniqueId)) {
-          filesByUniqueId.set(uniqueId, []);
+          if (groupCoverFile) {
+            console.log(
+              `Processing group cover ${groupIndex}: ${groupCoverFile.originalName}`,
+            );
+            const newKey = convertSessionKeyToSorterKey(
+              groupCoverFile.key,
+              tempSorterId,
+              1,
+              `group-${groupIndex}-cover`,
+            );
+            copyOperations.push({
+              sourceKey: groupCoverFile.key,
+              destKey: newKey,
+              originalKey: groupCoverFile.key,
+              isMainFile: true,
+            });
+            const groupCoverUrl = getR2PublicUrl(newKey);
+            fileUrlMappings.set(groupCoverFile.key, groupCoverUrl);
+            console.log(
+              `Added 1 group cover operation. Total operations: ${copyOperations.length}`,
+            );
+          }
         }
-        filesByUniqueId.get(uniqueId)!.push(file);
-      } else {
-        console.warn(`File "${file.originalName}" does not have a unique ID suffix`);
       }
-    });
-    
-    console.log(`Grouped files by unique ID: ${filesByUniqueId.size} unique files with ${itemFiles.length} total files`);
-    
-    if (validatedData.useGroups && validatedData.groups) {
-      // Process grouped items
-      console.log(`Processing grouped mode with ${validatedData.groups.length} groups`);
-      
-      for (const group of validatedData.groups) {
-        console.log(`Processing group "${group.name}" with ${group.items.length} items`);
-        
-        for (const item of group.items) {
+
+      // Collect item file operations
+      const itemFiles = uploadedFiles.filter(
+        (f: UploadedFile) => f.type === "item",
+      );
+      console.log(`Processing ${itemFiles.length} item files`);
+
+      // CRITICAL FIX: Group files by unique suffix instead of name-based matching
+      // Each file now has a unique suffix (e.g., "alice-a1b2c3.png") for proper correlation
+      const filesByUniqueId = new Map<string, UploadedFile[]>();
+
+      itemFiles.forEach((file: UploadedFile) => {
+        const uniqueId = extractIdFromFileName(file.originalName);
+        if (uniqueId) {
+          if (!filesByUniqueId.has(uniqueId)) {
+            filesByUniqueId.set(uniqueId, []);
+          }
+          filesByUniqueId.get(uniqueId)!.push(file);
+        } else {
+          console.warn(
+            `File "${file.originalName}" does not have a unique ID suffix`,
+          );
+        }
+      });
+
+      console.log(
+        `Grouped files by unique ID: ${filesByUniqueId.size} unique files with ${itemFiles.length} total files`,
+      );
+
+      if (validatedData.useGroups && validatedData.groups) {
+        // Process grouped items
+        console.log(
+          `Processing grouped mode with ${validatedData.groups.length} groups`,
+        );
+
+        for (const group of validatedData.groups) {
+          console.log(
+            `Processing group "${group.name}" with ${group.items.length} items`,
+          );
+
+          for (const item of group.items) {
+            // NEW: Use suffix-based correlation instead of name matching
+            // Find files that match this item's title (after removing suffix)
+            let matchingFiles: UploadedFile[] = [];
+            let matchedUniqueId: string | null = null;
+
+            // Find the unique ID for this item by checking original names (without suffix)
+            for (const [uniqueId, files] of filesByUniqueId.entries()) {
+              const sampleFile = files[0];
+              const originalNameWithoutSuffix = removeIdFromFileName(
+                sampleFile.originalName,
+              );
+              const nameWithoutExt = originalNameWithoutSuffix.replace(
+                /\.[^/.]+$/,
+                "",
+              );
+
+              if (nameWithoutExt === item.title) {
+                matchingFiles = files;
+                matchedUniqueId = uniqueId;
+                break;
+              }
+            }
+
+            console.log(
+              `Item "${item.title}" matched ${matchingFiles.length} files with ID "${matchedUniqueId}":`,
+              matchingFiles.map((f) => f.originalName),
+            );
+
+            if (matchingFiles.length > 0 && matchedUniqueId) {
+              const itemSlug = generateSorterItemSlug(
+                item.title,
+                generateSorterItemSlug(group.name),
+              );
+
+              for (const file of matchingFiles) {
+                const newKey = convertSessionKeyToSorterKey(
+                  file.key,
+                  tempSorterId,
+                  1,
+                  itemSlug,
+                );
+                const isMainFile = !file.key.includes("-thumb");
+
+                copyOperations.push({
+                  sourceKey: file.key,
+                  destKey: newKey,
+                  originalKey: file.key,
+                  isMainFile,
+                });
+
+                console.log(
+                  `Added operation for ${file.originalName} -> ${newKey} (${isMainFile ? "main" : "thumb"}). Total operations: ${copyOperations.length}`,
+                );
+
+                if (isMainFile) {
+                  const itemImageUrl = getR2PublicUrl(newKey);
+                  fileUrlMappings.set(file.key, itemImageUrl);
+                  // CRITICAL FIX: Store item title -> imageUrl mapping for database transaction
+                  itemImageUrls.set(item.title, itemImageUrl);
+                }
+              }
+
+              // Remove this unique ID from the map to prevent reuse
+              filesByUniqueId.delete(matchedUniqueId);
+            }
+          }
+        }
+      } else if (validatedData.items) {
+        // Process traditional items
+        console.log(
+          `Processing traditional mode with ${validatedData.items.length} items`,
+        );
+
+        for (const item of validatedData.items) {
+          const itemSlug = generateSorterItemSlug(item.title);
+
           // NEW: Use suffix-based correlation instead of name matching
           // Find files that match this item's title (after removing suffix)
           let matchingFiles: UploadedFile[] = [];
           let matchedUniqueId: string | null = null;
-          
+
           // Find the unique ID for this item by checking original names (without suffix)
           for (const [uniqueId, files] of filesByUniqueId.entries()) {
             const sampleFile = files[0];
-            const originalNameWithoutSuffix = removeIdFromFileName(sampleFile.originalName);
-            const nameWithoutExt = originalNameWithoutSuffix.replace(/\.[^/.]+$/, "");
-            
+            const originalNameWithoutSuffix = removeIdFromFileName(
+              sampleFile.originalName,
+            );
+            const nameWithoutExt = originalNameWithoutSuffix.replace(
+              /\.[^/.]+$/,
+              "",
+            );
+
             if (nameWithoutExt === item.title) {
               matchingFiles = files;
               matchedUniqueId = uniqueId;
@@ -213,24 +334,32 @@ async function handleUploadSessionRequest(body: any, userData: any) {
             }
           }
 
-          console.log(`Item "${item.title}" matched ${matchingFiles.length} files with ID "${matchedUniqueId}":`, matchingFiles.map(f => f.originalName));
+          console.log(
+            `Item "${item.title}" matched ${matchingFiles.length} files with ID "${matchedUniqueId}":`,
+            matchingFiles.map((f) => f.originalName),
+          );
 
           if (matchingFiles.length > 0 && matchedUniqueId) {
-            const itemSlug = generateSorterItemSlug(item.title, generateSorterItemSlug(group.name));
-            
             for (const file of matchingFiles) {
-              const newKey = convertSessionKeyToSorterKey(file.key, tempSorterId, 1, itemSlug);
-              const isMainFile = !file.key.includes('-thumb');
-              
+              const newKey = convertSessionKeyToSorterKey(
+                file.key,
+                tempSorterId,
+                1,
+                itemSlug,
+              );
+              const isMainFile = !file.key.includes("-thumb");
+
               copyOperations.push({
                 sourceKey: file.key,
                 destKey: newKey,
                 originalKey: file.key,
-                isMainFile
+                isMainFile,
               });
-              
-              console.log(`Added operation for ${file.originalName} -> ${newKey} (${isMainFile ? 'main' : 'thumb'}). Total operations: ${copyOperations.length}`);
-              
+
+              console.log(
+                `Added operation for ${file.originalName} -> ${newKey} (${isMainFile ? "main" : "thumb"}). Total operations: ${copyOperations.length}`,
+              );
+
               if (isMainFile) {
                 const itemImageUrl = getR2PublicUrl(newKey);
                 fileUrlMappings.set(file.key, itemImageUrl);
@@ -238,84 +367,39 @@ async function handleUploadSessionRequest(body: any, userData: any) {
                 itemImageUrls.set(item.title, itemImageUrl);
               }
             }
-            
+
             // Remove this unique ID from the map to prevent reuse
             filesByUniqueId.delete(matchedUniqueId);
           }
         }
       }
-    } else if (validatedData.items) {
-      // Process traditional items
-      console.log(`Processing traditional mode with ${validatedData.items.length} items`);
-      
-      for (const item of validatedData.items) {
-        const itemSlug = generateSorterItemSlug(item.title);
-        
-        // NEW: Use suffix-based correlation instead of name matching
-        // Find files that match this item's title (after removing suffix)
-        let matchingFiles: UploadedFile[] = [];
-        let matchedUniqueId: string | null = null;
-        
-        // Find the unique ID for this item by checking original names (without suffix)
-        for (const [uniqueId, files] of filesByUniqueId.entries()) {
-          const sampleFile = files[0];
-          const originalNameWithoutSuffix = removeIdFromFileName(sampleFile.originalName);
-          const nameWithoutExt = originalNameWithoutSuffix.replace(/\.[^/.]+$/, "");
-          
-          if (nameWithoutExt === item.title) {
-            matchingFiles = files;
-            matchedUniqueId = uniqueId;
-            break;
-          }
-        }
 
-        console.log(`Item "${item.title}" matched ${matchingFiles.length} files with ID "${matchedUniqueId}":`, matchingFiles.map(f => f.originalName));
+      // Execute all R2 copy operations in parallel
+      console.log(
+        `Executing ${copyOperations.length} R2 copy operations in parallel`,
+      );
+      const copyResults = await copyR2ObjectsInParallel(
+        copyOperations.map((op) => ({
+          sourceKey: op.sourceKey,
+          destKey: op.destKey,
+        })),
+        10, // Concurrency limit
+      );
 
-        if (matchingFiles.length > 0 && matchedUniqueId) {
-          for (const file of matchingFiles) {
-            const newKey = convertSessionKeyToSorterKey(file.key, tempSorterId, 1, itemSlug);
-            const isMainFile = !file.key.includes('-thumb');
-            
-            copyOperations.push({
-              sourceKey: file.key,
-              destKey: newKey,
-              originalKey: file.key,
-              isMainFile
-            });
-            
-            console.log(`Added operation for ${file.originalName} -> ${newKey} (${isMainFile ? 'main' : 'thumb'}). Total operations: ${copyOperations.length}`);
-            
-            if (isMainFile) {
-              const itemImageUrl = getR2PublicUrl(newKey);
-              fileUrlMappings.set(file.key, itemImageUrl);
-              // CRITICAL FIX: Store item title -> imageUrl mapping for database transaction
-              itemImageUrls.set(item.title, itemImageUrl);
-            }
-          }
-          
-          // Remove this unique ID from the map to prevent reuse
-          filesByUniqueId.delete(matchedUniqueId);
-        }
+      // Check for failures
+      const failedOperations = copyResults.filter((result) => !result.success);
+      if (failedOperations.length > 0) {
+        console.error(
+          `${failedOperations.length} R2 copy operations failed:`,
+          failedOperations,
+        );
+        throw new Error(
+          `Failed to copy ${failedOperations.length} files to R2`,
+        );
       }
-    }
-
-    // Execute all R2 copy operations in parallel
-    console.log(`Executing ${copyOperations.length} R2 copy operations in parallel`);
-    const copyResults = await copyR2ObjectsInParallel(
-      copyOperations.map(op => ({ sourceKey: op.sourceKey, destKey: op.destKey })),
-      10 // Concurrency limit
-    );
-    
-    // Check for failures
-    const failedOperations = copyResults.filter(result => !result.success);
-    if (failedOperations.length > 0) {
-      console.error(`${failedOperations.length} R2 copy operations failed:`, failedOperations);
-      throw new Error(`Failed to copy ${failedOperations.length} files to R2`);
-    }
-
     } catch (error) {
       // R2 operations failed
-      console.error("R2 operations failed during sorter creation:", error);      
+      console.error("R2 operations failed during sorter creation:", error);
       throw new Error("Failed to process uploaded files");
     }
 
@@ -794,7 +878,8 @@ export async function POST(request: NextRequest) {
 
       if (validatedData.useGroups) {
         // Generate unique slugs for all groups
-        const groupNames = validatedData.groups?.map((group) => group.name) || [];
+        const groupNames =
+          validatedData.groups?.map((group) => group.name) || [];
         const existingSlugs: string[] = [];
         const createdGroups: { [name: string]: string } = {}; // groupName -> groupId
 

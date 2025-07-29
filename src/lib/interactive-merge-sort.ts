@@ -115,13 +115,13 @@ export class InteractiveMergeSort {
 
     // Determine items to sort based on whether this is truly the first start
     let itemsToSort: SortItem[];
-    
+
     if (!this.hasStarted) {
       // First time ever - shuffle and store the order
       this.shuffledOrder = shuffleArray(items);
       this.hasStarted = true;
       itemsToSort = this.shuffledOrder;
-      
+
       // Save the new shuffled order immediately
       this.onSaveProgress?.();
     } else {

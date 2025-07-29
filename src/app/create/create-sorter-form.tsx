@@ -104,7 +104,11 @@ export default function CreateSorterForm() {
     onSuccess: async (uploadedFiles, abortController) => {
       // Files uploaded successfully, now create sorter with references
       const formData = form.getValues();
-      await createSorterWithUploadedFiles(formData, uploadedFiles, abortController);
+      await createSorterWithUploadedFiles(
+        formData,
+        uploadedFiles,
+        abortController,
+      );
     },
     onError: (error) => {
       setIsUploading(false);
@@ -918,7 +922,8 @@ export default function CreateSorterForm() {
         } catch (e) {
           // Response is not JSON (likely HTML error page)
           if (response.status === 504) {
-            errorMessage = "Server timeout - please try again. If the issue persists, try creating a smaller sorter first.";
+            errorMessage =
+              "Server timeout - please try again. If the issue persists, try creating a smaller sorter first.";
           } else {
             errorMessage = `Server error (${response.status}): ${response.statusText}`;
           }
@@ -934,11 +939,11 @@ export default function CreateSorterForm() {
       router.push(`/sorter/${result.slug}`);
     } catch (error) {
       // Handle AbortError specifically
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && error.name === "AbortError") {
         // Creation was cancelled - don't show error, hook will handle cleanup
         return;
       }
-      
+
       console.error("Error creating sorter:", error);
 
       const errorMessage =
@@ -1002,7 +1007,8 @@ export default function CreateSorterForm() {
         } catch (e) {
           // Response is not JSON (likely HTML error page)
           if (response.status === 504) {
-            errorMessage = "Server timeout - please try again. If the issue persists, try creating a smaller sorter first.";
+            errorMessage =
+              "Server timeout - please try again. If the issue persists, try creating a smaller sorter first.";
           } else {
             errorMessage = `Server error (${response.status}): ${response.statusText}`;
           }
@@ -1734,15 +1740,14 @@ export default function CreateSorterForm() {
             directUpload.cancel();
             setShowProgressDialog(false);
             setIsUploading(false);
-            
+
             // Form state remains intact - no reset needed
-            
+
             // Optional: Show cancellation feedback
             toast.info("Upload cancelled");
           }
         }}
       />
-
     </div>
   );
 }

@@ -175,7 +175,7 @@ export function getSessionFileKey(
 ): string {
   // All images are converted to JPEG during compression, so always use .jpg extension
   const extension = "jpg";
-  const baseName = `${index}${suffix || ''}`;
+  const baseName = `${index}${suffix || ""}`;
   return `sessions/${sessionId}/${fileType}/${baseName}.${extension}`;
 }
 
@@ -233,7 +233,7 @@ export function convertSessionKeyToSorterKey(
       const baseFilename = filename.replace(/\.[^/.]+$/, ""); // Remove extension
       const isThumb = baseFilename.includes("-thumb");
       const finalSlug = isThumb ? `${itemSlug}-thumb` : itemSlug;
-      
+
       return getVersionedItemKey(
         sorterId,
         finalSlug || "unknown",
@@ -373,24 +373,40 @@ async function copyR2Object(sourceKey: string, destKey: string): Promise<void> {
  */
 export async function copyR2ObjectsInParallel(
   operations: Array<{ sourceKey: string; destKey: string }>,
-  concurrency = 10
-): Promise<Array<{ success: boolean; sourceKey: string; destKey: string; error?: string }>> {
+  concurrency = 10,
+): Promise<
+  Array<{
+    success: boolean;
+    sourceKey: string;
+    destKey: string;
+    error?: string;
+  }>
+> {
   if (operations.length === 0) {
     return [];
   }
 
-  console.log(`Starting parallel R2 copy of ${operations.length} objects with concurrency ${concurrency}`);
+  console.log(
+    `Starting parallel R2 copy of ${operations.length} objects with concurrency ${concurrency}`,
+  );
   const startTime = Date.now();
 
-  const results: Array<{ success: boolean; sourceKey: string; destKey: string; error?: string }> = [];
-  
+  const results: Array<{
+    success: boolean;
+    sourceKey: string;
+    destKey: string;
+    error?: string;
+  }> = [];
+
   // Process operations in batches to control concurrency
   const batches = chunkArray(operations, concurrency);
-  
+
   for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
     const batch = batches[batchIndex];
-    console.log(`Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} operations)`);
-    
+    console.log(
+      `Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} operations)`,
+    );
+
     // Execute all operations in this batch in parallel
     const batchPromises = batch.map(async (operation) => {
       try {
@@ -401,41 +417,46 @@ export async function copyR2ObjectsInParallel(
           destKey: operation.destKey,
         };
       } catch (error) {
-        console.error(`Failed to copy ${operation.sourceKey} -> ${operation.destKey}:`, error);
+        console.error(
+          `Failed to copy ${operation.sourceKey} -> ${operation.destKey}:`,
+          error,
+        );
         return {
           success: false,
           sourceKey: operation.sourceKey,
           destKey: operation.destKey,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         };
       }
     });
-    
+
     // Wait for all operations in this batch to complete
     const batchResults = await Promise.allSettled(batchPromises);
-    
+
     // Extract results from Promise.allSettled
     for (const result of batchResults) {
-      if (result.status === 'fulfilled') {
+      if (result.status === "fulfilled") {
         results.push(result.value);
       } else {
         // This shouldn't happen since we're catching errors in the individual promises
-        console.error('Unexpected batch promise rejection:', result.reason);
+        console.error("Unexpected batch promise rejection:", result.reason);
         results.push({
           success: false,
-          sourceKey: 'unknown',
-          destKey: 'unknown',
-          error: 'Batch promise rejection',
+          sourceKey: "unknown",
+          destKey: "unknown",
+          error: "Batch promise rejection",
         });
       }
     }
   }
-  
+
   const duration = Date.now() - startTime;
-  const successCount = results.filter(r => r.success).length;
+  const successCount = results.filter((r) => r.success).length;
   const failureCount = results.length - successCount;
-  
-  console.log(`Parallel R2 copy completed in ${duration}ms: ${successCount} success, ${failureCount} failures`);
-  
+
+  console.log(
+    `Parallel R2 copy completed in ${duration}ms: ${successCount} success, ${failureCount} failures`,
+  );
+
   return results;
 }

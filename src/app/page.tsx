@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/panel";
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, count } from "drizzle-orm";
 import Link from "next/link";
 
 // Force dynamic rendering for always-fresh data
@@ -38,6 +39,57 @@ async function getPopularSorters() {
   return popularSorters;
 }
 
+async function getSorterStats() {
+  const [sorterCount] = await db
+    .select({ count: count() })
+    .from(sorters)
+    .where(eq(sorters.deleted, false));
+
+  return sorterCount.count;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const sorterCount = await getSorterStats();
+    
+    const title = "sortr - Create and Share Ranked Lists";
+    const description = sorterCount > 0 
+      ? `Create and share ranked lists through pairwise comparison. Join ${sorterCount}+ sorters and discover popular rankings across movies, music, games, and more.`
+      : "Create and share ranked lists through pairwise comparison. Build custom rankings, sort items by preference, and discover popular sorters.";
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "website",
+        siteName: "sortr",
+        images: [
+          {
+            url: "/og-home.png",
+            width: 1200,
+            height: 630,
+            alt: "sortr - Create and share ranked lists",
+          },
+        ],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: ["/og-home.png"],
+      },
+    };
+  } catch (error) {
+    console.error("Error generating homepage metadata:", error);
+    return {
+      title: "sortr - Create and Share Ranked Lists",
+      description: "Create and share ranked lists through pairwise comparison. Build custom rankings, sort items by preference, and discover popular sorters.",
+    };
+  }
+}
+
 export default async function Home() {
   const popularSortersRaw = await getPopularSorters();
   const popularSorters = popularSortersRaw.map((sorter) => ({
@@ -47,8 +99,59 @@ export default async function Home() {
     coverImageUrl: sorter.coverImageUrl ?? undefined,
   }));
 
+  // JSON-LD structured data for homepage
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "sortr",
+    description: "Create and share ranked lists through pairwise comparison",
+    url: process.env.NEXTAUTH_URL || "https://sortr.dev",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${process.env.NEXTAUTH_URL || "https://sortr.dev"}/browse?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      name: "Popular Sorters",
+      description: "Most popular ranking sorters on sortr",
+      numberOfItems: popularSorters.length,
+      itemListElement: popularSorters.slice(0, 5).map((sorter, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Survey",
+          name: sorter.title,
+          description: `Ranking sorter for ${sorter.title}`,
+          url: `${process.env.NEXTAUTH_URL || "https://sortr.dev"}/sorter/${sorter.slug}`,
+          about: sorter.category || "Ranking",
+          interactionStatistic: [
+            {
+              "@type": "InteractionCounter",
+              interactionType: "https://schema.org/ViewAction",
+              userInteractionCount: sorter.viewCount,
+            },
+            {
+              "@type": "InteractionCounter",
+              interactionType: "https://schema.org/CompleteAction",
+              userInteractionCount: sorter.completionCount,
+            },
+          ],
+        },
+      })),
+    },
+  };
+
   return (
-    <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-2 py-10 md:px-4">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-2 py-10 md:px-4">
       <section className="mx-auto mb-10 flex max-w-xl justify-center">
         <Box variant="primary" size="sm" className="text-center md:p-8">
           <h1 className="text-4xl font-extrabold tracking-wide md:mb-4 md:text-7xl">
@@ -90,5 +193,6 @@ export default async function Home() {
         </Panel>
       </section>
     </main>
+    </>
   );
 }

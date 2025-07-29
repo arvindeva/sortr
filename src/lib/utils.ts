@@ -10,8 +10,8 @@ export function cn(...inputs: ClassValue[]) {
  * @returns A 6-character unique identifier (e.g., "a1b2c3")
  */
 export function generateUniqueId(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
   for (let i = 0; i < 6; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -24,13 +24,16 @@ export function generateUniqueId(): string {
  * @param uniqueId Unique identifier to add
  * @returns Modified file name (e.g., "image-a1b2c3.png")
  */
-export function addSuffixToFileName(fileName: string, uniqueId: string): string {
-  const lastDotIndex = fileName.lastIndexOf('.');
+export function addSuffixToFileName(
+  fileName: string,
+  uniqueId: string,
+): string {
+  const lastDotIndex = fileName.lastIndexOf(".");
   if (lastDotIndex === -1) {
     // No extension
     return `${fileName}-${uniqueId}`;
   }
-  
+
   const nameWithoutExt = fileName.substring(0, lastDotIndex);
   const extension = fileName.substring(lastDotIndex);
   return `${nameWithoutExt}-${uniqueId}${extension}`;
@@ -54,7 +57,7 @@ export function extractIdFromFileName(fileName: string): string | null {
  */
 export function removeIdFromFileName(fileName: string): string {
   // Remove pattern: -[6 alphanumeric chars] before file extension
-  return fileName.replace(/-[a-z0-9]{6}(?=\.[^.]+$|$)/, '');
+  return fileName.replace(/-[a-z0-9]{6}(?=\.[^.]+$|$)/, "");
 }
 
 /**

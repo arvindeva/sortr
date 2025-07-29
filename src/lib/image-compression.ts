@@ -209,12 +209,15 @@ export function isCompressibleImage(file: File): boolean {
 export async function generateImageSizes(
   file: File,
   sizes: Array<{ width: number; height: number; suffix: string }>,
-  options: Omit<CompressionOptions, 'maxWidth' | 'maxHeight' | 'exactSize'> = {},
+  options: Omit<
+    CompressionOptions,
+    "maxWidth" | "maxHeight" | "exactSize"
+  > = {},
 ): Promise<MultiSizeResult[]> {
   const { quality = 0.85, format = "jpeg" } = options;
-  
+
   const results: MultiSizeResult[] = [];
-  
+
   // Process sizes in parallel for better performance
   const sizePromises = sizes.map(async (sizeConfig) => {
     const compressionOptions: CompressionOptions = {
@@ -222,19 +225,19 @@ export async function generateImageSizes(
       format,
       exactSize: { width: sizeConfig.width, height: sizeConfig.height },
     };
-    
+
     const result = await compressImage(file, compressionOptions);
-    
+
     return {
       ...result,
       suffix: sizeConfig.suffix,
       size: { width: sizeConfig.width, height: sizeConfig.height },
     } as MultiSizeResult;
   });
-  
+
   const resolvedResults = await Promise.all(sizePromises);
   results.push(...resolvedResults);
-  
+
   return results;
 }
 
@@ -243,18 +246,21 @@ export async function generateImageSizes(
  */
 export async function generateSorterItemSizes(
   file: File,
-  options: Omit<CompressionOptions, 'maxWidth' | 'maxHeight' | 'exactSize'> = {},
+  options: Omit<
+    CompressionOptions,
+    "maxWidth" | "maxHeight" | "exactSize"
+  > = {},
 ): Promise<{ thumbnail: MultiSizeResult; full: MultiSizeResult }> {
   const sizes = [
-    { width: 64, height: 64, suffix: 'thumb' },
-    { width: 300, height: 300, suffix: '' }, // No suffix for full size
+    { width: 64, height: 64, suffix: "thumb" },
+    { width: 300, height: 300, suffix: "" }, // No suffix for full size
   ];
-  
+
   const results = await generateImageSizes(file, sizes, options);
-  
+
   return {
-    thumbnail: results.find(r => r.suffix === 'thumb')!,
-    full: results.find(r => r.suffix === '')!,
+    thumbnail: results.find((r) => r.suffix === "thumb")!,
+    full: results.find((r) => r.suffix === "")!,
   };
 }
 
