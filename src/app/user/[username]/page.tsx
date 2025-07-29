@@ -116,7 +116,7 @@ export async function generateMetadata({
       .where(eq(sortingResults.userId, userData.id));
 
     const title = `${username}'s Profile`;
-    const description = `View ${username}'s sorters on sortr. ${sorterCount.count} sorters created, ${rankingCount.count} rankings completed. Create and share a sorter for anything to rank items from best to worst.`;
+    const description = `View ${username}'s sorters on sortr. ${sorterCount.count} sorters created, ${rankingCount.count} rankings completed.`;
 
     const userSince = new Date(
       userData.emailVerified || new Date(),
@@ -153,7 +153,7 @@ export async function generateMetadata({
     console.error("Error generating user metadata:", error);
     return {
       title: `${username}'s Profile`,
-      description: `View ${username}'s sorters on sortr. Create and share a sorter for anything to rank items from best to worst.`,
+      description: `View ${username}'s sorters on sortr.`,
     };
   }
 }
