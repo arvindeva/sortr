@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
+import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import {
   sortingResults,
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/panel";
 import { ArrowLeft, Trophy, RotateCcw, Play, Eye } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
+import { DeleteRankingButton } from "@/components/delete-ranking-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
 import { RankingImageLayout } from "@/components/ranking-image-layout";
 import { getImageUrl } from "@/lib/image-utils";
@@ -70,6 +72,7 @@ interface ResultData {
     id: string;
     name: string;
   }[];
+  isOwner: boolean; // NEW: Whether current user owns this ranking
 }
 
 export async function generateMetadata({
@@ -134,6 +137,21 @@ export async function generateMetadata({
 }
 
 async function getResultData(resultId: string): Promise<ResultData | null> {
+  // Get current user session to check ownership
+  const session = await getServerSession();
+  let currentUserId: string | null = null;
+  
+  if (session?.user?.email) {
+    const currentUserData = await db
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.email, session.user.email))
+      .limit(1);
+    
+    if (currentUserData.length > 0) {
+      currentUserId = currentUserData[0].id;
+    }
+  }
   // Get the sorting result with version information
   const resultData = await db
     .select({
@@ -142,6 +160,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       selectedGroups: sortingResults.selectedGroups,
       createdAt: sortingResults.createdAt,
       sorterId: sortingResults.sorterId,
+      userId: sortingResults.userId, // NEW: Get userId for ownership check
       version: sortingResults.version, // NEW: Get version
       username: user.username,
       // Sorter-level snapshots
@@ -304,6 +323,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     },
     selectedGroups: selectedGroups.length > 0 ? selectedGroups : undefined,
     totalGroups: totalGroups.length > 0 ? totalGroups : undefined,
+    isOwner: currentUserId !== null && result.userId === currentUserId, // Check ownership
   };
 }
 
@@ -315,7 +335,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
     notFound();
   }
 
-  const { result, sorter, selectedGroups, totalGroups } = data;
+  const { result, sorter, selectedGroups, totalGroups, isOwner } = data;
 
   return (
     <div className="container mx-auto max-w-6xl overflow-hidden px-2 py-2 md:px-4 md:py-8">
@@ -407,6 +427,12 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   selectedGroups: selectedGroups?.map((group) => group.name),
                 }}
               />
+              {isOwner && (
+                <DeleteRankingButton
+                  rankingId={result.id}
+                  sorterTitle={sorter.title}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -442,6 +468,12 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
             selectedGroups: selectedGroups?.map((group) => group.name),
           }}
         />
+        {isOwner && (
+          <DeleteRankingButton
+            rankingId={result.id}
+            sorterTitle={sorter.title}
+          />
+        )}
       </div>
 
       {/* Two Column Layout */}
