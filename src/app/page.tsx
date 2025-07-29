@@ -49,64 +49,33 @@ async function getSorterStats() {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  try {
-    const sorterCount = await getSorterStats();
+  const title = "sortr - Create a Sorter for Anything";
+  const description = "Create and share a sorter for anything to rank items from best to worst.";
 
-    const title = "sortr - Create a Sorter for Anything";
-    const description =
-      "Create and share a sorter for anything to rank items from best to worst.";
-
-    return {
-      title: {
-        absolute: title, // Use absolute to override the template
-      },
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
       description,
-      openGraph: {
-        title,
-        description,
-        type: "website",
-        siteName: "sortr",
-        images: [
-          {
-            url: "/og-home.png",
-            width: 1200,
-            height: 630,
-            alt: "sortr - Create and share ranked lists",
-          },
-        ],
-      },
-      twitter: {
-        card: "summary_large_image",
-        title,
-        description,
-        images: ["/og-home.png"],
-      },
-    };
-  } catch (error) {
-    console.error("Error generating homepage metadata:", error);
-    return {
-      title: {
-        absolute: "sortr - Create a Sorter for Anything",
-      },
-      description:
-        "Create and share a sorter for anything to rank items from best to worst.",
-      openGraph: {
-        title: "sortr - Create a Sorter for Anything",
-        description:
-          "Create and share a sorter for anything to rank items from best to worst.",
-        type: "website",
-        siteName: "sortr",
-        images: ["/og-home.png"],
-      },
-      twitter: {
-        card: "summary_large_image",
-        title: "sortr - Create a Sorter for Anything",
-        description:
-          "Create and share a sorter for anything to rank items from best to worst.",
-        images: ["/og-home.png"],
-      },
-    };
-  }
+      type: "website",
+      siteName: "sortr",
+      images: [
+        {
+          url: "/og-home.png",
+          width: 1200,
+          height: 630,
+          alt: "sortr - Create and share a sorter for anything",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/og-home.png"],
+    },
+  };
 }
 
 export default async function Home() {
