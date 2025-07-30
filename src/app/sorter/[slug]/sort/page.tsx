@@ -679,6 +679,13 @@ export default function SortPage() {
           </div>
         </div>
       </div>
+
+      {/* Progress Saving Reassurance */}
+      <div className="mt-6 px-2 text-center md:px-0">
+        <p className="text-sm text-foreground">
+          Your progress is automatically saved in your browser. Feel free to take breaks or navigate away - you can continue anytime!
+        </p>
+      </div>
     </div>
   );
 }
