@@ -21,9 +21,9 @@ export const revalidate = 3600;
 
 const getPopularSorters = unstable_cache(
   async () => {
-    console.log(
-      "🔥 Homepage cache MISS - fetching popular sorters from database",
-    );
+    const timestamp = new Date().toISOString();
+    console.log("🔥 HOMEPAGE CACHE MISS - Database query starting at:", timestamp);
+    
     const popularSorters = await db
       .select({
         id: sorters.id,
@@ -41,7 +41,9 @@ const getPopularSorters = unstable_cache(
       .orderBy(desc(sorters.completionCount))
       .limit(10);
 
-    console.log(`📊 Found ${popularSorters.length} sorters for homepage`);
+    const endTimestamp = new Date().toISOString();
+    console.log(`📊 HOMEPAGE QUERY COMPLETE - Found ${popularSorters.length} sorters at:`, endTimestamp);
+    console.log("📋 Sorter titles:", popularSorters.map(s => s.title));
     return popularSorters;
   },
   ["homepage-popular-sorters"],
@@ -91,6 +93,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
+  console.log("🏠 HOMEPAGE RENDER - Starting at:", new Date().toISOString());
+  
   const popularSortersRaw = await getPopularSorters();
   const popularSorters = popularSortersRaw.map((sorter) => ({
     ...sorter,
@@ -98,6 +102,8 @@ export default async function Home() {
     category: sorter.category ?? undefined,
     coverImageUrl: sorter.coverImageUrl ?? undefined,
   }));
+
+  console.log("🏠 HOMEPAGE RENDER - Complete with", popularSorters.length, "sorters at:", new Date().toISOString());
 
   // JSON-LD structured data for homepage
   const jsonLd = {
