@@ -10,8 +10,8 @@ import {
 import { eq, and } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
-import { revalidatePath } from "next/cache";
 import { authOptions } from "@/lib/auth";
+import { revalidateAfterSorterChange } from "@/lib/revalidation";
 
 export async function GET(
   request: NextRequest,
@@ -145,7 +145,7 @@ export async function DELETE(
 
     // Get the current user
     const userData = await db
-      .select({ id: user.id })
+      .select({ id: user.id, username: user.username })
       .from(user)
       .where(eq(user.email, session.user.email))
       .limit(1);
@@ -214,12 +214,15 @@ export async function DELETE(
     // All versioned data remains in database for rankings to reference
     // Future cleanup will only remove versions with no ranking references
 
-    // Revalidate pages that show sorter data
+    // Revalidate caches that show sorter data
     try {
-      revalidatePath("/"); // Homepage (popular sorters)
-      revalidatePath(`/sorter/${slug}`); // Sorter page (will 404, but clears cache)
+      await revalidateAfterSorterChange({
+        username: userData[0].username || undefined,
+        slug: slug,
+        includeBrowse: true,
+      });
     } catch (revalidateError) {
-      console.warn("Failed to revalidate some paths:", revalidateError);
+      console.warn("Failed to revalidate caches:", revalidateError);
       // Don't fail the entire request if revalidation fails
     }
 

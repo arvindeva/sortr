@@ -44,6 +44,7 @@ import {
   processSorterItemImage,
   validateSorterItemImageBuffer,
 } from "@/lib/image-processing";
+import { revalidateAfterSorterChange } from "@/lib/revalidation";
 
 const MAX_COVER_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_ITEM_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -542,6 +543,17 @@ async function handleUploadSessionRequest(body: any, userData: any) {
     // Mark upload session as complete (outside transaction)
     await completeUploadSession(sessionId);
 
+    // Revalidate caches that show sorter data
+    try {
+      await revalidateAfterSorterChange({
+        username: userData.username || undefined,
+        includeBrowse: true,
+      });
+    } catch (revalidateError) {
+      console.error("❌ Failed to revalidate caches (upload session path):", revalidateError);
+      // Don't fail the entire request if revalidation fails
+    }
+
     return NextResponse.json({
       id: result.newSorter.id,
       slug: result.newSorter.slug,
@@ -766,6 +778,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Wrap entire sorter creation in database transaction
+    console.log("🚀 Starting sorter creation transaction...");
     const result = await db.transaction(async (tx) => {
       // Create sorter
       const [newSorter] = await tx
@@ -1019,10 +1032,24 @@ export async function POST(request: NextRequest) {
       }
 
       // Return the sorter data from transaction
+      console.log(`✅ Sorter created successfully: ${newSorter.title} (${newSorter.slug})`);
       return {
         sorter: newSorter,
       };
     });
+    
+    console.log("💾 Database transaction completed successfully");
+
+    // Revalidate caches that show sorter data
+    try {
+      await revalidateAfterSorterChange({
+        username: userData[0].username || undefined,
+        includeBrowse: true,
+      });
+    } catch (revalidateError) {
+      console.error("❌ Failed to revalidate caches:", revalidateError);
+      // Don't fail the entire request if revalidation fails
+    }
 
     return NextResponse.json({
       success: true,

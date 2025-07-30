@@ -1,10 +1,10 @@
 import { db } from "@/db";
-import { sortingResults, sorters } from "@/db/schema";
+import { sortingResults, sorters, user } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidateHomepage, revalidateUserResults } from "@/lib/revalidation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,13 +63,18 @@ export async function POST(request: NextRequest) {
       .set({ completionCount: sql`${sorters.completionCount} + 1` })
       .where(eq(sorters.id, sorterId));
 
-    // Invalidate pages that show completion counts
-    revalidatePath("/"); // Homepage popular sorters
-    revalidatePath(`/sorter/${sorterId}`); // Individual sorter page
-
-    // Also invalidate any user profile pages that might show this sorter
-    // Note: We could be more specific if we had the creator's username
-    revalidatePath("/user/[username]", "page");
+    // Invalidate caches that show completion counts and user results
+    await revalidateHomepage(); // Homepage shows popular sorters by completion count
+    
+    // If user is logged in, invalidate their profile page to show new ranking
+    if (userId) {
+      try {
+        await revalidateUserResults(userId);
+      } catch (revalidateError) {
+        console.warn("Failed to revalidate user results cache:", revalidateError);
+        // Don't fail the entire request if revalidation fails
+      }
+    }
 
     return Response.json({
       resultId: result[0].id,
