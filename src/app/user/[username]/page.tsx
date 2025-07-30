@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import { user, sorters, sortingResults } from "@/db/schema";
 import { eq, desc, and, count } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,8 +22,8 @@ import { SorterGrid } from "@/components/ui/sorter-grid";
 import { Eye, Trophy } from "lucide-react";
 import { getImageUrl } from "@/lib/image-utils";
 
-// Force dynamic rendering for always-fresh user statistics
-export const dynamic = "force-dynamic";
+// Enable ISR with 1 hour revalidation
+export const revalidate = 3600;
 
 interface UserProfilePageProps {
   params: Promise<{
@@ -31,54 +32,80 @@ interface UserProfilePageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-async function getUserByUsername(username: string) {
-  const users = await db
-    .select()
-    .from(user)
-    .where(eq(user.username, username))
-    .limit(1);
+function getUserByUsername(username: string) {
+  return unstable_cache(
+    async () => {
+      const users = await db
+        .select()
+        .from(user)
+        .where(eq(user.username, username))
+        .limit(1);
 
-  return users[0] || null;
+      return users[0] || null;
+    },
+    [`user-profile-${username}`],
+    {
+      revalidate: 3600,
+    },
+  )();
 }
 
-async function getUserSorters(userId: string) {
-  const userSorters = await db
-    .select({
-      id: sorters.id,
-      title: sorters.title,
-      slug: sorters.slug,
-      description: sorters.description,
-      category: sorters.category,
-      createdAt: sorters.createdAt,
-      completionCount: sorters.completionCount,
-      viewCount: sorters.viewCount,
-      coverImageUrl: sorters.coverImageUrl,
-    })
-    .from(sorters)
-    .where(and(eq(sorters.userId, userId), eq(sorters.deleted, false)))
-    .orderBy(desc(sorters.createdAt));
+function getUserSorters(userId: string) {
+  return unstable_cache(
+    async () => {
+      console.log(`🔥 User sorters cache MISS - fetching for user ${userId}`);
+      const userSorters = await db
+        .select({
+          id: sorters.id,
+          title: sorters.title,
+          slug: sorters.slug,
+          description: sorters.description,
+          category: sorters.category,
+          createdAt: sorters.createdAt,
+          completionCount: sorters.completionCount,
+          viewCount: sorters.viewCount,
+          coverImageUrl: sorters.coverImageUrl,
+        })
+        .from(sorters)
+        .where(and(eq(sorters.userId, userId), eq(sorters.deleted, false)))
+        .orderBy(desc(sorters.createdAt));
 
-  return userSorters;
+      console.log(`📊 Found ${userSorters.length} sorters for user ${userId}`);
+      return userSorters;
+    },
+    [`user-sorters-${userId}`],
+    {
+      revalidate: 3600,
+    },
+  )();
 }
 
-async function getUserResults(userId: string) {
-  const userResults = await db
-    .select({
-      id: sortingResults.id,
-      sorterId: sortingResults.sorterId,
-      rankings: sortingResults.rankings,
-      selectedGroups: sortingResults.selectedGroups,
-      createdAt: sortingResults.createdAt,
-      sorterTitle: sorters.title,
-      sorterSlug: sorters.slug,
-      sorterCategory: sorters.category,
-    })
-    .from(sortingResults)
-    .leftJoin(sorters, eq(sortingResults.sorterId, sorters.id))
-    .where(eq(sortingResults.userId, userId))
-    .orderBy(desc(sortingResults.createdAt));
+function getUserResults(userId: string) {
+  return unstable_cache(
+    async () => {
+      const userResults = await db
+        .select({
+          id: sortingResults.id,
+          sorterId: sortingResults.sorterId,
+          rankings: sortingResults.rankings,
+          selectedGroups: sortingResults.selectedGroups,
+          createdAt: sortingResults.createdAt,
+          sorterTitle: sorters.title,
+          sorterSlug: sorters.slug,
+          sorterCategory: sorters.category,
+        })
+        .from(sortingResults)
+        .leftJoin(sorters, eq(sortingResults.sorterId, sorters.id))
+        .where(eq(sortingResults.userId, userId))
+        .orderBy(desc(sortingResults.createdAt));
 
-  return userResults;
+      return userResults;
+    },
+    [`user-results-${userId}`],
+    {
+      revalidate: 3600,
+    },
+  )();
 }
 
 export async function generateMetadata({
@@ -232,133 +259,134 @@ export default async function UserProfilePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
-      {/* Profile Header */}
-      <UserProfileHeader
-        username={userData.username || ""}
-        userSince={userSince}
-        isOwnProfile={isOwnProfile}
-        currentImage={currentImage}
-      />
-      {/* Sorters Section */}
-      <section className="mb-8">
-        <Panel variant="primary">
-          <PanelHeader variant="primary">
-            <PanelTitle>Sorters ({userSorters.length})</PanelTitle>
-          </PanelHeader>
-          <PanelContent variant="primary" className="p-2 md:p-6">
-            {userSorters.length === 0 ? (
-              <div className="text-center">
-                <Box variant="warning" size="lg">
-                  <p className="mb-4 text-lg font-medium">
-                    No sorters created yet.
-                  </p>
-                  <p className="font-medium">
-                    Start creating sorters to share with others!
-                  </p>
-                </Box>
-              </div>
-            ) : (
-              <SorterGrid>
-                {userSorters.map((sorter) => (
-                  <SorterCard key={sorter.id} sorter={sorter} />
-                ))}
-              </SorterGrid>
-            )}
-          </PanelContent>
-        </Panel>
-      </section>
+        {/* Profile Header */}
+        <UserProfileHeader
+          username={userData.username || ""}
+          userSince={userSince}
+          isOwnProfile={isOwnProfile}
+          currentImage={currentImage}
+        />
+        {/* Sorters Section */}
+        <section className="mb-8">
+          <Panel variant="primary">
+            <PanelHeader variant="primary">
+              <PanelTitle>Sorters ({userSorters.length})</PanelTitle>
+            </PanelHeader>
+            <PanelContent variant="primary" className="p-2 md:p-6">
+              {userSorters.length === 0 ? (
+                <div className="text-center">
+                  <Box variant="warning" size="md">
+                    <p className="mb-4 font-medium">No sorters created yet.</p>
+                    <p className="font-medium">
+                      Start creating sorters to share with others!
+                    </p>
+                  </Box>
+                </div>
+              ) : (
+                <SorterGrid>
+                  {userSorters.map((sorter) => (
+                    <SorterCard key={sorter.id} sorter={sorter} />
+                  ))}
+                </SorterGrid>
+              )}
+            </PanelContent>
+          </Panel>
+        </section>
 
-      {/* Rankings Section */}
-      <section>
-        <Panel variant="primary">
-          <PanelHeader variant="primary">
-            <PanelTitle>Rankings ({userResults.length})</PanelTitle>
-          </PanelHeader>
-          <PanelContent variant="primary" className="p-2 md:p-6">
-            {userResults.length === 0 ? (
-              <div className="text-center">
-                <Box variant="warning" size="md">
-                  <p className="mb-4 font-medium">No rankings yet.</p>
-                  <p className="font-medium">
-                    Complete some sorting sessions to see rankings!
-                  </p>
-                </Box>
-              </div>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
-                {userResults.map((result) => (
-                  <Link
-                    key={result.id}
-                    href={`/rankings/${result.id}`}
-                    className="card-link"
-                  >
-                    <Card className="card cursor-pointer gap-2 md:min-h-[180px]">
-                      <CardHeader className="flex flex-col justify-start">
-                        <CardTitle className="line-clamp-2 leading-relaxed">
-                          {result.sorterTitle || "Unknown Sorter"}
-                        </CardTitle>
-                        {result.sorterCategory && (
-                          <Badge variant="default">
-                            {result.sorterCategory}
-                          </Badge>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        {/* Top 3 Rankings Preview */}
-                        <div className="mb-3 space-y-2">
-                          {(() => {
-                            let rankings = [];
-                            try {
-                              rankings = JSON.parse(result.rankings);
-                            } catch (error) {
-                              console.error("Failed to parse rankings:", error);
-                            }
-                            const top3 = rankings.slice(0, 3);
-                            return top3.map((item: any, index: number) => (
-                              <div
-                                key={item.id || index}
-                                className="flex items-center gap-2"
-                              >
-                                <div className="flex min-w-0 flex-1 items-center gap-2">
-                                  {item.imageUrl ? (
-                                    <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
-                                      <img
-                                        src={getImageUrl(
-                                          item.imageUrl,
-                                          "thumbnail",
-                                        )}
-                                        alt={item.title}
-                                        className="h-full w-full object-cover"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className="border-border bg-secondary-background rounded-base flex h-6 w-6 flex-shrink-0 items-center justify-center border-2">
-                                      <span className="text-main text-xs font-bold">
-                                        {item.title.charAt(0).toUpperCase()}
-                                      </span>
-                                    </div>
-                                  )}
-                                  <span className="min-w-[1.5rem] text-center font-bold">
-                                    {index + 1}.
-                                  </span>
-                                  <span className="font-medium break-words">
-                                    {item.title}
-                                  </span>
+        {/* Rankings Section */}
+        <section>
+          <Panel variant="primary">
+            <PanelHeader variant="primary">
+              <PanelTitle>Rankings ({userResults.length})</PanelTitle>
+            </PanelHeader>
+            <PanelContent variant="primary" className="p-2 md:p-6">
+              {userResults.length === 0 ? (
+                <div className="text-center">
+                  <Box variant="warning" size="md">
+                    <p className="mb-4 font-medium">No rankings yet.</p>
+                    <p className="font-medium">
+                      Complete some sorting sessions to see rankings!
+                    </p>
+                  </Box>
+                </div>
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+                  {userResults.map((result) => (
+                    <Link
+                      key={result.id}
+                      href={`/rankings/${result.id}`}
+                      className="card-link"
+                    >
+                      <Card className="card cursor-pointer gap-2 md:min-h-[180px]">
+                        <CardHeader className="flex flex-col justify-start">
+                          <CardTitle className="line-clamp-2 leading-relaxed">
+                            {result.sorterTitle || "Unknown Sorter"}
+                          </CardTitle>
+                          {result.sorterCategory && (
+                            <Badge variant="default">
+                              {result.sorterCategory}
+                            </Badge>
+                          )}
+                        </CardHeader>
+                        <CardContent>
+                          {/* Top 3 Rankings Preview */}
+                          <div className="mb-3 space-y-2">
+                            {(() => {
+                              let rankings = [];
+                              try {
+                                rankings = JSON.parse(result.rankings);
+                              } catch (error) {
+                                console.error(
+                                  "Failed to parse rankings:",
+                                  error,
+                                );
+                              }
+                              const top3 = rankings.slice(0, 3);
+                              return top3.map((item: any, index: number) => (
+                                <div
+                                  key={item.id || index}
+                                  className="flex items-center gap-2"
+                                >
+                                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                                    {item.imageUrl ? (
+                                      <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
+                                        <img
+                                          src={getImageUrl(
+                                            item.imageUrl,
+                                            "thumbnail",
+                                          )}
+                                          alt={item.title}
+                                          className="h-full w-full object-cover"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <div className="border-border bg-secondary-background rounded-base flex h-6 w-6 flex-shrink-0 items-center justify-center border-2">
+                                        <span className="text-main text-xs font-bold">
+                                          {item.title.charAt(0).toUpperCase()}
+                                        </span>
+                                      </div>
+                                    )}
+                                    <span className="min-w-[1.5rem] text-center font-bold">
+                                      {index + 1}.
+                                    </span>
+                                    <span className="font-medium break-words">
+                                      {item.title}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                            ));
-                          })()}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </PanelContent>
-        </Panel>
-      </section>
-    </main>
+                              ));
+                            })()}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </PanelContent>
+          </Panel>
+        </section>
+      </main>
     </>
   );
 }

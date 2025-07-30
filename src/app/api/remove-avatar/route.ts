@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { deleteFromR2, getAvatarKey } from "@/lib/r2";
+import { revalidateUserProfile } from "@/lib/revalidation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     // Get user data
     const userData = await db
-      .select({ id: user.id, image: user.image })
+      .select({ id: user.id, image: user.image, username: user.username })
       .from(user)
       .where(eq(user.email, session.user.email))
       .limit(1);
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
 
     const userId = userData[0].id;
     const currentImage = userData[0].image;
+    const username = userData[0].username;
 
     // Check if user has an avatar to remove
     if (!currentImage) {
@@ -51,6 +53,16 @@ export async function POST(request: NextRequest) {
 
     // Update user's image URL to null in database
     await db.update(user).set({ image: null }).where(eq(user.id, userId));
+
+    // Revalidate user profile cache
+    if (username) {
+      try {
+        await revalidateUserProfile(username);
+      } catch (revalidateError) {
+        console.warn("Failed to revalidate user profile cache:", revalidateError);
+        // Don't fail the entire request if revalidation fails
+      }
+    }
 
     return NextResponse.json({
       success: true,

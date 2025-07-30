@@ -9,6 +9,7 @@ import {
   processAvatarImage,
   validateImageBuffer,
 } from "@/lib/image-processing";
+import { revalidateUserProfile } from "@/lib/revalidation";
 
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     // Get user data
     const userData = await db
-      .select({ id: user.id })
+      .select({ id: user.id, username: user.username })
       .from(user)
       .where(eq(user.email, session.user.email))
       .limit(1);
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = userData[0].id;
+    const username = userData[0].username;
 
     // Parse multipart form data
     const formData = await request.formData();
@@ -87,6 +89,16 @@ export async function POST(request: NextRequest) {
 
     // Update user's image URL in database
     await db.update(user).set({ image: avatarUrl }).where(eq(user.id, userId));
+
+    // Revalidate user profile cache
+    if (username) {
+      try {
+        await revalidateUserProfile(username);
+      } catch (revalidateError) {
+        console.warn("Failed to revalidate user profile cache:", revalidateError);
+        // Don't fail the entire request if revalidation fails
+      }
+    }
 
     return NextResponse.json({
       success: true,

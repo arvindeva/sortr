@@ -13,31 +13,42 @@ import {
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
 import { eq, desc, and, count } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 
-// Force dynamic rendering for always-fresh data
-export const dynamic = "force-dynamic";
+// Enable ISR with 1 hour revalidation
+export const revalidate = 3600;
 
-async function getPopularSorters() {
-  const popularSorters = await db
-    .select({
-      id: sorters.id,
-      title: sorters.title,
-      slug: sorters.slug,
-      category: sorters.category,
-      completionCount: sorters.completionCount,
-      viewCount: sorters.viewCount,
-      coverImageUrl: sorters.coverImageUrl,
-      creatorUsername: user.username,
-    })
-    .from(sorters)
-    .leftJoin(user, eq(sorters.userId, user.id))
-    .where(eq(sorters.deleted, false))
-    .orderBy(desc(sorters.completionCount))
-    .limit(10);
+const getPopularSorters = unstable_cache(
+  async () => {
+    console.log(
+      "🔥 Homepage cache MISS - fetching popular sorters from database",
+    );
+    const popularSorters = await db
+      .select({
+        id: sorters.id,
+        title: sorters.title,
+        slug: sorters.slug,
+        category: sorters.category,
+        completionCount: sorters.completionCount,
+        viewCount: sorters.viewCount,
+        coverImageUrl: sorters.coverImageUrl,
+        creatorUsername: user.username,
+      })
+      .from(sorters)
+      .leftJoin(user, eq(sorters.userId, user.id))
+      .where(eq(sorters.deleted, false))
+      .orderBy(desc(sorters.completionCount))
+      .limit(10);
 
-  return popularSorters;
-}
+    console.log(`📊 Found ${popularSorters.length} sorters for homepage`);
+    return popularSorters;
+  },
+  ["homepage-popular-sorters"],
+  {
+    revalidate: 3600,
+  },
+);
 
 async function getSorterStats() {
   const [sorterCount] = await db
@@ -50,7 +61,8 @@ async function getSorterStats() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const title = "sortr - Create a Sorter for Anything";
-  const description = "Create and share a sorter for anything to rank items from best to worst.";
+  const description =
+    "Create and share a sorter for anything to rank items from best to worst.";
 
   return {
     title,

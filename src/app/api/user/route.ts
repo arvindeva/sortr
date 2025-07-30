@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { updateUsernameSchema } from "@/lib/validations";
+import { revalidateHomepage, revalidateUserProfile } from "@/lib/revalidation";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -100,15 +100,15 @@ export async function PATCH(request: NextRequest) {
     // Update username
     await db.update(user).set({ username }).where(eq(user.id, userId));
 
-    // Revalidate pages that show user data
+    // Revalidate caches that show user data
     try {
-      revalidatePath("/"); // Homepage (popular sorters)
-      revalidatePath(`/user/${username}`); // New username profile page
-      if (currentUser[0].username) {
-        revalidatePath(`/user/${currentUser[0].username}`); // Old username profile page (if different)
+      await revalidateHomepage(); // Homepage (popular sorters)
+      await revalidateUserProfile(username); // New username profile page 
+      if (currentUser[0].username && currentUser[0].username !== username) {
+        await revalidateUserProfile(currentUser[0].username); // Old username profile page (if different)
       }
     } catch (revalidateError) {
-      console.warn("Failed to revalidate some paths:", revalidateError);
+      console.warn("Failed to revalidate caches:", revalidateError);
       // Don't fail the entire request if revalidation fails
     }
 
