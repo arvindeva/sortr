@@ -93,7 +93,7 @@ export function Navbar() {
 
   return (
     <nav className="border-border bg-secondary-background sticky top-0 z-30 flex w-full items-center justify-between border-b-2 px-4 py-2 md:px-6 md:py-4">
-      <Link href="/">
+      <Link href="/" prefetch={false}>
         <span className="text-2xl font-bold tracking-wide transition-all duration-300 ease-out hover:tracking-widest md:hidden">
           sortr
         </span>
@@ -254,7 +254,7 @@ export function Navbar() {
 
             {/* Simplified navbar inside drawer */}
             <div className="border-border bg-secondary-background flex items-center justify-between border-b-2 px-4 py-2">
-              <Link href="/">
+              <Link href="/" prefetch={false}>
                 <span className="text-2xl font-bold tracking-wide">sortr</span>
               </Link>
               <DrawerClose asChild>
