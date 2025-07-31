@@ -7,6 +7,7 @@ import {
   sorters,
   user,
   sorterGroups,
+  sorterTags,
   sorterItems,
   sorterHistory,
 } from "@/db/schema";
@@ -68,11 +69,16 @@ interface ResultData {
     id: string;
     name: string;
   }[];
+  selectedTagSlugs?: string[];
   totalGroups?: {
     id: string;
     name: string;
   }[];
-  isOwner: boolean; // NEW: Whether current user owns this ranking
+  totalTags?: {
+    name: string;
+    slug: string;
+  }[];
+  isOwner: boolean; // Whether current user owns this ranking
 }
 
 export async function generateMetadata({
@@ -158,10 +164,11 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       id: sortingResults.id,
       rankings: sortingResults.rankings,
       selectedGroups: sortingResults.selectedGroups,
+      selectedTagSlugs: sortingResults.selectedTagSlugs, // NEW: Get selected tag slugs
       createdAt: sortingResults.createdAt,
       sorterId: sortingResults.sorterId,
-      userId: sortingResults.userId, // NEW: Get userId for ownership check
-      version: sortingResults.version, // NEW: Get version
+      userId: sortingResults.userId, // Get userId for ownership check
+      version: sortingResults.version, // Get version
       username: user.username,
       // Sorter-level snapshots
       sorterTitle: sortingResults.sorterTitle,
@@ -300,6 +307,32 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     }
   }
 
+  // Get selected tag information (new tag-based system)
+  let selectedTagNames: string[] = [];
+  let totalTags: { name: string; slug: string }[] = [];
+  
+  if (result.selectedTagSlugs && result.selectedTagSlugs.length > 0 && result.sorterId) {
+    try {
+      // Get all tags for this sorter
+      const allTags = await db
+        .select({
+          name: sorterTags.name,
+          slug: sorterTags.slug,
+        })
+        .from(sorterTags)
+        .where(eq(sorterTags.sorterId, result.sorterId));
+
+      totalTags = allTags;
+
+      // Filter to only selected tags
+      selectedTagNames = allTags
+        .filter(tag => result.selectedTagSlugs!.includes(tag.slug))
+        .map(tag => tag.name);
+    } catch (error) {
+      console.error("Failed to fetch selected tags:", error);
+    }
+  }
+
   return {
     result: {
       id: result.id,
@@ -322,7 +355,9 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       isDeleted: sorter.isDeleted,
     },
     selectedGroups: selectedGroups.length > 0 ? selectedGroups : undefined,
+    selectedTagSlugs: selectedTagNames.length > 0 ? selectedTagNames : undefined,
     totalGroups: totalGroups.length > 0 ? totalGroups : undefined,
+    totalTags: totalTags.length > 0 ? totalTags : undefined,
     isOwner: currentUserId !== null && result.userId === currentUserId, // Check ownership
   };
 }
@@ -335,7 +370,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
     notFound();
   }
 
-  const { result, sorter, selectedGroups, totalGroups, isOwner } = data;
+  const { result, sorter, selectedGroups, selectedTagSlugs, totalGroups, totalTags, isOwner } = data;
 
   // JSON-LD structured data for rankings
   const jsonLd = {
@@ -566,8 +601,32 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
           </Panel>
         </div>
 
-        {/* Right Column - Sorter Info (desktop only) */}
-        <div className="hidden md:block">
+        {/* Right Column (desktop only) */}
+        <div className="hidden md:block space-y-8">
+          {/* Filters Used Panel - Only show if filters were used */}
+          {(selectedGroups || selectedTagSlugs) && (
+            <Panel variant="primary">
+              <PanelHeader variant="primary">
+                <PanelTitle>Filters Used</PanelTitle>
+              </PanelHeader>
+              <PanelContent variant="primary" className="p-2 md:p-6">
+                <div className="flex flex-wrap gap-2">
+                  {selectedTagSlugs && selectedTagSlugs.map((tagName) => (
+                    <Badge key={tagName} variant="neutral">
+                      {tagName}
+                    </Badge>
+                  ))}
+                  {selectedGroups && selectedGroups.map((group) => (
+                    <Badge key={group.id} variant="neutral">
+                      {group.name}
+                    </Badge>
+                  ))}
+                </div>
+              </PanelContent>
+            </Panel>
+          )}
+
+          {/* Sorter Info Panel */}
           <Panel variant="primary">
             <PanelHeader variant="primary">
               <PanelTitle>Sorter Info</PanelTitle>

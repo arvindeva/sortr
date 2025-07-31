@@ -9,6 +9,7 @@ import {
   varchar,
   jsonb,
   unique,
+  index,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -76,6 +77,27 @@ export const sorters = pgTable("sorters", {
   deleted: boolean("deleted").default(false).notNull(),
 });
 
+export const sorterTags = pgTable(
+  "sorterTags",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sorterId: uuid("sorterId")
+      .notNull()
+      .references(() => sorters.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 100 }).notNull(),
+    slug: varchar("slug", { length: 100 }).notNull(),
+    sortOrder: integer("sortOrder").default(0).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    // Composite unique constraints for name and slug per sorter
+    uniqueName: unique().on(table.sorterId, table.name),
+    uniqueSlug: unique().on(table.sorterId, table.slug),
+    // Index for fast ordering queries
+    sortOrderIdx: index("sorter_tags_sort_order_idx").on(table.sorterId, table.sortOrder),
+  }),
+);
+
 export const sorterGroups = pgTable("sorterGroups", {
   id: uuid("id").defaultRandom().primaryKey(),
   sorterId: uuid("sorterId")
@@ -88,19 +110,27 @@ export const sorterGroups = pgTable("sorterGroups", {
   version: integer("version").default(1).notNull(),
 });
 
-export const sorterItems = pgTable("sorterItems", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  sorterId: uuid("sorterId")
-    .notNull()
-    .references(() => sorters.id, { onDelete: "cascade" }),
-  groupId: uuid("groupId").references(() => sorterGroups.id, {
-    onDelete: "cascade",
+export const sorterItems = pgTable(
+  "sorterItems",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sorterId: uuid("sorterId")
+      .notNull()
+      .references(() => sorters.id, { onDelete: "cascade" }),
+    groupId: uuid("groupId").references(() => sorterGroups.id, {
+      onDelete: "cascade",
+    }),
+    title: text("title").notNull(),
+    slug: text("slug"), // For R2 key tracking and URL generation
+    imageUrl: text("imageUrl"),
+    tagSlugs: text("tagSlugs").array().default([]).notNull(), // Array of tag slugs for fast filtering
+    version: integer("version").default(1).notNull(),
+  },
+  (table) => ({
+    // GIN index for fast array overlap queries
+    tagSlugsIdx: index("sorter_items_tag_slugs_idx").using("gin", table.tagSlugs),
   }),
-  title: text("title").notNull(),
-  slug: text("slug"), // For R2 key tracking and URL generation
-  imageUrl: text("imageUrl"),
-  version: integer("version").default(1).notNull(),
-});
+);
 
 export const sortingResults = pgTable("sortingResults", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -110,6 +140,7 @@ export const sortingResults = pgTable("sortingResults", {
   userId: uuid("userId").references(() => user.id, { onDelete: "set null" }), // optional - for anonymous users
   rankings: text("rankings").notNull(), // JSON string of ranked items
   selectedGroups: text("selectedGroups"), // JSON string of selected group IDs (null if no groups used)
+  selectedTagSlugs: text("selectedTagSlugs").array(), // Array of tag slugs (null if no tags used)
   // Sorter-level snapshots for immutable rankings
   sorterTitle: text("sorterTitle"), // Snapshot of sorter title at time of ranking
   sorterCoverImageUrl: text("sorterCoverImageUrl"), // Snapshot of sorter cover image at time of ranking

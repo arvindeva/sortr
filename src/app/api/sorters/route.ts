@@ -8,6 +8,7 @@ import {
   sorters,
   sorterItems,
   sorterGroups,
+  sorterTags,
   user,
   sorterHistory,
 } from "@/db/schema";
@@ -18,6 +19,8 @@ import {
   generateUniqueSlug,
   generateSorterSlug,
   generateSorterItemSlug,
+  generateUniqueTagSlug,
+  validateTagName,
 } from "@/lib/utils";
 import {
   uploadToR2,
@@ -583,6 +586,129 @@ async function handleUploadSessionRequest(body: any, userData: any) {
   }
 }
 
+async function handleTagBasedSorterCreation(body: any, userData: any) {
+  try {
+    console.log("🏷️  Creating tag-based sorter");
+    
+    // Validate the data
+    const validatedData = createSorterSchema.parse(body);
+    
+    // Generate slug for sorter
+    const slug = generateSorterSlug(validatedData.title);
+
+    // Create sorter with tags in a transaction
+    const result = await db.transaction(async (tx) => {
+      // Create the sorter (without useGroups field)
+      const [newSorter] = await tx
+        .insert(sorters)
+        .values({
+          title: validatedData.title,
+          description: validatedData.description || null,
+          category: validatedData.category || null,
+          slug: slug,
+          coverImageUrl: validatedData.coverImageUrl || null,
+          userId: userData.id,
+          version: 1,
+          // Note: useGroups field removed from schema
+        })
+        .returning();
+
+      // Add to sorterHistory as version 1
+      await tx.insert(sorterHistory).values({
+        sorterId: newSorter.id,
+        title: newSorter.title,
+        description: newSorter.description,
+        coverImageUrl: newSorter.coverImageUrl,
+        version: 1,
+      });
+
+      // Create tags if provided
+      const createdTagSlugs = new Map<string, string>(); // tagName -> slug
+      if (validatedData.tags && validatedData.tags.length > 0) {
+        for (const tag of validatedData.tags) {
+          // Generate unique slug for this tag within the sorter
+          const existingTagSlugs = Array.from(createdTagSlugs.values());
+          const tagSlug = generateUniqueTagSlug(tag.name, existingTagSlugs);
+          
+          // Create the tag
+          await tx.insert(sorterTags).values({
+            sorterId: newSorter.id,
+            name: tag.name,
+            slug: tagSlug,
+            sortOrder: tag.sortOrder,
+          });
+          
+          createdTagSlugs.set(tag.name, tagSlug);
+        }
+      }
+
+      // Create items with tag assignments
+      if (validatedData.items && validatedData.items.length > 0) {
+        for (const item of validatedData.items) {
+          // Generate item slug
+          const itemSlug = generateSorterItemSlug(item.title);
+          
+          // Map tag names from form to actual slugs
+          const actualTagSlugs: string[] = [];
+          if (item.tagSlugs && item.tagSlugs.length > 0) {
+            // tagSlugs actually contains tag names from the frontend
+            for (const tagName of item.tagSlugs) {
+              if (createdTagSlugs.has(tagName)) {
+                actualTagSlugs.push(createdTagSlugs.get(tagName)!);
+              }
+            }
+          }
+          
+          await tx.insert(sorterItems).values({
+            sorterId: newSorter.id,
+            groupId: null, // No groups in tag-based system
+            title: item.title,
+            slug: itemSlug,
+            imageUrl: item.imageUrl || null,
+            tagSlugs: actualTagSlugs, // Array of tag slugs
+            version: 1,
+          });
+        }
+      }
+
+      return { sorter: newSorter };
+    });
+
+    console.log(`✅ Tag-based sorter created: ${result.sorter.title} (${result.sorter.slug})`);
+
+    // Revalidate caches
+    try {
+      await revalidateAfterSorterChange({
+        username: userData.username || undefined,
+        includeBrowse: true,
+      });
+    } catch (revalidateError) {
+      console.error("❌ Failed to revalidate caches:", revalidateError);
+    }
+
+    return NextResponse.json({
+      success: true,
+      sorter: result.sorter,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: "Validation error",
+          details: error.errors,
+        },
+        { status: 400 },
+      );
+    }
+
+    console.error("Error creating tag-based sorter:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
@@ -665,6 +791,11 @@ export async function POST(request: NextRequest) {
         // Add the sessionId back to the body
         const bodyWithSession = { ...body, uploadSession: sessionId };
         return await handleUploadSessionRequest(bodyWithSession, userData[0]);
+      }
+
+      // Handle tag-based sorter creation (new simplified path)
+      if (body.tags !== undefined) {
+        return await handleTagBasedSorterCreation(body, userData[0]);
       }
 
       validatedData = createSorterSchema.parse(body);

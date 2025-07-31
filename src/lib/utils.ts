@@ -172,6 +172,75 @@ export function generateSorterItemSlug(
 }
 
 /**
+ * Generate a tag slug from tag name
+ * @param tagName The tag name to convert to a slug
+ * @returns A URL-friendly tag slug
+ */
+export function generateTagSlug(tagName: string): string {
+  return slugify(tagName);
+}
+
+/**
+ * Generate a unique tag slug within a sorter
+ * @param tagName The tag name to convert to a slug
+ * @param existingSlugs Array of existing tag slugs to check against
+ * @returns A unique tag slug
+ */
+export function generateUniqueTagSlug(
+  tagName: string,
+  existingSlugs: string[],
+): string {
+  const baseSlug = generateTagSlug(tagName);
+
+  if (!existingSlugs.includes(baseSlug)) {
+    return baseSlug;
+  }
+
+  let counter = 2;
+  let uniqueSlug = `${baseSlug}-${counter}`;
+
+  while (existingSlugs.includes(uniqueSlug)) {
+    counter++;
+    uniqueSlug = `${baseSlug}-${counter}`;
+  }
+
+  return uniqueSlug;
+}
+
+/**
+ * Validate tag name for creation
+ * @param tagName The tag name to validate
+ * @returns Object with isValid boolean and error message if invalid
+ */
+export function validateTagName(tagName: string): {
+  isValid: boolean;
+  error?: string;
+} {
+  // Trim whitespace
+  const trimmed = tagName.trim();
+
+  // Check if empty
+  if (!trimmed) {
+    return { isValid: false, error: "Tag cannot be empty" };
+  }
+
+  // Check length (reasonable max)
+  if (trimmed.length > 100) {
+    return { isValid: false, error: "Tag name too long (max 100 characters)" };
+  }
+
+  // Only restrict control characters that could cause database/display issues
+  if (/[\x00-\x1f\x7f]/.test(trimmed)) {
+    return {
+      isValid: false,
+      error: "Tag contains invalid control characters",
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
  * Utility function to chunk an array into smaller batches
  * @param array The array to chunk
  * @param size The size of each chunk

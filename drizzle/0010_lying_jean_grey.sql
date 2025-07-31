@@ -1,0 +1,1 @@
+ALTER TABLE "sortingResults" ADD COLUMN "selectedTagSlugs" text[];

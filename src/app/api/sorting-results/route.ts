@@ -8,7 +8,7 @@ import { revalidateHomepage, revalidateUserResults } from "@/lib/revalidation";
 
 export async function POST(request: NextRequest) {
   try {
-    const { sorterId, rankings, selectedGroups } = await request.json();
+    const { sorterId, rankings, selectedGroups, selectedTagSlugs } = await request.json();
 
     if (!sorterId || !rankings) {
       return Response.json(
@@ -50,7 +50,8 @@ export async function POST(request: NextRequest) {
         userId,
         rankings: JSON.stringify(rankings), // Contains versioned URLs already
         selectedGroups: selectedGroups ? JSON.stringify(selectedGroups) : null,
-        version: sorterVersion, // NEW: Pin to specific version
+        selectedTagSlugs: selectedTagSlugs && selectedTagSlugs.length > 0 ? selectedTagSlugs : null,
+        version: sorterVersion, // Pin to specific version
         // Sorter-level snapshots (for quick access)
         sorterTitle,
         sorterCoverImageUrl,

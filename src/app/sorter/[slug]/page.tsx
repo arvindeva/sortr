@@ -64,10 +64,19 @@ interface Sorter {
   };
 }
 
+interface SorterTag {
+  id: string;
+  name: string;
+  slug: string;
+  sortOrder: number;
+  items: SorterItem[];
+}
+
 interface SorterData {
   sorter: Sorter;
   items: SorterItem[];
   groups: SorterGroup[];
+  tags?: SorterTag[];
 }
 
 export async function generateMetadata({
@@ -87,7 +96,7 @@ export async function generateMetadata({
   }
 
   const data: SorterData = await response.json();
-  const { sorter, items, groups } = data;
+  const { sorter, items, groups, tags } = data;
 
   // Create dynamic title
   const title = sorter.title;
@@ -102,9 +111,14 @@ export async function generateMetadata({
   }
 
   // Count total items
-  const itemCount = sorter.useGroups
-    ? groups.reduce((total, group) => total + group.items.length, 0)
-    : items.length;
+  let itemCount = items.length;
+  if (tags && tags.length > 0) {
+    // For tag-based sorters, use total items
+    itemCount = items.length;
+  } else if (sorter.useGroups) {
+    // For group-based sorters, count items in groups
+    itemCount = groups.reduce((total, group) => total + group.items.length, 0);
+  }
 
   const fullDescription = `${description}. Sort ${itemCount} items through pairwise comparison and create your personalized results.`;
 
@@ -209,8 +223,11 @@ export default async function SorterPage({ params }: SorterPageProps) {
     notFound();
   }
 
-  const { sorter, items, groups } = data;
+  const { sorter, items, groups, tags } = data;
   const recentResults = await getRecentResults(sorter.id);
+
+  // Determine if filtering is needed (tags or groups exist)
+  const hasFilters = (tags && tags.length > 0) || (sorter.useGroups && groups && groups.length > 0);
 
   // Get current session to check ownership
   const session = await getServerSession(authOptions);
@@ -319,7 +336,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
               {/* Desktop Action Buttons */}
               <div className="mt-4 hidden items-center gap-4 md:flex">
-                {sorter.useGroups ? (
+                {hasFilters ? (
                   <Button
                     asChild
                     size="default"
@@ -365,7 +382,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
         {/* Mobile Action Buttons */}
         <div className="mb-8 flex items-center gap-4 md:hidden">
-          {sorter.useGroups ? (
+          {hasFilters ? (
             <Button asChild size="default" variant="default" className="group">
               <Link href={`/sorter/${sorter.slug}/filters`}>
                 <Play
@@ -543,8 +560,27 @@ export default async function SorterPage({ params }: SorterPageProps) {
             </Panel>
           </section>
 
-          {/* Right Column - Recent Rankings */}
-          <section>
+          {/* Right Column */}
+          <section className="space-y-8">
+            {/* Filters Panel - Only show if tags exist */}
+            {tags && tags.length > 0 && (
+              <Panel variant="primary">
+                <PanelHeader variant="primary">
+                  <PanelTitle>Filters</PanelTitle>
+                </PanelHeader>
+                <PanelContent variant="primary" className="p-2 md:p-6">
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag) => (
+                      <Badge key={tag.id} variant="neutral">
+                        {tag.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </PanelContent>
+              </Panel>
+            )}
+
+            {/* Recent Rankings Panel */}
             <Panel variant="primary">
               <PanelHeader variant="primary">
                 <PanelTitle>

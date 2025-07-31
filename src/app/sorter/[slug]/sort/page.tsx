@@ -21,13 +21,20 @@ interface SorterData {
     title: string;
     description: string;
     slug: string;
-    useGroups: boolean;
+    useGroups?: boolean; // Optional for backward compatibility
   };
   items: SortItem[];
   groups?: {
     id: string;
     name: string;
     slug: string;
+    items: SortItem[];
+  }[];
+  tags?: {
+    id: string;
+    name: string;
+    slug: string;
+    sortOrder: number;
     items: SortItem[];
   }[];
 }
@@ -43,14 +50,14 @@ async function fetchSorterData(sorterSlug: string): Promise<SorterData> {
   return response.json();
 }
 
-// Generate localStorage key based on sorter ID and selected groups
-function generateProgressKey(sorterId: string, groupSlugs: string[]): string {
-  if (groupSlugs.length === 0) {
+// Generate localStorage key based on sorter ID and selected groups/tags
+function generateProgressKey(sorterId: string, filterSlugs: string[]): string {
+  if (filterSlugs.length === 0) {
     return `sorting-progress-${sorterId}-all`;
   }
 
   // Sort slugs for consistent key generation
-  const sortedSlugs = groupSlugs.sort().join("-");
+  const sortedSlugs = filterSlugs.sort().join("-");
   return `sorting-progress-${sorterId}-${sortedSlugs}`;
 }
 
@@ -197,7 +204,7 @@ export default function SortPage() {
   const [totalComparisons, setTotalComparisons] = useState(0);
   const [canUndo, setCanUndo] = useState(false);
   const [filteredItems, setFilteredItems] = useState<SortItem[]>([]);
-  const [currentGroupSlugs, setCurrentGroupSlugs] = useState<string[]>([]);
+  const [currentFilterSlugs, setCurrentFilterSlugs] = useState<string[]>([]);
   const [sorterId, setSorterId] = useState<string>("");
   const sorterRef = useRef<InteractiveMergeSort | null>(null);
   const resolveComparisonRef = useRef<((winnerId: string) => void) | null>(
@@ -220,10 +227,49 @@ export default function SortPage() {
   useEffect(() => {
     if (sorterData) {
       let itemsToSort = sorterData.items;
-      let groupSlugs: string[] = [];
+      let filterSlugs: string[] = [];
 
-      // If using groups, filter items based on selected groups from URL
-      if (sorterData.sorter.useGroups && sorterData.groups) {
+      // Check for tag-based filtering first (new system)
+      if (sorterData.tags && sorterData.tags.length > 0) {
+        const tagsParam = searchParams.get("tags");
+
+        if (tagsParam) {
+          try {
+            const selectedTagSlugs = tagsParam
+              .split(",")
+              .filter((slug) => slug.trim());
+
+            if (selectedTagSlugs.length === 0) {
+              itemsToSort = sorterData.items;
+              filterSlugs = [];
+            } else {
+              // Filter items that have any of the selected tags
+              itemsToSort = sorterData.items.filter((item) => {
+                // For tag-based filtering, we need to check if item has any of the selected tags
+                // This will be handled by the backend API - for now, get items from matching tags
+                const matchingTags = sorterData.tags!.filter((tag) =>
+                  selectedTagSlugs.includes(tag.slug)
+                );
+                const tagItemIds = new Set(
+                  matchingTags.flatMap((tag) => tag.items.map((item) => item.id))
+                );
+                return tagItemIds.has(item.id);
+              });
+              filterSlugs = selectedTagSlugs;
+            }
+          } catch (error) {
+            console.error("Failed to parse selected tags:", error);
+            itemsToSort = sorterData.items;
+            filterSlugs = [];
+          }
+        } else {
+          // No tags param, default to all items
+          itemsToSort = sorterData.items;
+          filterSlugs = [];
+        }
+      }
+      // Fallback to group-based filtering (legacy system)
+      else if (sorterData.sorter.useGroups && sorterData.groups) {
         const groupsParam = searchParams.get("groups");
 
         if (groupsParam) {
@@ -232,32 +278,30 @@ export default function SortPage() {
               .split(",")
               .filter((slug) => slug.trim());
 
-            // If no groups selected, default to all items
             if (selectedGroupSlugs.length === 0) {
               itemsToSort = sorterData.items;
-              groupSlugs = [];
+              filterSlugs = [];
             } else {
               // Filter items to only include those from selected groups
               itemsToSort = sorterData.groups
                 .filter((group) => selectedGroupSlugs.includes(group.slug))
                 .flatMap((group) => group.items);
-              groupSlugs = selectedGroupSlugs;
+              filterSlugs = selectedGroupSlugs;
             }
           } catch (error) {
             console.error("Failed to parse selected groups:", error);
-            // On error, default to all items instead of redirecting
             itemsToSort = sorterData.items;
-            groupSlugs = [];
+            filterSlugs = [];
           }
         } else {
           // No groups param, default to all items
           itemsToSort = sorterData.items;
-          groupSlugs = [];
+          filterSlugs = [];
         }
       }
 
       setFilteredItems(itemsToSort);
-      setCurrentGroupSlugs(groupSlugs);
+      setCurrentFilterSlugs(filterSlugs);
       setSorterId(sorterData.sorter.id);
     }
   }, [sorterData, router, searchParams]);
@@ -270,8 +314,8 @@ export default function SortPage() {
       !sorting &&
       !sorterRef.current
     ) {
-      // Check for saved progress using group-specific key
-      const progressKey = generateProgressKey(sorterId, currentGroupSlugs);
+      // Check for saved progress using filter-specific key
+      const progressKey = generateProgressKey(sorterId, currentFilterSlugs);
       const savedState = localStorage.getItem(progressKey);
       let savedChoices: Map<string, string> | undefined;
       let savedComparisonCount = 0;
@@ -360,7 +404,7 @@ export default function SortPage() {
           const compressed = LZString.compressToEncodedURIComponent(
             JSON.stringify(stateToSave),
           );
-          const progressKey = generateProgressKey(sorterId, currentGroupSlugs);
+          const progressKey = generateProgressKey(sorterId, currentFilterSlugs);
           localStorage.setItem(progressKey, compressed);
         }
       });
@@ -383,7 +427,7 @@ export default function SortPage() {
 
       startSorting();
     }
-  }, [sorterData, filteredItems, currentGroupSlugs]);
+  }, [sorterData, filteredItems, currentFilterSlugs]);
 
   const startSorting = useCallback(async () => {
     if (!sorterData || !sorterRef.current || filteredItems.length === 0) return;
@@ -413,16 +457,21 @@ export default function SortPage() {
       // Save results
       setSaving(true);
 
-      // Get selected group IDs based on URL parameters and sorter data
+      // Get selected filter IDs based on URL parameters and sorter data
       let selectedGroupIds: string[] = [];
-      if (
+      let selectedTagSlugs: string[] = [];
+      
+      if (sorterData.tags && sorterData.tags.length > 0) {
+        // New tag-based system
+        selectedTagSlugs = currentFilterSlugs;
+      } else if (
         sorterData.sorter.useGroups &&
         sorterData.groups &&
-        currentGroupSlugs.length > 0
+        currentFilterSlugs.length > 0
       ) {
-        // Convert group slugs from URL to group IDs
+        // Legacy group-based system - convert group slugs to group IDs
         selectedGroupIds = sorterData.groups
-          .filter((group) => currentGroupSlugs.includes(group.slug))
+          .filter((group) => currentFilterSlugs.includes(group.slug))
           .map((group) => group.id);
       }
 
@@ -432,7 +481,8 @@ export default function SortPage() {
         body: JSON.stringify({
           sorterId,
           rankings: result,
-          selectedGroups: selectedGroupIds,
+          selectedGroups: selectedGroupIds, // Legacy support
+          selectedTagSlugs: selectedTagSlugs, // New tag support
         }),
       });
 
@@ -440,8 +490,8 @@ export default function SortPage() {
 
       const { resultId } = await response.json();
 
-      // Clear saved progress for this specific group combination
-      const progressKey = generateProgressKey(sorterId, currentGroupSlugs);
+      // Clear saved progress for this specific filter combination
+      const progressKey = generateProgressKey(sorterId, currentFilterSlugs);
       localStorage.removeItem(progressKey);
 
       // Redirect to results page
@@ -451,7 +501,7 @@ export default function SortPage() {
       setSorting(false);
       setSaving(false);
     }
-  }, [sorterData, filteredItems, sorting, sorterId, router, currentGroupSlugs]);
+  }, [sorterData, filteredItems, sorting, sorterId, router, currentFilterSlugs]);
 
   const handleChoice = useCallback((winnerId: string) => {
     if (resolveComparisonRef.current) {

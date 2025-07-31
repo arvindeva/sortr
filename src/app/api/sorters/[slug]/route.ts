@@ -3,6 +3,7 @@ import {
   sorters,
   sorterItems,
   sorterGroups,
+  sorterTags,
   user,
   sortingResults,
   sorterHistory,
@@ -47,8 +48,59 @@ export async function GET(
 
     const sorter = sorterData[0];
 
-    if (sorter.useGroups) {
-      // Get groups with their items
+    // First check for tags (new system)
+    const tags = await db
+      .select({
+        id: sorterTags.id,
+        name: sorterTags.name,
+        slug: sorterTags.slug,
+        sortOrder: sorterTags.sortOrder,
+      })
+      .from(sorterTags)
+      .where(eq(sorterTags.sorterId, sorter.id));
+
+    if (tags.length > 0) {
+      // Tag-based sorter (new system)
+      const items = await db
+        .select({
+          id: sorterItems.id,
+          title: sorterItems.title,
+          imageUrl: sorterItems.imageUrl,
+          tagSlugs: sorterItems.tagSlugs,
+        })
+        .from(sorterItems)
+        .where(eq(sorterItems.sorterId, sorter.id));
+
+      // Group items by tags for the filter page
+      const tagsWithItems = tags.map((tag) => ({
+        ...tag,
+        items: items
+          .filter((item) => item.tagSlugs && item.tagSlugs.includes(tag.slug))
+          .map((item) => ({
+            id: item.id,
+            title: item.title,
+            imageUrl: item.imageUrl,
+          })),
+      }));
+
+      return Response.json({
+        sorter: {
+          ...sorter,
+          user: {
+            username: sorter.creatorUsername,
+            id: sorter.creatorId,
+          },
+        },
+        tags: tagsWithItems,
+        items: items.map((item) => ({
+          id: item.id,
+          title: item.title,
+          imageUrl: item.imageUrl,
+          tagSlugs: item.tagSlugs,
+        })),
+      });
+    } else if (sorter.useGroups) {
+      // Group-based sorter (legacy system)
       const groups = await db
         .select({
           id: sorterGroups.id,
@@ -103,7 +155,7 @@ export async function GET(
         })), // Also return flat items list for backward compatibility
       });
     } else {
-      // Get sorter items (traditional mode)
+      // Traditional sorter (no tags, no groups)
       const items = await db
         .select({
           id: sorterItems.id,
