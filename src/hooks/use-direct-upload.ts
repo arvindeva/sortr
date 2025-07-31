@@ -184,6 +184,8 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
           type: file.type,
         }));
 
+        console.log("Requesting upload tokens for files:", fileInfos);
+
         const tokenResponse = await fetch("/api/upload-tokens", {
           method: "POST",
           headers: {
@@ -197,8 +199,16 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
         });
 
         if (!tokenResponse.ok) {
-          const error = await tokenResponse.json();
-          throw new Error(error.error || "Failed to get upload tokens");
+          let errorMessage = "Failed to get upload tokens";
+          try {
+            const error = await tokenResponse.json();
+            errorMessage = error.error || errorMessage;
+            console.error("Upload token request failed:", error);
+          } catch (parseError) {
+            console.error("Failed to parse error response:", parseError);
+            errorMessage = `Server error (${tokenResponse.status}): ${tokenResponse.statusText}`;
+          }
+          throw new Error(errorMessage);
         }
 
         const tokenData: UploadTokenResponse = await tokenResponse.json();

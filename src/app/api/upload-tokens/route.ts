@@ -36,11 +36,16 @@ const uploadTokenRequestSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("Upload tokens API: Starting request");
+    
     // Check authentication
     const session = await getServerSession();
     if (!session?.user?.email) {
+      console.log("Upload tokens API: No authenticated user");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    
+    console.log("Upload tokens API: Authenticated user:", session.user.email);
 
     // Get user from database
     const userQuery = await db.query.user.findFirst({
@@ -53,7 +58,10 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json();
+    console.log("Upload tokens API: Request body:", body);
+    
     const validatedData = uploadTokenRequestSchema.parse(body);
+    console.log("Upload tokens API: Validated data:", validatedData);
 
     // Create upload session
     const expiresAt = new Date();
