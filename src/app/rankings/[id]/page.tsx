@@ -40,7 +40,6 @@ interface RankedItem {
   id: string;
   title: string;
   imageUrl?: string;
-  groupImageUrl?: string;
 }
 
 interface ResultData {
@@ -57,17 +56,12 @@ interface ResultData {
     description: string;
     category: string;
     coverImageUrl?: string;
-    useGroups: boolean;
     creatorUsername: string;
     createdAt: Date;
     completionCount: number;
     viewCount: number;
     isDeleted: boolean;
   };
-  selectedGroups?: {
-    id: string;
-    name: string;
-  }[];
   selectedTagSlugs?: string[];
   totalGroups?: {
     id: string;
@@ -236,7 +230,6 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     id: result.sorterId || "deleted",
     slug: liveSorter?.slug || null,
     category: liveSorter?.category || "",
-    useGroups: liveSorter?.useGroups || false,
     creatorUsername: liveSorter?.creatorUsername || "Unknown User",
     createdAt: liveSorter?.createdAt || new Date(),
     completionCount: liveSorter?.completionCount || 0,
@@ -258,8 +251,6 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
   const rankings: RankedItem[] = parsedRankings;
 
   // Groups no longer exist - only tags are supported
-  let selectedGroups: { id: string; name: string }[] = [];
-  let totalGroups: { id: string; name: string }[] = [];
 
   // Get selected tag information (new tag-based system)
   let selectedTagNames: string[] = [];

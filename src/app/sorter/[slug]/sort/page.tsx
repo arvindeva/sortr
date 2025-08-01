@@ -60,10 +60,6 @@ function extractImageUrls(items: SortItem[]): string[] {
     if (item.imageUrl) {
       imageUrls.push(item.imageUrl);
     }
-    // Add group/tag image if available
-    if (item.groupImageUrl) {
-      imageUrls.push(item.groupImageUrl);
-    }
   });
   
   // Remove duplicates
@@ -793,7 +789,6 @@ export default function SortPage() {
         <ComparisonCard
           className="mx-auto md:w-80"
           imageUrl={currentComparison.itemA.imageUrl}
-          groupImageUrl={currentComparison.itemA.groupImageUrl}
           title={currentComparison.itemA.title}
           onClick={() => handleChoice(currentComparison.itemA.id)}
         />
@@ -802,7 +797,6 @@ export default function SortPage() {
         <ComparisonCard
           className="mx-auto md:w-80"
           imageUrl={currentComparison.itemB.imageUrl}
-          groupImageUrl={currentComparison.itemB.groupImageUrl}
           title={currentComparison.itemB.title}
           onClick={() => handleChoice(currentComparison.itemB.id)}
         />

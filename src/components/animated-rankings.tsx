@@ -7,7 +7,6 @@ interface RankedItem {
   id: string;
   title: string;
   imageUrl?: string;
-  groupImageUrl?: string;
 }
 
 interface AnimatedRankingsProps {
@@ -35,17 +34,13 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
             // Top 3: Special layout with larger images
             <>
               {/* Image */}
-              {item.imageUrl || item.groupImageUrl ? (
+              {item.imageUrl ? (
                 <div 
                   className="rounded-base border-border flex-shrink-0 overflow-hidden border-2 mb-3 md:mb-0 md:mr-4"
                   style={{ width: "200px", height: "200px" }}
                 >
                   <img
-                    src={
-                      item.imageUrl
-                        ? getImageUrl(item.imageUrl, "full")
-                        : getImageUrl(item.groupImageUrl, "full")
-                    }
+                    src={getImageUrl(item.imageUrl, "full")}
                     alt={item.title}
                     className="h-full w-full object-cover"
                   />
@@ -87,14 +82,10 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
             // Rest: Standard horizontal layout
             <>
               {/* Image */}
-              {item.imageUrl || item.groupImageUrl ? (
+              {item.imageUrl ? (
                 <div className="rounded-base border-border h-10 w-10 flex-shrink-0 overflow-hidden border-2 md:h-16 md:w-16">
                   <img
-                    src={
-                      item.imageUrl
-                        ? getImageUrl(item.imageUrl, "thumbnail")
-                        : getImageUrl(item.groupImageUrl, "full")
-                    }
+                    src={getImageUrl(item.imageUrl, "thumbnail")}
                     alt={item.title}
                     className="h-full w-full object-cover"
                   />

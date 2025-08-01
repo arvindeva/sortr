@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 
 interface ComparisonCardProps extends React.ComponentProps<"div"> {
   imageUrl?: string;
-  groupImageUrl?: string;
   title: string;
   onClick?: () => void;
 }
@@ -12,13 +11,11 @@ interface ComparisonCardProps extends React.ComponentProps<"div"> {
 function ComparisonCard({
   className,
   imageUrl,
-  groupImageUrl,
   title,
   onClick,
   ...props
 }: ComparisonCardProps) {
-  // Use item image first, then group image, then letter placeholder
-  const displayImageUrl = imageUrl || groupImageUrl;
+  const displayImageUrl = imageUrl;
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
