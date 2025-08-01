@@ -58,14 +58,10 @@ export default function CreateSorterFormTags() {
   const [showProgressDialog, setShowProgressDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Upload progress state 
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
-
   // Direct upload hook
   const directUpload = useDirectUpload({
     onProgress: (progress) => {
-      // Update progress state
-      setUploadProgress(progress);
+      // Update progress display
       setShowProgressDialog(true);
     },
     onSuccess: async (uploadedFiles, abortController) => {
@@ -80,7 +76,11 @@ export default function CreateSorterFormTags() {
     onError: (error) => {
       setIsUploading(false);
       setShowProgressDialog(false);
-      console.error("Upload error:", error);
+      
+      // Don't log AbortError as it's expected during cancellation
+      if (error !== "AbortError") {
+        console.error("Upload error:", error);
+      }
     },
   });
 
@@ -452,6 +452,11 @@ export default function CreateSorterFormTags() {
       const result = await response.json();
       console.log("API response:", result);
 
+      // Check if request was aborted before showing success
+      if (abortController?.signal.aborted) {
+        return;
+      }
+
       toast.success("Sorter created successfully!");
 
       // Clean up local state and redirect - handle different response structures
@@ -558,9 +563,22 @@ export default function CreateSorterFormTags() {
     <div>
       {/* Upload Progress Dialog */}
       <UploadProgressDialog 
-        open={showProgressDialog}
-        progress={uploadProgress}
-        onOpenChange={() => {}}
+        open={showProgressDialog || directUpload.isUploading}
+        progress={directUpload.progress}
+        onOpenChange={(open) => {
+          if (!open) {
+            // User clicked X - cancel upload
+            directUpload.cancel();
+            setShowProgressDialog(false);
+            setIsUploading(false);
+            setIsLoading(false);
+
+            // Form state remains intact - no reset needed
+
+            // Show cancellation feedback
+            toast.info("Upload cancelled");
+          }
+        }}
       />
 
       <Panel variant="primary" className="bg-background">
@@ -870,16 +888,16 @@ export default function CreateSorterFormTags() {
               <div className="flex gap-4">
                 <Button
                   type="submit"
-                  disabled={isLoading || isUploading}
+                  disabled={isLoading || isUploading || directUpload.isUploading}
                   className="flex-1"
                 >
-                  {isLoading || isUploading ? "Creating..." : "Create Sorter"}
+                  {isLoading || isUploading || directUpload.isUploading ? "Creating..." : "Create Sorter"}
                 </Button>
                 <Button
                   type="button"
                   variant="neutral"
                   onClick={() => router.back()}
-                  disabled={isLoading || isUploading}
+                  disabled={isLoading || isUploading || directUpload.isUploading}
                 >
                   Cancel
                 </Button>

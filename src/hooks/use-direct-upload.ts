@@ -423,6 +423,11 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
                 error: null,
               };
             } catch (error) {
+              // Handle AbortError specially - don't log it as an error during cancellation
+              if (error instanceof Error && error.name === "AbortError") {
+                throw error; // Re-throw to stop the upload process
+              }
+              
               console.error(
                 `Failed to upload ${task.originalFile.name}:`,
                 error,
@@ -478,7 +483,9 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
 
                 // Check if this is an abort error
                 if (taskResult.error?.includes("AbortError")) {
-                  throw new Error("AbortError");
+                  const abortError = new Error("Upload was cancelled");
+                  abortError.name = "AbortError";
+                  throw abortError;
                 }
 
                 updateProgress({
@@ -501,7 +508,13 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
                 });
               }
             } else {
-              // Promise rejected (shouldn't happen due to try-catch, but handle it)
+              // Promise rejected - check if it's an AbortError
+              if (result.reason instanceof Error && result.reason.name === "AbortError") {
+                const abortError = new Error("Upload was cancelled");
+                abortError.name = "AbortError";
+                throw abortError;
+              }
+              
               console.error(
                 "Unexpected batch promise rejection:",
                 result.reason,
@@ -561,6 +574,12 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
         if (options.onSuccess) {
           try {
             await options.onSuccess(uploadResults, abortController);
+
+            // Check if the operation was cancelled during onSuccess
+            if (abortController?.signal.aborted) {
+              // Operation was cancelled, don't show completion
+              return;
+            }
 
             // After sorter creation is complete, show redirecting message
             updateProgress({
