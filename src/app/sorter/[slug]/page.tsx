@@ -39,12 +39,6 @@ interface SorterItem {
   groupImageUrl?: string;
 }
 
-interface SorterGroup {
-  id: string;
-  name: string;
-  coverImageUrl?: string;
-  items: SorterItem[];
-}
 
 interface Sorter {
   id: string;
@@ -53,7 +47,6 @@ interface Sorter {
   description?: string;
   category?: string;
   coverImageUrl?: string;
-  useGroups: boolean;
   userId: string;
   createdAt: string;
   completionCount: number;
@@ -75,7 +68,6 @@ interface SorterTag {
 interface SorterData {
   sorter: Sorter;
   items: SorterItem[];
-  groups: SorterGroup[];
   tags?: SorterTag[];
 }
 
@@ -96,7 +88,7 @@ export async function generateMetadata({
   }
 
   const data: SorterData = await response.json();
-  const { sorter, items, groups, tags } = data;
+  const { sorter, items, tags } = data;
 
   // Create dynamic title
   const title = sorter.title;
@@ -111,14 +103,7 @@ export async function generateMetadata({
   }
 
   // Count total items
-  let itemCount = items.length;
-  if (tags && tags.length > 0) {
-    // For tag-based sorters, use total items
-    itemCount = items.length;
-  } else if (sorter.useGroups) {
-    // For group-based sorters, count items in groups
-    itemCount = groups.reduce((total, group) => total + group.items.length, 0);
-  }
+  const itemCount = items.length;
 
   const fullDescription = `${description}. Sort ${itemCount} items through pairwise comparison and create your personalized results.`;
 
@@ -223,11 +208,11 @@ export default async function SorterPage({ params }: SorterPageProps) {
     notFound();
   }
 
-  const { sorter, items, groups, tags } = data;
+  const { sorter, items, tags } = data;
   const recentResults = await getRecentResults(sorter.id);
 
-  // Determine if filtering is needed (tags or groups exist)
-  const hasFilters = (tags && tags.length > 0) || (sorter.useGroups && groups && groups.length > 0);
+  // Determine if filtering is needed (tags exist)
+  const hasFilters = tags && tags.length > 0;
 
   // Get current session to check ownership
   const session = await getServerSession(authOptions);
@@ -250,8 +235,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
     "@context": "https://schema.org",
     "@type": "Survey",
     name: sorter.title,
-    description:
-      sorter.description || `Sorter for "${sorter.title}"`,
+    description: sorter.description || `Sorter for "${sorter.title}"`,
     url: `${process.env.NEXTAUTH_URL}/sorter/${sorter.slug}`,
     dateCreated: sorter.createdAt,
     creator: {
@@ -422,94 +406,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                 <PanelTitle>Items to Rank ({items?.length || 0})</PanelTitle>
               </PanelHeader>
               <PanelContent variant="primary" className="p-2 md:p-6">
-                {sorter.useGroups && groups ? (
-                  /* Groups Mode */
-                  groups.length === 0 ? (
-                    <Box variant="warning" size="md">
-                      <p className="font-medium italic">
-                        No groups found for this sorter.
-                      </p>
-                    </Box>
-                  ) : (
-                    <div className="space-y-6">
-                      {groups.map((group) => (
-                        <div key={group.id} className="space-y-3">
-                          {/* Group Header with Cover Image */}
-                          <div className="flex items-center gap-3">
-                            {/* Group Cover Image */}
-                            {group.coverImageUrl ? (
-                              <div className="border-border rounded-base h-12 w-12 flex-shrink-0 overflow-hidden border-2">
-                                <img
-                                  src={group.coverImageUrl}
-                                  alt={`${group.name} cover`}
-                                  className="h-full w-full object-cover"
-                                />
-                              </div>
-                            ) : (
-                              <div className="border-border bg-secondary-background rounded-base flex h-12 w-12 flex-shrink-0 items-center justify-center border-2">
-                                <span className="text-main text-sm font-bold">
-                                  {group.name.charAt(0).toUpperCase()}
-                                </span>
-                              </div>
-                            )}
-
-                            {/* Group Name Badge */}
-                            <Badge variant="default">{group.name}</Badge>
-                          </div>
-
-                          {/* Items in Group */}
-                          <div className="space-y-3">
-                            {group.items.map((item) => (
-                              <RankingItem
-                                key={item.id}
-                                className="bg-background text-foreground"
-                              >
-                                <RankingItemContent>
-                                  <div className="flex min-w-0 items-center gap-3 overflow-hidden">
-                                    {/* Thumbnail */}
-                                    {item.imageUrl || item.groupImageUrl ? (
-                                      <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
-                                        <img
-                                          src={
-                                            item.imageUrl
-                                              ? getImageUrl(
-                                                  item.imageUrl,
-                                                  "thumbnail",
-                                                )
-                                              : getImageUrl(
-                                                  item.groupImageUrl,
-                                                  "full",
-                                                )
-                                          }
-                                          alt={item.title}
-                                          className="h-full w-full object-cover"
-                                        />
-                                      </div>
-                                    ) : (
-                                      <div className="border-border bg-secondary-background rounded-base flex h-10 w-10 flex-shrink-0 items-center justify-center border-2">
-                                        <span className="text-main text-xs font-bold">
-                                          {item.title.charAt(0).toUpperCase()}
-                                        </span>
-                                      </div>
-                                    )}
-
-                                    {/* Title */}
-                                    <div className="w-0 min-w-0 flex-1">
-                                      <p className="font-medium break-words hyphens-auto">
-                                        {item.title}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </RankingItemContent>
-                              </RankingItem>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )
-                ) : /* Traditional Mode */
-                items?.length === 0 ? (
+                {items?.length === 0 ? (
                   <Box variant="warning" size="md">
                     <p className="font-medium italic">
                       No items found for this sorter.
@@ -526,7 +423,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
                           <div className="flex min-w-0 items-center gap-3 overflow-hidden">
                             {/* Thumbnail */}
                             {item.imageUrl || item.groupImageUrl ? (
-                              <div className="border-border rounded-base h-10 w-10 flex-shrink-0 overflow-hidden border-2">
+                              <div className="border-border rounded-base h-16 w-16 flex-shrink-0 overflow-hidden border-2">
                                 <img
                                   src={
                                     item.imageUrl

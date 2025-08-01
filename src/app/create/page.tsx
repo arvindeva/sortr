@@ -13,7 +13,7 @@ export default async function CreatePage() {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
+    <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
       <CreateSorterFormTags />
     </div>
   );

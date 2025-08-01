@@ -76,7 +76,7 @@ export default function CreateSorterFormTags() {
     onError: (error) => {
       setIsUploading(false);
       setShowProgressDialog(false);
-      
+
       // Don't log AbortError as it's expected during cancellation
       if (error !== "AbortError") {
         console.error("Upload error:", error);
@@ -564,7 +564,7 @@ export default function CreateSorterFormTags() {
   return (
     <div>
       {/* Upload Progress Dialog */}
-      <UploadProgressDialog 
+      <UploadProgressDialog
         open={showProgressDialog || directUpload.isUploading}
         progress={directUpload.progress}
         onOpenChange={(open) => {
@@ -578,7 +578,7 @@ export default function CreateSorterFormTags() {
             // Form state remains intact - no reset needed
 
             // Show cancellation feedback
-            toast.info("Upload cancelled");
+            toast.info("Sorter creation cancelled");
           }
         }}
       />
@@ -737,9 +737,11 @@ export default function CreateSorterFormTags() {
                 {/* Items List */}
                 <div className="space-y-4">
                   {itemFields.length === 0 ? (
-                    <div className="py-8 text-center">
-                      <p>No items added yet</p>
-                      <p className="mt-1 text-sm">
+                    <div className="py-8">
+                      <p className="text-muted-foreground">
+                        No items added yet
+                      </p>
+                      <p className="text-muted-foreground mt-1 text-sm">
                         Click "Upload Images" or "Add Item" to get started
                       </p>
                     </div>
@@ -817,7 +819,7 @@ export default function CreateSorterFormTags() {
 
                   {/* Add buttons below all items - only show when there's at least one item */}
                   {itemFields.length > 0 && (
-                    <div className="pt-2 flex items-center gap-2">
+                    <div className="flex items-center gap-2 pt-2">
                       <Button
                         type="button"
                         variant="neutral"
@@ -887,21 +889,17 @@ export default function CreateSorterFormTags() {
               )}
 
               {/* Submit */}
-              <div className="flex gap-4">
+              <div>
                 <Button
                   type="submit"
-                  disabled={isLoading || isUploading || directUpload.isUploading}
-                  className="flex-1"
+                  disabled={
+                    isLoading || isUploading || directUpload.isUploading
+                  }
+                  className="w-full md:mt-4"
                 >
-                  {isLoading || isUploading || directUpload.isUploading ? "Creating..." : "Create Sorter"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="neutral"
-                  onClick={() => router.back()}
-                  disabled={isLoading || isUploading || directUpload.isUploading}
-                >
-                  Cancel
+                  {isLoading || isUploading || directUpload.isUploading
+                    ? "Creating..."
+                    : "Create Sorter"}
                 </Button>
               </div>
             </form>

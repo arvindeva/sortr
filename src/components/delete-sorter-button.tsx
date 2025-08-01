@@ -94,10 +94,7 @@ export function DeleteSorterButton({
             <p className="mb-2 font-medium">
               Are you sure you want to delete <strong>"{sorterTitle}"</strong>?
             </p>
-            <p className="text-foreground">
-              This action cannot be undone. All sorting results and data
-              associated with this sorter will be permanently deleted.
-            </p>
+            <p className="text-foreground">This action cannot be undone.</p>
           </div>
 
           {error && (
@@ -106,10 +103,18 @@ export function DeleteSorterButton({
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="neutral"
+              onClick={() => setIsOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
             <Button
               variant="default"
-              className="flex-1 bg-red-500 hover:bg-red-600"
+              className="bg-red-500 hover:bg-red-600"
               onClick={handleDelete}
               disabled={isDeleting}
             >
@@ -121,14 +126,6 @@ export function DeleteSorterButton({
                   Delete Forever
                 </>
               )}
-            </Button>
-            <Button
-              type="button"
-              variant="neutral"
-              onClick={() => setIsOpen(false)}
-              disabled={isDeleting}
-            >
-              Cancel
             </Button>
           </div>
         </div>
