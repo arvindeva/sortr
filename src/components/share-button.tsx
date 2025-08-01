@@ -24,7 +24,7 @@ interface ShareButtonProps {
     username: string;
     rankings: RankedItem[];
     createdAt: Date;
-    selectedGroups?: string[];
+    selectedTags?: string[];
   };
 }
 

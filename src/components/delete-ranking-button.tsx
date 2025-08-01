@@ -80,10 +80,18 @@ export function DeleteRankingButton({
           </Button>
           <Button
             variant="default"
+            className="bg-red-500 hover:bg-red-600"
             onClick={handleDelete}
             disabled={isDeleting}
           >
-            {isDeleting ? "Deleting..." : "Delete Ranking"}
+            {isDeleting ? (
+              "Deleting..."
+            ) : (
+              <>
+                <Trash2 className="mr-2" size={16} />
+                Delete Ranking
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

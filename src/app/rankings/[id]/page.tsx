@@ -40,7 +40,6 @@ interface RankedItem {
   id: string;
   title: string;
   imageUrl?: string;
-  groupImageUrl?: string;
 }
 
 interface ResultData {
@@ -57,22 +56,13 @@ interface ResultData {
     description: string;
     category: string;
     coverImageUrl?: string;
-    useGroups: boolean;
     creatorUsername: string;
     createdAt: Date;
     completionCount: number;
     viewCount: number;
     isDeleted: boolean;
   };
-  selectedGroups?: {
-    id: string;
-    name: string;
-  }[];
   selectedTagSlugs?: string[];
-  totalGroups?: {
-    id: string;
-    name: string;
-  }[];
   totalTags?: {
     name: string;
     slug: string;
@@ -236,7 +226,6 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     id: result.sorterId || "deleted",
     slug: liveSorter?.slug || null,
     category: liveSorter?.category || "",
-    useGroups: liveSorter?.useGroups || false,
     creatorUsername: liveSorter?.creatorUsername || "Unknown User",
     createdAt: liveSorter?.createdAt || new Date(),
     completionCount: liveSorter?.completionCount || 0,
@@ -258,8 +247,6 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
   const rankings: RankedItem[] = parsedRankings;
 
   // Groups no longer exist - only tags are supported
-  let selectedGroups: { id: string; name: string }[] = [];
-  let totalGroups: { id: string; name: string }[] = [];
 
   // Get selected tag information (new tag-based system)
   let selectedTagNames: string[] = [];
@@ -301,16 +288,13 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       description: sorter.description,
       category: sorter.category,
       coverImageUrl: sorter.coverImageUrl,
-      useGroups: sorter.useGroups,
       creatorUsername: sorter.creatorUsername,
       createdAt: sorter.createdAt,
       completionCount: sorter.completionCount,
       viewCount: sorter.viewCount,
       isDeleted: sorter.isDeleted,
     },
-    selectedGroups: selectedGroups.length > 0 ? selectedGroups : undefined,
     selectedTagSlugs: selectedTagNames.length > 0 ? selectedTagNames : undefined,
-    totalGroups: totalGroups.length > 0 ? totalGroups : undefined,
     totalTags: totalTags.length > 0 ? totalTags : undefined,
     isOwner: currentUserId !== null && result.userId === currentUserId, // Check ownership
   };
@@ -324,7 +308,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
     notFound();
   }
 
-  const { result, sorter, selectedGroups, selectedTagSlugs, totalGroups, totalTags, isOwner } = data;
+  const { result, sorter, selectedTagSlugs, totalTags, isOwner } = data;
 
   // JSON-LD structured data for rankings
   const jsonLd = {
@@ -373,8 +357,8 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         ...(item.imageUrl && { image: item.imageUrl }),
       })),
     },
-    ...(selectedGroups && selectedGroups.length > 0 && {
-      about: selectedGroups.map(group => group.name).join(", "),
+    ...(selectedTagSlugs && selectedTagSlugs.length > 0 && {
+      about: selectedTagSlugs.join(", "),
     }),
   };
 
@@ -448,11 +432,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
               {!sorter.isDeleted && sorter.slug ? (
                 <Button asChild variant="default">
                   <Link
-                    href={
-                      sorter.useGroups
-                        ? `/sorter/${sorter.slug}/filters`
-                        : `/sorter/${sorter.slug}/sort`
-                    }
+                    href={`/sorter/${sorter.slug}/sort`}
                   >
                     <Play size={16} />
                     Sort This
@@ -470,7 +450,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   username: result.username,
                   rankings: result.rankings,
                   createdAt: result.createdAt,
-                  selectedGroups: selectedGroups?.map((group) => group.name),
+                  selectedTags: selectedTagSlugs,
                 }}
               />
               {isOwner && (
@@ -489,11 +469,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         {!sorter.isDeleted && sorter.slug ? (
           <Button asChild variant="default">
             <Link
-              href={
-                sorter.useGroups
-                  ? `/sorter/${sorter.slug}/filters`
-                  : `/sorter/${sorter.slug}/sort`
-              }
+              href={`/sorter/${sorter.slug}/sort`}
             >
               <Play size={16} />
               Sort This
@@ -511,7 +487,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
             username: result.username,
             rankings: result.rankings,
             createdAt: result.createdAt,
-            selectedGroups: selectedGroups?.map((group) => group.name),
+            selectedTags: selectedTagSlugs,
           }}
         />
         {isOwner && (
@@ -534,21 +510,6 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
               variant="primary"
               className="overflow-hidden p-2 md:p-6"
             >
-              {/* Smart Group Badges - only show when subset of groups used */}
-              {selectedGroups &&
-                totalGroups &&
-                selectedGroups.length > 0 &&
-                selectedGroups.length < totalGroups.length && (
-                  <div className="mb-6">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedGroups.map((group) => (
-                        <Badge key={group.id} variant="neutral">
-                          {group.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
               <AnimatedRankings rankings={result.rankings} />
             </PanelContent>
@@ -558,7 +519,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         {/* Right Column (desktop only) */}
         <div className="hidden md:block space-y-8">
           {/* Filters Used Panel - Only show if filters were used */}
-          {(selectedGroups || selectedTagSlugs) && (
+          {selectedTagSlugs && (
             <Panel variant="primary">
               <PanelHeader variant="primary">
                 <PanelTitle>Filters Used</PanelTitle>
@@ -568,11 +529,6 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   {selectedTagSlugs && selectedTagSlugs.map((tagName) => (
                     <Badge key={tagName} variant="neutral">
                       {tagName}
-                    </Badge>
-                  ))}
-                  {selectedGroups && selectedGroups.map((group) => (
-                    <Badge key={group.id} variant="neutral">
-                      {group.name}
                     </Badge>
                   ))}
                 </div>
@@ -716,11 +672,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
           <>
             <Button asChild>
               <Link
-                href={
-                  sorter.useGroups
-                    ? `/sorter/${sorter.slug}/filters`
-                    : `/sorter/${sorter.slug}/sort`
-                }
+                href={`/sorter/${sorter.slug}/sort`}
               >
                 <Play className="mr-2" size={16} />
                 Sort now
@@ -756,7 +708,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
               username={result.username}
               rankings={result.rankings}
               createdAt={result.createdAt}
-              selectedGroups={selectedGroups?.map((group) => group.name)}
+              selectedTags={selectedTagSlugs}
             />
           </div>
         </div>

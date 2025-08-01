@@ -12,7 +12,6 @@ interface RankedItem {
   id: string;
   title: string;
   imageUrl?: string;
-  groupImageUrl?: string;
 }
 
 interface RankingImageLayoutProps {
@@ -20,7 +19,7 @@ interface RankingImageLayoutProps {
   username: string;
   rankings: RankedItem[];
   createdAt: Date;
-  selectedGroups?: string[];
+  selectedTags?: string[];
 }
 
 export function RankingImageLayout({
@@ -28,7 +27,7 @@ export function RankingImageLayout({
   username,
   rankings,
   createdAt,
-  selectedGroups,
+  selectedTags,
 }: RankingImageLayoutProps) {
   // Split rankings into top 3 (with images) and remaining (text only)
   const top3Items = rankings.slice(0, 3);
@@ -140,10 +139,10 @@ export function RankingImageLayout({
                       justifyContent: "center",
                     }}
                   >
-                    {item.imageUrl || item.groupImageUrl ? (
+                    {item.imageUrl ? (
                       <img
                         src={getImageUrl(
-                          item.imageUrl || item.groupImageUrl,
+                          item.imageUrl,
                           "full",
                         )}
                         alt={item.title}
@@ -235,10 +234,10 @@ export function RankingImageLayout({
                         justifyContent: "center",
                       }}
                     >
-                      {item.imageUrl || item.groupImageUrl ? (
+                      {item.imageUrl ? (
                         <img
                           src={getImageUrl(
-                            item.imageUrl || item.groupImageUrl,
+                            item.imageUrl,
                             "full",
                           )}
                           alt={item.title}
