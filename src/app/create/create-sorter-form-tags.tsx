@@ -464,6 +464,7 @@ export default function CreateSorterFormTags() {
       // Tag-based path: { success: true, sorter: { slug: "..." } }
       const slug = result.slug || result.sorter?.slug;
       if (slug) {
+        router.refresh(); // Clear router cache so homepage shows new sorter
         router.push(`/sorter/${slug}`);
       } else {
         console.error("No slug found in response:", result);
@@ -520,6 +521,7 @@ export default function CreateSorterFormTags() {
 
       const result = await response.json();
       toast.success("Sorter created successfully!");
+      router.refresh(); // Clear router cache so homepage shows new sorter
       router.push(`/sorter/${result.sorter.slug}`);
     } catch (error) {
       console.error("Error creating sorter:", error);
