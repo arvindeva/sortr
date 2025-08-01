@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
         sorterId,
         userId,
         rankings: JSON.stringify(rankings), // Contains versioned URLs already
-        selectedGroups: selectedGroups ? JSON.stringify(selectedGroups) : null,
         selectedTagSlugs: selectedTagSlugs && selectedTagSlugs.length > 0 ? selectedTagSlugs : null,
         version: sorterVersion, // Pin to specific version
         // Sorter-level snapshots (for quick access)

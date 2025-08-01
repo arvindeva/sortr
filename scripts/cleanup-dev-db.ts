@@ -3,10 +3,10 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import {
   sessionFiles,
-  sorterGroups,
   sorterHistory,
   sorterItems,
   sorters,
+  sorterTags,
   sortingResults,
   uploadSessions,
 } from "../src/db/schema";
@@ -154,6 +154,44 @@ async function deleteTableRecords(
   }
 }
 
+async function invalidateCache() {
+  console.log("🧹 Invalidating cached pages...");
+  
+  try {
+    // Try both tag-based and path-based revalidation for maximum effectiveness
+    const response = await fetch("http://localhost:3000/api/revalidate", {
+      method: "POST", 
+      headers: {
+        "Content-Type": "application/json",
+        "x-revalidation-secret": "dev-cleanup",
+      },
+      body: JSON.stringify({ 
+        tags: [
+          "homepage-popular-sorters",
+          "browse-sorters"
+        ],
+        paths: [
+          "/",           // Homepage
+          "/browse",     // Browse page
+          "/user"        // User profile prefix (will help with profile pages)
+        ]
+      }),
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log(`   ✅ Invalidated caches (tags + paths) - timestamp: ${result.timestamp}`);
+      console.log(`   📝 Note: User profile caches will refresh automatically on next visit`);
+    } else {
+      const errorText = await response.text();
+      console.log(`   ⚠️  Failed to invalidate caches: ${response.status} - ${errorText}`);
+    }
+  } catch (error) {
+    console.log(`   ⚠️  Could not reach revalidation API (server may not be running)`);
+    console.log(`   💡 Tip: Make sure the dev server is running on localhost:3000`);
+  }
+}
+
 async function cleanupDevDatabase() {
   console.log("🚀 Starting dev database cleanup...");
   console.log(
@@ -170,7 +208,7 @@ async function cleanupDevDatabase() {
       { name: "sorterHistory", table: sorterHistory },
       { name: "sortingResults", table: sortingResults },
       { name: "sorterItems", table: sorterItems },
-      { name: "sorterGroups", table: sorterGroups },
+      { name: "sorterTags", table: sorterTags },
       { name: "uploadSessions", table: uploadSessions },
       { name: "sorters", table: sorters },
     ];
@@ -251,6 +289,10 @@ async function cleanupDevDatabase() {
     console.log(
       `\n🛡️  Preserved tables: user, account, session, verificationToken`,
     );
+
+    // Invalidate caches after successful cleanup
+    await invalidateCache();
+    
   } catch (error) {
     console.error("💥 Database cleanup failed:", error);
     process.exit(1);

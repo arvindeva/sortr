@@ -29,7 +29,6 @@ export async function GET(
         id: sortingResults.id,
         sorterId: sortingResults.sorterId,
         rankings: sortingResults.rankings,
-        selectedGroups: sortingResults.selectedGroups,
         createdAt: sortingResults.createdAt,
         sorterTitle: sorters.title,
         sorterSlug: sorters.slug,

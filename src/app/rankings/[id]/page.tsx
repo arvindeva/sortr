@@ -6,7 +6,6 @@ import {
   sortingResults,
   sorters,
   user,
-  sorterGroups,
   sorterTags,
   sorterItems,
   sorterHistory,
@@ -163,7 +162,6 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     .select({
       id: sortingResults.id,
       rankings: sortingResults.rankings,
-      selectedGroups: sortingResults.selectedGroups,
       selectedTagSlugs: sortingResults.selectedTagSlugs, // NEW: Get selected tag slugs
       createdAt: sortingResults.createdAt,
       sorterId: sortingResults.sorterId,
@@ -212,7 +210,6 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
         id: sorters.id,
         slug: sorters.slug,
         category: sorters.category,
-        useGroups: sorters.useGroups,
         creatorUsername: user.username,
         createdAt: sorters.createdAt,
         completionCount: sorters.completionCount,
@@ -260,52 +257,9 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
   // Rankings already contain the correct versioned URLs from when they were created
   const rankings: RankedItem[] = parsedRankings;
 
-  // Get selected groups if this result used groups
-  // Query by version to ensure we get the group names as they were at ranking time
+  // Groups no longer exist - only tags are supported
   let selectedGroups: { id: string; name: string }[] = [];
   let totalGroups: { id: string; name: string }[] = [];
-
-  if (result.selectedGroups && result.sorterId && result.version) {
-    try {
-      const selectedGroupIds: string[] = JSON.parse(result.selectedGroups);
-
-      // Get all groups available for this sorter version (for comparison)
-      const allGroupsData = await db
-        .select({
-          id: sorterGroups.id,
-          name: sorterGroups.name,
-        })
-        .from(sorterGroups)
-        .where(
-          and(
-            eq(sorterGroups.sorterId, result.sorterId),
-            eq(sorterGroups.version, result.version),
-          ),
-        );
-
-      totalGroups = allGroupsData;
-
-      if (selectedGroupIds.length > 0) {
-        const groupsData = await db
-          .select({
-            id: sorterGroups.id,
-            name: sorterGroups.name,
-          })
-          .from(sorterGroups)
-          .where(
-            and(
-              inArray(sorterGroups.id, selectedGroupIds),
-              eq(sorterGroups.sorterId, result.sorterId),
-              eq(sorterGroups.version, result.version),
-            ),
-          );
-
-        selectedGroups = groupsData;
-      }
-    } catch (error) {
-      console.error("Failed to parse selected groups JSON:", error);
-    }
-  }
 
   // Get selected tag information (new tag-based system)
   let selectedTagNames: string[] = [];

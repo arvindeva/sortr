@@ -38,7 +38,7 @@ export const createSorterSchema = z
             .string()
             .min(1, "Item title is required")
             .max(100, "Item title must be 100 characters or less"),
-          tagSlugs: z.array(z.string()).default([]), // Array of tag slugs assigned to this item
+          tagSlugs: z.array(z.string()).optional().default([]), // Array of tag slugs assigned to this item
           imageUrl: z.string().url("Invalid URL").optional(),
         }),
       )

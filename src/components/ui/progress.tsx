@@ -9,9 +9,11 @@ import { cn } from "@/lib/utils";
 function Progress({
   className,
   value,
+  shimmer = false,
   ...props
 }: React.ComponentProps<typeof ProgressPrimitive.Root> & {
   value?: number;
+  shimmer?: boolean;
 }) {
   return (
     <ProgressPrimitive.Root
@@ -24,7 +26,10 @@ function Progress({
     >
       <ProgressPrimitive.Indicator
         data-slot="progress-indicator"
-        className="border-border bg-main h-full w-full flex-1 border-r-2 transition-all"
+        className={cn(
+          "border-border bg-main h-full w-full flex-1 border-r-2 transition-all relative overflow-hidden",
+          shimmer && "progress-shimmer"
+        )}
         style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
       />
     </ProgressPrimitive.Root>

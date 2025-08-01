@@ -30,6 +30,76 @@ interface DirectUploadState {
   abortController: AbortController | null;
 }
 
+// Helper function to upload a single file with retries
+async function uploadWithRetry(
+  uploadUrl: string,
+  file: File,
+  fileName: string,
+  size: string,
+  abortController: AbortController,
+  maxRetries: number = 2,
+  baseDelay: number = 300
+): Promise<Response> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Only log on retry attempts, not first attempt
+      if (attempt > 1) {
+        console.log(`Retrying ${fileName} (${size}) - Attempt ${attempt}/${maxRetries}`);
+      }
+      
+      const response = await fetch(uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+        signal: abortController.signal,
+      });
+
+      if (response.ok) {
+        return response;
+      }
+
+      // If it's a 5xx error (server error), retry. For 4xx (client error), don't retry
+      if (response.status >= 500) {
+        const errorText = await response.text();
+        lastError = new Error(`${response.status}: ${errorText}`);
+        
+        if (attempt < maxRetries) {
+          const delay = baseDelay * attempt; // Linear backoff: 300ms, 600ms
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+      } else {
+        // 4xx error - don't retry
+        const errorText = await response.text();
+        throw new Error(`${response.status}: ${errorText}`);
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw error; // Don't retry if upload was aborted
+      }
+      
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      if (attempt < maxRetries) {
+        const delay = baseDelay * attempt; // Linear backoff: 300ms, 600ms
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+    }
+  }
+  
+  throw lastError || new Error('Upload failed after retries');
+}
+
+// Helper function to add delay between batches
+async function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export function useDirectUpload(options: DirectUploadOptions = {}) {
   const { data: session } = useSession();
   const [state, setState] = useState<DirectUploadState>({
@@ -283,9 +353,12 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
         }
 
         // Process uploads in parallel batches
-        const CONCURRENT_UPLOADS = 6; // Conservative concurrency for stability
+        // Conservative concurrency for stability
+        const CONCURRENT_UPLOADS = 5;
         const uploadBatches = chunkArray(uploadTasks, CONCURRENT_UPLOADS);
         let completedTasks = 0;
+        
+        console.log(`Uploading ${uploadTasks.length} files in ${uploadBatches.length} batches of ${CONCURRENT_UPLOADS}`);
 
         for (
           let batchIndex = 0;
@@ -322,39 +395,16 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
                   fileToUpload = task.processedFile.full || task.originalFile;
                 }
 
-                console.log(
-                  `Uploading ${task.originalFile.name} (${uploadUrl.size || "single"}) to:`,
+                // Use retry mechanism for upload
+                const uploadResponse = await uploadWithRetry(
                   uploadUrl.uploadUrl,
+                  fileToUpload,
+                  task.originalFile.name,
+                  uploadUrl.size || "single",
+                  abortController
                 );
 
-                const uploadResponse = await fetch(uploadUrl.uploadUrl, {
-                  method: "PUT",
-                  body: fileToUpload,
-                  headers: {
-                    "Content-Type": fileToUpload.type,
-                  },
-                  signal: abortController.signal,
-                });
-
-                console.log(
-                  `Upload response for ${task.originalFile.name} (${uploadUrl.size || "single"}):`,
-                  {
-                    status: uploadResponse.status,
-                    statusText: uploadResponse.statusText,
-                    ok: uploadResponse.ok,
-                  },
-                );
-
-                if (!uploadResponse.ok) {
-                  const errorText = await uploadResponse.text();
-                  console.error(
-                    `Upload failed for ${task.originalFile.name} (${uploadUrl.size || "single"}):`,
-                    errorText,
-                  );
-                  throw new Error(
-                    `Upload failed for ${task.originalFile.name}: ${uploadResponse.statusText}`,
-                  );
-                }
+                // Success - no need for verbose logging
 
                 // Track all uploads (thumbnail and full) in results
                 const uploadedFile: UploadedFile = {
@@ -458,6 +508,15 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
               );
               completedTasks++;
             }
+          }
+          
+          // Add minimal delay between batches only for very large uploads
+          // Skip delay after the last batch
+          if (batchIndex < uploadBatches.length - 1 && uploadTasks.length > 150) {
+            const batchDelay = 500; // Just 500ms delay for massive batches (150+ files)
+            
+            console.log(`Waiting ${batchDelay}ms before next batch...`);
+            await delay(batchDelay);
           }
         }
 

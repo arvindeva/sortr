@@ -2,7 +2,6 @@ import { db } from "@/db";
 import {
   sorterHistory,
   sorterItems,
-  sorterGroups,
   sortingResults,
 } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -59,14 +58,7 @@ export async function cleanupVersion(
         ),
       );
 
-    await db
-      .delete(sorterGroups)
-      .where(
-        and(
-          eq(sorterGroups.sorterId, sorterId),
-          eq(sorterGroups.version, version),
-        ),
-      );
+    // Groups table no longer exists
 
     // Clean up R2 images for this version
     const r2Cleanup = await cleanupSorterVersion(sorterId, version);

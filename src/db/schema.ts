@@ -65,7 +65,6 @@ export const sorters = pgTable("sorters", {
   description: text("description"),
   category: text("category"),
   slug: text("slug").notNull().unique(),
-  useGroups: boolean("use_groups").default(false).notNull(),
   coverImageUrl: text("cover_image_url"),
   userId: uuid("userId")
     .notNull()
@@ -98,17 +97,6 @@ export const sorterTags = pgTable(
   }),
 );
 
-export const sorterGroups = pgTable("sorterGroups", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  sorterId: uuid("sorterId")
-    .notNull()
-    .references(() => sorters.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  slug: text("slug").notNull(),
-  coverImageUrl: text("cover_image_url"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  version: integer("version").default(1).notNull(),
-});
 
 export const sorterItems = pgTable(
   "sorterItems",
@@ -117,9 +105,6 @@ export const sorterItems = pgTable(
     sorterId: uuid("sorterId")
       .notNull()
       .references(() => sorters.id, { onDelete: "cascade" }),
-    groupId: uuid("groupId").references(() => sorterGroups.id, {
-      onDelete: "cascade",
-    }),
     title: text("title").notNull(),
     slug: text("slug"), // For R2 key tracking and URL generation
     imageUrl: text("imageUrl"),
@@ -139,7 +124,6 @@ export const sortingResults = pgTable("sortingResults", {
   }), // Rankings survive sorter deletion
   userId: uuid("userId").references(() => user.id, { onDelete: "set null" }), // optional - for anonymous users
   rankings: text("rankings").notNull(), // JSON string of ranked items
-  selectedGroups: text("selectedGroups"), // JSON string of selected group IDs (null if no groups used)
   selectedTagSlugs: text("selectedTagSlugs").array(), // Array of tag slugs (null if no tags used)
   // Sorter-level snapshots for immutable rankings
   sorterTitle: text("sorterTitle"), // Snapshot of sorter title at time of ranking
