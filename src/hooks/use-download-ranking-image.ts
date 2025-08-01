@@ -13,7 +13,7 @@ interface RankingImageData {
   username: string;
   rankings: RankedItem[];
   createdAt: Date;
-  selectedGroups?: string[];
+  selectedTags?: string[];
 }
 
 export function useDownloadRankingImage() {
@@ -48,7 +48,7 @@ export function useDownloadRankingImage() {
           username: data.username,
           rankings: data.rankings,
           createdAt: data.createdAt,
-          selectedGroups: data.selectedGroups,
+          selectedTags: data.selectedTags,
         });
 
         // Append container to body
