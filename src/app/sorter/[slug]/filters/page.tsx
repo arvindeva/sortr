@@ -21,11 +21,11 @@ interface FilterPageProps {
   }>;
 }
 
-interface Group {
+interface Tag {
   id: string;
   name: string;
   slug: string;
-  coverImageUrl?: string;
+  sortOrder: number;
   items: {
     id: string;
     title: string;
@@ -38,21 +38,19 @@ interface Sorter {
   title: string;
   description?: string;
   slug: string;
-  useGroups: boolean;
 }
 
 interface ApiResponse {
   sorter: Sorter;
-  groups: Group[];
+  tags: Tag[];
   items: any[];
 }
 
 export default function FilterPage({ params }: FilterPageProps) {
   const router = useRouter();
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
-  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [currentSlug, setCurrentSlug] = useState<string>("");
-  const [isGroupsInitialized, setIsGroupsInitialized] = useState(false);
+  const [isTagsInitialized, setIsTagsInitialized] = useState(false);
 
   // Get slug from params
   useEffect(() => {
@@ -78,47 +76,40 @@ export default function FilterPage({ params }: FilterPageProps) {
     enabled: !!currentSlug,
   });
 
-  // Handle redirect and initialize selected groups
+  // Handle redirect and initialize selected tags
   useEffect(() => {
     if (data) {
-      if (!data.sorter.useGroups) {
+      // If no tags exist, redirect directly to sort
+      if (!data.tags || data.tags.length === 0) {
         router.push(`/sorter/${currentSlug}/sort`);
         return;
       }
 
-      // Select all groups by default (only on first load)
-      if (!isGroupsInitialized) {
-        setSelectedGroups(data.groups.map((group) => group.slug));
-        setIsGroupsInitialized(true);
+      // Select all tags by default (only on first load)
+      if (!isTagsInitialized) {
+        setSelectedTags(data.tags.map((tag) => tag.slug));
+        setIsTagsInitialized(true);
       }
     }
-  }, [data, currentSlug, router, isGroupsInitialized]);
+  }, [data, currentSlug, router, isTagsInitialized]);
 
-  const toggleGroup = (groupSlug: string) => {
-    setSelectedGroups((prev) =>
-      prev.includes(groupSlug)
-        ? prev.filter((slug) => slug !== groupSlug)
-        : [...prev, groupSlug],
-    );
-  };
-
-  const toggleExpanded = (groupId: string) => {
-    setExpandedGroups((prev) =>
-      prev.includes(groupId)
-        ? prev.filter((id) => id !== groupId)
-        : [...prev, groupId],
+  const toggleTag = (tagSlug: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tagSlug)
+        ? prev.filter((slug) => slug !== tagSlug)
+        : [...prev, tagSlug],
     );
   };
 
   const handleStartSorting = () => {
-    if (selectedGroups.length === 0) {
-      alert("Please select at least one group to sort");
+    if (selectedTags.length === 0) {
+      alert("Please select at least one tag to sort");
       return;
     }
 
-    // Navigate to sort page with selected groups as URL parameters
-    const groupsParam = selectedGroups.join(",");
-    router.push(`/sorter/${currentSlug}/sort?groups=${groupsParam}`);
+    // Navigate to sort page with selected tags as URL parameters
+    const tagsParam = selectedTags.join(",");
+    router.push(`/sorter/${currentSlug}/sort?tags=${tagsParam}`);
   };
 
   if (isLoading) {
@@ -159,12 +150,24 @@ export default function FilterPage({ params }: FilterPageProps) {
   }
 
   // Destructure data for easier access
-  const { sorter, groups } = data;
+  const { sorter, tags } = data;
 
-  const totalItems = selectedGroups.reduce((total, groupSlug) => {
-    const group = groups.find((g) => g.slug === groupSlug);
-    return total + (group?.items.length || 0);
-  }, 0);
+  // Calculate unique items across selected tags
+  const totalItems = (() => {
+    if (selectedTags.length === 0) return 0;
+    
+    const uniqueItemIds = new Set<string>();
+    selectedTags.forEach(tagSlug => {
+      const tag = tags.find((t) => t.slug === tagSlug);
+      if (tag) {
+        tag.items.forEach(item => {
+          uniqueItemIds.add(item.id);
+        });
+      }
+    });
+    
+    return uniqueItemIds.size;
+  })();
 
   return (
     <div className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
@@ -188,7 +191,7 @@ export default function FilterPage({ params }: FilterPageProps) {
         <PanelContent variant="primary" className="p-2 md:p-6">
           <div className="mb-6">
             <p className="text-foreground mb-4">
-              This sorter has filters. Choose which groups you want to include
+              This sorter has filters. Choose which tags you want to include
               in your sorting session for "{sorter.title}"
             </p>
 
@@ -197,7 +200,7 @@ export default function FilterPage({ params }: FilterPageProps) {
               <div className="flex items-center gap-1">
                 <Filter className="h-4 w-4" />
                 <span>
-                  {selectedGroups.length} of {groups.length} groups selected
+                  {selectedTags.length} of {tags.length} tags selected
                 </span>
               </div>
               <div>
@@ -206,70 +209,26 @@ export default function FilterPage({ params }: FilterPageProps) {
             </div>
           </div>
 
-          {/* Groups Selection */}
+          {/* Tags Selection */}
           <div className="mb-8">
             <div className="space-y-4">
-              {groups.map((group) => {
-                const isSelected = selectedGroups.includes(group.slug);
-                const isExpanded = expandedGroups.includes(group.id);
+              {tags.map((tag) => {
+                const isSelected = selectedTags.includes(tag.slug);
 
                 return (
-                  <div key={group.id} className="space-y-2">
-                    {/* Group Row */}
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        id={`group-${group.id}`}
-                        className="border-foreground cursor-pointer"
-                        checked={isSelected}
-                        onCheckedChange={() => toggleGroup(group.slug)}
-                      />
-                      {/* Group Cover Image */}
-                      {group.coverImageUrl ? (
-                        <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
-                          <img
-                            src={group.coverImageUrl}
-                            alt={`${group.name} cover`}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="border-border bg-secondary-background rounded-base flex h-6 w-6 flex-shrink-0 items-center justify-center border-2">
-                          <span className="text-main text-xs font-bold">
-                            {group.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      <label
-                        htmlFor={`group-${group.id}`}
-                        className="cursor-pointer font-medium"
-                      >
-                        {group.name}
-                      </label>
-                      <button
-                        onClick={() => toggleExpanded(group.id)}
-                        className="cursor-pointer text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
-                      >
-                        {isExpanded
-                          ? `Hide ${group.items.length} items`
-                          : `Show ${group.items.length} items`}
-                      </button>
-                    </div>
-
-                    {/* Expandable Items List */}
-                    {isExpanded && (
-                      <div className="ml-6 space-y-2">
-                        {group.items.map((item) => (
-                          <div
-                            key={item.id}
-                            className="flex items-center gap-2"
-                          >
-                            <span className="text-foreground truncate">
-                              {item.title}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <div key={tag.id} className="flex items-center gap-3">
+                    <Checkbox
+                      id={`tag-${tag.id}`}
+                      className="border-foreground cursor-pointer"
+                      checked={isSelected}
+                      onCheckedChange={() => toggleTag(tag.slug)}
+                    />
+                    <label
+                      htmlFor={`tag-${tag.id}`}
+                      className="cursor-pointer font-medium"
+                    >
+                      {tag.name}
+                    </label>
                   </div>
                 );
               })}
@@ -281,23 +240,23 @@ export default function FilterPage({ params }: FilterPageProps) {
             <Button
               variant="neutral"
               size="sm"
-              onClick={() => setSelectedGroups(groups.map((g) => g.slug))}
+              onClick={() => setSelectedTags(tags.map((t) => t.slug))}
             >
               Select All
             </Button>
             <Button
               variant="neutral"
               size="sm"
-              onClick={() => setSelectedGroups([])}
+              onClick={() => setSelectedTags([])}
             >
               Clear All
             </Button>
           </div>
 
-          {selectedGroups.length === 0 && (
+          {selectedTags.length === 0 && (
             <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
               <p className="text-yellow-800">
-                Please select at least one group to start sorting.
+                Please select at least one tag to start sorting.
               </p>
             </div>
           )}
@@ -305,7 +264,7 @@ export default function FilterPage({ params }: FilterPageProps) {
           {/* Start Sorting Button */}
           <Button
             onClick={handleStartSorting}
-            disabled={selectedGroups.length === 0}
+            disabled={selectedTags.length === 0}
             size="lg"
             className="w-full"
           >

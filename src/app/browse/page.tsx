@@ -264,24 +264,18 @@ function BrowseContent() {
                 <div className="mb-4">
                   <SortingBarsLoader />
                 </div>
-                <Box variant="neutral" size="md">
-                  <p className="font-medium">Loading sorters...</p>
-                </Box>
+                <p className="text-lg font-medium">Loading sorters...</p>
               </div>
             ) : error ? (
               <div className="text-center">
-                <Box variant="warning" size="md">
-                  <p className="font-medium">
-                    Error loading sorters. Please try again.
-                  </p>
-                </Box>
+                <p className="font-medium">
+                  Error loading sorters. Please try again.
+                </p>
               </div>
             ) : !data || data.sorters.length === 0 ? (
               <div className="text-center">
-                <Box variant="warning" size="md">
-                  <p className="mb-2 font-medium">No sorters found.</p>
-                  <p>Try adjusting your search or filter criteria.</p>
-                </Box>
+                <p className="mb-2 font-medium">No sorters found.</p>
+                <p>Try adjusting your search or filter criteria.</p>
               </div>
             ) : (
               <>

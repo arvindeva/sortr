@@ -7,7 +7,7 @@ export const maxDuration = 60;
 import {
   sorters,
   sorterItems,
-  sorterGroups,
+  sorterTags,
   user,
   sorterHistory,
 } from "@/db/schema";
@@ -18,6 +18,8 @@ import {
   generateUniqueSlug,
   generateSorterSlug,
   generateSorterItemSlug,
+  generateUniqueTagSlug,
+  validateTagName,
 } from "@/lib/utils";
 import {
   uploadToR2,
@@ -148,53 +150,6 @@ async function handleUploadSessionRequest(body: any, userData: any) {
         );
       }
 
-      // Collect group cover file operations
-      if (validatedData.useGroups && validatedData.groups) {
-        const groupCoverFiles = uploadedFiles.filter(
-          (f: UploadedFile) => f.type === "group-cover",
-        );
-        console.log(
-          `Processing ${validatedData.groups.length} groups with ${groupCoverFiles.length} group cover files`,
-        );
-
-        for (
-          let groupIndex = 0;
-          groupIndex < validatedData.groups.length;
-          groupIndex++
-        ) {
-          const groupCoverFile = groupCoverFiles.find((file: UploadedFile) => {
-            const match = file.originalName.match(/^group-cover-(\d+)-/);
-            if (match) {
-              const fileGroupIndex = parseInt(match[1]);
-              return fileGroupIndex === groupIndex;
-            }
-            return false;
-          });
-
-          if (groupCoverFile) {
-            console.log(
-              `Processing group cover ${groupIndex}: ${groupCoverFile.originalName}`,
-            );
-            const newKey = convertSessionKeyToSorterKey(
-              groupCoverFile.key,
-              tempSorterId,
-              1,
-              `group-${groupIndex}-cover`,
-            );
-            copyOperations.push({
-              sourceKey: groupCoverFile.key,
-              destKey: newKey,
-              originalKey: groupCoverFile.key,
-              isMainFile: true,
-            });
-            const groupCoverUrl = getR2PublicUrl(newKey);
-            fileUrlMappings.set(groupCoverFile.key, groupCoverUrl);
-            console.log(
-              `Added 1 group cover operation. Total operations: ${copyOperations.length}`,
-            );
-          }
-        }
-      }
 
       // Collect item file operations
       const itemFiles = uploadedFiles.filter(
@@ -224,86 +179,7 @@ async function handleUploadSessionRequest(body: any, userData: any) {
         `Grouped files by unique ID: ${filesByUniqueId.size} unique files with ${itemFiles.length} total files`,
       );
 
-      if (validatedData.useGroups && validatedData.groups) {
-        // Process grouped items
-        console.log(
-          `Processing grouped mode with ${validatedData.groups.length} groups`,
-        );
-
-        for (const group of validatedData.groups) {
-          console.log(
-            `Processing group "${group.name}" with ${group.items.length} items`,
-          );
-
-          for (const item of group.items) {
-            // NEW: Use suffix-based correlation instead of name matching
-            // Find files that match this item's title (after removing suffix)
-            let matchingFiles: UploadedFile[] = [];
-            let matchedUniqueId: string | null = null;
-
-            // Find the unique ID for this item by checking original names (without suffix)
-            for (const [uniqueId, files] of filesByUniqueId.entries()) {
-              const sampleFile = files[0];
-              const originalNameWithoutSuffix = removeIdFromFileName(
-                sampleFile.originalName,
-              );
-              const nameWithoutExt = originalNameWithoutSuffix.replace(
-                /\.[^/.]+$/,
-                "",
-              );
-
-              if (nameWithoutExt === item.title) {
-                matchingFiles = files;
-                matchedUniqueId = uniqueId;
-                break;
-              }
-            }
-
-            console.log(
-              `Item "${item.title}" matched ${matchingFiles.length} files with ID "${matchedUniqueId}":`,
-              matchingFiles.map((f) => f.originalName),
-            );
-
-            if (matchingFiles.length > 0 && matchedUniqueId) {
-              const itemSlug = generateSorterItemSlug(
-                item.title,
-                generateSorterItemSlug(group.name),
-              );
-
-              for (const file of matchingFiles) {
-                const newKey = convertSessionKeyToSorterKey(
-                  file.key,
-                  tempSorterId,
-                  1,
-                  itemSlug,
-                );
-                const isMainFile = !file.key.includes("-thumb");
-
-                copyOperations.push({
-                  sourceKey: file.key,
-                  destKey: newKey,
-                  originalKey: file.key,
-                  isMainFile,
-                });
-
-                console.log(
-                  `Added operation for ${file.originalName} -> ${newKey} (${isMainFile ? "main" : "thumb"}). Total operations: ${copyOperations.length}`,
-                );
-
-                if (isMainFile) {
-                  const itemImageUrl = getR2PublicUrl(newKey);
-                  fileUrlMappings.set(file.key, itemImageUrl);
-                  // CRITICAL FIX: Store item title -> imageUrl mapping for database transaction
-                  itemImageUrls.set(item.title, itemImageUrl);
-                }
-              }
-
-              // Remove this unique ID from the map to prevent reuse
-              filesByUniqueId.delete(matchedUniqueId);
-            }
-          }
-        }
-      } else if (validatedData.items) {
+      if (validatedData.items) {
         // Process traditional items
         console.log(
           `Processing traditional mode with ${validatedData.items.length} items`,
@@ -414,7 +290,6 @@ async function handleUploadSessionRequest(body: any, userData: any) {
           slug: generateUniqueSlug(slug, existingSlugs),
           description: validatedData.description || null,
           category: validatedData.category || null,
-          useGroups: validatedData.useGroups || false,
           userId: userData.id,
           coverImageUrl, // Use pre-computed cover image URL from Phase 1
           version: 1, // Start with version 1
@@ -430,72 +305,32 @@ async function handleUploadSessionRequest(body: any, userData: any) {
         version: 1,
       });
 
+      // Create tags if provided (support for tag-based sorters with images)
+      const createdTagSlugs = new Map<string, string>(); // tagName -> slug
+      if (validatedData.tags && validatedData.tags.length > 0) {
+        console.log(`Creating ${validatedData.tags.length} tags for sorter`);
+        for (const tag of validatedData.tags) {
+          // Generate unique slug for this tag within the sorter
+          const existingTagSlugs = Array.from(createdTagSlugs.values());
+          const tagSlug = generateUniqueTagSlug(tag.name, existingTagSlugs);
+          
+          // Create the tag
+          await tx.insert(sorterTags).values({
+            sorterId: newSorter.id,
+            name: tag.name,
+            slug: tagSlug,
+            sortOrder: tag.sortOrder,
+          });
+          
+          createdTagSlugs.set(tag.name, tagSlug);
+          console.log(`Created tag: ${tag.name} -> ${tagSlug}`);
+        }
+      }
+
       // Process uploaded files and convert session keys to sorter keys
       let currentItemIndex = 0;
 
-      if (validatedData.useGroups && validatedData.groups) {
-        // Handle grouped sorter
-        const groupCoverFiles = uploadedFiles.filter(
-          (f: UploadedFile) => f.type === "group-cover",
-        );
-
-        // Process groups sequentially to maintain correct file order
-        for (
-          let groupIndex = 0;
-          groupIndex < validatedData.groups.length;
-          groupIndex++
-        ) {
-          const group = validatedData.groups[groupIndex];
-          // Find group cover file for this specific group
-          const groupCoverFile = groupCoverFiles.find((file: UploadedFile) => {
-            // Extract index from group-cover-{index}- prefix in originalName
-            const match = file.originalName.match(/^group-cover-(\d+)-/);
-            if (match) {
-              const fileGroupIndex = parseInt(match[1]);
-              return fileGroupIndex === groupIndex;
-            }
-            return false;
-          });
-
-          let groupCoverUrl: string | null = null;
-          if (groupCoverFile) {
-            // Use pre-computed URL from Phase 1
-            groupCoverUrl = fileUrlMappings.get(groupCoverFile.key) || null;
-          }
-
-          // Create group
-          const groupSlug = generateSorterItemSlug(group.name);
-          const [newGroup] = await tx
-            .insert(sorterGroups)
-            .values({
-              sorterId: newSorter.id,
-              name: group.name,
-              slug: groupSlug,
-              coverImageUrl: groupCoverUrl,
-            })
-            .returning();
-
-          // Create group items sequentially
-          for (const item of group.items) {
-            // Generate unique slug for this item (used for both R2 key and database)
-            const itemSlug = generateSorterItemSlug(
-              item.title,
-              generateSorterItemSlug(group.name),
-            );
-
-            // CRITICAL FIX: Use pre-computed item-to-URL mapping instead of file matching
-            const itemImageUrl = itemImageUrls.get(item.title) || null;
-
-            await tx.insert(sorterItems).values({
-              sorterId: newSorter.id,
-              groupId: newGroup.id,
-              title: item.title,
-              slug: itemSlug,
-              imageUrl: itemImageUrl,
-            });
-          }
-        }
-      } else if (validatedData.items) {
+      if (validatedData.items) {
         // Handle traditional sorter
         const itemFiles = uploadedFiles.filter(
           (f: UploadedFile) => f.type === "item",
@@ -518,12 +353,23 @@ async function handleUploadSessionRequest(body: any, userData: any) {
           // CRITICAL FIX: Use pre-computed item-to-URL mapping instead of file matching
           const itemImageUrl = itemImageUrls.get(item.title) || null;
 
+          // Convert tag names to tag slugs for this item
+          const itemTagSlugs: string[] = [];
+          if (item.tagSlugs && item.tagSlugs.length > 0) {
+            for (const tagName of item.tagSlugs) {
+              const tagSlug = createdTagSlugs.get(tagName);
+              if (tagSlug) {
+                itemTagSlugs.push(tagSlug);
+              }
+            }
+          }
+
           await tx.insert(sorterItems).values({
             sorterId: newSorter.id,
-            groupId: null,
             title: item.title,
             slug: itemSlug,
             imageUrl: itemImageUrl,
+            tagSlugs: itemTagSlugs,
           });
         }
       }
@@ -578,6 +424,130 @@ async function handleUploadSessionRequest(body: any, userData: any) {
 
     return NextResponse.json(
       { error: "Failed to create sorter" },
+      { status: 500 },
+    );
+  }
+}
+
+async function handleTagBasedSorterCreation(body: any, userData: any) {
+  try {
+    console.log("🏷️  Creating tag-based sorter");
+    console.log("📝 Body received:", JSON.stringify(body, null, 2));
+    
+    // Validate the data
+    const validatedData = createSorterSchema.parse(body);
+    console.log("✅ Validated data:", JSON.stringify(validatedData, null, 2));
+    
+    // Generate slug for sorter
+    const slug = generateSorterSlug(validatedData.title);
+
+    // Create sorter with tags in a transaction
+    const result = await db.transaction(async (tx) => {
+      // Create the sorter (without useGroups field)
+      const [newSorter] = await tx
+        .insert(sorters)
+        .values({
+          title: validatedData.title,
+          description: validatedData.description || null,
+          category: validatedData.category || null,
+          slug: slug,
+          coverImageUrl: validatedData.coverImageUrl || null,
+          userId: userData.id,
+          version: 1,
+          // Note: useGroups field removed from schema
+        })
+        .returning();
+
+      // Add to sorterHistory as version 1
+      await tx.insert(sorterHistory).values({
+        sorterId: newSorter.id,
+        title: newSorter.title,
+        description: newSorter.description,
+        coverImageUrl: newSorter.coverImageUrl,
+        version: 1,
+      });
+
+      // Create tags if provided
+      const createdTagSlugs = new Map<string, string>(); // tagName -> slug
+      if (validatedData.tags && validatedData.tags.length > 0) {
+        for (const tag of validatedData.tags) {
+          // Generate unique slug for this tag within the sorter
+          const existingTagSlugs = Array.from(createdTagSlugs.values());
+          const tagSlug = generateUniqueTagSlug(tag.name, existingTagSlugs);
+          
+          // Create the tag
+          await tx.insert(sorterTags).values({
+            sorterId: newSorter.id,
+            name: tag.name,
+            slug: tagSlug,
+            sortOrder: tag.sortOrder,
+          });
+          
+          createdTagSlugs.set(tag.name, tagSlug);
+        }
+      }
+
+      // Create items with tag assignments
+      if (validatedData.items && validatedData.items.length > 0) {
+        for (const item of validatedData.items) {
+          // Generate item slug
+          const itemSlug = generateSorterItemSlug(item.title);
+          
+          // Map tag names from form to actual slugs
+          const actualTagSlugs: string[] = [];
+          if (item.tagSlugs && item.tagSlugs.length > 0) {
+            // tagSlugs actually contains tag names from the frontend
+            for (const tagName of item.tagSlugs) {
+              if (createdTagSlugs.has(tagName)) {
+                actualTagSlugs.push(createdTagSlugs.get(tagName)!);
+              }
+            }
+          }
+          
+          await tx.insert(sorterItems).values({
+            sorterId: newSorter.id,
+            title: item.title,
+            slug: itemSlug,
+            imageUrl: item.imageUrl || null,
+            tagSlugs: actualTagSlugs, // Array of tag slugs
+            version: 1,
+          });
+        }
+      }
+
+      return { sorter: newSorter };
+    });
+
+    console.log(`✅ Tag-based sorter created: ${result.sorter.title} (${result.sorter.slug})`);
+
+    // Revalidate caches
+    try {
+      await revalidateAfterSorterChange({
+        username: userData.username || undefined,
+        includeBrowse: true,
+      });
+    } catch (revalidateError) {
+      console.error("❌ Failed to revalidate caches:", revalidateError);
+    }
+
+    return NextResponse.json({
+      success: true,
+      sorter: result.sorter,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: "Validation error",
+          details: error.errors,
+        },
+        { status: 400 },
+      );
+    }
+
+    console.error("Error creating tag-based sorter:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
       { status: 500 },
     );
   }
@@ -665,6 +635,11 @@ export async function POST(request: NextRequest) {
         // Add the sessionId back to the body
         const bodyWithSession = { ...body, uploadSession: sessionId };
         return await handleUploadSessionRequest(bodyWithSession, userData[0]);
+      }
+
+      // Handle tag-based sorter creation (new simplified path)
+      if (body.tags !== undefined) {
+        return await handleTagBasedSorterCreation(body, userData[0]);
       }
 
       validatedData = createSorterSchema.parse(body);
@@ -788,7 +763,6 @@ export async function POST(request: NextRequest) {
           description: validatedData.description || null,
           category: validatedData.category || null,
           slug: slug,
-          useGroups: validatedData.useGroups || false,
           coverImageUrl: validatedData.coverImageUrl || null,
           userId: userData[0].id,
           version: 1, // Start with version 1
@@ -850,18 +824,7 @@ export async function POST(request: NextRequest) {
       }> = [];
 
       // Add items from form data (which may already include image-based items)
-      if (validatedData.useGroups && validatedData.groups) {
-        for (const group of validatedData.groups) {
-          for (const item of group.items) {
-            allProcessedItems.push({
-              title: item.title,
-              imageUrl: item.imageUrl,
-              groupName: group.name,
-              hasImage: false, // Will be determined by matching with uploaded images
-            });
-          }
-        }
-      } else if (validatedData.items) {
+      if (validatedData.items) {
         for (const item of validatedData.items) {
           allProcessedItems.push({
             title: item.title,
@@ -889,115 +852,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      if (validatedData.useGroups) {
-        // Generate unique slugs for all groups
-        const groupNames =
-          validatedData.groups?.map((group) => group.name) || [];
-        const existingSlugs: string[] = [];
-        const createdGroups: { [name: string]: string } = {}; // groupName -> groupId
-
-        // Create groups first
-        for (const groupName of groupNames) {
-          if (!createdGroups[groupName]) {
-            const slug = generateUniqueSlug(groupName, existingSlugs);
-            existingSlugs.push(slug);
-
-            const [newGroup] = await tx
-              .insert(sorterGroups)
-              .values({
-                sorterId: newSorter.id,
-                name: groupName,
-                slug: slug,
-              })
-              .returning();
-
-            createdGroups[groupName] = newGroup.id;
-          }
-        }
-
-        // Process group cover images
-        if (groupCoverFiles.length > 0) {
-          let groupCoverIndex = 0;
-          for (
-            let i = 0;
-            i < groupNames.length && groupCoverIndex < groupCoverFiles.length;
-            i++
-          ) {
-            const groupName = groupNames[i];
-            const groupCoverFile = groupCoverFiles[groupCoverIndex];
-
-            if (groupCoverFile && createdGroups[groupName]) {
-              // Get group slug for this group
-              const groupSlug = existingSlugs[i];
-
-              // Process cover image: crop to square and resize to 300x300
-              const bytes = await groupCoverFile.arrayBuffer();
-              const buffer = Buffer.from(bytes);
-              const processedBuffer = await processCoverImage(buffer); // Reuse existing cover image processing
-
-              // Generate versioned group cover key: [groupSlug--group-image]
-              const groupCoverSlug = `${groupSlug}--group-image`;
-              const groupCoverKey = getVersionedGroupKey(
-                newSorter.id,
-                groupCoverSlug,
-                1,
-              );
-
-              // Upload to R2
-              await uploadToR2(groupCoverKey, processedBuffer, "image/jpeg");
-
-              // Generate public URL with cache-busting timestamp
-              const timestamp = Date.now();
-              const groupCoverUrl = `${getR2PublicUrl(groupCoverKey)}?t=${timestamp}`;
-
-              // Update group with cover image URL
-              await tx
-                .update(sorterGroups)
-                .set({ coverImageUrl: groupCoverUrl })
-                .where(eq(sorterGroups.id, createdGroups[groupName]));
-
-              groupCoverIndex++;
-            }
-          }
-        }
-
-        // Create items for each group
-        let imageIndex = 0;
-        for (const item of allProcessedItems) {
-          if (item.groupName && createdGroups[item.groupName]) {
-            let finalImageUrl = item.imageUrl || null;
-            let itemSlug = null;
-
-            // Handle image upload if this item has an image
-            if (item.hasImage && imageIndex < processedItemImages.length) {
-              const processedImage = processedItemImages[imageIndex];
-              const groupSlug = existingSlugs.find(
-                (slug, index) => groupNames[index] === item.groupName,
-              );
-
-              itemSlug = generateSorterItemSlug(item.title, groupSlug);
-              const itemKey = getVersionedItemKey(newSorter.id, itemSlug, 1);
-
-              // Upload to R2
-              await uploadToR2(itemKey, processedImage.buffer, "image/jpeg");
-
-              // Generate public URL with cache-busting timestamp
-              const timestamp = Date.now();
-              finalImageUrl = `${getR2PublicUrl(itemKey)}?t=${timestamp}`;
-
-              imageIndex++;
-            }
-
-            await tx.insert(sorterItems).values({
-              sorterId: newSorter.id,
-              groupId: createdGroups[item.groupName],
-              title: item.title,
-              slug: itemSlug,
-              imageUrl: finalImageUrl,
-            });
-          }
-        }
-      } else {
+      {
         // Create sorter items without groups (flat mode)
         let imageIndex = 0;
         for (const item of allProcessedItems) {
@@ -1023,7 +878,6 @@ export async function POST(request: NextRequest) {
 
           await tx.insert(sorterItems).values({
             sorterId: newSorter.id,
-            groupId: null,
             title: item.title,
             slug: itemSlug,
             imageUrl: finalImageUrl,

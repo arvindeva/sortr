@@ -162,6 +162,29 @@
     animation: shimmer 1.5s ease-in-out infinite;
   }
 
+  /* Progress bar shimmer animation - sliding highlight */
+  @keyframes progress-shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .progress-shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    animation: progress-shimmer 1.5s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
   /* Responsive font sizing overrides - smaller text on mobile for better density */
   :root {
     /* Mobile-first: smaller font sizes */

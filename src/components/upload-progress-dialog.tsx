@@ -100,7 +100,11 @@ export function UploadProgressDialog({
               )}
             </div>
             {progress.determinate ? (
-              <Progress value={progress.overallProgress} className="h-4" />
+              <Progress 
+                value={progress.overallProgress} 
+                className="h-4" 
+                shimmer={progress.phase === "uploading-files"}
+              />
             ) : progress.statusMessage === "Redirecting to sorter..." ? (
               <div className="flex justify-center py-2">
                 <div className="relative">

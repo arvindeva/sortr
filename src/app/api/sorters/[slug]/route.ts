@@ -2,7 +2,7 @@ import { db } from "@/db";
 import {
   sorters,
   sorterItems,
-  sorterGroups,
+  sorterTags,
   user,
   sortingResults,
   sorterHistory,
@@ -28,7 +28,6 @@ export async function GET(
         description: sorters.description,
         category: sorters.category,
         slug: sorters.slug,
-        useGroups: sorters.useGroups,
         coverImageUrl: sorters.coverImageUrl,
         createdAt: sorters.createdAt,
         completionCount: sorters.completionCount,
@@ -47,42 +46,43 @@ export async function GET(
 
     const sorter = sorterData[0];
 
-    if (sorter.useGroups) {
-      // Get groups with their items
-      const groups = await db
-        .select({
-          id: sorterGroups.id,
-          name: sorterGroups.name,
-          slug: sorterGroups.slug,
-          coverImageUrl: sorterGroups.coverImageUrl,
-          createdAt: sorterGroups.createdAt,
-        })
-        .from(sorterGroups)
-        .where(eq(sorterGroups.sorterId, sorter.id));
+    // First check for tags (new system)
+    const tags = await db
+      .select({
+        id: sorterTags.id,
+        name: sorterTags.name,
+        slug: sorterTags.slug,
+        sortOrder: sorterTags.sortOrder,
+      })
+      .from(sorterTags)
+      .where(eq(sorterTags.sorterId, sorter.id));
 
-      // Get all items with their group IDs and group cover images
+    if (tags.length > 0) {
+      // Tag-based sorter (new system)
       const items = await db
         .select({
           id: sorterItems.id,
           title: sorterItems.title,
           imageUrl: sorterItems.imageUrl,
-          groupId: sorterItems.groupId,
-          groupCoverImageUrl: sorterGroups.coverImageUrl,
+          tagSlugs: sorterItems.tagSlugs,
         })
         .from(sorterItems)
-        .leftJoin(sorterGroups, eq(sorterItems.groupId, sorterGroups.id))
         .where(eq(sorterItems.sorterId, sorter.id));
 
-      // Group items by group
-      const groupsWithItems = groups.map((group) => ({
-        ...group,
+      // Group items by tags for the filter page
+      // Include untagged items (empty tagSlugs array) in all tag groups
+      const tagsWithItems = tags.map((tag) => ({
+        ...tag,
         items: items
-          .filter((item) => item.groupId === group.id)
+          .filter((item) => 
+            // Include items that have this tag OR items with no tags (empty array)
+            (item.tagSlugs && item.tagSlugs.includes(tag.slug)) ||
+            (!item.tagSlugs || item.tagSlugs.length === 0)
+          )
           .map((item) => ({
             id: item.id,
             title: item.title,
             imageUrl: item.imageUrl,
-            groupImageUrl: item.groupCoverImageUrl,
           })),
       }));
 
@@ -94,16 +94,16 @@ export async function GET(
             id: sorter.creatorId,
           },
         },
-        groups: groupsWithItems,
+        tags: tagsWithItems,
         items: items.map((item) => ({
           id: item.id,
           title: item.title,
           imageUrl: item.imageUrl,
-          groupImageUrl: item.groupCoverImageUrl,
-        })), // Also return flat items list for backward compatibility
+          tagSlugs: item.tagSlugs,
+        })),
       });
     } else {
-      // Get sorter items (traditional mode)
+      // Traditional sorter (no tags, no groups)
       const items = await db
         .select({
           id: sorterItems.id,
@@ -210,7 +210,7 @@ export async function DELETE(
       .set({ deleted: true })
       .where(eq(sorters.id, sorter.id));
 
-    // NOTE: We do NOT delete sorterItems, sorterGroups, or sorterHistory
+    // NOTE: We do NOT delete sorterItems or sorterHistory
     // All versioned data remains in database for rankings to reference
     // Future cleanup will only remove versions with no ranking references
 
