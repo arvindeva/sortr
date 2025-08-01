@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Plus, X, GripVertical } from "lucide-react";
 import {
   DndContext,
@@ -179,34 +180,41 @@ export default function TagManagement({
     <div className={className}>
       <div className="space-y-4">
         {/* Input section */}
-        <div className="relative max-w-md">
-          <Input
-            ref={inputRef}
-            type="text"
-            placeholder="Add a tag (e.g., TH6, Season 1)"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="pr-12"
-          />
-          {/* Add icon button with pink background and borders */}
-          <button
-            type="button"
-            onClick={handleAddTag}
-            disabled={!inputValue.trim()}
-            className="text-foreground bg-main hover:bg-main absolute top-0 right-0 bottom-0 w-10 border-2 border-border rounded-r-[10px] disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center"
-          >
-            <Plus size={16} strokeWidth={2.5} />
-          </button>
+        <div className="space-y-2">
+          <Label htmlFor="tag-input">
+            Add a tag
+          </Label>
+          <div className="relative max-w-md">
+            <Input
+              id="tag-input"
+              ref={inputRef}
+              type="text"
+              placeholder="Enter tag here"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="pr-12"
+            />
+            {/* Add icon button with pink background and borders */}
+            <button
+              type="button"
+              onClick={handleAddTag}
+              disabled={!inputValue.trim()}
+              className="text-foreground bg-main hover:bg-main absolute top-0 right-0 bottom-0 w-10 border-2 border-border rounded-r-[10px] disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center"
+            >
+              <Plus size={16} strokeWidth={2.5} />
+            </button>
+          </div>
         </div>
+
+        {/* Help message below input */}
+        <p className="text-foreground text-sm">
+          Add tags to enable filtering during sorting. For example: album names, seasons, categories, etc.
+        </p>
 
         {/* Tags list */}
         {tags.length > 0 && (
           <div className="space-y-2">
-            <p className="text-foreground text-sm">
-              Drag to reorder • Tags will appear in this order during filtering
-            </p>
-
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -227,6 +235,10 @@ export default function TagManagement({
                 </div>
               </SortableContext>
             </DndContext>
+
+            <p className="text-foreground text-sm">
+              Drag to reorder • Tags will appear in this order during filtering
+            </p>
           </div>
         )}
 
@@ -236,6 +248,10 @@ export default function TagManagement({
             during sorting.
           </p>
         )}
+
+        <p className="text-muted-foreground text-sm">
+          💡 Untagged items will always appear during sorting
+        </p>
       </div>
     </div>
   );

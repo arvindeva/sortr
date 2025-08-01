@@ -23,7 +23,7 @@ interface SorterData {
     slug: string;
     useGroups?: boolean; // Optional for backward compatibility
   };
-  items: SortItem[];
+  items: (SortItem & { tagSlugs?: string[] })[];
   groups?: {
     id: string;
     name: string;
@@ -245,15 +245,19 @@ export default function SortPage() {
             } else {
               // Filter items that have any of the selected tags
               itemsToSort = sorterData.items.filter((item) => {
-                // For tag-based filtering, we need to check if item has any of the selected tags
-                // This will be handled by the backend API - for now, get items from matching tags
+                // Include items that have any of the selected tags
                 const matchingTags = sorterData.tags!.filter((tag) =>
                   selectedTagSlugs.includes(tag.slug)
                 );
                 const tagItemIds = new Set(
                   matchingTags.flatMap((tag) => tag.items.map((item) => item.id))
                 );
-                return tagItemIds.has(item.id);
+                
+                // Also include items with no tags (empty tagSlugs array) - they appear in all filters
+                const hasMatchingTag = tagItemIds.has(item.id);
+                const isUntagged = !item.tagSlugs || item.tagSlugs.length === 0;
+                
+                return hasMatchingTag || isUntagged;
               });
               filterSlugs = selectedTagSlugs;
             }
