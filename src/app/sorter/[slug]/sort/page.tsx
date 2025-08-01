@@ -14,6 +14,7 @@ import { Box } from "@/components/ui/box";
 import { PageHeader } from "@/components/ui/page-header";
 import { SortPageSkeleton } from "@/components/sort-page-skeleton";
 import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
+import { useImagePreloader } from "@/hooks/use-image-preloader";
 
 interface SorterData {
   sorter: {
@@ -48,6 +49,25 @@ async function fetchSorterData(sorterSlug: string): Promise<SorterData> {
   const response = await fetch(`/api/sorters/${sorterSlug}`);
   if (!response.ok) throw new Error("Failed to fetch sorter");
   return response.json();
+}
+
+// Extract all image URLs from items for preloading
+function extractImageUrls(items: SortItem[]): string[] {
+  const imageUrls: string[] = [];
+  
+  items.forEach(item => {
+    // Add item image if available
+    if (item.imageUrl) {
+      imageUrls.push(item.imageUrl);
+    }
+    // Add group/tag image if available
+    if (item.groupImageUrl) {
+      imageUrls.push(item.groupImageUrl);
+    }
+  });
+  
+  // Remove duplicates
+  return [...new Set(imageUrls)];
 }
 
 // Generate localStorage key based on sorter ID and selected groups/tags
@@ -206,11 +226,15 @@ export default function SortPage() {
   const [filteredItems, setFilteredItems] = useState<SortItem[]>([]);
   const [currentFilterSlugs, setCurrentFilterSlugs] = useState<string[]>([]);
   const [sorterId, setSorterId] = useState<string>("");
+  const [imagesPreloaded, setImagesPreloaded] = useState(false);
   const sorterRef = useRef<InteractiveMergeSort | null>(null);
   const resolveComparisonRef = useRef<((winnerId: string) => void) | null>(
     null,
   );
   const isRestartingRef = useRef(false);
+
+  // Image preloader
+  const { progress: preloadProgress, preloadImages, reset: resetPreloader } = useImagePreloader();
 
   // Fetch sorter data with TanStack Query
   const {
@@ -310,11 +334,46 @@ export default function SortPage() {
     }
   }, [sorterData, router, searchParams]);
 
-  // Initialize sorting when data loads
+  // Preload images when filtered items change
+  useEffect(() => {
+    if (filteredItems.length > 0) {
+      const imageUrls = extractImageUrls(filteredItems);
+      
+      if (imageUrls.length > 0) {
+        setImagesPreloaded(false);
+        resetPreloader();
+        
+        // Set up timeout to proceed even if preloading takes too long (10 seconds)
+        const timeoutId = setTimeout(() => {
+          console.warn("Image preloading timed out, proceeding with sorting");
+          setImagesPreloaded(true);
+        }, 10000);
+        
+        preloadImages(imageUrls).then(() => {
+          clearTimeout(timeoutId);
+          setImagesPreloaded(true);
+        }).catch((error) => {
+          clearTimeout(timeoutId);
+          console.warn("Some images failed to preload:", error);
+          // Still allow sorting to proceed even if some images fail
+          setImagesPreloaded(true);
+        });
+      } else {
+        // No images to preload
+        setImagesPreloaded(true);
+      }
+    } else {
+      // Reset preloading state when no items
+      setImagesPreloaded(false);
+    }
+  }, [filteredItems, preloadImages, resetPreloader]);
+
+  // Initialize sorting when data loads and images are preloaded
   useEffect(() => {
     if (
       sorterData &&
       filteredItems.length > 0 &&
+      imagesPreloaded &&
       !sorting &&
       !sorterRef.current
     ) {
@@ -431,7 +490,7 @@ export default function SortPage() {
 
       startSorting();
     }
-  }, [sorterData, filteredItems, currentFilterSlugs]);
+  }, [sorterData, filteredItems, imagesPreloaded, currentFilterSlugs]);
 
   const startSorting = useCallback(async () => {
     if (!sorterData || !sorterRef.current || filteredItems.length === 0) return;
@@ -591,14 +650,36 @@ export default function SortPage() {
       }
     };
 
+    // Show image preloading progress
+    const showPreloadProgress = !imagesPreloaded && preloadProgress.total > 0;
+    const preloadPercentage = preloadProgress.total > 0 
+      ? Math.round((preloadProgress.loaded / preloadProgress.total) * 100)
+      : 0;
+
     return (
       <div className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
         <div className="space-y-6 text-center">
           <div>
-            <p className="mb-2 text-lg text-black dark:text-white">
-              Preparing comparison...
-            </p>
-            <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2"></div>
+            {showPreloadProgress ? (
+              <>
+                <p className="mb-2 text-lg text-black dark:text-white">
+                  Loading images... {preloadProgress.loaded}/{preloadProgress.total} ({preloadPercentage}%)
+                </p>
+                <Progress value={preloadPercentage} className="mx-auto mb-4 max-w-md" />
+                {preloadProgress.failed > 0 && (
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    {preloadProgress.failed} image{preloadProgress.failed !== 1 ? 's' : ''} failed to load
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="mb-2 text-lg text-black dark:text-white">
+                  Preparing comparison...
+                </p>
+                <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2"></div>
+              </>
+            )}
           </div>
 
           <Box variant="warning" size="md" className="mx-auto max-w-md">
