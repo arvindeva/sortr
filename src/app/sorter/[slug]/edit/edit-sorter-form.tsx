@@ -71,30 +71,37 @@ function buildR2PublicUrl(key: string): string {
   if (publicUrl) {
     return `${publicUrl}/${key}`;
   }
-  
+
   // Fallback - this should be configured in environment
   return `https://dev-cdn.sortr.io/${key}`;
 }
 
-export default function EditSorterForm({ sorter, tags, items }: EditSorterFormProps) {
+export default function EditSorterForm({
+  sorter,
+  tags,
+  items,
+}: EditSorterFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
-    sorter.coverImageUrl
+    sorter.coverImageUrl,
   );
   const [itemImagesData, setItemImagesData] = useState<
     Array<{ file: File; preview: string } | null>
   >([]);
   const [managedTags, setManagedTags] = useState<Tag[]>(
-    tags.map(tag => ({ id: tag.id, name: tag.name, sortOrder: tag.sortOrder }))
+    tags.map((tag) => ({
+      id: tag.id,
+      name: tag.name,
+      sortOrder: tag.sortOrder,
+    })),
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Upload progress state
   const [showProgressDialog, setShowProgressDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-
 
   // Direct upload hook
   const directUpload = useDirectUpload({
@@ -121,7 +128,7 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
   });
 
   // Convert existing data to form format
-  const defaultItems = items.map(item => ({
+  const defaultItems = items.map((item) => ({
     title: item.title,
     imageUrl: item.imageUrl || undefined,
     tagSlugs: item.tagSlugs || [],
@@ -171,23 +178,32 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
       // Reset to original image if available
       const originalItem = items[index];
       newItemImagesData[index] = null;
-      form.setValue(`items.${index}.imageUrl`, originalItem?.imageUrl || undefined);
+      form.setValue(
+        `items.${index}.imageUrl`,
+        originalItem?.imageUrl || undefined,
+      );
     }
     setItemImagesData(newItemImagesData);
   };
 
   // Handle multiple image upload
-  const handleMultipleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMultipleImageSelect = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const files = event.target.files;
     if (!files) return;
 
     const newFiles = Array.from(files);
     const currentItems = form.getValues("items");
-    
+
     // Find empty slots first (items without names or images)
     const emptySlots: number[] = [];
     currentItems.forEach((item, index) => {
-      if (!item.title.trim() && !itemImagesData[index] && !items[index]?.imageUrl) {
+      if (
+        !item.title.trim() &&
+        !itemImagesData[index] &&
+        !items[index]?.imageUrl
+      ) {
         emptySlots.push(index);
       }
     });
@@ -198,7 +214,7 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
     // Process each selected file
     newFiles.forEach((file, fileIndex) => {
       let targetIndex: number;
-      
+
       if (fileIndex < emptySlots.length) {
         // Use empty slot
         targetIndex = emptySlots[fileIndex];
@@ -213,12 +229,12 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
 
       // Set the image for this item
       const preview = URL.createObjectURL(file);
-      
+
       // Extend array if needed
       while (newItemImagesData.length <= targetIndex) {
         newItemImagesData.push(null);
       }
-      
+
       newItemImagesData[targetIndex] = { file, preview };
 
       // Set filename as item name (without extension)
@@ -243,7 +259,7 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
   // Remove item
   const removeItem = (index: number) => {
     remove(index);
-    setItemImagesData(prev => {
+    setItemImagesData((prev) => {
       const newData = [...prev];
       newData.splice(index, 1);
       return newData;
@@ -260,7 +276,7 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
 
       // Map uploaded files to their respective fields
       let coverImageUrl = data.coverImageUrl; // Keep existing if no new upload
-      const itemImageUrls = [...data.items.map(item => item.imageUrl)]; // Keep existing URLs
+      const itemImageUrls = [...data.items.map((item) => item.imageUrl)]; // Keep existing URLs
 
       uploadedFiles.forEach((uploadedFile) => {
         if (uploadedFile.type === "cover") {
@@ -269,8 +285,8 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
         } else if (uploadedFile.type === "item") {
           // For items, we need to match by original name to get the correct index
           const originalName = uploadedFile.originalName;
-          const itemIndex = data.items.findIndex((item, idx) => 
-            itemImagesData[idx]?.file.name === originalName
+          const itemIndex = data.items.findIndex(
+            (item, idx) => itemImagesData[idx]?.file.name === originalName,
           );
           if (itemIndex >= 0) {
             itemImageUrls[itemIndex] = buildR2PublicUrl(uploadedFile.key);
@@ -282,21 +298,27 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
       const finalData = {
         ...data,
         coverImageUrl: coverImageUrl || undefined,
-        items: data.items.map((item, index) => ({
-          ...item,
-          imageUrl: itemImageUrls[index] || undefined,
-        })).map(item => ({
-          ...item,
-          // Remove undefined imageUrl to avoid validation issues
-          ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
-        })),
+        items: data.items
+          .map((item, index) => ({
+            ...item,
+            imageUrl: itemImageUrls[index] || undefined,
+          }))
+          .map((item) => ({
+            ...item,
+            // Remove undefined imageUrl to avoid validation issues
+            ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
+          })),
         tags: managedTags,
       };
 
       // Update the sorter via API
-      const response = await axios.put(`/api/sorters/${sorter.slug}`, finalData, {
-        signal: abortController?.signal,
-      });
+      const response = await axios.put(
+        `/api/sorters/${sorter.slug}`,
+        finalData,
+        {
+          signal: abortController?.signal,
+        },
+      );
 
       if (response.data) {
         toast.success("Sorter updated successfully!");
@@ -313,8 +335,10 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
       }
 
       const errorMessage =
-        error.response?.data?.error || error.message || "Failed to update sorter";
-      
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to update sorter";
+
       toast.error(errorMessage);
       console.error("Update error:", error);
       throw error;
@@ -351,7 +375,7 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
           const prefixedCoverFile = new File(
             [coverImageFile],
             `cover-${coverImageFile.name}`,
-            { type: coverImageFile.type }
+            { type: coverImageFile.type },
           );
           filesToUpload.push(prefixedCoverFile);
           fileMetadata.push({
@@ -379,7 +403,7 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
         // No new images - direct API call
         const finalData = {
           ...data,
-          items: data.items.map(item => ({
+          items: data.items.map((item) => ({
             ...item,
             // Remove undefined imageUrl to avoid validation issues
             ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
@@ -387,7 +411,10 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
           tags: managedTags,
         };
 
-        const response = await axios.put(`/api/sorters/${sorter.slug}`, finalData);
+        const response = await axios.put(
+          `/api/sorters/${sorter.slug}`,
+          finalData,
+        );
 
         if (response.data) {
           toast.success("Sorter updated successfully!");
@@ -397,7 +424,9 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
     } catch (error: any) {
       setIsLoading(false);
       const errorMessage =
-        error.response?.data?.error || error.message || "Failed to update sorter";
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to update sorter";
       toast.error(errorMessage);
       console.error("Update error:", error);
     }
@@ -408,10 +437,12 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
       <Panel className="mx-auto w-full">
         <PanelHeader variant="primary">
           <div className="flex items-center gap-4">
-            <Link href={`/sorter/${sorter.slug}`}>
-              <Button variant="neutralNoShadow" size="icon">
-                <ArrowLeft size={16} />
-              </Button>
+            <Link
+              href={`/sorter/${sorter.slug}`}
+              className="flex items-center justify-center transition-opacity hover:opacity-70"
+              title="Back to sorter"
+            >
+              <ArrowLeft size={20} />
             </Link>
             <PanelTitle>Edit Sorter</PanelTitle>
           </div>
@@ -430,10 +461,7 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
                       <FormItem>
                         <FormLabel>Title *</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="e.g., Best Movies of All Time"
-                            {...field}
-                          />
+                          <Input placeholder="e.g., Marvel Movies" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -465,7 +493,10 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || ""}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select a category (optional)" />
@@ -483,9 +514,7 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
                             <SelectItem value="Food">Food</SelectItem>
                             <SelectItem value="Sports">Sports</SelectItem>
                             <SelectItem value="Fashion">Fashion</SelectItem>
-                            <SelectItem value="Academics">
-                              Academics
-                            </SelectItem>
+                            <SelectItem value="Academics">Academics</SelectItem>
                             <SelectItem value="Anime & Manga">
                               Anime & Manga
                             </SelectItem>
@@ -505,7 +534,6 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
 
                   {/* Cover Image Upload */}
                   <div>
-                    <FormLabel className="mb-2 block">Cover Image</FormLabel>
                     <CoverImageUpload
                       onImageSelect={handleCoverImageSelect}
                       selectedFile={coverImageFile}
@@ -518,8 +546,9 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
               {/* Tags Section */}
               <div className="mb-6">
                 <h2 className="mb-4 text-xl font-semibold">Tags</h2>
-                <p className="mb-4 text-sm text-muted-foreground">
-                  Create tags to organize your items. Users can filter by tags before sorting.
+                <p className="text-muted-foreground mb-4 text-sm">
+                  Create tags to organize your items. Users can filter by tags
+                  before sorting.
                 </p>
                 <TagManagement
                   tags={managedTags}
@@ -589,16 +618,26 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
                                 <div className="flex items-center gap-2">
                                   {/* Image preview if available */}
                                   {(() => {
-                                    const currentItem = form.watch(`items.${index}`);
-                                    const hasNewImage = itemImagesData[index]?.preview;
-                                    const hasExistingImage = currentItem?.imageUrl;
+                                    const currentItem = form.watch(
+                                      `items.${index}`,
+                                    );
+                                    const hasNewImage =
+                                      itemImagesData[index]?.preview;
+                                    const hasExistingImage =
+                                      currentItem?.imageUrl;
                                     return hasNewImage || hasExistingImage;
                                   })() && (
-                                    <div className="flex-shrink-0 relative">
+                                    <div className="relative flex-shrink-0">
                                       <img
                                         src={(() => {
-                                          const currentItem = form.watch(`items.${index}`);
-                                          return itemImagesData[index]?.preview || currentItem?.imageUrl || '';
+                                          const currentItem = form.watch(
+                                            `items.${index}`,
+                                          );
+                                          return (
+                                            itemImagesData[index]?.preview ||
+                                            currentItem?.imageUrl ||
+                                            ""
+                                          );
                                         })()}
                                         alt={`Preview ${index + 1}`}
                                         className="border-border h-10 w-10 rounded border-2 object-cover"
@@ -608,9 +647,11 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
                                         type="button"
                                         variant="neutralNoShadow"
                                         size="icon"
-                                        className="absolute -bottom-1 -right-1 h-4 w-4 p-0"
+                                        className="absolute -right-1 -bottom-1 h-4 w-4 p-0"
                                         onClick={() => {
-                                          const input = document.getElementById(`item-image-replace-${index}`) as HTMLInputElement;
+                                          const input = document.getElementById(
+                                            `item-image-replace-${index}`,
+                                          ) as HTMLInputElement;
                                           input?.click();
                                         }}
                                         title="Replace image"
@@ -637,15 +678,16 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
                                       placeholder={`Item ${index + 1}`}
                                       {...field}
                                       onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
+                                        if (e.key === "Enter") {
                                           e.preventDefault();
                                           // Add new item and focus on it
                                           addItem();
                                           // Focus will be set after the new item is rendered
                                           setTimeout(() => {
-                                            const nextInput = document.querySelector(
-                                              `input[name="items.${fields.length}.title"]`
-                                            ) as HTMLInputElement;
+                                            const nextInput =
+                                              document.querySelector(
+                                                `input[name="items.${fields.length}.title"]`,
+                                              ) as HTMLInputElement;
                                             nextInput?.focus();
                                           }, 0);
                                         }
@@ -671,21 +713,39 @@ export default function EditSorterForm({ sorter, tags, items }: EditSorterFormPr
                                 {managedTags.length > 0 && (
                                   <div className="mb-2 flex flex-wrap gap-2">
                                     {managedTags.map((tag) => {
-                                      const tagSlug = tag.name.toLowerCase().replace(/\s+/g, '-');
-                                      const currentTags = form.watch(`items.${index}.tagSlugs`) || [];
-                                      const isSelected = currentTags.includes(tagSlug);
+                                      const tagSlug = tag.name
+                                        .toLowerCase()
+                                        .replace(/\s+/g, "-");
+                                      const currentTags =
+                                        form.watch(`items.${index}.tagSlugs`) ||
+                                        [];
+                                      const isSelected =
+                                        currentTags.includes(tagSlug);
                                       return (
                                         <Button
                                           key={tag.id}
                                           type="button"
-                                          variant={isSelected ? "default" : "neutral"}
+                                          variant={
+                                            isSelected ? "default" : "neutral"
+                                          }
                                           size="sm"
                                           onClick={() => {
-                                            const currentTagSlugs = form.getValues(`items.${index}.tagSlugs`) || [];
+                                            const currentTagSlugs =
+                                              form.getValues(
+                                                `items.${index}.tagSlugs`,
+                                              ) || [];
                                             if (isSelected) {
-                                              form.setValue(`items.${index}.tagSlugs`, currentTagSlugs.filter(t => t !== tagSlug));
+                                              form.setValue(
+                                                `items.${index}.tagSlugs`,
+                                                currentTagSlugs.filter(
+                                                  (t) => t !== tagSlug,
+                                                ),
+                                              );
                                             } else {
-                                              form.setValue(`items.${index}.tagSlugs`, [...currentTagSlugs, tagSlug]);
+                                              form.setValue(
+                                                `items.${index}.tagSlugs`,
+                                                [...currentTagSlugs, tagSlug],
+                                              );
                                             }
                                           }}
                                           className="h-8 text-xs"

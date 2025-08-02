@@ -1121,7 +1121,7 @@ export default function CreateSorterForm() {
                         <FormLabel>Description</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Describe what you're ranking..."
+                            placeholder="Describe your sorter (optional)"
                             rows={3}
                             {...field}
                           />

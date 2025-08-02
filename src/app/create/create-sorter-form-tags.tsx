@@ -602,10 +602,7 @@ export default function CreateSorterFormTags() {
                       <FormItem>
                         <FormLabel>Title *</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="e.g., Best Marvel Movies"
-                            {...field}
-                          />
+                          <Input placeholder="e.g., Marvel Movies" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -620,7 +617,7 @@ export default function CreateSorterFormTags() {
                         <FormLabel>Description</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Describe what you're ranking..."
+                            placeholder="Describe your sorter (optional)"
                             rows={3}
                             {...field}
                           />
@@ -771,15 +768,16 @@ export default function CreateSorterFormTags() {
                                       placeholder={`Item ${index + 1}`}
                                       {...field}
                                       onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
+                                        if (e.key === "Enter") {
                                           e.preventDefault();
                                           // Add new item and focus on it
                                           addItemHandler();
                                           // Focus will be set after the new item is rendered
                                           setTimeout(() => {
-                                            const nextInput = document.querySelector(
-                                              `input[name="items.${itemFields.length}.title"]`
-                                            ) as HTMLInputElement;
+                                            const nextInput =
+                                              document.querySelector(
+                                                `input[name="items.${itemFields.length}.title"]`,
+                                              ) as HTMLInputElement;
                                             nextInput?.focus();
                                           }, 0);
                                         }

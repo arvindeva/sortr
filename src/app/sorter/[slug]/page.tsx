@@ -455,8 +455,8 @@ export default async function SorterPage({ params }: SorterPageProps) {
                                 />
                               </div>
                             ) : (
-                              <div className="border-border bg-secondary-background rounded-base flex h-10 w-10 flex-shrink-0 items-center justify-center border-2">
-                                <span className="text-main text-xs font-bold">
+                              <div className="border-border bg-secondary-background rounded-base flex h-16 w-16 flex-shrink-0 items-center justify-center border-2">
+                                <span className="text-main text-xl font-bold">
                                   {item.title.charAt(0).toUpperCase()}
                                 </span>
                               </div>
