@@ -75,8 +75,8 @@ export function EditUsernameButton({
       <DialogTrigger asChild>
         <Button
           variant="neutralNoShadow"
-          size="sm"
-          className="h-6 w-6 p-0"
+          size="icon"
+          className="h-6 w-6"
           title="Edit username"
         >
           <Pencil size={14} />
