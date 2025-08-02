@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RankingItem, RankingItemContent } from "@/components/ui/ranking-item";
-import { Play, User, Calendar, Eye, Trophy, Trash2 } from "lucide-react";
+import { Play, User, Calendar, Eye, Trophy, Trash2, Pencil } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { DeleteSorterButton } from "@/components/delete-sorter-button";
 import { getImageUrl } from "@/lib/image-utils";
@@ -352,6 +352,16 @@ export default async function SorterPage({ params }: SorterPageProps) {
                   </Button>
                 )}
 
+                {/* Edit Button - Only show for sorter owner */}
+                {isOwner && (
+                  <Button asChild variant="neutral">
+                    <Link href={`/sorter/${sorter.slug}/edit`}>
+                      <Pencil className="mr-2" size={16} />
+                      Edit
+                    </Link>
+                  </Button>
+                )}
+
                 {/* Delete Button - Only show for sorter owner */}
                 {isOwner && (
                   <DeleteSorterButton
@@ -384,6 +394,16 @@ export default async function SorterPage({ params }: SorterPageProps) {
                   size={20}
                 />
                 Sort now
+              </Link>
+            </Button>
+          )}
+
+          {/* Edit Button - Only show for sorter owner */}
+          {isOwner && (
+            <Button asChild variant="neutral">
+              <Link href={`/sorter/${sorter.slug}/edit`}>
+                <Pencil className="mr-2" size={16} />
+                Edit
               </Link>
             </Button>
           )}
