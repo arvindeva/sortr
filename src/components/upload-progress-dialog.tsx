@@ -17,12 +17,14 @@ interface UploadProgressDialogProps {
   open: boolean;
   progress: UploadProgress | null;
   onOpenChange?: (open: boolean) => void;
+  onCancel?: () => void;
 }
 
 export function UploadProgressDialog({
   open,
   progress,
   onOpenChange,
+  onCancel,
 }: UploadProgressDialogProps) {
   if (!progress) return null;
 
@@ -74,12 +76,30 @@ export function UploadProgressDialog({
     }
   };
 
+  const canCancel = progress.phase !== "complete";
+
+  const handleCancel = () => {
+    if (onCancel && canCancel) {
+      onCancel();
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open && canCancel) {
+      // If user tries to close during upload, treat it as cancel
+      handleCancel();
+    } else if (!open && !canCancel) {
+      // Allow closing after completion
+      onOpenChange?.(false);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className="sm:max-w-md"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={canCancel ? undefined : (e) => e.preventDefault()}
+        onEscapeKeyDown={canCancel ? undefined : (e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle>{getPhaseTitle(progress.phase)}</DialogTitle>
