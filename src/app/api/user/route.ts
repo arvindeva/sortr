@@ -5,7 +5,6 @@ import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { updateUsernameSchema } from "@/lib/validations";
-import { revalidateHomepage, revalidateUserProfile } from "@/lib/revalidation";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -99,18 +98,6 @@ export async function PATCH(request: NextRequest) {
 
     // Update username
     await db.update(user).set({ username }).where(eq(user.id, userId));
-
-    // Revalidate caches that show user data
-    try {
-      await revalidateHomepage(); // Homepage (popular sorters)
-      await revalidateUserProfile(username); // New username profile page 
-      if (currentUser[0].username && currentUser[0].username !== username) {
-        await revalidateUserProfile(currentUser[0].username); // Old username profile page (if different)
-      }
-    } catch (revalidateError) {
-      console.warn("Failed to revalidate caches:", revalidateError);
-      // Don't fail the entire request if revalidation fails
-    }
 
     return NextResponse.json({
       message: "Username updated successfully",

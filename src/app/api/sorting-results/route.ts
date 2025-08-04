@@ -4,7 +4,6 @@ import { eq, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
-import { revalidateHomepage, revalidateUserResults } from "@/lib/revalidation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,18 +62,6 @@ export async function POST(request: NextRequest) {
       .set({ completionCount: sql`${sorters.completionCount} + 1` })
       .where(eq(sorters.id, sorterId));
 
-    // Invalidate caches that show completion counts and user results
-    await revalidateHomepage(); // Homepage shows popular sorters by completion count
-    
-    // If user is logged in, invalidate their profile page to show new ranking
-    if (userId) {
-      try {
-        await revalidateUserResults(userId);
-      } catch (revalidateError) {
-        console.warn("Failed to revalidate user results cache:", revalidateError);
-        // Don't fail the entire request if revalidation fails
-      }
-    }
 
     return Response.json({
       resultId: result[0].id,

@@ -75,7 +75,9 @@ export default function CoverImageUpload({
     }
   };
 
-  const handleRemoveImage = () => {
+  const handleRemoveImage = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     onImageSelect(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";

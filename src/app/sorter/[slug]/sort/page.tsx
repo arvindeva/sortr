@@ -13,7 +13,7 @@ import LZString from "lz-string";
 import { Box } from "@/components/ui/box";
 import { PageHeader } from "@/components/ui/page-header";
 import { SortPageSkeleton } from "@/components/sort-page-skeleton";
-import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
+import { Spinner } from "@/components/ui/spinner";
 import { useImagePreloader } from "@/hooks/use-image-preloader";
 
 interface SorterData {
@@ -614,7 +614,9 @@ export default function SortPage() {
           <h1 className="mb-3 animate-pulse text-2xl font-bold">
             Saving Results...
           </h1>
-          <SortingBarsLoader className="mb-6" />
+          <div className="mb-6">
+            <Spinner size={32} />
+          </div>
         </div>
       </div>
     );

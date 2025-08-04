@@ -82,6 +82,13 @@ export default function CreateSorterFormTags() {
         console.error("Upload error:", error);
       }
     },
+    getFileType: (file, index) => {
+      // First file is cover image if coverImageFile exists, rest are item images
+      if (coverImageFile && index === 0) {
+        return "cover";
+      }
+      return "item";
+    },
   });
 
   const form = useForm<CreateSorterInput>({

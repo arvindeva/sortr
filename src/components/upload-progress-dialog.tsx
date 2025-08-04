@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Progress } from "@/components/ui/progress";
-import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
+import { Spinner } from "@/components/ui/spinner";
 import { Check } from "lucide-react";
 import type { UploadProgress } from "@/types/upload";
 
@@ -137,8 +137,8 @@ export function UploadProgressDialog({
                 </div>
               </div>
             ) : (
-              <div className="flex justify-center py-2">
-                <SortingBarsLoader />
+              <div className="py-2">
+                <Spinner size={28} />
               </div>
             )}
           </div>

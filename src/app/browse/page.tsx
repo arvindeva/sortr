@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
+import { Spinner } from "@/components/ui/spinner";
 import { PageHeader } from "@/components/ui/page-header";
 import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
@@ -262,7 +262,7 @@ function BrowseContent() {
             {isLoading ? (
               <div className="text-center">
                 <div className="mb-4">
-                  <SortingBarsLoader />
+                  <Spinner size={32} />
                 </div>
                 <p className="text-lg font-medium">Loading sorters...</p>
               </div>

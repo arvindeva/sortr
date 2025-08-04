@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import { sortingResults, user } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { revalidateUserResults } from "@/lib/revalidation";
 
 export async function DELETE(
   request: NextRequest,
@@ -56,13 +55,6 @@ export async function DELETE(
     // Delete the ranking (hard deletion as requested)
     await db.delete(sortingResults).where(eq(sortingResults.id, id));
 
-    // Revalidate user results cache
-    try {
-      await revalidateUserResults(currentUserId);
-    } catch (revalidateError) {
-      console.warn("Failed to revalidate user results cache:", revalidateError);
-      // Don't fail the entire request if revalidation fails
-    }
 
     return NextResponse.json({
       success: true,

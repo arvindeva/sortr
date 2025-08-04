@@ -1,65 +1,7 @@
 import type { Metadata } from "next";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
-import { SorterCard } from "@/components/ui/sorter-card";
-import { SorterGrid } from "@/components/ui/sorter-grid";
-import {
-  Panel,
-  PanelHeader,
-  PanelTitle,
-  PanelContent,
-} from "@/components/ui/panel";
-import { db } from "@/db";
-import { sorters, user } from "@/db/schema";
-import { eq, desc, and, count } from "drizzle-orm";
-import { unstable_cache } from "next/cache";
+import { HomepageClient } from "@/components/homepage-client";
 import Link from "next/link";
-
-// Enable ISR with 1 hour revalidation
-export const revalidate = 3600;
-
-const getPopularSorters = unstable_cache(
-  async () => {
-    const timestamp = new Date().toISOString();
-    console.log("🔥 HOMEPAGE CACHE MISS - Database query starting at:", timestamp);
-    
-    const popularSorters = await db
-      .select({
-        id: sorters.id,
-        title: sorters.title,
-        slug: sorters.slug,
-        category: sorters.category,
-        completionCount: sorters.completionCount,
-        viewCount: sorters.viewCount,
-        coverImageUrl: sorters.coverImageUrl,
-        creatorUsername: user.username,
-      })
-      .from(sorters)
-      .leftJoin(user, eq(sorters.userId, user.id))
-      .where(eq(sorters.deleted, false))
-      .orderBy(desc(sorters.completionCount))
-      .limit(10);
-
-    const endTimestamp = new Date().toISOString();
-    console.log(`📊 HOMEPAGE QUERY COMPLETE - Found ${popularSorters.length} sorters at:`, endTimestamp);
-    console.log("📋 Sorter titles:", popularSorters.map(s => s.title));
-    return popularSorters;
-  },
-  ["homepage-popular-sorters"],
-  {
-    revalidate: 3600,
-  },
-);
-
-async function getSorterStats() {
-  const [sorterCount] = await db
-    .select({ count: count() })
-    .from(sorters)
-    .where(eq(sorters.deleted, false));
-
-  return sorterCount.count;
-}
 
 export async function generateMetadata(): Promise<Metadata> {
   const title = "sortr - Create a Sorter for Anything";
@@ -92,19 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Home() {
-  console.log("🏠 HOMEPAGE RENDER - Starting at:", new Date().toISOString());
-  
-  const popularSortersRaw = await getPopularSorters();
-  const popularSorters = popularSortersRaw.map((sorter) => ({
-    ...sorter,
-    creatorUsername: sorter.creatorUsername ?? "Unknown",
-    category: sorter.category ?? undefined,
-    coverImageUrl: sorter.coverImageUrl ?? undefined,
-  }));
-
-  console.log("🏠 HOMEPAGE RENDER - Complete with", popularSorters.length, "sorters at:", new Date().toISOString());
-
+export default function Home() {
   // JSON-LD structured data for homepage
   const jsonLd = {
     "@context": "https://schema.org",
@@ -120,35 +50,6 @@ export default async function Home() {
         urlTemplate: `${process.env.NEXTAUTH_URL || "https://sortr.dev"}/browse?q={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
-    },
-    mainEntity: {
-      "@type": "ItemList",
-      name: "Popular Sorters",
-      description: "Most popular sorters on sortr",
-      numberOfItems: popularSorters.length,
-      itemListElement: popularSorters.slice(0, 5).map((sorter, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        item: {
-          "@type": "Survey",
-          name: sorter.title,
-          description: `Sorter for ${sorter.title}`,
-          url: `${process.env.NEXTAUTH_URL || "https://sortr.dev"}/sorter/${sorter.slug}`,
-          about: sorter.category || "Ranking",
-          interactionStatistic: [
-            {
-              "@type": "InteractionCounter",
-              interactionType: "https://schema.org/ViewAction",
-              userInteractionCount: sorter.viewCount,
-            },
-            {
-              "@type": "InteractionCounter",
-              interactionType: "https://schema.org/CompleteAction",
-              userInteractionCount: sorter.completionCount,
-            },
-          ],
-        },
-      })),
     },
   };
 
@@ -180,28 +81,9 @@ export default async function Home() {
             </p>
           </Box>
         </section>
-        <section className="w-full">
-          <Panel variant="primary">
-            <PanelHeader variant="primary">
-              <PanelTitle>Popular Sorters</PanelTitle>
-            </PanelHeader>
-            <PanelContent variant="primary" className="p-2 md:p-6">
-              {popularSorters.length === 0 ? (
-                <div className="text-center">
-                  <Box variant="warning" size="md">
-                    <p className="font-medium">No sorters available yet.</p>
-                  </Box>
-                </div>
-              ) : (
-                <SorterGrid>
-                  {popularSorters.map((sorter) => (
-                    <SorterCard key={sorter.id} sorter={sorter} />
-                  ))}
-                </SorterGrid>
-              )}
-            </PanelContent>
-          </Panel>
-        </section>
+        
+        {/* Client-side fetched popular sorters */}
+        <HomepageClient />
       </main>
     </>
   );
