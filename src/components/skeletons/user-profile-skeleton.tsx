@@ -32,9 +32,7 @@ export function UserProfileSkeleton() {
       <section className="mb-8">
         <Panel variant="primary">
           <PanelHeader variant="primary">
-            <PanelTitle>
-              Sorters (<Skeleton className="inline-block h-4 w-6" />)
-            </PanelTitle>
+            <PanelTitle>Sorters</PanelTitle>
           </PanelHeader>
           <PanelContent variant="primary" className="p-2 md:p-6">
             <SorterGridSkeleton count={6} />
@@ -46,9 +44,7 @@ export function UserProfileSkeleton() {
       <section>
         <Panel variant="primary">
           <PanelHeader variant="primary">
-            <PanelTitle>
-              Rankings (<Skeleton className="inline-block h-4 w-6" />)
-            </PanelTitle>
+            <PanelTitle>Rankings</PanelTitle>
           </PanelHeader>
           <PanelContent variant="primary" className="p-2 md:p-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">

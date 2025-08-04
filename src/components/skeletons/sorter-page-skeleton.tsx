@@ -58,7 +58,7 @@ export function SorterPageSkeleton() {
         <section>
           <Panel variant="primary">
             <PanelHeader variant="primary">
-              <PanelTitle>Items to Rank (<Skeleton className="inline-block h-4 w-8" />)</PanelTitle>
+              <PanelTitle>Items to Rank</PanelTitle>
             </PanelHeader>
             <PanelContent variant="primary" className="p-2 md:p-6">
               <div className="space-y-3">
@@ -103,9 +103,7 @@ export function SorterPageSkeleton() {
           {/* Recent Rankings Panel */}
           <Panel variant="primary">
             <PanelHeader variant="primary">
-              <PanelTitle>
-                Recent Rankings (<Skeleton className="inline-block h-4 w-4" />)
-              </PanelTitle>
+              <PanelTitle>Recent Rankings</PanelTitle>
             </PanelHeader>
             <PanelContent variant="primary" className="p-2 md:p-6">
               <div className="space-y-4">
