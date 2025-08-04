@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
@@ -82,6 +83,7 @@ export default function EditSorterForm({
   items,
 }: EditSorterFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
@@ -97,6 +99,7 @@ export default function EditSorterForm({
       sortOrder: tag.sortOrder,
     })),
   );
+  const [hasChanged, setHasChanged] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Upload progress state
@@ -125,6 +128,13 @@ export default function EditSorterForm({
         console.error("Upload error:", error);
       }
     },
+    getFileType: (file, index) => {
+      // First file is cover image if coverImageFile exists, rest are item images
+      if (coverImageFile && index === 0) {
+        return "cover";
+      }
+      return "item";
+    },
   });
 
   // Convert existing data to form format
@@ -151,23 +161,45 @@ export default function EditSorterForm({
     name: "items",
   });
 
+  // Detect form field changes
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      setHasChanged(true);
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Detect tag changes
+  useEffect(() => {
+    const originalTagNames = tags.map(tag => tag.name).sort();
+    const currentTagNames = managedTags.map(tag => tag.name).sort();
+    const tagsChanged = originalTagNames.length !== currentTagNames.length ||
+      originalTagNames.some((name, index) => name !== currentTagNames[index]);
+    
+    if (tagsChanged) {
+      setHasChanged(true);
+    }
+  }, [managedTags, tags]);
+
   // Handle cover image selection
   const handleCoverImageSelect = (file: File | null) => {
     setCoverImageFile(file);
+    setHasChanged(true); // Flag any image change
     if (file) {
       const preview = URL.createObjectURL(file);
       setCoverImagePreview(preview);
       // Don't set coverImageUrl in form - it will be set after upload
       form.setValue("coverImageUrl", undefined);
     } else {
-      setCoverImagePreview(sorter.coverImageUrl); // Reset to original
+      setCoverImagePreview(null); // Completely remove preview
       setCoverImageFile(null);
-      form.setValue("coverImageUrl", sorter.coverImageUrl || undefined);
+      form.setValue("coverImageUrl", undefined); // Remove from form
     }
   };
 
   // Handle item image selection
   const handleItemImageSelect = (index: number, file: File | null) => {
+    setHasChanged(true); // Flag any image change
     const newItemImagesData = [...itemImagesData];
     if (file) {
       const preview = URL.createObjectURL(file);
@@ -192,6 +224,8 @@ export default function EditSorterForm({
   ) => {
     const files = event.target.files;
     if (!files) return;
+
+    setHasChanged(true); // Flag any image change
 
     const newFiles = Array.from(files);
     const currentItems = form.getValues("items");
@@ -323,6 +357,17 @@ export default function EditSorterForm({
       if (response.data) {
         toast.success("Sorter updated successfully!");
         setShowProgressDialog(false);
+        
+        // Invalidate cached sorter data to show updates immediately
+        await queryClient.invalidateQueries({
+          queryKey: ["sorter", sorter.slug],
+        });
+        
+        // Also invalidate recent results in case they changed
+        await queryClient.invalidateQueries({
+          queryKey: ["sorter", sorter.slug, "recent-results"],
+        });
+        
         router.push(`/sorter/${sorter.slug}`);
       }
     } catch (error: any) {
@@ -354,53 +399,36 @@ export default function EditSorterForm({
     toast.info("Upload cancelled");
   };
 
-  // Handle form submission
+  // Handle form submission - SIMPLIFIED VERSION (matches create sorter)
   const onSubmit = async (data: CreateSorterInput) => {
     setIsLoading(true);
     setShowProgressDialog(false); // Reset dialog state
     directUpload.reset(); // Reset upload hook state
 
     try {
-      if (coverImageFile || itemImagesData.some((imageData) => imageData)) {
-        // Has new images - use upload flow
+      // Check if we have new images to upload
+      const hasNewImages = coverImageFile || itemImagesData.some((imageData) => imageData);
+      
+      if (hasNewImages) {
+        // Has new images - use upload flow (same as create sorter)
         const filesToUpload: File[] = [];
-        const fileMetadata: Array<{
-          id: string;
-          file: File;
-          originalName: string;
-        }> = [];
 
         if (coverImageFile) {
-          // CRITICAL FIX: Prefix cover image filename with "cover-" for proper file type detection
-          const prefixedCoverFile = new File(
-            [coverImageFile],
-            `cover-${coverImageFile.name}`,
-            { type: coverImageFile.type },
-          );
-          filesToUpload.push(prefixedCoverFile);
-          fileMetadata.push({
-            id: "cover",
-            file: prefixedCoverFile,
-            originalName: prefixedCoverFile.name,
-          });
+          filesToUpload.push(coverImageFile);
         }
 
-        itemImagesData.forEach((imageData, index) => {
+        itemImagesData.forEach((imageData) => {
           if (imageData) {
             filesToUpload.push(imageData.file);
-            fileMetadata.push({
-              id: `item-${index}`,
-              file: imageData.file,
-              originalName: imageData.file.name,
-            });
           }
         });
 
+        console.log(`🚀 Uploading ${filesToUpload.length} new files for edit`);
         setIsUploading(true);
-        setShowProgressDialog(true); // Show dialog immediately when starting upload
+        setShowProgressDialog(true);
         directUpload.uploadFiles(filesToUpload);
       } else {
-        // No new images - direct API call
+        // No new images - direct API call with current URLs
         const finalData = {
           ...data,
           items: data.items.map((item) => ({
@@ -411,6 +439,7 @@ export default function EditSorterForm({
           tags: managedTags,
         };
 
+        console.log(`📝 Updating sorter without new images`);
         const response = await axios.put(
           `/api/sorters/${sorter.slug}`,
           finalData,
@@ -418,6 +447,17 @@ export default function EditSorterForm({
 
         if (response.data) {
           toast.success("Sorter updated successfully!");
+          
+          // Invalidate cached sorter data to show updates immediately
+          await queryClient.invalidateQueries({
+            queryKey: ["sorter", sorter.slug],
+          });
+          
+          // Also invalidate recent results in case they changed
+          await queryClient.invalidateQueries({
+            queryKey: ["sorter", sorter.slug, "recent-results"],
+          });
+          
           router.push(`/sorter/${sorter.slug}`);
         }
       }
@@ -832,10 +872,10 @@ export default function EditSorterForm({
                 </Link>
                 <Button
                   type="submit"
-                  disabled={isLoading || isUploading}
+                  disabled={isLoading || isUploading || !hasChanged}
                   className="min-w-[120px]"
                 >
-                  {isLoading || isUploading ? "Updating..." : "Update Sorter"}
+                  {isLoading || isUploading ? "Updating..." : hasChanged ? "Update Sorter" : "No Changes"}
                 </Button>
               </div>
             </form>
