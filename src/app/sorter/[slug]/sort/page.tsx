@@ -6,6 +6,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ComparisonCard } from "@/components/ui/comparison-card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Undo2, RotateCcw } from "lucide-react";
 import { SortItem } from "@/lib/sorting";
 import { InteractiveMergeSort, SortState } from "@/lib/interactive-merge-sort";
@@ -223,6 +231,7 @@ export default function SortPage() {
   const [currentFilterSlugs, setCurrentFilterSlugs] = useState<string[]>([]);
   const [sorterId, setSorterId] = useState<string>("");
   const [imagesPreloaded, setImagesPreloaded] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
   const sorterRef = useRef<InteractiveMergeSort | null>(null);
   const resolveComparisonRef = useRef<((winnerId: string) => void) | null>(
     null,
@@ -585,9 +594,18 @@ export default function SortPage() {
   const handleReset = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setShowResetDialog(true);
+  }, []);
+
+  const confirmReset = useCallback(() => {
     if (sorterRef.current) {
       sorterRef.current.reset();
     }
+    setShowResetDialog(false);
+  }, []);
+
+  const cancelReset = useCallback(() => {
+    setShowResetDialog(false);
   }, []);
 
   if (isLoading) {
@@ -817,6 +835,32 @@ export default function SortPage() {
           Your progress is automatically saved in your browser. Feel free to take breaks or navigate away - you can continue anytime!
         </p>
       </div>
+
+      {/* Reset Confirmation Dialog */}
+      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Progress?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to reset your progress? This will restart the sorting from the beginning and cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-row justify-end gap-2">
+            <Button
+              variant="neutral"
+              onClick={cancelReset}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={confirmReset}
+            >
+              Reset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
