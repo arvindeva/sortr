@@ -18,6 +18,7 @@ interface UploadProgressDialogProps {
   progress: UploadProgress | null;
   onOpenChange?: (open: boolean) => void;
   onCancel?: () => void;
+  isEditMode?: boolean;
 }
 
 export function UploadProgressDialog({
@@ -25,17 +26,18 @@ export function UploadProgressDialog({
   progress,
   onOpenChange,
   onCancel,
+  isEditMode = false,
 }: UploadProgressDialogProps) {
   if (!progress) return null;
 
   const getPhaseTitle = (phase: UploadProgress["phase"]) => {
     switch (phase) {
       case "requesting-tokens":
-        return "Creating sorter...";
+        return isEditMode ? "Preparing edit..." : "Creating sorter...";
       case "uploading-files":
         return "Uploading Images...";
       case "creating-sorter":
-        return "Creating sorter...";
+        return isEditMode ? "Editing Sorter..." : "Creating Sorter...";
       case "complete":
         return "Upload complete!";
       default:
@@ -54,7 +56,7 @@ export function UploadProgressDialog({
         const totalFiles = progress.files.length;
         return `${completedFiles}/${totalFiles} images uploaded`;
       case "creating-sorter":
-        return "Processing sorter...";
+        return isEditMode ? "Processing edits..." : "Processing sorter...";
       case "complete":
         return "All files uploaded successfully!";
       default:
@@ -105,7 +107,10 @@ export function UploadProgressDialog({
           <DialogTitle>{getPhaseTitle(progress.phase)}</DialogTitle>
           <VisuallyHidden.Root>
             <DialogDescription>
-              Upload progress for creating a new sorter with files
+              {isEditMode 
+                ? "Upload progress for editing sorter with files"
+                : "Upload progress for creating a new sorter with files"
+              }
             </DialogDescription>
           </VisuallyHidden.Root>
         </DialogHeader>

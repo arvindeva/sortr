@@ -889,6 +889,7 @@ export default function EditSorterForm({
         onOpenChange={setShowProgressDialog}
         progress={directUpload.progress}
         onCancel={handleCancelUpload}
+        isEditMode={true}
       />
     </>
   );
