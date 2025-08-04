@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { deleteFromR2, getAvatarKey } from "@/lib/r2";
+import { revalidatePath } from "next/cache";
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,6 +54,11 @@ export async function POST(request: NextRequest) {
     // Update user's image URL to null in database
     await db.update(user).set({ image: null }).where(eq(user.id, userId));
 
+    // Revalidate user profile page to update cached avatar
+    if (username) {
+      revalidatePath(`/user/${username}`);
+      console.log(`♻️ Revalidated profile path: /user/${username}`);
+    }
 
     return NextResponse.json({
       success: true,

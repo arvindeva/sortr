@@ -687,7 +687,7 @@ export default function EditSorterForm({
                                         type="button"
                                         variant="neutralNoShadow"
                                         size="icon"
-                                        className="absolute -right-1 -bottom-1 h-4 w-4 p-0"
+                                        className="absolute -right-1 -bottom-1 h-6 w-6 p-0"
                                         onClick={() => {
                                           const input = document.getElementById(
                                             `item-image-replace-${index}`,

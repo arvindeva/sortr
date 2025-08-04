@@ -9,6 +9,7 @@ import {
   processAvatarImage,
   validateImageBuffer,
 } from "@/lib/image-processing";
+import { revalidatePath } from "next/cache";
 
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -89,6 +90,11 @@ export async function POST(request: NextRequest) {
     // Update user's image URL in database
     await db.update(user).set({ image: avatarUrl }).where(eq(user.id, userId));
 
+    // Revalidate user profile page to update cached avatar
+    if (username) {
+      revalidatePath(`/user/${username}`);
+      console.log(`♻️ Revalidated profile path: /user/${username}`);
+    }
 
     return NextResponse.json({
       success: true,

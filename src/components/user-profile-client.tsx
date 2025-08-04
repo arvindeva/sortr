@@ -1,8 +1,7 @@
 "use client";
 
 import { useUserProfile } from "@/hooks/api";
-import { UserProfileSkeleton } from "@/components/skeletons";
-import { UserProfileHeader } from "@/components/user-profile-header";
+import { UserProfileContentSkeleton } from "@/components/skeletons/user-profile-content-skeleton";
 import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,50 +30,38 @@ export function UserProfileClient({
   const { data, isLoading, error } = useUserProfile(username);
 
   if (isLoading) {
-    return <UserProfileSkeleton />;
+    return <UserProfileContentSkeleton />;
   }
 
   if (error) {
     return (
-      <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
-        <section className="mb-8">
-          <Box variant="warning" size="md">
-            <p className="font-medium">
-              {error.message === "User not found" 
-                ? "User not found. This profile may not exist."
-                : "Failed to load user profile. Please try again."
-              }
-            </p>
-          </Box>
-        </section>
-      </main>
+      <section className="mb-8">
+        <Box variant="warning" size="md">
+          <p className="font-medium">
+            {error.message === "User not found" 
+              ? "User not found. This profile may not exist."
+              : "Failed to load user profile content. Please try again."
+            }
+          </p>
+        </Box>
+      </section>
     );
   }
 
   if (!data) {
     return (
-      <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
-        <section className="mb-8">
-          <Box variant="warning" size="md">
-            <p className="font-medium">User not found.</p>
-          </Box>
-        </section>
-      </main>
+      <section className="mb-8">
+        <Box variant="warning" size="md">
+          <p className="font-medium">User not found.</p>
+        </Box>
+      </section>
     );
   }
 
   const { user, stats, sorters, rankings, userSince } = data;
 
   return (
-    <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
-      {/* Profile Header */}
-      <UserProfileHeader
-        username={user.username || ""}
-        userSince={userSince}
-        isOwnProfile={isOwnProfile}
-        currentImage={user.image}
-      />
-
+    <>
       {/* Sorters Section */}
       <section className="mb-8">
         <Panel variant="primary">
@@ -198,6 +185,6 @@ export function UserProfileClient({
           </PanelContent>
         </Panel>
       </section>
-    </main>
+    </>
   );
 }

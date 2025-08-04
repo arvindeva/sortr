@@ -15,6 +15,7 @@ import { createSorterSchema } from "@/lib/validations";
 import { copyR2ObjectsInParallel, getVersionedItemKey, getVersionedCoverKey, getR2PublicUrl } from "@/lib/r2";
 import { generateTagSlug, generateSorterItemSlug } from "@/lib/utils";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 export async function GET(
   request: NextRequest,
@@ -217,6 +218,9 @@ export async function DELETE(
     // All versioned data remains in database for rankings to reference
     // Future cleanup will only remove versions with no ranking references
 
+    // Revalidate the sorter page to update cached static elements
+    revalidatePath(`/sorter/${slug}`);
+    console.log(`♻️ Revalidated path: /sorter/${slug}`);
 
     return Response.json({
       message: "Sorter deleted successfully",
@@ -297,6 +301,10 @@ export async function PUT(
 
     // NEW SIMPLE EDIT FLOW - ALWAYS COPY EVERYTHING
     const result = await handleEditSorterSimple(validatedData, currentSorter, newVersion, currentUserId);
+
+    // Revalidate the sorter page to update cached static elements
+    revalidatePath(`/sorter/${slug}`);
+    console.log(`♻️ Revalidated path: /sorter/${slug}`);
 
     return Response.json({
       message: "Sorter updated successfully",

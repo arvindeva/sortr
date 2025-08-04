@@ -6,6 +6,12 @@ import { sorters, user } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { SorterPageClient } from "@/components/sorter-page-client";
+import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Play, Trophy, Pencil } from "lucide-react";
+import { DeleteSorterButton } from "@/components/delete-sorter-button";
+import Link from "next/link";
 
 interface SorterPageProps {
   params: Promise<{
@@ -123,6 +129,7 @@ async function getSorterWithItems(
   // Use the API endpoint to get sorter data with groups support
   const response = await fetch(
     `${process.env.NEXTAUTH_URL}/api/sorters/${sorterSlug}`,
+    { next: { revalidate: 300 } } // Cache for 5 minutes
   );
   if (!response.ok) {
     return null;
@@ -157,6 +164,11 @@ export default async function SorterPage({ params }: SorterPageProps) {
     isOwner = userData.length > 0 && userData[0].id === data.sorter.user.id;
   }
 
+  const { sorter, tags } = data;
+  
+  // Determine if filtering is needed (tags exist)
+  const hasFilters = tags && tags.length > 0;
+
   // JSON-LD structured data for SEO (server-side)
   const jsonLd = {
     "@context": "https://schema.org",
@@ -190,12 +202,158 @@ export default async function SorterPage({ params }: SorterPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Client-side data fetching and rendering */}
-      <SorterPageClient
-        slug={slug}
-        isOwner={isOwner}
-        currentUserEmail={currentUserEmail || undefined}
-      />
+      <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
+        {/* Server-rendered Sorter Header */}
+        <section className="mb-3">
+          <div className="flex items-center space-x-3 py-4 md:space-x-6">
+            {/* Cover Image */}
+            <div className="border-border rounded-base flex h-28 w-28 items-center justify-center overflow-hidden border-2 md:h-48 md:w-48">
+              {sorter.coverImageUrl ? (
+                <img
+                  src={sorter.coverImageUrl}
+                  alt={`${sorter.title}'s cover`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="bg-secondary-background text-main flex h-full w-full items-center justify-center">
+                  <span className="text-4xl font-bold">
+                    {sorter.title.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Sorter Info */}
+            <div className="flex-1">
+              <div className="mb-2 flex items-center gap-2">
+                <PageHeader>{sorter.title}</PageHeader>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-medium">
+                <div className="flex items-center gap-1">
+                  <span>by</span>
+                  {sorter.user.username ? (
+                    <Link
+                      href={`/user/${sorter.user.username}`}
+                      className="font-bold hover:underline"
+                    >
+                      {sorter.user.username}
+                    </Link>
+                  ) : (
+                    <span className="font-bold">Unknown User</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Trophy size={16} />
+                  <span>{sorter.completionCount}</span>
+                </div>
+              </div>
+
+              {/* Desktop Action Buttons */}
+              <div className="mt-4 hidden items-center gap-4 md:flex">
+                {hasFilters ? (
+                  <Button
+                    asChild
+                    size="default"
+                    variant="default"
+                    className="group"
+                  >
+                    <Link href={`/sorter/${sorter.slug}/filters`}>
+                      <Play
+                        className="transition-transform duration-200 group-hover:translate-x-1"
+                        size={20}
+                      />
+                      Sort Now
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    asChild
+                    size="default"
+                    variant="default"
+                    className="group"
+                  >
+                    <Link href={`/sorter/${sorter.slug}/sort`}>
+                      <Play
+                        className="transition-transform duration-200 group-hover:translate-x-1"
+                        size={20}
+                      />
+                      Sort now
+                    </Link>
+                  </Button>
+                )}
+
+                {/* Edit Button - Only show for sorter owner */}
+                {isOwner && (
+                  <Button asChild variant="neutral">
+                    <Link href={`/sorter/${sorter.slug}/edit`}>
+                      <Pencil className="mr-2" size={16} />
+                      Edit
+                    </Link>
+                  </Button>
+                )}
+
+                {/* Delete Button - Only show for sorter owner */}
+                {isOwner && (
+                  <DeleteSorterButton
+                    sorterSlug={sorter.slug}
+                    sorterTitle={sorter.title}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Mobile Action Buttons */}
+        <div className="mb-8 flex items-center gap-4 md:hidden">
+          {hasFilters ? (
+            <Button asChild size="default" variant="default" className="group">
+              <Link href={`/sorter/${sorter.slug}/filters`}>
+                <Play
+                  className="transition-transform duration-200 group-hover:translate-x-1"
+                  size={20}
+                />
+                Sort Now
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild size="default" variant="default" className="group">
+              <Link href={`/sorter/${sorter.slug}/sort`}>
+                <Play
+                  className="transition-transform duration-200 group-hover:translate-x-1"
+                  size={20}
+                />
+                Sort now
+              </Link>
+            </Button>
+          )}
+
+          {/* Edit Button - Only show for sorter owner */}
+          {isOwner && (
+            <Button asChild variant="neutral">
+              <Link href={`/sorter/${sorter.slug}/edit`}>
+                <Pencil className="mr-2" size={16} />
+                Edit
+              </Link>
+            </Button>
+          )}
+
+          {/* Delete Button - Only show for sorter owner */}
+          {isOwner && (
+            <DeleteSorterButton
+              sorterSlug={sorter.slug}
+              sorterTitle={sorter.title}
+            />
+          )}
+        </div>
+
+        {/* Client-side content for items, tags, and recent rankings */}
+        <SorterPageClient
+          slug={slug}
+          isOwner={isOwner}
+          currentUserEmail={currentUserEmail || undefined}
+        />
+      </main>
     </>
   );
 }

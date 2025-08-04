@@ -5,6 +5,7 @@ import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { updateUsernameSchema } from "@/lib/validations";
+import { revalidatePath } from "next/cache";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -96,8 +97,20 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    const oldUsername = currentUser[0].username;
+
     // Update username
     await db.update(user).set({ username }).where(eq(user.id, userId));
+
+    // Revalidate both old and new profile pages if username changed
+    if (oldUsername && oldUsername !== username) {
+      revalidatePath(`/user/${oldUsername}`);
+      console.log(`♻️ Revalidated old profile path: /user/${oldUsername}`);
+    }
+    if (username) {
+      revalidatePath(`/user/${username}`);
+      console.log(`♻️ Revalidated new profile path: /user/${username}`);
+    }
 
     return NextResponse.json({
       message: "Username updated successfully",

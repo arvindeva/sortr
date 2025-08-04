@@ -6,6 +6,7 @@ import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { UserProfileClient } from "@/components/user-profile-client";
+import { UserProfileHeader } from "@/components/user-profile-header";
 
 interface UserProfilePageProps {
   params: Promise<{
@@ -105,6 +106,14 @@ export default async function UserProfilePage({
   const currentUserEmail = session?.user?.email;
   const isOwnProfile = currentUserEmail === userData.email;
 
+  // Calculate user since date
+  const userSince = new Date(
+    userData.emailVerified || new Date(),
+  ).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+
   // JSON-LD structured data for user profile (server-side for SEO)
   const jsonLd = {
     "@context": "https://schema.org",
@@ -126,12 +135,22 @@ export default async function UserProfilePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Client-side data fetching and rendering */}
-      <UserProfileClient
-        username={username}
-        isOwnProfile={isOwnProfile}
-        currentUserEmail={currentUserEmail || undefined}
-      />
+      <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
+        {/* Server-rendered Profile Header */}
+        <UserProfileHeader
+          username={userData.username || ""}
+          userSince={userSince}
+          isOwnProfile={isOwnProfile}
+          currentImage={userData.image}
+        />
+
+        {/* Client-side content for sorters and rankings */}
+        <UserProfileClient
+          username={username}
+          isOwnProfile={isOwnProfile}
+          currentUserEmail={currentUserEmail || undefined}
+        />
+      </main>
     </>
   );
 }
