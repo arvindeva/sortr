@@ -108,7 +108,7 @@
   --spacing-boxShadowY: 2px;
   --spacing-reverseBoxShadowX: -2px;
   --spacing-reverseBoxShadowY: -2px;
-  --radius-base: 10px;
+  --radius-base: 1px;
   --shadow-shadow: var(--shadow);
   --font-weight-base: 500;
   --font-weight-heading: 800;
@@ -190,13 +190,18 @@
   }
 
   .progress-shimmer::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.6),
+      transparent
+    );
     animation: progress-shimmer 1.5s ease-in-out infinite;
     pointer-events: none;
     z-index: 1;
@@ -229,5 +234,16 @@
 
   .text-base {
     font-size: var(--font-size-base) !important;
+  }
+}
+
+/* Custom pulse animation with white-to-light grey colors */
+@keyframes pulse-white {
+  0%,
+  100% {
+    background-color: #e5e7eb; /* light grey */
+  }
+  50% {
+    background-color: #ffffff; /* white */
   }
 }
