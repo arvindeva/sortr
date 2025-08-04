@@ -40,6 +40,9 @@ function ComparisonCard({
 
   // Show letter placeholder if no image URL, image failed, or image hasn't loaded yet
   const showPlaceholder = !displayImageUrl || imageError || !imageLoaded;
+  
+  // Show shimmer animation when there's an image URL but it's still loading (not failed)
+  const showShimmer = displayImageUrl && !imageLoaded && !imageError;
 
   return (
     <div
@@ -56,7 +59,8 @@ function ComparisonCard({
         <div 
           className={cn(
             "bg-secondary-background absolute inset-0 flex items-center justify-center transition-opacity duration-200",
-            showPlaceholder ? "opacity-100" : "opacity-0"
+            showPlaceholder ? "opacity-100" : "opacity-0",
+            showShimmer && "animate-pulse" // Default pulse when loading
           )}
         >
           <span className="text-primary text-lg font-bold md:text-4xl">

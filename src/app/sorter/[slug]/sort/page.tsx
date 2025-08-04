@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useImagePreloader } from "@/hooks/use-image-preloader";
 import { ComparisonCard } from "@/components/ui/comparison-card";
 import {
   Dialog,
@@ -22,7 +23,6 @@ import { Box } from "@/components/ui/box";
 import { PageHeader } from "@/components/ui/page-header";
 import { SortPageSkeleton } from "@/components/sort-page-skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import { useImagePreloader } from "@/hooks/use-image-preloader";
 
 interface SorterData {
   sorter: {
