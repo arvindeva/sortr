@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Progress } from "@/components/ui/progress";
-import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
+import { Spinner } from "@/components/ui/spinner";
 import { Check } from "lucide-react";
 import type { UploadProgress } from "@/types/upload";
 
@@ -17,23 +17,27 @@ interface UploadProgressDialogProps {
   open: boolean;
   progress: UploadProgress | null;
   onOpenChange?: (open: boolean) => void;
+  onCancel?: () => void;
+  isEditMode?: boolean;
 }
 
 export function UploadProgressDialog({
   open,
   progress,
   onOpenChange,
+  onCancel,
+  isEditMode = false,
 }: UploadProgressDialogProps) {
   if (!progress) return null;
 
   const getPhaseTitle = (phase: UploadProgress["phase"]) => {
     switch (phase) {
       case "requesting-tokens":
-        return "Creating sorter...";
+        return isEditMode ? "Preparing edit..." : "Creating sorter...";
       case "uploading-files":
         return "Uploading Images...";
       case "creating-sorter":
-        return "Creating sorter...";
+        return isEditMode ? "Editing Sorter..." : "Creating Sorter...";
       case "complete":
         return "Upload complete!";
       default:
@@ -52,7 +56,7 @@ export function UploadProgressDialog({
         const totalFiles = progress.files.length;
         return `${completedFiles}/${totalFiles} images uploaded`;
       case "creating-sorter":
-        return "Processing sorter...";
+        return isEditMode ? "Processing edits..." : "Processing sorter...";
       case "complete":
         return "All files uploaded successfully!";
       default:
@@ -74,18 +78,39 @@ export function UploadProgressDialog({
     }
   };
 
+  const canCancel = progress.phase !== "complete";
+
+  const handleCancel = () => {
+    if (onCancel && canCancel) {
+      onCancel();
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open && canCancel) {
+      // If user tries to close during upload, treat it as cancel
+      handleCancel();
+    } else if (!open && !canCancel) {
+      // Allow closing after completion
+      onOpenChange?.(false);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className="sm:max-w-md"
         onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
+        onEscapeKeyDown={canCancel ? undefined : (e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle>{getPhaseTitle(progress.phase)}</DialogTitle>
           <VisuallyHidden.Root>
             <DialogDescription>
-              Upload progress for creating a new sorter with files
+              {isEditMode 
+                ? "Upload progress for editing sorter with files"
+                : "Upload progress for creating a new sorter with files"
+              }
             </DialogDescription>
           </VisuallyHidden.Root>
         </DialogHeader>
@@ -117,8 +142,8 @@ export function UploadProgressDialog({
                 </div>
               </div>
             ) : (
-              <div className="flex justify-center py-2">
-                <SortingBarsLoader />
+              <div className="py-2">
+                <Spinner size={28} />
               </div>
             )}
           </div>

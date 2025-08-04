@@ -61,8 +61,8 @@ export default function CreateSorterFormTags() {
   // Direct upload hook
   const directUpload = useDirectUpload({
     onProgress: (progress) => {
-      // Update progress display
-      setShowProgressDialog(true);
+      // Progress updates are handled by the dialog component
+      // Dialog is shown immediately when upload starts
     },
     onSuccess: async (uploadedFiles, abortController) => {
       // Files uploaded successfully, now create sorter with references
@@ -81,6 +81,13 @@ export default function CreateSorterFormTags() {
       if (error !== "AbortError") {
         console.error("Upload error:", error);
       }
+    },
+    getFileType: (file, index) => {
+      // First file is cover image if coverImageFile exists, rest are item images
+      if (coverImageFile && index === 0) {
+        return "cover";
+      }
+      return "item";
     },
   });
 
@@ -332,6 +339,7 @@ export default function CreateSorterFormTags() {
   // Upload with progress tracking using axios
   const uploadWithDirectR2 = async (data: CreateSorterInput) => {
     setIsUploading(true);
+    setShowProgressDialog(true); // Show dialog immediately when starting upload
 
     try {
       // Collect all files for upload
@@ -538,6 +546,8 @@ export default function CreateSorterFormTags() {
   // Handle form submission
   const onSubmit = async (data: CreateSorterInput) => {
     setIsLoading(true);
+    setShowProgressDialog(false); // Reset dialog state
+    directUpload.reset(); // Reset upload hook state
 
     try {
       if (coverImageFile || itemImagesData.some((imageData) => imageData)) {
@@ -567,19 +577,17 @@ export default function CreateSorterFormTags() {
       <UploadProgressDialog
         open={showProgressDialog || directUpload.isUploading}
         progress={directUpload.progress}
-        onOpenChange={(open) => {
-          if (!open) {
-            // User clicked X - cancel upload
-            directUpload.cancel();
-            setShowProgressDialog(false);
-            setIsUploading(false);
-            setIsLoading(false);
+        onCancel={() => {
+          // User clicked cancel button
+          directUpload.cancel();
+          setShowProgressDialog(false);
+          setIsUploading(false);
+          setIsLoading(false);
 
-            // Form state remains intact - no reset needed
+          // Form state remains intact - no reset needed
 
-            // Show cancellation feedback
-            toast.info("Sorter creation cancelled");
-          }
+          // Show cancellation feedback
+          toast.info("Sorter creation cancelled");
         }}
       />
 
@@ -601,10 +609,7 @@ export default function CreateSorterFormTags() {
                       <FormItem>
                         <FormLabel>Title *</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="e.g., Best Marvel Movies"
-                            {...field}
-                          />
+                          <Input placeholder="e.g., Marvel Movies" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -619,7 +624,7 @@ export default function CreateSorterFormTags() {
                         <FormLabel>Description</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Describe what you're ranking..."
+                            placeholder="Describe your sorter (optional)"
                             rows={3}
                             {...field}
                           />
@@ -769,6 +774,21 @@ export default function CreateSorterFormTags() {
                                     <Input
                                       placeholder={`Item ${index + 1}`}
                                       {...field}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          e.preventDefault();
+                                          // Add new item and focus on it
+                                          addItemHandler();
+                                          // Focus will be set after the new item is rendered
+                                          setTimeout(() => {
+                                            const nextInput =
+                                              document.querySelector(
+                                                `input[name="items.${itemFields.length}.title"]`,
+                                              ) as HTMLInputElement;
+                                            nextInput?.focus();
+                                          }, 0);
+                                        }
+                                      }}
                                     />
                                   </FormControl>
                                   {itemFields.length > 0 && (

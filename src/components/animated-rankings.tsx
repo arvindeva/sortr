@@ -88,6 +88,13 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
                     src={getImageUrl(item.imageUrl, "thumbnail")}
                     alt={item.title}
                     className="h-full w-full object-cover"
+                    onError={(e) => {
+                      // Fallback to full-size image if thumbnail fails to load
+                      const target = e.target as HTMLImageElement;
+                      if (target.src.includes('-thumb')) {
+                        target.src = getImageUrl(item.imageUrl, "full");
+                      }
+                    }}
                   />
                 </div>
               ) : (

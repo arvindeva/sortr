@@ -5,7 +5,6 @@ import { db } from "@/db";
 import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { deleteFromR2, getAvatarKey } from "@/lib/r2";
-import { revalidateUserProfile } from "@/lib/revalidation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,15 +53,6 @@ export async function POST(request: NextRequest) {
     // Update user's image URL to null in database
     await db.update(user).set({ image: null }).where(eq(user.id, userId));
 
-    // Revalidate user profile cache
-    if (username) {
-      try {
-        await revalidateUserProfile(username);
-      } catch (revalidateError) {
-        console.warn("Failed to revalidate user profile cache:", revalidateError);
-        // Don't fail the entire request if revalidation fails
-      }
-    }
 
     return NextResponse.json({
       success: true,

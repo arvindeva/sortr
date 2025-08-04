@@ -19,6 +19,8 @@ interface DirectUploadOptions {
     abortController: AbortController | null,
   ) => void;
   onError?: (error: string) => void;
+  fileType?: "cover" | "item" | "group-cover"; // Single file type for all files
+  getFileType?: (file: File, index: number) => "cover" | "item" | "group-cover"; // Per-file type function
 }
 
 interface DirectUploadState {
@@ -99,6 +101,7 @@ async function uploadWithRetry(
 async function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
 
 export function useDirectUpload(options: DirectUploadOptions = {}) {
   const { data: session } = useSession();
@@ -247,12 +250,18 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
           determinate: false,
         });
 
-        // Create file infos for token request (still based on original files)
-        const fileInfos = files.map((file) => ({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-        }));
+        // Create file infos for token request with explicit file types from UI context
+        const fileInfos = files.map((file, index) => {
+          // Use per-file type function if provided, otherwise single file type, defaulting to "item"
+          const fileType = options.getFileType?.(file, index) || options.fileType || "item";
+          
+          return {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            fileType,
+          };
+        });
 
         console.log("Requesting upload tokens for files:", fileInfos);
 
@@ -323,12 +332,9 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
           const originalFile = files[i];
           const processedFile = processedFiles[i];
 
-          // Determine how many URLs this file should have based on type
-          // Items get 2 URLs (thumbnail + full), covers/group-covers get 1 URL
-          const isItemFile =
-            !originalFile.name.toLowerCase().startsWith("cover-") &&
-            !originalFile.name.toLowerCase().startsWith("group-cover-");
-          const expectedUrlCount = isItemFile ? 2 : 1;
+          // Determine how many URLs this file should have based on explicit type
+          const fileType = options.getFileType?.(originalFile, i) || options.fileType || "item";
+          const expectedUrlCount = fileType === "item" ? 2 : 1;
 
           // Get exactly the URLs for this file
           const uploadUrls = tokenData.uploadUrls.slice(
@@ -357,6 +363,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
         const CONCURRENT_UPLOADS = 5;
         const uploadBatches = chunkArray(uploadTasks, CONCURRENT_UPLOADS);
         let completedTasks = 0;
+        const completedFileIndices = new Set<number>(); // Track completed files by index, not name
         
         console.log(`Uploading ${uploadTasks.length} files in ${uploadBatches.length} batches of ${CONCURRENT_UPLOADS}`);
 
@@ -453,6 +460,9 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
                 // Add successful uploads to results
                 uploadResults.push(...taskResult.results);
                 completedTasks++;
+                
+                // Track this file as completed by its index
+                completedFileIndices.add(taskResult.task.fileIndex);
 
                 // Update progress for this file
                 updateProgress({
@@ -463,15 +473,9 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
                     progress: uploadTasks.find((t) => t.fileIndex === idx)
                       ? 100
                       : 0,
-                    status: uploadResults.some(
-                      (r) => r.originalName === files[idx]?.name,
-                    )
+                    status: completedFileIndices.has(idx)
                       ? "complete"
-                      : uploadTasks
-                            .slice(0, completedTasks)
-                            .some((t) => t.fileIndex === idx)
-                        ? "complete"
-                        : "pending",
+                      : "pending",
                   })),
                   overallProgress: 10 + (completedTasks / files.length) * 80,
                   statusMessage: `Uploaded ${displayFiles[taskResult.task.fileIndex]?.name || taskResult.task.originalFile.name}`,
@@ -494,9 +498,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
                     name: displayFile.name,
                     processedName: files[idx]?.name,
                     progress: 0,
-                    status: uploadResults.some(
-                      (r) => r.originalName === files[idx]?.name,
-                    )
+                    status: completedFileIndices.has(idx)
                       ? "complete"
                       : taskResult.task.fileIndex === idx
                         ? "failed"
@@ -540,9 +542,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
             name: displayFile.name,
             processedName: files[idx]?.name,
             progress: 100,
-            status: uploadResults.some(
-              (r) => r.originalName === files[idx]?.name,
-            )
+            status: completedFileIndices.has(idx)
               ? "complete"
               : "failed",
           })),

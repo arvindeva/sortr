@@ -18,9 +18,13 @@ export function getImageUrl(
   }
 
   if (size === "thumbnail") {
-    // Generate thumbnail URL by adding -thumb suffix and ensuring .jpg extension
-    // All images are stored as JPEG regardless of original format
-    return baseUrl.replace(/\.([^.]+)$/, "-thumb.jpg");
+    // For backward compatibility: try thumbnail first, but fallback to full size
+    // This handles cases where thumbnail versions don't exist (e.g., after edits)
+    const thumbnailUrl = baseUrl.replace(/\.([^.]+)$/, "-thumb.jpg");
+    
+    // TODO: In the future, we could add logic to check if thumbnail exists
+    // For now, return thumbnail URL and let the browser/component handle fallback
+    return thumbnailUrl;
   }
 
   // Full size is the base URL (keep original extension for backward compatibility)

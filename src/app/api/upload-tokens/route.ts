@@ -27,6 +27,7 @@ const uploadTokenRequestSchema = z.object({
         type: z.string().refine((type) => ALLOWED_IMAGE_TYPES.includes(type), {
           message: "Only JPG, PNG, and WebP files are allowed",
         }),
+        fileType: z.enum(["cover", "item", "group-cover"]),
       }),
     )
     .min(1)
@@ -90,12 +91,8 @@ export async function POST(request: NextRequest) {
     for (let index = 0; index < validatedData.files.length; index++) {
       const file = validatedData.files[index];
 
-      // Determine file type based on position and naming patterns
-      const fileType = determineFileType(
-        file.name,
-        index,
-        validatedData.files.length,
-      );
+      // Use explicit file type from frontend (now required)
+      const fileType = file.fileType;
 
       if (fileType === "item") {
         // Generate both thumbnail and full size URLs for items
@@ -198,43 +195,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * Determine file type based on naming patterns
- * This is a simple heuristic - can be enhanced later
- */
-function determineFileType(
-  filename: string,
-  index: number,
-  totalFiles: number,
-): "cover" | "item" | "group-cover" {
-  const lower = filename.toLowerCase();
-  // Check for explicit cover image prefix (added by form)
-  if (lower.startsWith("cover-")) {
-    return "cover";
-  }
-
-  // Check for group cover prefix (added by form)
-  if (lower.startsWith("group-cover-")) {
-    return "group-cover";
-  }
-
-  // Check for other group cover indicators
-  if (
-    lower.includes("group") &&
-    (lower.includes("cover") || lower.includes("banner"))
-  ) {
-    return "group-cover";
-  }
-
-  // Check for other cover indicators
-  if (
-    lower.includes("cover") ||
-    lower.includes("banner") ||
-    lower.includes("header")
-  ) {
-    return "cover";
-  }
-
-  // Default to item image
-  return "item";
-}

@@ -162,6 +162,23 @@
     animation: shimmer 1.5s ease-in-out infinite;
   }
 
+  /* Enhanced skeleton shimmer animation - faster with lighter peak */
+  @keyframes skeleton-shimmer {
+    0% {
+      background-color: var(--secondary-background);
+    }
+    50% {
+      background-color: var(--background);
+    }
+    100% {
+      background-color: var(--secondary-background);
+    }
+  }
+
+  .skeleton-shimmer {
+    animation: skeleton-shimmer 1s ease-in-out infinite;
+  }
+
   /* Progress bar shimmer animation - sliding highlight */
   @keyframes progress-shimmer {
     0% {

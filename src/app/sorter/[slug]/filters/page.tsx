@@ -11,7 +11,7 @@ import {
   PanelTitle,
   PanelContent,
 } from "@/components/ui/panel";
-import { SortingBarsLoader } from "@/components/ui/sorting-bars-loader";
+import { Spinner } from "@/components/ui/spinner";
 import { ChevronLeft, Filter, Play } from "lucide-react";
 import Link from "next/link";
 
@@ -119,7 +119,9 @@ export default function FilterPage({ params }: FilterPageProps) {
           <h1 className="mb-3 animate-pulse text-2xl font-bold">
             Loading filters...
           </h1>
-          <SortingBarsLoader className="mb-6" />
+          <div className="mb-6">
+            <Spinner size={32} />
+          </div>
         </div>
       </div>
     );

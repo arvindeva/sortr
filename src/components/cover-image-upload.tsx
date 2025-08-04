@@ -75,7 +75,9 @@ export default function CoverImageUpload({
     }
   };
 
-  const handleRemoveImage = () => {
+  const handleRemoveImage = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     onImageSelect(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -101,7 +103,7 @@ export default function CoverImageUpload({
       />
 
       {/* Upload area */}
-      {!selectedFile ? (
+      {!selectedFile && !previewUrl ? (
         <Box
           variant="white"
           size="md"
@@ -143,13 +145,27 @@ export default function CoverImageUpload({
 
             {/* File info */}
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{selectedFile.name}</p>
-              <p className="text-muted-foreground text-xs">
-                {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
-              </p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                Will be resized to 300x300px
-              </p>
+              {selectedFile ? (
+                <>
+                  <p className="truncate font-medium">{selectedFile.name}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Will be resized to 300x300px
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="truncate font-medium">Current cover image</p>
+                  <p className="text-muted-foreground text-xs">
+                    Existing cover image
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Click "Replace Image" to change
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Remove button */}

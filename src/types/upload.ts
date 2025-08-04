@@ -4,6 +4,7 @@ export interface FileInfo {
   name: string;
   size: number;
   type: string; // MIME type
+  fileType?: "cover" | "item" | "group-cover"; // Explicit file type from frontend
 }
 
 export interface SignedUploadUrl {
