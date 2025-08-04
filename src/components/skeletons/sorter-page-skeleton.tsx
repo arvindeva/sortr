@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/panel";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { RankingItem, RankingItemContent } from "@/components/ui/ranking-item";
+import { Spinner } from "@/components/ui/spinner";
 
 export function SorterPageSkeleton() {
   return (
@@ -60,26 +61,8 @@ export function SorterPageSkeleton() {
             <PanelHeader variant="primary">
               <PanelTitle>Items to Rank</PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary" className="p-2 md:p-6">
-              <div className="space-y-3">
-                {Array.from({ length: 6 }, (_, i) => (
-                  <RankingItem
-                    key={i}
-                    className="bg-background text-foreground"
-                  >
-                    <RankingItemContent>
-                      <div className="flex min-w-0 items-center gap-3 overflow-hidden">
-                        {/* Thumbnail Skeleton */}
-                        <Skeleton className="h-16 w-16 flex-shrink-0" />
-                        {/* Item Name Skeleton */}
-                        <div className="w-0 min-w-0 flex-1">
-                          <Skeleton className="h-4 w-full" />
-                        </div>
-                      </div>
-                    </RankingItemContent>
-                  </RankingItem>
-                ))}
-              </div>
+            <PanelContent variant="primary" className="flex min-h-[300px] items-center justify-center p-2 md:p-6">
+              <Spinner size={32} />
             </PanelContent>
           </Panel>
         </section>
@@ -91,12 +74,8 @@ export function SorterPageSkeleton() {
             <PanelHeader variant="primary">
               <PanelTitle>Filters</PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary" className="p-2 md:p-6">
-              <div className="flex flex-wrap gap-2">
-                {Array.from({ length: 3 }, (_, i) => (
-                  <Skeleton key={i} className="h-6 w-16" />
-                ))}
-              </div>
+            <PanelContent variant="primary" className="flex min-h-[100px] items-center justify-center p-2 md:p-6">
+              <Spinner size={24} />
             </PanelContent>
           </Panel>
 
@@ -105,32 +84,8 @@ export function SorterPageSkeleton() {
             <PanelHeader variant="primary">
               <PanelTitle>Recent Rankings</PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary" className="p-2 md:p-6">
-              <div className="space-y-4">
-                {Array.from({ length: 3 }, (_, i) => (
-                  <Card key={i} className="bg-background text-foreground gap-2">
-                    <CardHeader>
-                      <Skeleton className="h-4 w-20" />
-                    </CardHeader>
-                    <CardContent>
-                      {/* Top 3 Rankings Skeleton */}
-                      <div className="mb-3 space-y-2">
-                        {Array.from({ length: 3 }, (_, j) => (
-                          <div key={j} className="flex items-center gap-2">
-                            <div className="flex min-w-0 flex-1 items-center gap-2">
-                              <Skeleton className="h-6 w-6 flex-shrink-0" />
-                              <Skeleton className="h-4 w-6 text-center" />
-                              <Skeleton className="h-4 flex-1" />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      {/* Date Skeleton */}
-                      <Skeleton className="h-3 w-20" />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+            <PanelContent variant="primary" className="flex min-h-[200px] items-center justify-center p-2 md:p-6">
+              <Spinner size={32} />
             </PanelContent>
           </Panel>
         </section>

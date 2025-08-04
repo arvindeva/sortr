@@ -6,6 +6,7 @@ import {
   PanelContent,
 } from "@/components/ui/panel";
 import { SorterGridSkeleton } from "./sorter-grid-skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 export function UserProfileSkeleton() {
   return (
@@ -46,29 +47,8 @@ export function UserProfileSkeleton() {
           <PanelHeader variant="primary">
             <PanelTitle>Rankings</PanelTitle>
           </PanelHeader>
-          <PanelContent variant="primary" className="p-2 md:p-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
-              {Array.from({ length: 4 }, (_, i) => (
-                <div
-                  key={i}
-                  className="rounded-lg border-2 border-border p-4 shadow-shadow"
-                >
-                  <div className="mb-3 space-y-2">
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                  <div className="space-y-2">
-                    {Array.from({ length: 3 }, (_, j) => (
-                      <div key={j} className="flex items-center gap-2">
-                        <Skeleton className="h-6 w-6 rounded" />
-                        <Skeleton className="h-4 w-4" />
-                        <Skeleton className="h-4 flex-1" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+          <PanelContent variant="primary" className="flex min-h-[200px] items-center justify-center p-2 md:p-6">
+            <Spinner size={32} />
           </PanelContent>
         </Panel>
       </section>
