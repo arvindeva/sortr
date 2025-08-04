@@ -87,11 +87,13 @@ export function UploadProgressDialog({
   };
 
   const handleOpenChange = (open: boolean) => {
-    // Only allow closing after completion
-    if (!open && progress.phase === "complete") {
+    if (!open && canCancel) {
+      // If user tries to close during upload, treat it as cancel
+      handleCancel();
+    } else if (!open && !canCancel) {
+      // Allow closing after completion
       onOpenChange?.(false);
     }
-    // Prevent closing during uploads by doing nothing for other cases
   };
 
   return (
@@ -99,7 +101,7 @@ export function UploadProgressDialog({
       <DialogContent
         className="sm:max-w-md"
         onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
+        onEscapeKeyDown={canCancel ? undefined : (e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle>{getPhaseTitle(progress.phase)}</DialogTitle>
