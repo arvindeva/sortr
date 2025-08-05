@@ -55,10 +55,7 @@ export default function RootLayout({
         style={{ fontFamily: "var(--font-poppins)" }}
       >
         <Providers>
-          <NextTopLoader 
-            color="#ff6b8a"
-            showSpinner={false}
-          />
+          <NextTopLoader color="#ff6b8a" showSpinner={false} height={3} />
           <Navbar />
           <div className="flex-1">{children}</div>
           <Footer />
