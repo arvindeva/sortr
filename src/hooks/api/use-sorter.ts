@@ -86,10 +86,11 @@ async function fetchRecentResults(slug: string): Promise<RecentResult[]> {
 }
 
 // TanStack Query hooks
-export function useSorterData(slug: string, enabled: boolean = true) {
+export function useSorterData(slug: string, enabled: boolean = true, initialData?: SorterData) {
   return useQuery({
     queryKey: ["sorter", slug],
     queryFn: () => fetchSorterData(slug),
+    initialData,
     staleTime: 30 * 1000, // 30 seconds - shorter since view counts change
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
@@ -117,8 +118,8 @@ export function useRecentResults(slug: string, enabled: boolean = true) {
 }
 
 // Combined hook for sorter page data
-export function useSorterPage(slug: string) {
-  const sorterQuery = useSorterData(slug);
+export function useSorterPage(slug: string, initialData?: SorterData) {
+  const sorterQuery = useSorterData(slug, true, initialData);
   const recentResultsQuery = useRecentResults(
     slug,
     !!sorterQuery.data?.sorter

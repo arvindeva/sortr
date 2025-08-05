@@ -21,14 +21,16 @@ interface UserProfileClientProps {
   username: string;
   isOwnProfile: boolean;
   currentUserEmail?: string;
+  initialData?: any; // Will use the same type as useUserProfile returns
 }
 
 export function UserProfileClient({ 
   username, 
   isOwnProfile,
-  currentUserEmail 
+  currentUserEmail,
+  initialData
 }: UserProfileClientProps) {
-  const { data, isLoading, error } = useUserProfile(username);
+  const { data, isLoading, error } = useUserProfile(username, initialData);
 
   if (isLoading) {
     return <UserProfileSkeleton />;
@@ -36,45 +38,33 @@ export function UserProfileClient({
 
   if (error) {
     return (
-      <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
-        <section className="mb-8">
-          <Box variant="warning" size="md">
-            <p className="font-medium">
-              {error.message === "User not found" 
-                ? "User not found. This profile may not exist."
-                : "Failed to load user profile. Please try again."
-              }
-            </p>
-          </Box>
-        </section>
-      </main>
+      <section className="mb-8">
+        <Box variant="warning" size="md">
+          <p className="font-medium">
+            {error.message === "User not found" 
+              ? "User not found. This profile may not exist."
+              : "Failed to load user profile. Please try again."
+            }
+          </p>
+        </Box>
+      </section>
     );
   }
 
   if (!data) {
     return (
-      <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
-        <section className="mb-8">
-          <Box variant="warning" size="md">
-            <p className="font-medium">User not found.</p>
-          </Box>
-        </section>
-      </main>
+      <section className="mb-8">
+        <Box variant="warning" size="md">
+          <p className="font-medium">User not found.</p>
+        </Box>
+      </section>
     );
   }
 
   const { user, stats, sorters, rankings, userSince } = data;
 
   return (
-    <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
-      {/* Profile Header */}
-      <UserProfileHeader
-        username={user.username || ""}
-        userSince={userSince}
-        isOwnProfile={isOwnProfile}
-        currentImage={user.image}
-      />
-
+    <>
       {/* Sorters Section */}
       <section className="mb-8">
         <Panel variant="primary">
@@ -198,6 +188,6 @@ export function UserProfileClient({
           </PanelContent>
         </Panel>
       </section>
-    </main>
+    </>
   );
 }

@@ -3,10 +3,8 @@
 import { useSorterPage } from "@/hooks/api/use-sorter";
 import { SorterPageSkeleton } from "@/components/skeletons/sorter-page-skeleton";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
-import { PageHeader } from "@/components/ui/page-header";
+import { Badge } from "@/components/ui/badge";
 import {
   Panel,
   PanelHeader,
@@ -15,8 +13,6 @@ import {
 } from "@/components/ui/panel";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { RankingItem, RankingItemContent } from "@/components/ui/ranking-item";
-import { Play, Trophy, Pencil } from "lucide-react";
-import { DeleteSorterButton } from "@/components/delete-sorter-button";
 import { getImageUrl } from "@/lib/image-utils";
 
 interface SorterPageClientProps {
@@ -28,7 +24,7 @@ interface SorterPageClientProps {
 export function SorterPageClient({ 
   slug, 
   isOwner,
-  currentUserEmail 
+  currentUserEmail
 }: SorterPageClientProps) {
   const { sorterData, recentResults, isLoading, isError, error } = useSorterPage(slug);
 
@@ -38,18 +34,16 @@ export function SorterPageClient({
 
   if (isError) {
     return (
-      <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
-        <section className="mb-8">
-          <Box variant="warning" size="md">
-            <p className="font-medium">
-              {error?.message === "Sorter not found" 
-                ? "Sorter not found. This sorter may not exist or has been deleted."
-                : "Failed to load sorter. Please try again."
-              }
-            </p>
-          </Box>
-        </section>
-      </main>
+      <section className="mb-8">
+        <Box variant="warning" size="md">
+          <p className="font-medium">
+            {error?.message === "Sorter not found" 
+              ? "Sorter not found. This sorter may not exist or has been deleted."
+              : "Failed to load sorter. Please try again."
+            }
+          </p>
+        </Box>
+      </section>
     );
   }
 
@@ -57,157 +51,10 @@ export function SorterPageClient({
     return <SorterPageSkeleton />;
   }
 
-  const { sorter, items, tags } = sorterData;
-  
-  // Determine if filtering is needed (tags exist)
-  const hasFilters = tags && tags.length > 0;
+  const { items, tags } = sorterData;
 
   return (
-    <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
-      {/* Sorter Header */}
-      <section className="mb-3">
-        <div className="flex items-center space-x-3 py-4 md:space-x-6">
-          {/* Cover Image */}
-          <div className="border-border rounded-base flex h-28 w-28 items-center justify-center overflow-hidden border-2 md:h-48 md:w-48">
-            {sorter.coverImageUrl ? (
-              <img
-                src={sorter.coverImageUrl}
-                alt={`${sorter.title}'s cover`}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="bg-secondary-background text-main flex h-full w-full items-center justify-center">
-                <span className="text-4xl font-bold">
-                  {sorter.title.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Sorter Info */}
-          <div className="flex-1">
-            <div className="mb-2 flex items-center gap-2">
-              <PageHeader>{sorter.title}</PageHeader>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-medium">
-              <div className="flex items-center gap-1">
-                <span>by</span>
-                {sorter.user.username ? (
-                  <Link
-                    href={`/user/${sorter.user.username}`}
-                    className="font-bold hover:underline"
-                  >
-                    {sorter.user.username}
-                  </Link>
-                ) : (
-                  <span className="font-bold">Unknown User</span>
-                )}
-              </div>
-              <div className="flex items-center gap-1">
-                <Trophy size={16} />
-                <span>{sorter.completionCount}</span>
-              </div>
-            </div>
-
-            {/* Desktop Action Buttons */}
-            <div className="mt-4 hidden items-center gap-4 md:flex">
-              {hasFilters ? (
-                <Button
-                  asChild
-                  size="default"
-                  variant="default"
-                  className="group"
-                >
-                  <Link href={`/sorter/${sorter.slug}/filters`}>
-                    <Play
-                      className="transition-transform duration-200 group-hover:translate-x-1"
-                      size={20}
-                    />
-                    Sort Now
-                  </Link>
-                </Button>
-              ) : (
-                <Button
-                  asChild
-                  size="default"
-                  variant="default"
-                  className="group"
-                >
-                  <Link href={`/sorter/${sorter.slug}/sort`}>
-                    <Play
-                      className="transition-transform duration-200 group-hover:translate-x-1"
-                      size={20}
-                    />
-                    Sort now
-                  </Link>
-                </Button>
-              )}
-
-              {/* Edit Button - Only show for sorter owner */}
-              {isOwner && (
-                <Button asChild variant="neutral">
-                  <Link href={`/sorter/${sorter.slug}/edit`}>
-                    <Pencil className="mr-2" size={16} />
-                    Edit
-                  </Link>
-                </Button>
-              )}
-
-              {/* Delete Button - Only show for sorter owner */}
-              {isOwner && (
-                <DeleteSorterButton
-                  sorterSlug={sorter.slug}
-                  sorterTitle={sorter.title}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Mobile Action Buttons */}
-      <div className="mb-8 flex items-center gap-4 md:hidden">
-        {hasFilters ? (
-          <Button asChild size="default" variant="default" className="group">
-            <Link href={`/sorter/${sorter.slug}/filters`}>
-              <Play
-                className="transition-transform duration-200 group-hover:translate-x-1"
-                size={20}
-              />
-              Sort Now
-            </Link>
-          </Button>
-        ) : (
-          <Button asChild size="default" variant="default" className="group">
-            <Link href={`/sorter/${sorter.slug}/sort`}>
-              <Play
-                className="transition-transform duration-200 group-hover:translate-x-1"
-                size={20}
-              />
-              Sort now
-            </Link>
-          </Button>
-        )}
-
-        {/* Edit Button - Only show for sorter owner */}
-        {isOwner && (
-          <Button asChild variant="neutral">
-            <Link href={`/sorter/${sorter.slug}/edit`}>
-              <Pencil className="mr-2" size={16} />
-              Edit
-            </Link>
-          </Button>
-        )}
-
-        {/* Delete Button - Only show for sorter owner */}
-        {isOwner && (
-          <DeleteSorterButton
-            sorterSlug={sorter.slug}
-            sorterTitle={sorter.title}
-          />
-        )}
-      </div>
-
+    <>
       {/* Two Column Layout */}
       <div className="grid gap-8 md:grid-cols-2">
         {/* Left Column - Items to Rank */}
@@ -388,6 +235,6 @@ export function SorterPageClient({
           </Panel>
         </section>
       </div>
-    </main>
+    </>
   );
 }

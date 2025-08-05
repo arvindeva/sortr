@@ -56,14 +56,15 @@ export function ShareButton({
           Share
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleCopyLink}>
+      <DropdownMenuContent align="end" className="bg-secondary-background">
+        <DropdownMenuItem onClick={handleCopyLink} className="bg-secondary-background text-foreground">
           <Link2 className="mr-2" size={16} />
           Copy Link
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={handleDownloadImage}
           disabled={isGenerating || !rankingData}
+          className="bg-secondary-background text-foreground"
         >
           <Download className="mr-2" size={16} />
           {isGenerating ? "Generating..." : "Download Image"}

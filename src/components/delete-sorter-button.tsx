@@ -15,11 +15,13 @@ import { Trash2, AlertTriangle } from "lucide-react";
 interface DeleteSorterButtonProps {
   sorterSlug: string;
   sorterTitle: string;
+  iconOnly?: boolean;
 }
 
 export function DeleteSorterButton({
   sorterSlug,
   sorterTitle,
+  iconOnly = false,
 }: DeleteSorterButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -70,15 +72,15 @@ export function DeleteSorterButton({
       <DialogTrigger asChild>
         <Button
           variant="neutral"
-          size="default"
+          size={iconOnly ? "icon" : "default"}
           className="group"
           title={`Delete "${sorterTitle}"`}
         >
           <Trash2
-            className="transition-transform duration-200 group-hover:scale-110"
-            size={20}
+            className={`transition-transform duration-200 group-hover:scale-110 ${iconOnly ? "" : "mr-2"}`}
+            size={iconOnly ? 16 : 20}
           />
-          Delete
+          {!iconOnly && "Delete"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
+import { SorterHeaderServer } from "@/components/sorter-header-server";
 import { SorterPageClient } from "@/components/sorter-page-client";
 
 interface SorterPageProps {
@@ -157,6 +158,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
     isOwner = userData.length > 0 && userData[0].id === data.sorter.user.id;
   }
 
+  // Check if sorter has filters/tags
+  const hasFilters = Boolean(data.tags && data.tags.length > 0);
+
   // JSON-LD structured data for SEO (server-side)
   const jsonLd = {
     "@context": "https://schema.org",
@@ -190,12 +194,21 @@ export default async function SorterPage({ params }: SorterPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Client-side data fetching and rendering */}
-      <SorterPageClient
-        slug={slug}
-        isOwner={isOwner}
-        currentUserEmail={currentUserEmail || undefined}
-      />
+      <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
+        {/* Server-rendered Sorter Header */}
+        <SorterHeaderServer 
+          sorter={data.sorter}
+          hasFilters={hasFilters}
+          isOwner={isOwner}
+        />
+        
+        {/* Client-side data fetching for items and recent results */}
+        <SorterPageClient
+          slug={slug}
+          isOwner={isOwner}
+          currentUserEmail={currentUserEmail || undefined}
+        />
+      </main>
     </>
   );
 }

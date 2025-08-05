@@ -65,10 +65,11 @@ async function fetchUserProfile(username: string): Promise<UserProfileData> {
   return response.json();
 }
 
-export function useUserProfile(username: string) {
+export function useUserProfile(username: string, initialData?: UserProfileData) {
   return useQuery({
     queryKey: ["user", username],
     queryFn: () => fetchUserProfile(username),
+    initialData,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,

@@ -174,11 +174,11 @@ export function UserProfileHeader({
                       )}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuContent align="end" className="w-48 bg-secondary-background">
                     <DropdownMenuItem
                       onClick={handleUploadClick}
                       disabled={isLoading}
-                      className="cursor-pointer"
+                      className="cursor-pointer bg-secondary-background text-foreground"
                     >
                       <Upload className="mr-2 h-4 w-4" />
                       Upload Avatar
@@ -186,7 +186,7 @@ export function UserProfileHeader({
                     <DropdownMenuItem
                       onClick={handleRemoveAvatar}
                       disabled={!currentImage || isLoading}
-                      className="cursor-pointer"
+                      className="cursor-pointer bg-secondary-background text-foreground"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Remove Avatar
