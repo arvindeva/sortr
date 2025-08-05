@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -60,6 +61,7 @@ export default function RootLayout({
           <div className="flex-1">{children}</div>
           <Footer />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
