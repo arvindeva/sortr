@@ -171,11 +171,12 @@ export default function EditSorterForm({
 
   // Detect tag changes
   useEffect(() => {
-    const originalTagNames = tags.map(tag => tag.name).sort();
-    const currentTagNames = managedTags.map(tag => tag.name).sort();
-    const tagsChanged = originalTagNames.length !== currentTagNames.length ||
+    const originalTagNames = tags.map((tag) => tag.name).sort();
+    const currentTagNames = managedTags.map((tag) => tag.name).sort();
+    const tagsChanged =
+      originalTagNames.length !== currentTagNames.length ||
       originalTagNames.some((name, index) => name !== currentTagNames[index]);
-    
+
     if (tagsChanged) {
       setHasChanged(true);
     }
@@ -357,17 +358,17 @@ export default function EditSorterForm({
       if (response.data) {
         toast.success("Sorter updated successfully!");
         setShowProgressDialog(false);
-        
+
         // Invalidate cached sorter data to show updates immediately
         await queryClient.invalidateQueries({
           queryKey: ["sorter", sorter.slug],
         });
-        
+
         // Also invalidate recent results in case they changed
         await queryClient.invalidateQueries({
           queryKey: ["sorter", sorter.slug, "recent-results"],
         });
-        
+
         router.push(`/sorter/${sorter.slug}`);
       }
     } catch (error: any) {
@@ -407,8 +408,9 @@ export default function EditSorterForm({
 
     try {
       // Check if we have new images to upload
-      const hasNewImages = coverImageFile || itemImagesData.some((imageData) => imageData);
-      
+      const hasNewImages =
+        coverImageFile || itemImagesData.some((imageData) => imageData);
+
       if (hasNewImages) {
         // Has new images - use upload flow (same as create sorter)
         const filesToUpload: File[] = [];
@@ -447,17 +449,17 @@ export default function EditSorterForm({
 
         if (response.data) {
           toast.success("Sorter updated successfully!");
-          
+
           // Invalidate cached sorter data to show updates immediately
           await queryClient.invalidateQueries({
             queryKey: ["sorter", sorter.slug],
           });
-          
+
           // Also invalidate recent results in case they changed
           await queryClient.invalidateQueries({
             queryKey: ["sorter", sorter.slug, "recent-results"],
           });
-          
+
           router.push(`/sorter/${sorter.slug}`);
         }
       }
@@ -875,7 +877,11 @@ export default function EditSorterForm({
                   disabled={isLoading || isUploading || !hasChanged}
                   className="min-w-[120px]"
                 >
-                  {isLoading || isUploading ? "Updating..." : hasChanged ? "Update Sorter" : "No Changes"}
+                  {isLoading || isUploading
+                    ? "Updating..."
+                    : hasChanged
+                      ? "Update Sorter"
+                      : "No Changes"}
                 </Button>
               </div>
             </form>

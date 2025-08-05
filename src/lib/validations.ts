@@ -25,7 +25,10 @@ export const createSorterSchema = z
             .string()
             .min(1, "Tag name is required")
             .max(100, "Tag name must be 100 characters or less")
-            .refine((name) => name.trim().length > 0, "Tag name cannot be empty"),
+            .refine(
+              (name) => name.trim().length > 0,
+              "Tag name cannot be empty",
+            ),
           sortOrder: z.number().int().min(0),
         }),
       )

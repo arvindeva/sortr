@@ -3,8 +3,8 @@
 import { useSorterPage } from "@/hooks/api/use-sorter";
 import { SorterContentSkeleton } from "@/components/skeletons/sorter-content-skeleton";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
+import { Badge } from "@/components/ui/badge";
 import {
   Panel,
   PanelHeader,
@@ -21,12 +21,13 @@ interface SorterPageClientProps {
   currentUserEmail?: string;
 }
 
-export function SorterPageClient({ 
-  slug, 
+export function SorterPageClient({
+  slug,
   isOwner,
-  currentUserEmail 
+  currentUserEmail,
 }: SorterPageClientProps) {
-  const { sorterData, recentResults, isLoading, isError, error } = useSorterPage(slug);
+  const { sorterData, recentResults, isLoading, isError, error } =
+    useSorterPage(slug);
 
   if (isLoading) {
     return <SorterContentSkeleton />;
@@ -37,10 +38,9 @@ export function SorterPageClient({
       <section className="mb-8">
         <Box variant="warning" size="md">
           <p className="font-medium">
-            {error?.message === "Sorter not found" 
+            {error?.message === "Sorter not found"
               ? "Sorter not found. This sorter may not exist or has been deleted."
-              : "Failed to load sorter content. Please try again."
-            }
+              : "Failed to load sorter. Please try again."}
           </p>
         </Box>
       </section>
@@ -51,10 +51,7 @@ export function SorterPageClient({
     return <SorterContentSkeleton />;
   }
 
-  const { sorter, items, tags } = sorterData;
-  
-  // Determine if filtering is needed (tags exist)
-  const hasFilters = tags && tags.length > 0;
+  const { items, tags } = sorterData;
 
   return (
     <>
@@ -92,8 +89,11 @@ export function SorterPageClient({
                                 onError={(e) => {
                                   // Fallback to full-size image if thumbnail fails to load
                                   const target = e.target as HTMLImageElement;
-                                  if (target.src.includes('-thumb')) {
-                                    target.src = getImageUrl(item.imageUrl, "full");
+                                  if (target.src.includes("-thumb")) {
+                                    target.src = getImageUrl(
+                                      item.imageUrl,
+                                      "full",
+                                    );
                                   }
                                 }}
                               />
@@ -144,9 +144,7 @@ export function SorterPageClient({
           {/* Recent Rankings Panel */}
           <Panel variant="primary">
             <PanelHeader variant="primary">
-              <PanelTitle>
-                Recent Rankings ({recentResults.length})
-              </PanelTitle>
+              <PanelTitle>Recent Rankings ({recentResults.length})</PanelTitle>
             </PanelHeader>
             <PanelContent variant="primary" className="p-2 md:p-6">
               {recentResults.length === 0 ? (
@@ -188,14 +186,21 @@ export function SorterPageClient({
                                   {item.imageUrl ? (
                                     <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
                                       <img
-                                        src={getImageUrl(item.imageUrl, "thumbnail")}
+                                        src={getImageUrl(
+                                          item.imageUrl,
+                                          "thumbnail",
+                                        )}
                                         alt={item.title}
                                         className="h-full w-full object-cover"
                                         onError={(e) => {
                                           // Fallback to full-size image if thumbnail fails to load
-                                          const target = e.target as HTMLImageElement;
-                                          if (target.src.includes('-thumb')) {
-                                            target.src = getImageUrl(item.imageUrl, "full");
+                                          const target =
+                                            e.target as HTMLImageElement;
+                                          if (target.src.includes("-thumb")) {
+                                            target.src = getImageUrl(
+                                              item.imageUrl,
+                                              "full",
+                                            );
                                           }
                                         }}
                                       />

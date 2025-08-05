@@ -3,7 +3,7 @@ import { Poppins } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { ProgressProvider } from "@/components/progress-provider";
+import NextTopLoader from "nextjs-toploader";
 
 import "./globals.css";
 
@@ -55,11 +55,11 @@ export default function RootLayout({
         style={{ fontFamily: "var(--font-poppins)" }}
       >
         <Providers>
+          <NextTopLoader color="#ff6b8a" showSpinner={false} height={3} />
           <Navbar />
           <div className="flex-1">{children}</div>
           <Footer />
         </Providers>
-        <ProgressProvider />
       </body>
     </html>
   );

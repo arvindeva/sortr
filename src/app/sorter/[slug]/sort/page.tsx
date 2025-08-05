@@ -62,14 +62,14 @@ async function fetchSorterData(sorterSlug: string): Promise<SorterData> {
 // Extract all image URLs from items for preloading
 function extractImageUrls(items: SortItem[]): string[] {
   const imageUrls: string[] = [];
-  
-  items.forEach(item => {
+
+  items.forEach((item) => {
     // Add item image if available
     if (item.imageUrl) {
       imageUrls.push(item.imageUrl);
     }
   });
-  
+
   // Remove duplicates
   return [...new Set(imageUrls)];
 }
@@ -239,7 +239,11 @@ export default function SortPage() {
   const isRestartingRef = useRef(false);
 
   // Image preloader
-  const { progress: preloadProgress, preloadImages, reset: resetPreloader } = useImagePreloader();
+  const {
+    progress: preloadProgress,
+    preloadImages,
+    reset: resetPreloader,
+  } = useImagePreloader();
 
   // Fetch sorter data with TanStack Query
   const {
@@ -276,16 +280,18 @@ export default function SortPage() {
               itemsToSort = sorterData.items.filter((item) => {
                 // Include items that have any of the selected tags
                 const matchingTags = sorterData.tags!.filter((tag) =>
-                  selectedTagSlugs.includes(tag.slug)
+                  selectedTagSlugs.includes(tag.slug),
                 );
                 const tagItemIds = new Set(
-                  matchingTags.flatMap((tag) => tag.items.map((item) => item.id))
+                  matchingTags.flatMap((tag) =>
+                    tag.items.map((item) => item.id),
+                  ),
                 );
-                
+
                 // Also include items with no tags (empty tagSlugs array) - they appear in all filters
                 const hasMatchingTag = tagItemIds.has(item.id);
                 const isUntagged = !item.tagSlugs || item.tagSlugs.length === 0;
-                
+
                 return hasMatchingTag || isUntagged;
               });
               filterSlugs = selectedTagSlugs;
@@ -343,26 +349,28 @@ export default function SortPage() {
   useEffect(() => {
     if (filteredItems.length > 0) {
       const imageUrls = extractImageUrls(filteredItems);
-      
+
       if (imageUrls.length > 0) {
         setImagesPreloaded(false);
         resetPreloader();
-        
+
         // Set up timeout to proceed even if preloading takes too long (10 seconds)
         const timeoutId = setTimeout(() => {
           console.warn("Image preloading timed out, proceeding with sorting");
           setImagesPreloaded(true);
         }, 10000);
-        
-        preloadImages(imageUrls).then(() => {
-          clearTimeout(timeoutId);
-          setImagesPreloaded(true);
-        }).catch((error) => {
-          clearTimeout(timeoutId);
-          console.warn("Some images failed to preload:", error);
-          // Still allow sorting to proceed even if some images fail
-          setImagesPreloaded(true);
-        });
+
+        preloadImages(imageUrls)
+          .then(() => {
+            clearTimeout(timeoutId);
+            setImagesPreloaded(true);
+          })
+          .catch((error) => {
+            clearTimeout(timeoutId);
+            console.warn("Some images failed to preload:", error);
+            // Still allow sorting to proceed even if some images fail
+            setImagesPreloaded(true);
+          });
       } else {
         // No images to preload
         setImagesPreloaded(true);
@@ -528,7 +536,7 @@ export default function SortPage() {
       // Get selected filter IDs based on URL parameters and sorter data
       let selectedGroupIds: string[] = [];
       let selectedTagSlugs: string[] = [];
-      
+
       if (sorterData.tags && sorterData.tags.length > 0) {
         // New tag-based system
         selectedTagSlugs = currentFilterSlugs;
@@ -569,7 +577,14 @@ export default function SortPage() {
       setSorting(false);
       setSaving(false);
     }
-  }, [sorterData, filteredItems, sorting, sorterId, router, currentFilterSlugs]);
+  }, [
+    sorterData,
+    filteredItems,
+    sorting,
+    sorterId,
+    router,
+    currentFilterSlugs,
+  ]);
 
   const handleChoice = useCallback((winnerId: string) => {
     if (resolveComparisonRef.current) {
@@ -668,9 +683,10 @@ export default function SortPage() {
 
     // Show image preloading progress
     const showPreloadProgress = !imagesPreloaded && preloadProgress.total > 0;
-    const preloadPercentage = preloadProgress.total > 0 
-      ? Math.round((preloadProgress.loaded / preloadProgress.total) * 100)
-      : 0;
+    const preloadPercentage =
+      preloadProgress.total > 0
+        ? Math.round((preloadProgress.loaded / preloadProgress.total) * 100)
+        : 0;
 
     return (
       <div className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
@@ -679,12 +695,17 @@ export default function SortPage() {
             {showPreloadProgress ? (
               <>
                 <p className="mb-2 text-lg text-black dark:text-white">
-                  Loading images... {preloadProgress.loaded}/{preloadProgress.total} ({preloadPercentage}%)
+                  Loading images... {preloadProgress.loaded}/
+                  {preloadProgress.total} ({preloadPercentage}%)
                 </p>
-                <Progress value={preloadPercentage} className="mx-auto mb-4 max-w-md" />
+                <Progress
+                  value={preloadPercentage}
+                  className="mx-auto mb-4 max-w-md"
+                />
                 {preloadProgress.failed > 0 && (
                   <p className="text-sm text-red-600 dark:text-red-400">
-                    {preloadProgress.failed} image{preloadProgress.failed !== 1 ? 's' : ''} failed to load
+                    {preloadProgress.failed} image
+                    {preloadProgress.failed !== 1 ? "s" : ""} failed to load
                   </p>
                 )}
               </>
@@ -831,8 +852,9 @@ export default function SortPage() {
 
       {/* Progress Saving Reassurance */}
       <div className="mt-6 px-2 text-center md:px-0">
-        <p className="text-sm text-foreground">
-          Your progress is automatically saved in your browser. Feel free to take breaks or navigate away - you can continue anytime!
+        <p className="text-foreground text-sm">
+          Your progress is automatically saved in your browser. Feel free to
+          take breaks or navigate away - you can continue anytime!
         </p>
       </div>
 
@@ -842,20 +864,15 @@ export default function SortPage() {
           <DialogHeader>
             <DialogTitle>Reset Progress?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to reset your progress? This will restart the sorting from the beginning and cannot be undone.
+              Are you sure you want to reset your progress? This will restart
+              the sorting from the beginning and cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-row justify-end gap-2">
-            <Button
-              variant="neutral"
-              onClick={cancelReset}
-            >
+            <Button variant="neutral" onClick={cancelReset}>
               Cancel
             </Button>
-            <Button
-              variant="default"
-              onClick={confirmReset}
-            >
+            <Button variant="default" onClick={confirmReset}>
               Reset
             </Button>
           </DialogFooter>

@@ -6,11 +6,13 @@ import { eq, desc } from "drizzle-orm";
 // GET /api/sorters/[slug]/results - Get recent results for a sorter
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
   try {
-    console.log(`🔍 GET /api/sorters/${slug}/results - Fetching recent results`);
+    console.log(
+      `🔍 GET /api/sorters/${slug}/results - Fetching recent results`,
+    );
 
     // First get the sorter ID from slug
     const sorterData = await db
@@ -56,14 +58,16 @@ export async function GET(
       };
     });
 
-    console.log(`✅ GET /api/sorters/${slug}/results - Found ${transformedResults.length} recent results`);
+    console.log(
+      `✅ GET /api/sorters/${slug}/results - Found ${transformedResults.length} recent results`,
+    );
 
     return NextResponse.json(transformedResults);
   } catch (error) {
     console.error(`❌ GET /api/sorters/${slug}/results error:`, error);
     return NextResponse.json(
       { error: "Failed to fetch recent results" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

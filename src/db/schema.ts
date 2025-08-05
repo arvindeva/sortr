@@ -93,10 +93,12 @@ export const sorterTags = pgTable(
     uniqueName: unique().on(table.sorterId, table.name),
     uniqueSlug: unique().on(table.sorterId, table.slug),
     // Index for fast ordering queries
-    sortOrderIdx: index("sorter_tags_sort_order_idx").on(table.sorterId, table.sortOrder),
+    sortOrderIdx: index("sorter_tags_sort_order_idx").on(
+      table.sorterId,
+      table.sortOrder,
+    ),
   }),
 );
-
 
 export const sorterItems = pgTable(
   "sorterItems",
@@ -113,7 +115,10 @@ export const sorterItems = pgTable(
   },
   (table) => ({
     // GIN index for fast array overlap queries
-    tagSlugsIdx: index("sorter_items_tag_slugs_idx").using("gin", table.tagSlugs),
+    tagSlugsIdx: index("sorter_items_tag_slugs_idx").using(
+      "gin",
+      table.tagSlugs,
+    ),
   }),
 );
 

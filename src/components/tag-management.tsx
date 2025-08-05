@@ -60,10 +60,14 @@ function SortableTag({ tag, onRemove }: SortableTagProps) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="inline-flex items-center relative">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative inline-flex items-center"
+    >
       <Badge
         variant="neutral"
-        className="inline-flex min-h-8 items-center gap-2 px-3 py-2 pr-8 text-sm cursor-grab active:cursor-grabbing"
+        className="inline-flex min-h-8 cursor-grab items-center gap-2 px-3 py-2 pr-8 text-sm active:cursor-grabbing"
         {...attributes}
         {...listeners}
       >
@@ -71,11 +75,9 @@ function SortableTag({ tag, onRemove }: SortableTagProps) {
         <GripVertical size={14} className="text-muted-foreground" />
 
         {/* Tag name */}
-        <span className="select-none">
-          {tag.name}
-        </span>
+        <span className="select-none">{tag.name}</span>
       </Badge>
-      
+
       {/* Remove button positioned absolutely - completely outside drag area */}
       <button
         type="button"
@@ -84,7 +86,7 @@ function SortableTag({ tag, onRemove }: SortableTagProps) {
           e.preventDefault();
           onRemove(tag.id);
         }}
-        className="text-foreground absolute right-1 top-1/2 -translate-y-1/2 cursor-pointer rounded-sm p-1 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950"
+        className="text-foreground absolute top-1/2 right-1 -translate-y-1/2 cursor-pointer rounded-sm p-1 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950"
       >
         <X size={14} strokeWidth={2.5} />
       </button>
@@ -181,9 +183,7 @@ export default function TagManagement({
       <div className="space-y-4">
         {/* Input section */}
         <div className="space-y-2">
-          <Label htmlFor="tag-input">
-            Add a tag
-          </Label>
+          <Label htmlFor="tag-input">Add a tag</Label>
           <div className="relative max-w-md">
             <Input
               id="tag-input"
@@ -200,7 +200,7 @@ export default function TagManagement({
               type="button"
               onClick={handleAddTag}
               disabled={!inputValue.trim()}
-              className="text-foreground bg-main hover:bg-main absolute top-0 right-0 bottom-0 w-10 border-2 border-border rounded-r-[10px] disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center"
+              className="text-foreground bg-main hover:bg-main border-border absolute top-0 right-0 bottom-0 flex w-10 items-center justify-center rounded-r-[10px] border-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus size={16} strokeWidth={2.5} />
             </button>
@@ -209,7 +209,8 @@ export default function TagManagement({
 
         {/* Help message below input */}
         <p className="text-foreground text-sm">
-          Add tags to enable filtering during sorting. For example: album names, seasons, categories, etc.
+          Add tags to enable filtering during sorting. For example: album names,
+          seasons, categories, etc.
         </p>
 
         {/* Tags list */}

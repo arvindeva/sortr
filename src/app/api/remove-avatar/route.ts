@@ -53,13 +53,6 @@ export async function POST(request: NextRequest) {
 
     // Update user's image URL to null in database
     await db.update(user).set({ image: null }).where(eq(user.id, userId));
-
-    // Revalidate user profile page to update cached avatar
-    if (username) {
-      revalidatePath(`/user/${username}`);
-      console.log(`♻️ Revalidated profile path: /user/${username}`);
-    }
-
     return NextResponse.json({
       success: true,
       message: "Avatar removed successfully",

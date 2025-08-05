@@ -24,7 +24,7 @@ function ComparisonCard({
     if (displayImageUrl) {
       setImageLoaded(false);
       setImageError(false);
-      
+
       // Check if image is already in cache by creating a new Image element
       const img = new Image();
       img.onload = () => {
@@ -40,7 +40,7 @@ function ComparisonCard({
 
   // Show letter placeholder if no image URL, image failed, or image hasn't loaded yet
   const showPlaceholder = !displayImageUrl || imageError || !imageLoaded;
-  
+
   // Show shimmer animation when there's an image URL but it's still loading (not failed)
   const showShimmer = displayImageUrl && !imageLoaded && !imageError;
 
@@ -56,11 +56,11 @@ function ComparisonCard({
       {/* Image area - flush with top */}
       <div className="relative aspect-square w-full max-w-[300px] overflow-hidden md:h-[300px] md:max-w-none">
         {/* Letter placeholder - always rendered, hidden when image loads */}
-        <div 
+        <div
           className={cn(
             "bg-secondary-background absolute inset-0 flex items-center justify-center transition-opacity duration-200",
             showPlaceholder ? "opacity-100" : "opacity-0",
-            showShimmer && "animate-pulse" // Default pulse when loading
+            showShimmer && "animate-pulse", // Default pulse when loading
           )}
         >
           <span className="text-primary text-lg font-bold md:text-4xl">
@@ -75,7 +75,7 @@ function ComparisonCard({
             alt={title}
             className={cn(
               "h-full w-full object-cover transition-opacity duration-150",
-              imageLoaded && !imageError ? "opacity-100" : "opacity-0"
+              imageLoaded && !imageError ? "opacity-100" : "opacity-0",
             )}
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}

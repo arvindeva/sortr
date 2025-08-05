@@ -20,14 +20,16 @@ interface UserProfileClientProps {
   username: string;
   isOwnProfile: boolean;
   currentUserEmail?: string;
+  initialData?: any; // Will use the same type as useUserProfile returns
 }
 
-export function UserProfileClient({ 
-  username, 
+export function UserProfileClient({
+  username,
   isOwnProfile,
-  currentUserEmail 
+  currentUserEmail,
+  initialData,
 }: UserProfileClientProps) {
-  const { data, isLoading, error } = useUserProfile(username);
+  const { data, isLoading, error } = useUserProfile(username, initialData);
 
   if (isLoading) {
     return <UserProfileContentSkeleton />;
@@ -38,10 +40,9 @@ export function UserProfileClient({
       <section className="mb-8">
         <Box variant="warning" size="md">
           <p className="font-medium">
-            {error.message === "User not found" 
+            {error.message === "User not found"
               ? "User not found. This profile may not exist."
-              : "Failed to load user profile content. Please try again."
-            }
+              : "Failed to load user profile. Please try again."}
           </p>
         </Box>
       </section>
@@ -136,14 +137,21 @@ export function UserProfileClient({
                                 {item.imageUrl ? (
                                   <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
                                     <img
-                                      src={getImageUrl(item.imageUrl, "thumbnail")}
+                                      src={getImageUrl(
+                                        item.imageUrl,
+                                        "thumbnail",
+                                      )}
                                       alt={item.title}
                                       className="h-full w-full object-cover"
                                       onError={(e) => {
                                         // Fallback to full-size image if thumbnail fails to load
-                                        const target = e.target as HTMLImageElement;
-                                        if (target.src.includes('-thumb')) {
-                                          target.src = getImageUrl(item.imageUrl, "full");
+                                        const target =
+                                          e.target as HTMLImageElement;
+                                        if (target.src.includes("-thumb")) {
+                                          target.src = getImageUrl(
+                                            item.imageUrl,
+                                            "full",
+                                          );
                                         }
                                       }}
                                     />

@@ -154,7 +154,6 @@ async function deleteTableRecords(
   }
 }
 
-
 async function cleanupDevDatabase() {
   console.log("🚀 Starting dev database cleanup...");
   console.log(
@@ -252,8 +251,6 @@ async function cleanupDevDatabase() {
     console.log(
       `\n🛡️  Preserved tables: user, account, session, verificationToken`,
     );
-
-    
   } catch (error) {
     console.error("💥 Database cleanup failed:", error);
     process.exit(1);

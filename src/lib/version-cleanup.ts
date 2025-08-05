@@ -1,9 +1,5 @@
 import { db } from "@/db";
-import {
-  sorterHistory,
-  sorterItems,
-  sortingResults,
-} from "@/db/schema";
+import { sorterHistory, sorterItems, sortingResults } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { cleanupSorterVersion } from "@/lib/r2";
 

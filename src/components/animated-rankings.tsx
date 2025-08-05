@@ -27,7 +27,9 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
             ease: "easeOut",
           }}
           className={`bg-background text-foreground rounded-base border-border shadow-shadow overflow-hidden border-2 p-2 md:p-4 ${
-            index < 3 ? "flex flex-col items-center text-center md:flex-row md:items-center md:text-left" : "flex items-center gap-3"
+            index < 3
+              ? "flex flex-col items-center text-center md:flex-row md:items-center md:text-left"
+              : "flex items-center gap-3"
           }`}
         >
           {index < 3 ? (
@@ -35,8 +37,8 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
             <>
               {/* Image */}
               {item.imageUrl ? (
-                <div 
-                  className="rounded-base border-border flex-shrink-0 overflow-hidden border-2 mb-3 md:mb-0 md:mr-4"
+                <div
+                  className="rounded-base border-border mb-3 flex-shrink-0 overflow-hidden border-2 md:mr-4 md:mb-0"
                   style={{ width: "200px", height: "200px" }}
                 >
                   <img
@@ -46,11 +48,11 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
                   />
                 </div>
               ) : (
-                <div 
-                  className="rounded-base border-border bg-secondary-background flex flex-shrink-0 items-center justify-center border-2 mb-3 md:mb-0 md:mr-4"
+                <div
+                  className="rounded-base border-border bg-secondary-background mb-3 flex flex-shrink-0 items-center justify-center border-2 md:mr-4 md:mb-0"
                   style={{ width: "200px", height: "200px" }}
                 >
-                  <span className="text-main font-bold text-4xl md:text-5xl">
+                  <span className="text-main text-4xl font-bold md:text-5xl">
                     {item.title.charAt(0).toUpperCase()}
                   </span>
                 </div>
@@ -62,17 +64,17 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
                   {index + 1}.&nbsp;&nbsp;{item.title}
                 </h3>
                 {index === 0 && (
-                  <span className="block mt-2 text-3xl md:absolute md:-top-1 md:right-2 md:mt-0 md:text-3xl">
+                  <span className="mt-2 block text-3xl md:absolute md:-top-1 md:right-2 md:mt-0 md:text-3xl">
                     🥇
                   </span>
                 )}
                 {index === 1 && (
-                  <span className="block mt-2 text-3xl md:absolute md:-top-1 md:right-2 md:mt-0 md:text-3xl">
+                  <span className="mt-2 block text-3xl md:absolute md:-top-1 md:right-2 md:mt-0 md:text-3xl">
                     🥈
                   </span>
                 )}
                 {index === 2 && (
-                  <span className="block mt-2 text-3xl md:absolute md:-top-1 md:right-2 md:mt-0 md:text-3xl">
+                  <span className="mt-2 block text-3xl md:absolute md:-top-1 md:right-2 md:mt-0 md:text-3xl">
                     🥉
                   </span>
                 )}
@@ -91,7 +93,7 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
                     onError={(e) => {
                       // Fallback to full-size image if thumbnail fails to load
                       const target = e.target as HTMLImageElement;
-                      if (target.src.includes('-thumb')) {
+                      if (target.src.includes("-thumb")) {
                         target.src = getImageUrl(item.imageUrl, "full");
                       }
                     }}

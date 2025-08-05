@@ -54,21 +54,25 @@ interface UserProfileData {
 
 async function fetchUserProfile(username: string): Promise<UserProfileData> {
   const response = await fetch(`/api/user/${encodeURIComponent(username)}`);
-  
+
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error("User not found");
     }
     throw new Error(`Failed to fetch user profile: ${response.status}`);
   }
-  
+
   return response.json();
 }
 
-export function useUserProfile(username: string) {
+export function useUserProfile(
+  username: string,
+  initialData?: UserProfileData,
+) {
   return useQuery({
     queryKey: ["user", username],
     queryFn: () => fetchUserProfile(username),
+    initialData,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
@@ -79,14 +83,15 @@ export function useUserProfile(username: string) {
       }
       return failureCount < 3;
     },
-    enabled: !!username && username !== "Anonymous" && username !== "Unknown User",
+    enabled:
+      !!username && username !== "Anonymous" && username !== "Unknown User",
   });
 }
 
-export type { 
-  UserProfile, 
-  UserStats, 
-  SorterPreview, 
-  RankingPreview, 
-  UserProfileData 
+export type {
+  UserProfile,
+  UserStats,
+  SorterPreview,
+  RankingPreview,
+  UserProfileData,
 };

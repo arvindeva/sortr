@@ -107,10 +107,9 @@ export function UploadProgressDialog({
           <DialogTitle>{getPhaseTitle(progress.phase)}</DialogTitle>
           <VisuallyHidden.Root>
             <DialogDescription>
-              {isEditMode 
+              {isEditMode
                 ? "Upload progress for editing sorter with files"
-                : "Upload progress for creating a new sorter with files"
-              }
+                : "Upload progress for creating a new sorter with files"}
             </DialogDescription>
           </VisuallyHidden.Root>
         </DialogHeader>
@@ -125,9 +124,9 @@ export function UploadProgressDialog({
               )}
             </div>
             {progress.determinate ? (
-              <Progress 
-                value={progress.overallProgress} 
-                className="h-4" 
+              <Progress
+                value={progress.overallProgress}
+                className="h-4"
                 shimmer={progress.phase === "uploading-files"}
               />
             ) : progress.statusMessage === "Redirecting to sorter..." ? (
