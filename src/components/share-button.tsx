@@ -57,7 +57,10 @@ export function ShareButton({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-secondary-background">
-        <DropdownMenuItem onClick={handleCopyLink} className="bg-secondary-background text-foreground">
+        <DropdownMenuItem
+          onClick={handleCopyLink}
+          className="bg-secondary-background text-foreground"
+        >
           <Link2 className="mr-2" size={16} />
           Copy Link
         </DropdownMenuItem>

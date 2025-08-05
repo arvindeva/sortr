@@ -20,7 +20,10 @@ export function SorterPageSkeleton() {
             <PanelHeader variant="primary">
               <PanelTitle>Items to Rank</PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary" className="flex min-h-[300px] items-center justify-center p-2 md:p-6">
+            <PanelContent
+              variant="primary"
+              className="flex min-h-[300px] items-center justify-center p-2 md:p-6"
+            >
               <Spinner size={32} />
             </PanelContent>
           </Panel>
@@ -33,7 +36,10 @@ export function SorterPageSkeleton() {
             <PanelHeader variant="primary">
               <PanelTitle>Filters</PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary" className="flex min-h-[100px] items-center justify-center p-2 md:p-6">
+            <PanelContent
+              variant="primary"
+              className="flex min-h-[100px] items-center justify-center p-2 md:p-6"
+            >
               <Spinner size={24} />
             </PanelContent>
           </Panel>
@@ -43,7 +49,10 @@ export function SorterPageSkeleton() {
             <PanelHeader variant="primary">
               <PanelTitle>Recent Rankings</PanelTitle>
             </PanelHeader>
-            <PanelContent variant="primary" className="flex min-h-[200px] items-center justify-center p-2 md:p-6">
+            <PanelContent
+              variant="primary"
+              className="flex min-h-[200px] items-center justify-center p-2 md:p-6"
+            >
               <Spinner size={32} />
             </PanelContent>
           </Panel>

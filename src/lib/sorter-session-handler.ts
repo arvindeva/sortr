@@ -14,10 +14,7 @@ import {
   extractIdFromFileName,
   removeIdFromFileName,
 } from "@/lib/utils";
-import {
-  getUploadSession,
-  completeUploadSession,
-} from "@/lib/session-manager";
+import { getUploadSession, completeUploadSession } from "@/lib/session-manager";
 import type { UploadedFile } from "@/types/upload";
 import { z } from "zod";
 
@@ -49,7 +46,7 @@ interface SessionHandlerResult {
 export async function handleSorterWithUploadSession(
   body: any,
   userId: string,
-  options: SessionHandlerOptions
+  options: SessionHandlerOptions,
 ): Promise<NextResponse<any>> {
   const { uploadSession: sessionId, uploadedFiles, ...sorterData } = body;
 
@@ -59,21 +56,21 @@ export async function handleSorterWithUploadSession(
     if (!session) {
       return NextResponse.json(
         { error: "Upload session not found or expired" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (session.userId !== userId) {
       return NextResponse.json(
         { error: "Upload session does not belong to current user" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     if (uploadedFiles.length === 0) {
       return NextResponse.json(
         { error: "No files found in upload session" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -89,10 +86,11 @@ export async function handleSorterWithUploadSession(
       // For create, we'll get the ID after database insertion
       sorterId = `temp-${Date.now()}`;
       version = 1;
-      finalSlug = options.makeSlugUnique?.(
-        options.generateSlug?.(validatedData.title) || validatedData.title,
-        options.existingSlugs || []
-      ) || validatedData.title;
+      finalSlug =
+        options.makeSlugUnique?.(
+          options.generateSlug?.(validatedData.title) || validatedData.title,
+          options.existingSlugs || [],
+        ) || validatedData.title;
     } else {
       // For edit, use existing sorter
       sorterId = options.currentSorter!.id;
@@ -112,14 +110,16 @@ export async function handleSorterWithUploadSession(
     const itemImageUrls = new Map<string, string>(); // itemTitle -> imageUrl
 
     // Process cover file
-    const coverFile = uploadedFiles.find((f: UploadedFile) => f.type === "cover");
+    const coverFile = uploadedFiles.find(
+      (f: UploadedFile) => f.type === "cover",
+    );
     if (coverFile) {
       console.log(`Processing cover file: ${coverFile.originalName}`);
       const newKey = convertSessionKeyToSorterKey(
         coverFile.key,
         sorterId,
         version,
-        "cover"
+        "cover",
       );
       copyOperations.push({
         sourceKey: coverFile.key,
@@ -131,7 +131,9 @@ export async function handleSorterWithUploadSession(
     }
 
     // Process item files (using create sorter logic)
-    const itemFiles = uploadedFiles.filter((f: UploadedFile) => f.type === "item");
+    const itemFiles = uploadedFiles.filter(
+      (f: UploadedFile) => f.type === "item",
+    );
     const filesByUniqueId = new Map<string, UploadedFile[]>();
 
     itemFiles.forEach((file: UploadedFile) => {
@@ -142,17 +144,27 @@ export async function handleSorterWithUploadSession(
         }
         filesByUniqueId.get(uniqueId)!.push(file);
       } else {
-        console.warn(`File "${file.originalName}" does not have a unique ID suffix`);
+        console.warn(
+          `File "${file.originalName}" does not have a unique ID suffix`,
+        );
       }
     });
 
     if (validatedData.items) {
       const usedUniqueIds = new Set<string>(); // Track which file groups have been used
 
-      console.log(`🔍 Processing ${validatedData.items.length} items for file matching`);
-      console.log(`📁 Available file groups: ${Array.from(filesByUniqueId.keys())}`);
+      console.log(
+        `🔍 Processing ${validatedData.items.length} items for file matching`,
+      );
+      console.log(
+        `📁 Available file groups: ${Array.from(filesByUniqueId.keys())}`,
+      );
 
-      for (let itemIndex = 0; itemIndex < validatedData.items.length; itemIndex++) {
+      for (
+        let itemIndex = 0;
+        itemIndex < validatedData.items.length;
+        itemIndex++
+      ) {
         const item = validatedData.items[itemIndex];
         const itemSlug = generateSorterItemSlug(item.title);
 
@@ -170,15 +182,24 @@ export async function handleSorterWithUploadSession(
           }
 
           const sampleFile = files[0];
-          const originalNameWithoutSuffix = removeIdFromFileName(sampleFile.originalName);
-          const nameWithoutExt = originalNameWithoutSuffix.replace(/\.[^/.]+$/, "");
+          const originalNameWithoutSuffix = removeIdFromFileName(
+            sampleFile.originalName,
+          );
+          const nameWithoutExt = originalNameWithoutSuffix.replace(
+            /\.[^/.]+$/,
+            "",
+          );
 
-          console.log(`🔎 Checking uniqueId ${uniqueId}: "${nameWithoutExt}" vs "${item.title}"`);
+          console.log(
+            `🔎 Checking uniqueId ${uniqueId}: "${nameWithoutExt}" vs "${item.title}"`,
+          );
 
           if (nameWithoutExt === item.title) {
             matchingFiles = files;
             matchedUniqueId = uniqueId;
-            console.log(`✅ Found match! uniqueId: ${uniqueId}, files: ${files.length}`);
+            console.log(
+              `✅ Found match! uniqueId: ${uniqueId}, files: ${files.length}`,
+            );
             break; // Take the first available match for this item name
           }
         }
@@ -193,7 +214,7 @@ export async function handleSorterWithUploadSession(
               file.key,
               sorterId,
               version,
-              itemSlug
+              itemSlug,
             );
             const isMainFile = !file.key.includes("-thumb");
 
@@ -209,30 +230,42 @@ export async function handleSorterWithUploadSession(
               // Use a unique key for duplicate names: combine title with item index
               const uniqueItemKey = `${item.title}_${itemIndex}`;
               itemImageUrls.set(uniqueItemKey, itemImageUrl);
-              console.log(`💾 Stored image URL for key "${uniqueItemKey}": ${itemImageUrl}`);
+              console.log(
+                `💾 Stored image URL for key "${uniqueItemKey}": ${itemImageUrl}`,
+              );
             }
           }
         } else {
-          console.log(`❌ No matching files found for item ${itemIndex}: "${item.title}"`);
+          console.log(
+            `❌ No matching files found for item ${itemIndex}: "${item.title}"`,
+          );
         }
       }
 
-      console.log(`📊 Final itemImageUrls map:`, Array.from(itemImageUrls.entries()));
+      console.log(
+        `📊 Final itemImageUrls map:`,
+        Array.from(itemImageUrls.entries()),
+      );
     }
 
     // Phase 5: Execute R2 copy operations in parallel
-    console.log(`Executing ${copyOperations.length} R2 copy operations for ${options.mode}`);
+    console.log(
+      `Executing ${copyOperations.length} R2 copy operations for ${options.mode}`,
+    );
     const copyResults = await copyR2ObjectsInParallel(
       copyOperations.map((op) => ({
         sourceKey: op.sourceKey,
         destKey: op.destKey,
       })),
-      10
+      10,
     );
 
     const failedOperations = copyResults.filter((result) => !result.success);
     if (failedOperations.length > 0) {
-      console.error(`${failedOperations.length} R2 copy operations failed:`, failedOperations);
+      console.error(
+        `${failedOperations.length} R2 copy operations failed:`,
+        failedOperations,
+      );
       throw new Error(`Failed to copy ${failedOperations.length} files to R2`);
     }
 
@@ -280,8 +313,8 @@ export async function handleSorterWithUploadSession(
           .where(
             and(
               eq(sorterHistory.sorterId, currentSorter.id),
-              eq(sorterHistory.version, currentSorter.version)
-            )
+              eq(sorterHistory.version, currentSorter.version),
+            ),
           )
           .limit(1);
 
@@ -319,7 +352,9 @@ export async function handleSorterWithUploadSession(
 
       // Create/update tags (same logic for both create and edit)
       if (options.mode === "edit") {
-        await trx.delete(sorterTags).where(eq(sorterTags.sorterId, finalSorterId));
+        await trx
+          .delete(sorterTags)
+          .where(eq(sorterTags.sorterId, finalSorterId));
       }
 
       const createdTagSlugs = new Map<string, string>();
@@ -341,18 +376,27 @@ export async function handleSorterWithUploadSession(
 
       // Create/update items (same logic for both create and edit)
       if (options.mode === "edit") {
-        await trx.delete(sorterItems).where(eq(sorterItems.sorterId, finalSorterId));
+        await trx
+          .delete(sorterItems)
+          .where(eq(sorterItems.sorterId, finalSorterId));
       }
 
-      for (let itemIndex = 0; itemIndex < validatedData.items.length; itemIndex++) {
+      for (
+        let itemIndex = 0;
+        itemIndex < validatedData.items.length;
+        itemIndex++
+      ) {
         const item = validatedData.items[itemIndex];
         const itemSlug = generateSorterItemSlug(item.title);
-        
+
         // Use unique key for duplicate names: combine title with item index
         const uniqueItemKey = `${item.title}_${itemIndex}`;
-        const itemImageUrl = itemImageUrls.get(uniqueItemKey) || item.imageUrl || null;
-        
-        console.log(`🗄️  DB Insert - Item ${itemIndex}: "${item.title}", key: "${uniqueItemKey}", imageUrl: ${itemImageUrl ? "✅ FOUND" : "❌ NULL"}`);
+        const itemImageUrl =
+          itemImageUrls.get(uniqueItemKey) || item.imageUrl || null;
+
+        console.log(
+          `🗄️  DB Insert - Item ${itemIndex}: "${item.title}", key: "${uniqueItemKey}", imageUrl: ${itemImageUrl ? "✅ FOUND" : "❌ NULL"}`,
+        );
         if (itemImageUrl) {
           console.log(`🔗 URL: ${itemImageUrl}`);
         }
@@ -396,9 +440,11 @@ export async function handleSorterWithUploadSession(
       }));
 
       if (renameOperations.length > 0) {
-        console.log(`Renaming ${renameOperations.length} R2 objects with real sorter ID`);
+        console.log(
+          `Renaming ${renameOperations.length} R2 objects with real sorter ID`,
+        );
         await copyR2ObjectsInParallel(renameOperations, 10);
-        
+
         // TODO: Delete the temporary files after successful rename
         // Note: We could implement cleanup here if needed
       }
@@ -407,9 +453,10 @@ export async function handleSorterWithUploadSession(
     // Phase 8: Mark upload session as complete
     await completeUploadSession(sessionId);
 
-    const message = options.mode === "create" 
-      ? "Sorter created successfully with uploaded files"
-      : "Sorter updated successfully with uploaded files";
+    const message =
+      options.mode === "create"
+        ? "Sorter created successfully with uploaded files"
+        : "Sorter updated successfully with uploaded files";
 
     return NextResponse.json({
       id: result.sorterId,
@@ -419,9 +466,11 @@ export async function handleSorterWithUploadSession(
       coverImageUrl: result.coverImageUrl,
       message,
     });
-
   } catch (error) {
-    console.error(`Error ${options.mode}ing sorter with upload session:`, error);
+    console.error(
+      `Error ${options.mode}ing sorter with upload session:`,
+      error,
+    );
 
     if (error instanceof z.ZodError) {
       console.error("Validation error details:", error.errors);
@@ -430,13 +479,13 @@ export async function handleSorterWithUploadSession(
           error: "Validation error",
           details: error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: `Failed to ${options.mode} sorter` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

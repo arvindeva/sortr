@@ -233,9 +233,11 @@ export function convertSessionKeyToSorterKey(
       const baseFilename = filename.replace(/\.[^/.]+$/, ""); // Remove extension
       const isThumb = baseFilename.includes("-thumb");
       // Don't add -thumb suffix if the itemSlug already ends with -thumb
-      const finalSlug = isThumb ? 
-        (itemSlug?.endsWith("-thumb") ? itemSlug : `${itemSlug}-thumb`) : 
-        itemSlug;
+      const finalSlug = isThumb
+        ? itemSlug?.endsWith("-thumb")
+          ? itemSlug
+          : `${itemSlug}-thumb`
+        : itemSlug;
 
       return getVersionedItemKey(
         sorterId,

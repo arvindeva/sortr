@@ -55,7 +55,6 @@ export async function DELETE(
     // Delete the ranking (hard deletion as requested)
     await db.delete(sortingResults).where(eq(sortingResults.id, id));
 
-
     return NextResponse.json({
       success: true,
       message: "Ranking deleted successfully",

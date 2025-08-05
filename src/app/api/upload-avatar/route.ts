@@ -89,7 +89,6 @@ export async function POST(request: NextRequest) {
     // Update user's image URL in database
     await db.update(user).set({ image: avatarUrl }).where(eq(user.id, userId));
 
-
     return NextResponse.json({
       success: true,
       avatarUrl,

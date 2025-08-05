@@ -21,11 +21,11 @@ interface HomepageData {
 
 async function fetchPopularSorters(): Promise<HomepageData> {
   const response = await fetch("/api/sorters");
-  
+
   if (!response.ok) {
     throw new Error(`Failed to fetch popular sorters: ${response.status}`);
   }
-  
+
   return response.json();
 }
 

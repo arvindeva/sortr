@@ -6,16 +6,13 @@ interface SorterGridProps {
   className?: string;
 }
 
-export function SorterGrid({
-  children,
-  className = "",
-}: SorterGridProps) {
+export function SorterGrid({ children, className = "" }: SorterGridProps) {
   return (
-    <div 
+    <div
       className={cn(
-        "grid gap-2 sm:gap-4 justify-center",
+        "grid justify-center gap-2 sm:gap-4",
         "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
-        className
+        className,
       )}
     >
       {children}

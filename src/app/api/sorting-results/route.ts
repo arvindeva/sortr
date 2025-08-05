@@ -7,7 +7,8 @@ import { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { sorterId, rankings, selectedGroups, selectedTagSlugs } = await request.json();
+    const { sorterId, rankings, selectedGroups, selectedTagSlugs } =
+      await request.json();
 
     if (!sorterId || !rankings) {
       return Response.json(
@@ -48,7 +49,10 @@ export async function POST(request: NextRequest) {
         sorterId,
         userId,
         rankings: JSON.stringify(rankings), // Contains versioned URLs already
-        selectedTagSlugs: selectedTagSlugs && selectedTagSlugs.length > 0 ? selectedTagSlugs : null,
+        selectedTagSlugs:
+          selectedTagSlugs && selectedTagSlugs.length > 0
+            ? selectedTagSlugs
+            : null,
         version: sorterVersion, // Pin to specific version
         // Sorter-level snapshots (for quick access)
         sorterTitle,
@@ -61,7 +65,6 @@ export async function POST(request: NextRequest) {
       .update(sorters)
       .set({ completionCount: sql`${sorters.completionCount} + 1` })
       .where(eq(sorters.id, sorterId));
-
 
     return Response.json({
       resultId: result[0].id,

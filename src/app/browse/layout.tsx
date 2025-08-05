@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Browse Sorters",
-  description: "Explore and discover sorters across all categories. Search by title, creator, or browse by category. Create and share a sorter for anything to rank items from best to worst.",
+  description:
+    "Explore and discover sorters across all categories. Search by title, creator, or browse by category. Create and share a sorter for anything to rank items from best to worst.",
   openGraph: {
     title: "Browse Sorters",
-    description: "Explore and discover sorters across all categories. Search by title, creator, or browse by category.",
+    description:
+      "Explore and discover sorters across all categories. Search by title, creator, or browse by category.",
     type: "website",
     siteName: "sortr",
     images: [
@@ -20,7 +22,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Browse Sorters",
-    description: "Explore and discover sorters across all categories. Search by title, creator, or browse by category.",
+    description:
+      "Explore and discover sorters across all categories. Search by title, creator, or browse by category.",
     images: ["/og-browse.png"],
   },
 };

@@ -10,14 +10,13 @@ interface RouteParams {
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     const { username } = await params;
-    console.log(`👤 GET /api/user/${username} - Fetching complete user profile`);
+    console.log(
+      `👤 GET /api/user/${username} - Fetching complete user profile`,
+    );
 
     // Handle anonymous user case
     if (username === "Anonymous" || username === "Unknown User") {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Get user by username
@@ -29,10 +28,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     const userData = users[0];
     if (!userData) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     console.log(`👤 Found user: ${userData.username} (${userData.id})`);
@@ -42,11 +38,13 @@ export async function GET(request: Request, { params }: RouteParams) {
       db
         .select({ count: count() })
         .from(sorters)
-        .where(and(eq(sorters.userId, userData.id), eq(sorters.deleted, false))),
+        .where(
+          and(eq(sorters.userId, userData.id), eq(sorters.deleted, false)),
+        ),
       db
         .select({ count: count() })
         .from(sortingResults)
-        .where(eq(sortingResults.userId, userData.id))
+        .where(eq(sortingResults.userId, userData.id)),
     ]);
 
     const sorterCount = sorterCountResult[0].count;
@@ -97,7 +95,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     const transformedResults = userResults.map((result) => {
       let rankings = [];
       let top3 = [];
-      
+
       try {
         rankings = JSON.parse(result.rankings);
         top3 = rankings.slice(0, 3);
@@ -124,7 +122,9 @@ export async function GET(request: Request, { params }: RouteParams) {
       year: "numeric",
     });
 
-    console.log(`📊 GET /api/user/${username} - Complete: ${sorterCount} sorters, ${rankingCount} rankings`);
+    console.log(
+      `📊 GET /api/user/${username} - Complete: ${sorterCount} sorters, ${rankingCount} rankings`,
+    );
 
     return NextResponse.json({
       user: {
@@ -147,7 +147,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     console.error("❌ GET /api/user/[username] error:", error);
     return NextResponse.json(
       { error: "Failed to fetch user profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

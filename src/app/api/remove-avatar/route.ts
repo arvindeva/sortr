@@ -53,7 +53,6 @@ export async function POST(request: NextRequest) {
     // Update user's image URL to null in database
     await db.update(user).set({ image: null }).where(eq(user.id, userId));
 
-
     return NextResponse.json({
       success: true,
       message: "Avatar removed successfully",

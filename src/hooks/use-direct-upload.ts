@@ -40,17 +40,19 @@ async function uploadWithRetry(
   size: string,
   abortController: AbortController,
   maxRetries: number = 2,
-  baseDelay: number = 300
+  baseDelay: number = 300,
 ): Promise<Response> {
   let lastError: Error | null = null;
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       // Only log on retry attempts, not first attempt
       if (attempt > 1) {
-        console.log(`Retrying ${fileName} (${size}) - Attempt ${attempt}/${maxRetries}`);
+        console.log(
+          `Retrying ${fileName} (${size}) - Attempt ${attempt}/${maxRetries}`,
+        );
       }
-      
+
       const response = await fetch(uploadUrl, {
         method: "PUT",
         body: file,
@@ -68,10 +70,10 @@ async function uploadWithRetry(
       if (response.status >= 500) {
         const errorText = await response.text();
         lastError = new Error(`${response.status}: ${errorText}`);
-        
+
         if (attempt < maxRetries) {
           const delay = baseDelay * attempt; // Linear backoff: 300ms, 600ms
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
       } else {
@@ -80,28 +82,27 @@ async function uploadWithRetry(
         throw new Error(`${response.status}: ${errorText}`);
       }
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && error.name === "AbortError") {
         throw error; // Don't retry if upload was aborted
       }
-      
+
       lastError = error instanceof Error ? error : new Error(String(error));
-      
+
       if (attempt < maxRetries) {
         const delay = baseDelay * attempt; // Linear backoff: 300ms, 600ms
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
     }
   }
-  
-  throw lastError || new Error('Upload failed after retries');
+
+  throw lastError || new Error("Upload failed after retries");
 }
 
 // Helper function to add delay between batches
 async function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
-
 
 export function useDirectUpload(options: DirectUploadOptions = {}) {
   const { data: session } = useSession();
@@ -253,8 +254,9 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
         // Create file infos for token request with explicit file types from UI context
         const fileInfos = files.map((file, index) => {
           // Use per-file type function if provided, otherwise single file type, defaulting to "item"
-          const fileType = options.getFileType?.(file, index) || options.fileType || "item";
-          
+          const fileType =
+            options.getFileType?.(file, index) || options.fileType || "item";
+
           return {
             name: file.name,
             size: file.size,
@@ -333,7 +335,10 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
           const processedFile = processedFiles[i];
 
           // Determine how many URLs this file should have based on explicit type
-          const fileType = options.getFileType?.(originalFile, i) || options.fileType || "item";
+          const fileType =
+            options.getFileType?.(originalFile, i) ||
+            options.fileType ||
+            "item";
           const expectedUrlCount = fileType === "item" ? 2 : 1;
 
           // Get exactly the URLs for this file
@@ -364,8 +369,10 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
         const uploadBatches = chunkArray(uploadTasks, CONCURRENT_UPLOADS);
         let completedTasks = 0;
         const completedFileIndices = new Set<number>(); // Track completed files by index, not name
-        
-        console.log(`Uploading ${uploadTasks.length} files in ${uploadBatches.length} batches of ${CONCURRENT_UPLOADS}`);
+
+        console.log(
+          `Uploading ${uploadTasks.length} files in ${uploadBatches.length} batches of ${CONCURRENT_UPLOADS}`,
+        );
 
         for (
           let batchIndex = 0;
@@ -408,7 +415,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
                   fileToUpload,
                   task.originalFile.name,
                   uploadUrl.size || "single",
-                  abortController
+                  abortController,
                 );
 
                 // Success - no need for verbose logging
@@ -434,7 +441,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
               if (error instanceof Error && error.name === "AbortError") {
                 throw error; // Re-throw to stop the upload process
               }
-              
+
               console.error(
                 `Failed to upload ${task.originalFile.name}:`,
                 error,
@@ -460,7 +467,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
                 // Add successful uploads to results
                 uploadResults.push(...taskResult.results);
                 completedTasks++;
-                
+
                 // Track this file as completed by its index
                 completedFileIndices.add(taskResult.task.fileIndex);
 
@@ -511,12 +518,15 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
               }
             } else {
               // Promise rejected - check if it's an AbortError
-              if (result.reason instanceof Error && result.reason.name === "AbortError") {
+              if (
+                result.reason instanceof Error &&
+                result.reason.name === "AbortError"
+              ) {
                 const abortError = new Error("Upload was cancelled");
                 abortError.name = "AbortError";
                 throw abortError;
               }
-              
+
               console.error(
                 "Unexpected batch promise rejection:",
                 result.reason,
@@ -524,12 +534,15 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
               completedTasks++;
             }
           }
-          
+
           // Add minimal delay between batches only for very large uploads
           // Skip delay after the last batch
-          if (batchIndex < uploadBatches.length - 1 && uploadTasks.length > 150) {
+          if (
+            batchIndex < uploadBatches.length - 1 &&
+            uploadTasks.length > 150
+          ) {
             const batchDelay = 500; // Just 500ms delay for massive batches (150+ files)
-            
+
             console.log(`Waiting ${batchDelay}ms before next batch...`);
             await delay(batchDelay);
           }
@@ -542,9 +555,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
             name: displayFile.name,
             processedName: files[idx]?.name,
             progress: 100,
-            status: completedFileIndices.has(idx)
-              ? "complete"
-              : "failed",
+            status: completedFileIndices.has(idx) ? "complete" : "failed",
           })),
           overallProgress: 100,
           statusMessage: "Upload complete!",

@@ -55,9 +55,7 @@ const ALLOWED_ITEM_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 async function handleUploadSessionRequest(body: any, userData: any) {
   // Get existing slugs to ensure uniqueness
-  const existingSorters = await db
-    .select({ slug: sorters.slug })
-    .from(sorters);
+  const existingSorters = await db.select({ slug: sorters.slug }).from(sorters);
   const existingSlugs = existingSorters.map((s) => s.slug);
 
   return await handleSorterWithUploadSession(body, userData.id, {
@@ -72,11 +70,11 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
   try {
     console.log("🏷️  Creating tag-based sorter");
     console.log("📝 Body received:", JSON.stringify(body, null, 2));
-    
+
     // Validate the data
     const validatedData = createSorterSchema.parse(body);
     console.log("✅ Validated data:", JSON.stringify(validatedData, null, 2));
-    
+
     // Generate slug for sorter
     const slug = generateSorterSlug(validatedData.title);
 
@@ -113,7 +111,7 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
           // Generate unique slug for this tag within the sorter
           const existingTagSlugs = Array.from(createdTagSlugs.values());
           const tagSlug = generateUniqueTagSlug(tag.name, existingTagSlugs);
-          
+
           // Create the tag
           await tx.insert(sorterTags).values({
             sorterId: newSorter.id,
@@ -121,7 +119,7 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
             slug: tagSlug,
             sortOrder: tag.sortOrder,
           });
-          
+
           createdTagSlugs.set(tag.name, tagSlug);
         }
       }
@@ -131,7 +129,7 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
         for (const item of validatedData.items) {
           // Generate item slug
           const itemSlug = generateSorterItemSlug(item.title);
-          
+
           // Map tag names from form to actual slugs
           const actualTagSlugs: string[] = [];
           if (item.tagSlugs && item.tagSlugs.length > 0) {
@@ -142,7 +140,7 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
               }
             }
           }
-          
+
           await tx.insert(sorterItems).values({
             sorterId: newSorter.id,
             title: item.title,
@@ -157,7 +155,9 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
       return { sorter: newSorter };
     });
 
-    console.log(`✅ Tag-based sorter created: ${result.sorter.title} (${result.sorter.slug})`);
+    console.log(
+      `✅ Tag-based sorter created: ${result.sorter.title} (${result.sorter.slug})`,
+    );
 
     return NextResponse.json({
       success: true,
@@ -515,12 +515,14 @@ export async function POST(request: NextRequest) {
       }
 
       // Return the sorter data from transaction
-      console.log(`✅ Sorter created successfully: ${newSorter.title} (${newSorter.slug})`);
+      console.log(
+        `✅ Sorter created successfully: ${newSorter.title} (${newSorter.slug})`,
+      );
       return {
         sorter: newSorter,
       };
     });
-    
+
     console.log("💾 Database transaction completed successfully");
 
     return NextResponse.json({
@@ -550,7 +552,7 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     console.log("🏠 GET /api/sorters - Fetching popular sorters for homepage");
-    
+
     const popularSorters = await db
       .select({
         id: sorters.id,
@@ -576,7 +578,9 @@ export async function GET() {
       coverImageUrl: sorter.coverImageUrl ?? undefined,
     }));
 
-    console.log(`📊 GET /api/sorters - Found ${transformedSorters.length} popular sorters`);
+    console.log(
+      `📊 GET /api/sorters - Found ${transformedSorters.length} popular sorters`,
+    );
 
     return NextResponse.json({
       popularSorters: transformedSorters,
@@ -587,7 +591,7 @@ export async function GET() {
     console.error("❌ GET /api/sorters error:", error);
     return NextResponse.json(
       { error: "Failed to fetch popular sorters" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

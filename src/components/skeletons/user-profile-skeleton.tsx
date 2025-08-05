@@ -18,7 +18,7 @@ export function UserProfileSkeleton() {
           <div className="relative">
             <Skeleton className="h-28 w-28 md:h-48 md:w-48" />
           </div>
-          
+
           {/* User info skeleton */}
           <div className="flex-1">
             <div className="mb-2 flex items-center gap-2">
@@ -47,7 +47,10 @@ export function UserProfileSkeleton() {
           <PanelHeader variant="primary">
             <PanelTitle>Rankings</PanelTitle>
           </PanelHeader>
-          <PanelContent variant="primary" className="flex min-h-[200px] items-center justify-center p-2 md:p-6">
+          <PanelContent
+            variant="primary"
+            className="flex min-h-[200px] items-center justify-center p-2 md:p-6"
+          >
             <Spinner size={32} />
           </PanelContent>
         </Panel>

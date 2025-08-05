@@ -54,16 +54,16 @@ export interface SorterPageData {
 // API functions
 async function fetchSorterData(slug: string): Promise<SorterData> {
   console.log(`🔍 Fetching sorter data for slug: ${slug}`);
-  
+
   const response = await fetch(`/api/sorters/${slug}`);
-  
+
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error("Sorter not found");
     }
     throw new Error("Failed to fetch sorter data");
   }
-  
+
   const data = await response.json();
   console.log(`✅ Fetched sorter data for: ${data.sorter.title}`);
   return data;
@@ -71,22 +71,26 @@ async function fetchSorterData(slug: string): Promise<SorterData> {
 
 async function fetchRecentResults(slug: string): Promise<RecentResult[]> {
   console.log(`🔍 Fetching recent results for sorter: ${slug}`);
-  
+
   const response = await fetch(`/api/sorters/${slug}/results`);
-  
+
   if (!response.ok) {
     // Results endpoint might not exist yet, return empty array
     console.warn(`⚠️ Failed to fetch recent results for sorter ${slug}`);
     return [];
   }
-  
+
   const data = await response.json();
   console.log(`✅ Fetched ${data.length} recent results`);
   return data;
 }
 
 // TanStack Query hooks
-export function useSorterData(slug: string, enabled: boolean = true, initialData?: SorterData) {
+export function useSorterData(
+  slug: string,
+  enabled: boolean = true,
+  initialData?: SorterData,
+) {
   return useQuery({
     queryKey: ["sorter", slug],
     queryFn: () => fetchSorterData(slug),
@@ -120,10 +124,7 @@ export function useRecentResults(slug: string, enabled: boolean = true) {
 // Combined hook for sorter page data
 export function useSorterPage(slug: string, initialData?: SorterData) {
   const sorterQuery = useSorterData(slug, true, initialData);
-  const recentResultsQuery = useRecentResults(
-    slug,
-    !!sorterQuery.data?.sorter
-  );
+  const recentResultsQuery = useRecentResults(slug, !!sorterQuery.data?.sorter);
 
   return {
     sorterData: sorterQuery.data,

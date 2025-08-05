@@ -81,7 +81,7 @@ export default function Home() {
             </p>
           </Box>
         </section>
-        
+
         {/* Client-side fetched popular sorters */}
         <HomepageClient />
       </main>

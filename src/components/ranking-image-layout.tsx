@@ -141,10 +141,7 @@ export function RankingImageLayout({
                   >
                     {item.imageUrl ? (
                       <img
-                        src={getImageUrl(
-                          item.imageUrl,
-                          "full",
-                        )}
+                        src={getImageUrl(item.imageUrl, "full")}
                         alt={item.title}
                         style={{
                           width: "100%",
@@ -236,10 +233,7 @@ export function RankingImageLayout({
                     >
                       {item.imageUrl ? (
                         <img
-                          src={getImageUrl(
-                            item.imageUrl,
-                            "full",
-                          )}
+                          src={getImageUrl(item.imageUrl, "full")}
                           alt={item.title}
                           style={{
                             width: "100%",

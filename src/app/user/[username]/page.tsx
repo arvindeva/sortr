@@ -54,7 +54,7 @@ async function getUserProfileData(username: string) {
     db
       .select({ count: count() })
       .from(sortingResults)
-      .where(eq(sortingResults.userId, userData.id))
+      .where(eq(sortingResults.userId, userData.id)),
   ]);
 
   const sorterCount = sorterCountResult[0].count;
@@ -105,7 +105,7 @@ async function getUserProfileData(username: string) {
   const transformedResults = userResults.map((result) => {
     let rankings = [];
     let top3 = [];
-    
+
     try {
       rankings = JSON.parse(result.rankings);
       top3 = rankings.slice(0, 3);
@@ -259,7 +259,7 @@ export default async function UserProfilePage({
           isOwnProfile={isOwnProfile}
           currentImage={profileData.user.image}
         />
-        
+
         {/* Client-side data fetching for sorters and rankings */}
         <UserProfileClient
           username={username}

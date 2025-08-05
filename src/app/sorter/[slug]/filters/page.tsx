@@ -157,17 +157,17 @@ export default function FilterPage({ params }: FilterPageProps) {
   // Calculate unique items across selected tags
   const totalItems = (() => {
     if (selectedTags.length === 0) return 0;
-    
+
     const uniqueItemIds = new Set<string>();
-    selectedTags.forEach(tagSlug => {
+    selectedTags.forEach((tagSlug) => {
       const tag = tags.find((t) => t.slug === tagSlug);
       if (tag) {
-        tag.items.forEach(item => {
+        tag.items.forEach((item) => {
           uniqueItemIds.add(item.id);
         });
       }
     });
-    
+
     return uniqueItemIds.size;
   })();
 
@@ -193,8 +193,8 @@ export default function FilterPage({ params }: FilterPageProps) {
         <PanelContent variant="primary" className="p-2 md:p-6">
           <div className="mb-6">
             <p className="text-foreground mb-4">
-              This sorter has filters. Choose which tags you want to include
-              in your sorting session for "{sorter.title}"
+              This sorter has filters. Choose which tags you want to include in
+              your sorting session for "{sorter.title}"
             </p>
 
             {/* Stats */}

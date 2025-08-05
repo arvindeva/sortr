@@ -9,7 +9,7 @@ interface SpinnerProps {
 export function Spinner({ className, size = 24 }: SpinnerProps) {
   return (
     <div className={cn("flex justify-center", className)}>
-      <Loader2 size={size} className="animate-spin text-main" />
+      <Loader2 size={size} className="text-main animate-spin" />
     </div>
   );
 }

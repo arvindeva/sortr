@@ -135,7 +135,7 @@ async function getSorterWithItems(
 
 export default async function SorterPage({ params }: SorterPageProps) {
   const { slug } = await params;
-  
+
   // Basic sorter validation for 404 (server-side)
   const data = await getSorterWithItems(slug);
   if (!data) {
@@ -196,12 +196,12 @@ export default async function SorterPage({ params }: SorterPageProps) {
       />
       <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
         {/* Server-rendered Sorter Header */}
-        <SorterHeaderServer 
+        <SorterHeaderServer
           sorter={data.sorter}
           hasFilters={hasFilters}
           isOwner={isOwner}
         />
-        
+
         {/* Client-side data fetching for items and recent results */}
         <SorterPageClient
           slug={slug}

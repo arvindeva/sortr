@@ -241,11 +241,11 @@ The application uses a sophisticated direct upload system that bypasses server i
 ```typescript
 // Upload session lifecycle
 interface UploadSession {
-  id: string;           // UUID session identifier
-  userId: string;       // User who initiated upload
+  id: string; // UUID session identifier
+  userId: string; // User who initiated upload
   status: "pending" | "uploading" | "complete" | "expired" | "failed";
-  createdAt: Date;      // Session creation timestamp
-  expiresAt: Date;      // Automatic expiration (15 minutes)
+  createdAt: Date; // Session creation timestamp
+  expiresAt: Date; // Automatic expiration (15 minutes)
   metadata?: Record<string, any>; // Additional session data
 }
 ```
@@ -450,8 +450,9 @@ The application uses a sophisticated tag system for organizing and filtering sor
 - **Sort Order Indexing**: Optimized queries for tag ordering
 
 # important-instruction-reminders
+
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
-NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+NEVER proactively create documentation files (\*.md) or README files. Only create documentation files if explicitly requested by the User.
 ALWAYS use tailwind v4

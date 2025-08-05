@@ -11,7 +11,7 @@ interface EditSorterPageProps {
 
 export default async function EditSorterPage({ params }: EditSorterPageProps) {
   const { slug } = await params;
-  
+
   // Check authentication
   const session = await getServerSession();
   if (!session?.user?.email) {
@@ -82,11 +82,7 @@ export default async function EditSorterPage({ params }: EditSorterPageProps) {
 
   return (
     <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
-      <EditSorterForm
-        sorter={sorter}
-        tags={tags}
-        items={items}
-      />
+      <EditSorterForm sorter={sorter} tags={tags} items={items} />
     </div>
   );
 }
