@@ -52,10 +52,10 @@ export function ProgressProvider() {
 
         setProgress(10);
 
-        // Quick progress animation
+        // Slower transition from 10% to 70%
         timer = setTimeout(() => {
           setProgress(70);
-        }, 100);
+        }, 800);
       }
     };
 
@@ -72,7 +72,7 @@ export function ProgressProvider() {
     <div className="fixed top-0 right-0 left-0 z-50">
       <div className="bg-muted h-1">
         <div
-          className="bg-primary h-full transition-all duration-200 ease-out"
+          className="bg-primary h-full transition-all duration-700 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
