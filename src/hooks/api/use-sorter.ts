@@ -129,7 +129,7 @@ export function useSorterPage(slug: string, initialData?: SorterData) {
   return {
     sorterData: sorterQuery.data,
     recentResults: recentResultsQuery.data || [],
-    isLoading: sorterQuery.isLoading,
+    isLoading: sorterQuery.isLoading || recentResultsQuery.isLoading,
     isError: sorterQuery.isError,
     error: sorterQuery.error,
     refetch: () => {
