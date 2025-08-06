@@ -66,7 +66,7 @@ export function useImagePreloader(): UseImagePreloaderReturn {
 
       // Handle CORS failures by retrying without crossOrigin
       const originalOnError = img.onerror;
-      img.onerror = () => {
+      img.onerror = (event) => {
         // If this was a CORS attempt, try again without CORS
         if (img.crossOrigin === "anonymous") {
           img.crossOrigin = "";
@@ -75,7 +75,9 @@ export function useImagePreloader(): UseImagePreloaderReturn {
           return;
         }
         // If non-CORS attempt failed, call original error handler
-        originalOnError?.call(img);
+        if (originalOnError) {
+          originalOnError(event);
+        }
       };
 
       tryLoad(true);
