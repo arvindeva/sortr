@@ -56,9 +56,29 @@ export function useImagePreloader(): UseImagePreloaderReturn {
         reject(new Error(`Failed to load image: ${src}`));
       };
 
-      // Set crossOrigin for R2 images if needed
-      img.crossOrigin = "anonymous";
-      img.src = src;
+      // Try with crossOrigin first, fallback without if CORS fails
+      const tryLoad = (withCors: boolean) => {
+        if (withCors) {
+          img.crossOrigin = "anonymous";
+        }
+        img.src = src;
+      };
+
+      // Handle CORS failures by retrying without crossOrigin
+      const originalOnError = img.onerror;
+      img.onerror = () => {
+        // If this was a CORS attempt, try again without CORS
+        if (img.crossOrigin === "anonymous") {
+          img.crossOrigin = "";
+          img.onerror = originalOnError;
+          img.src = src;
+          return;
+        }
+        // If non-CORS attempt failed, call original error handler
+        originalOnError?.call(img);
+      };
+
+      tryLoad(true);
     });
   }, []);
 

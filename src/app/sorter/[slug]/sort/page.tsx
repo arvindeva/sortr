@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Undo2, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
 import { SortItem } from "@/lib/sorting";
 import { InteractiveMergeSort, SortState } from "@/lib/interactive-merge-sort";
 import LZString from "lz-string";
@@ -91,6 +92,8 @@ function serializeChoices(
   userChoices: Map<string, string>,
   stateHistory: any[],
   shuffledOrder: SortItem[] = [],
+  totalBattles = 0,
+  sortedNo = 0,
 ): any {
   // Create item map for UUID to index conversion
   const itemMap = items.map((item) => item.id);
@@ -133,6 +136,7 @@ function serializeChoices(
     return {
       choices: stateChoices,
       comparisonCount: state.comparisonCount,
+      sortedNo: state.sortedNo || 0,
     };
   });
 
@@ -149,6 +153,8 @@ function serializeChoices(
     choices,
     historyChoices,
     shuffledOrderIndexes,
+    totalBattles,
+    sortedNo,
   };
 }
 
@@ -160,8 +166,10 @@ function deserializeChoices(
   userChoices: Map<string, string>;
   stateHistory: any[];
   shuffledOrder: SortItem[];
+  totalBattles: number;
+  sortedNo: number;
 } {
-  const { itemMap, choices, historyChoices, shuffledOrderIndexes } =
+  const { itemMap, choices, historyChoices, shuffledOrderIndexes, totalBattles = 0, sortedNo = 0 } =
     serializedData;
 
   // Reconstruct user choices map
@@ -193,6 +201,7 @@ function deserializeChoices(
     return {
       userChoices: stateChoices,
       comparisonCount: historyState.comparisonCount,
+      sortedNo: historyState.sortedNo || 0,
     };
   });
 
@@ -211,7 +220,7 @@ function deserializeChoices(
     }
   }
 
-  return { userChoices, stateHistory, shuffledOrder };
+  return { userChoices, stateHistory, shuffledOrder, totalBattles, sortedNo };
 }
 
 export default function SortPage() {
@@ -397,6 +406,8 @@ export default function SortPage() {
       let savedComparisonCount = 0;
       let savedStateHistory: SortState[] | undefined;
       let savedShuffledOrder: SortItem[] | undefined;
+      let savedTotalBattles: number | undefined;
+      let savedSortedNo: number | undefined;
 
       if (savedState) {
         try {
@@ -409,10 +420,12 @@ export default function SortPage() {
 
             // Handle new optimized format
             if (parsed.optimized) {
-              const { userChoices, stateHistory, shuffledOrder } =
+              const { userChoices, stateHistory, shuffledOrder, totalBattles, sortedNo } =
                 deserializeChoices(parsed, filteredItems);
               savedChoices = userChoices;
               savedStateHistory = stateHistory;
+              savedTotalBattles = totalBattles;
+              savedSortedNo = sortedNo;
               if (shuffledOrder.length > 0) {
                 savedShuffledOrder = shuffledOrder;
               }
@@ -438,23 +451,25 @@ export default function SortPage() {
         }
       }
 
-      sorterRef.current = new InteractiveMergeSort(
+      sorterRef.current = new InteractiveMergeSort({
         savedChoices,
         savedComparisonCount,
         savedStateHistory,
-      );
+        savedTotalBattles,
+        savedSortedNo,
+      });
 
       // Restore shuffled order if available
       if (savedShuffledOrder) {
         sorterRef.current.setShuffledOrder(savedShuffledOrder);
       }
 
-      // Set up progress tracking
-      sorterRef.current.setProgressCallback((completed, total) => {
+      // Set up progress tracking - simple approach
+      sorterRef.current.setProgressCallback((comparisons, progressPercent) => {
         // Small delay to ensure DOM is ready for animation
         setTimeout(() => {
-          setCompletedComparisons(completed);
-          setTotalComparisons(total);
+          setCompletedComparisons(comparisons);
+          setTotalComparisons(progressPercent);
           setCanUndo(sorterRef.current?.canUndo() || false);
         }, 100);
       });
@@ -468,6 +483,8 @@ export default function SortPage() {
             sorterRef.current.getUserChoices(),
             sorterRef.current.getStateHistory(),
             sorterRef.current.getShuffledOrder(),
+            sorterRef.current.getTotalBattles(),
+            sorterRef.current.getSortedNo(),
           );
 
           const stateToSave = {
@@ -591,6 +608,13 @@ export default function SortPage() {
       setCurrentComparison(null);
       resolveComparisonRef.current(winnerId);
       resolveComparisonRef.current = null;
+    }
+  }, []);
+
+  const handleRemoveItem = useCallback((itemId: string, itemTitle: string) => {
+    if (sorterRef.current) {
+      sorterRef.current.removeItem(itemId);
+      toast.success(`Removed "${itemTitle}" from sorting`);
     }
   }, []);
 
@@ -743,14 +767,8 @@ export default function SortPage() {
     );
   }
 
-  // Calculate progress based on actual comparisons needed (like charasort)
-  const progress =
-    totalComparisons > 0
-      ? Math.min(
-          99,
-          Math.floor((completedComparisons / totalComparisons) * 100),
-        )
-      : 0;
+  // Simple progress - totalComparisons now holds the progress percentage
+  const progress = Math.floor(totalComparisons);
 
   return (
     <div className="container mx-auto max-w-6xl px-0 py-8 text-black md:px-4 dark:text-white">
@@ -832,6 +850,8 @@ export default function SortPage() {
           imageUrl={currentComparison.itemA.imageUrl}
           title={currentComparison.itemA.title}
           onClick={() => handleChoice(currentComparison.itemA.id)}
+          canRemove={filteredItems.length > 1}
+          onRemove={() => handleRemoveItem(currentComparison.itemA.id, currentComparison.itemA.title)}
         />
 
         {/* Item B */}
@@ -840,6 +860,8 @@ export default function SortPage() {
           imageUrl={currentComparison.itemB.imageUrl}
           title={currentComparison.itemB.title}
           onClick={() => handleChoice(currentComparison.itemB.id)}
+          canRemove={filteredItems.length > 1}
+          onRemove={() => handleRemoveItem(currentComparison.itemB.id, currentComparison.itemB.title)}
         />
 
         {/* VS Divider - neobrutalist styling, visible on all devices */}

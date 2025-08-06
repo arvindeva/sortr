@@ -17,25 +17,46 @@ function getComparisonKey(itemA: SortItem, itemB: SortItem): string {
 export interface SortState {
   userChoices: Map<string, string>;
   comparisonCount: number;
+  sortedNo: number;
 }
+
+export interface SortOptions {
+  savedChoices?: Map<string, string>;
+  savedComparisonCount?: number;
+  savedStateHistory?: SortState[];
+  savedTotalBattles?: number;
+  savedSortedNo?: number;
+}
+
+// Animation constants
+const REMOVAL_ANIMATION_DURATION = 800; // 0.8 seconds
+const REMOVAL_ANIMATION_STEPS = 20;
+const MAX_PROGRESS_PERCENT = 99;
 
 export class InteractiveMergeSort {
   private userChoices = new Map<string, string>();
   private comparisonCount = 0;
-  private totalComparisons = 0;
+  private totalBattles = 0; // Fixed total battles calculated at start (like charasort)
+  private sortedNo = 0; // Number of items placed in merged lists (like charasort)
   private stateHistory: SortState[] = [];
   private currentItems: SortItem[] = [];
   private hasStarted = false;
   private shuffledOrder: SortItem[] = [];
+  private animatedSortedNo = 0; // For smooth removal animations
+  private isAnimating = false;
   private onProgressUpdate?: (completed: number, total: number) => void;
   private onSaveProgress?: () => void;
   private onRestartRequested?: () => void;
 
-  constructor(
-    savedChoices?: Map<string, string>,
-    savedComparisonCount = 0,
-    savedStateHistory?: SortState[],
-  ) {
+  constructor(options: SortOptions = {}) {
+    const {
+      savedChoices,
+      savedComparisonCount = 0,
+      savedStateHistory,
+      savedTotalBattles,
+      savedSortedNo,
+    } = options;
+
     if (savedChoices) {
       this.userChoices = new Map(savedChoices);
       this.hasStarted = true; // If we have saved choices, sorting has started
@@ -43,6 +64,13 @@ export class InteractiveMergeSort {
     this.comparisonCount = savedComparisonCount;
     if (savedStateHistory) {
       this.stateHistory = savedStateHistory;
+    }
+    if (savedTotalBattles !== undefined) {
+      this.totalBattles = savedTotalBattles;
+    }
+    if (savedSortedNo !== undefined) {
+      this.sortedNo = savedSortedNo;
+      this.animatedSortedNo = savedSortedNo;
     }
   }
 
@@ -58,10 +86,32 @@ export class InteractiveMergeSort {
     this.onRestartRequested = callback;
   }
 
+  // Calculate total battles exactly like charasort does
+  private calculateTotalBattles(itemCount: number): number {
+    if (itemCount <= 1) return 0;
+
+    let total = 0;
+    const countBattles = (len: number) => {
+      if (len <= 1) return;
+      const mid = Math.ceil(len / 2);
+      const leftLen = mid;
+      const rightLen = len - mid;
+
+      // Add both halves (what charasort actually does)
+      total += leftLen + rightLen;
+      countBattles(leftLen);
+      countBattles(rightLen);
+    };
+
+    countBattles(itemCount);
+    return total;
+  }
+
   private saveStateSnapshot() {
     this.stateHistory.push({
       userChoices: new Map(this.userChoices),
       comparisonCount: this.comparisonCount,
+      sortedNo: this.sortedNo,
     });
 
     // Keep only the last 1 state to prevent storage bloat
@@ -80,9 +130,11 @@ export class InteractiveMergeSort {
     const previousState = this.stateHistory.pop()!;
     this.userChoices = previousState.userChoices;
     this.comparisonCount = previousState.comparisonCount;
+    this.sortedNo = previousState.sortedNo;
+    this.animatedSortedNo = this.sortedNo;
 
-    // Update progress
-    this.onProgressUpdate?.(this.comparisonCount, this.totalComparisons);
+    // Update progress display  
+    this.updateProgress();
     this.onSaveProgress?.();
 
     // Request restart of sorting from current state
@@ -94,12 +146,14 @@ export class InteractiveMergeSort {
   reset() {
     this.userChoices.clear();
     this.comparisonCount = 0;
+    this.sortedNo = 0;
+    this.animatedSortedNo = 0;
     this.stateHistory = [];
     this.hasStarted = false; // Reset to allow new randomization
     this.shuffledOrder = [];
 
-    // Update progress
-    this.onProgressUpdate?.(0, this.totalComparisons);
+    // Reset progress
+    this.updateProgress();
     this.onSaveProgress?.();
 
     // Request restart of sorting from beginning
@@ -122,60 +176,69 @@ export class InteractiveMergeSort {
       this.hasStarted = true;
       itemsToSort = this.shuffledOrder;
 
+      // Calculate total battles ONCE - NEVER changes (like charasort)
+      if (this.totalBattles === 0) {
+        this.totalBattles = this.calculateTotalBattles(items.length);
+      }
+
       // Save the new shuffled order immediately
       this.onSaveProgress?.();
     } else {
       // Already started (saved progress or undo) - use consistent order
       itemsToSort = this.shuffledOrder.length > 0 ? this.shuffledOrder : items;
-    }
-
-    // Calculate total comparisons needed by simulating the sort first
-    this.totalComparisons = this.simulateSort(items);
-    this.onProgressUpdate?.(this.comparisonCount, this.totalComparisons);
-
-    return await this.mergeSort(itemsToSort, onNeedComparison);
-  }
-
-  private recalculateTotal(): void {
-    if (this.currentItems.length > 0) {
-      this.totalComparisons = this.simulateSort(this.currentItems);
-    }
-  }
-
-  private simulateSort(items: SortItem[]): number {
-    // Calculate total potential merges needed (like charasort's totalBattles)
-    let totalMerges = 0;
-
-    const calculateMerges = (length: number): number => {
-      if (length <= 1) return 0;
-
-      const mid = Math.floor(length / 2);
-      const leftLength = mid;
-      const rightLength = length - mid;
-
-      // Add merges needed for this level (minimum of left and right lengths)
-      totalMerges += Math.min(leftLength, rightLength);
-
-      // Recursively calculate for sublists
-      calculateMerges(leftLength);
-      calculateMerges(rightLength);
-
-      return totalMerges;
-    };
-
-    calculateMerges(items.length);
-
-    // Subtract comparisons we already know
-    let knownComparisons = 0;
-    for (let i = 0; i < items.length; i++) {
-      for (let j = i + 1; j < items.length; j++) {
-        if (this.userChoices.get(getComparisonKey(items[i], items[j]))) {
-          knownComparisons++;
-        }
+      
+      // If totalBattles wasn't saved (legacy save), recalculate it
+      if (this.totalBattles === 0) {
+        this.totalBattles = this.calculateTotalBattles(items.length);
       }
     }
 
-    return Math.max(1, totalMerges - Math.floor(knownComparisons * 0.3));
+    // Update progress display
+    this.updateProgress();
+
+    const result = await this.mergeSort(itemsToSort, onNeedComparison);
+    
+    // Set to 100% when complete
+    this.onProgressUpdate?.(this.comparisonCount, 100);
+    
+    return result;
+  }
+
+  // Charasort-style progress: sortedNo vs totalBattles, capped at 99%
+  private updateProgress(): void {
+    const progress = this.totalBattles > 0 
+      ? Math.min(MAX_PROGRESS_PERCENT, Math.floor((this.animatedSortedNo / this.totalBattles) * 100))
+      : 0;
+    this.onProgressUpdate?.(this.comparisonCount, progress);
+  }
+
+  // Smoothly animate sortedNo increases (for removals)
+  private animateSortedNoIncrease(targetSortedNo: number): void {
+    if (this.isAnimating) return;
+    
+    this.isAnimating = true;
+    const startValue = this.animatedSortedNo;
+    const increment = targetSortedNo - startValue;
+    const stepIncrement = increment / REMOVAL_ANIMATION_STEPS;
+    const stepDuration = REMOVAL_ANIMATION_DURATION / REMOVAL_ANIMATION_STEPS;
+    
+    let currentStep = 0;
+    
+    const animate = () => {
+      currentStep++;
+      this.animatedSortedNo = Math.min(targetSortedNo, startValue + (stepIncrement * currentStep));
+      this.updateProgress();
+      
+      if (currentStep < REMOVAL_ANIMATION_STEPS && this.animatedSortedNo < targetSortedNo) {
+        setTimeout(animate, stepDuration);
+      } else {
+        this.animatedSortedNo = targetSortedNo;
+        this.isAnimating = false;
+        this.updateProgress();
+      }
+    };
+    
+    animate();
   }
 
   private async mergeSort(
@@ -217,12 +280,6 @@ export class InteractiveMergeSort {
 
         this.comparisonCount++;
         this.userChoices.set(key, winner);
-
-        // Recalculate total comparisons with the new knowledge
-        this.recalculateTotal();
-
-        this.onProgressUpdate?.(this.comparisonCount, this.totalComparisons);
-        this.onSaveProgress?.(); // Save progress after updating count
       }
 
       if (winner === leftItem.id) {
@@ -232,16 +289,28 @@ export class InteractiveMergeSort {
         result.push(rightItem);
         rightIndex++;
       }
+
+      // Increment sortedNo for each item placed (like charasort)
+      this.sortedNo++;
+      this.animatedSortedNo = this.sortedNo;
+      this.updateProgress();
+      this.onSaveProgress?.(); // Save progress after updating count
     }
 
-    // Add remaining items
+    // Add remaining items and increment sortedNo for each (like charasort)
     while (leftIndex < left.length) {
       result.push(left[leftIndex]);
       leftIndex++;
+      this.sortedNo++;
+      this.animatedSortedNo = this.sortedNo;
+      this.updateProgress(); // Update immediately like charasort
     }
     while (rightIndex < right.length) {
       result.push(right[rightIndex]);
       rightIndex++;
+      this.sortedNo++;
+      this.animatedSortedNo = this.sortedNo;
+      this.updateProgress(); // Update immediately like charasort
     }
 
     return result;
@@ -268,5 +337,59 @@ export class InteractiveMergeSort {
     if (shuffledOrder.length > 0) {
       this.hasStarted = true;
     }
+  }
+
+  getTotalBattles(): number {
+    return this.totalBattles;
+  }
+
+  getSortedNo(): number {
+    return this.sortedNo;
+  }
+
+  removeItem(itemId: string): void {
+    // Save state snapshot BEFORE removal for undo support
+    this.saveStateSnapshot();
+    
+    // Remove item from item arrays
+    this.currentItems = this.currentItems.filter(item => item.id !== itemId);
+    this.shuffledOrder = this.shuffledOrder.filter(item => item.id !== itemId);
+    
+    // Count how many comparisons involved this item (for progress animation)
+    let removedComparisons = 0;
+    
+    // Clean up all comparisons involving this item
+    for (const [key, winnerId] of this.userChoices) {
+      const [id1, id2] = key.split(',');
+      if (id1 === itemId || id2 === itemId) {
+        this.userChoices.delete(key);
+        removedComparisons++;
+      }
+    }
+    
+    // DON'T clean up state history - leave it intact for undo support
+    // The undo system can handle states with non-existent items gracefully
+    
+    // Recalculate comparison count from cleaned userChoices (avoid off-by-one errors)
+    this.comparisonCount = this.userChoices.size;
+    
+    // Increase sortedNo based on removed comparisons
+    // Each removed comparison represents work that no longer needs to be done
+    // We approximate this as removing ~ 1-2 work units per comparison
+    const workSaved = Math.floor(removedComparisons * 1.5);
+    const newSortedNo = Math.min(this.totalBattles, this.sortedNo + workSaved);
+    
+    // Animate the progress increase smoothly instead of jumping
+    if (newSortedNo > this.sortedNo) {
+      this.sortedNo = newSortedNo;
+      this.animateSortedNoIncrease(newSortedNo);
+    } else {
+      this.updateProgress();
+    }
+    
+    this.onSaveProgress?.(); // Save updated state
+    
+    // Restart sorting with cleaned state
+    this.onRestartRequested?.();
   }
 }
