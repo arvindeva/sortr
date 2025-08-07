@@ -29,17 +29,6 @@ function ComparisonCard({
     if (displayImageUrl) {
       setImageLoaded(false);
       setImageError(false);
-
-      // Check if image is already in cache by creating a new Image element
-      const img = new Image();
-      img.onload = () => {
-        // Image is cached, show it immediately
-        setImageLoaded(true);
-      };
-      img.onerror = () => {
-        setImageError(true);
-      };
-      img.src = displayImageUrl;
     }
   }, [displayImageUrl]);
 
@@ -53,7 +42,7 @@ function ComparisonCard({
     <div className={cn("flex flex-col items-center", className)} {...props}>
       {/* Main comparison card */}
       <div
-        className="bg-main rounded-base border-border shadow-shadow flex w-full max-w-[300px] cursor-pointer flex-col overflow-hidden border-2 text-black transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md md:w-[300px] md:max-w-none"
+        className="bg-secondary-background rounded-base border-border shadow-shadow flex w-full max-w-[300px] cursor-pointer flex-col overflow-hidden border-2 text-black transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md md:w-[300px] md:max-w-none"
         onClick={onClick}
       >
         {/* Image area - flush with top */}
