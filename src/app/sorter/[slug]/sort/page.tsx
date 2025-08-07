@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useImagePreloader } from "@/hooks/use-image-preloader";
@@ -228,6 +228,7 @@ export default function SortPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sorterSlug = params.slug as string;
+  const queryClient = useQueryClient();
 
   const [currentComparison, setCurrentComparison] =
     useState<ComparisonState | null>(null);
@@ -586,6 +587,14 @@ export default function SortPage() {
       // Clear saved progress for this specific filter combination
       const progressKey = generateProgressKey(sorterId, currentFilterSlugs);
       localStorage.removeItem(progressKey);
+
+      // Invalidate sorter data cache to show new ranking in recent rankings
+      queryClient.invalidateQueries({
+        queryKey: ["sorter", sorterSlug],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["sorter", sorterSlug, "recent-results"],
+      });
 
       // Redirect to results page
       router.push(`/rankings/${resultId}`);
