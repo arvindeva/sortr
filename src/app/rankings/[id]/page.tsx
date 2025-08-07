@@ -486,6 +486,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
             </Button>
           )}
           <ShareButton
+            hideTextOnMobile
             rankingData={{
               sorterTitle: sorter.title,
               username: result.username,
@@ -498,6 +499,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
             <DeleteRankingButton
               rankingId={result.id}
               sorterTitle={sorter.title}
+              hideTextOnMobile
             />
           )}
         </div>

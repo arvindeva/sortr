@@ -18,11 +18,13 @@ import { toast } from "sonner";
 interface DeleteRankingButtonProps {
   rankingId: string;
   sorterTitle: string;
+  hideTextOnMobile?: boolean;
 }
 
 export function DeleteRankingButton({
   rankingId,
   sorterTitle,
+  hideTextOnMobile = false,
 }: DeleteRankingButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -57,9 +59,13 @@ export function DeleteRankingButton({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="neutral" size="sm">
+        <Button 
+          variant="neutral" 
+          size="sm"
+          className={hideTextOnMobile ? "md:w-auto w-10 h-10 px-0" : ""}
+        >
           <Trash2 size={16} />
-          Delete
+          <span className={hideTextOnMobile ? "hidden md:inline md:ml-2" : ""}>Delete</span>
         </Button>
       </DialogTrigger>
       <DialogContent>

@@ -18,7 +18,8 @@ interface RankedItem {
 }
 
 interface ShareButtonProps {
-  size?: "sm" | "default" | "lg";
+  size?: "sm" | "default" | "lg" | "icon";
+  hideTextOnMobile?: boolean;
   rankingData?: {
     sorterTitle: string;
     username: string;
@@ -30,6 +31,7 @@ interface ShareButtonProps {
 
 export function ShareButton({
   size = "default",
+  hideTextOnMobile = false,
   rankingData,
 }: ShareButtonProps) {
   const { downloadImage, isGenerating } = useDownloadRankingImage();
@@ -51,9 +53,13 @@ export function ShareButton({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="neutral" size={size}>
+        <Button 
+          variant="neutral" 
+          size={size}
+          className={hideTextOnMobile ? "md:w-auto w-10 h-10 px-0" : ""}
+        >
           <Share2 size={16} />
-          Share
+          <span className={hideTextOnMobile ? "hidden md:inline md:ml-2" : ""}>Share</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-secondary-background">
