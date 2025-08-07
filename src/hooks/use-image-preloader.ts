@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { markImageAsPreloaded } from "@/lib/preload-store";
 
 export interface PreloadProgress {
   loaded: number;
@@ -38,6 +39,9 @@ export function useImagePreloader(): UseImagePreloaderReturn {
       const img = new Image();
 
       img.onload = () => {
+        // Mark image as preloaded in global store
+        markImageAsPreloaded(src);
+        
         setProgress((prev) => ({
           ...prev,
           loaded: prev.loaded + 1,
@@ -56,31 +60,9 @@ export function useImagePreloader(): UseImagePreloaderReturn {
         reject(new Error(`Failed to load image: ${src}`));
       };
 
-      // Try with crossOrigin first, fallback without if CORS fails
-      const tryLoad = (withCors: boolean) => {
-        if (withCors) {
-          img.crossOrigin = "anonymous";
-        }
-        img.src = src;
-      };
-
-      // Handle CORS failures by retrying without crossOrigin
-      const originalOnError = img.onerror;
-      img.onerror = (event) => {
-        // If this was a CORS attempt, try again without CORS
-        if (img.crossOrigin === "anonymous") {
-          img.crossOrigin = "";
-          img.onerror = originalOnError;
-          img.src = src;
-          return;
-        }
-        // If non-CORS attempt failed, call original error handler
-        if (originalOnError) {
-          originalOnError(event);
-        }
-      };
-
-      tryLoad(true);
+      // Load without CORS to match how CSS background-image loads
+      // This ensures the same cached resource is used
+      img.src = src;
     });
   }, []);
 

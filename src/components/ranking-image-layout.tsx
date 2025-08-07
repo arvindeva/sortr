@@ -148,7 +148,6 @@ export function RankingImageLayout({
                           height: "100%",
                           objectFit: "cover",
                         }}
-                        crossOrigin="anonymous"
                       />
                     ) : (
                       <span
@@ -240,8 +239,7 @@ export function RankingImageLayout({
                             height: "100%",
                             objectFit: "cover",
                           }}
-                          crossOrigin="anonymous"
-                        />
+                          />
                       ) : (
                         <span
                           style={{
