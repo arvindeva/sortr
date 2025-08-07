@@ -855,7 +855,7 @@ export default function SortPage() {
       <div className="relative grid grid-cols-2 items-stretch gap-2 px-0 md:gap-4 md:px-0">
         {/* Item A */}
         <ComparisonCard
-          className="mx-auto md:w-80"
+          className="md:mx-auto md:w-80"
           imageUrl={currentComparison.itemA.imageUrl}
           title={currentComparison.itemA.title}
           onClick={() => handleChoice(currentComparison.itemA.id)}
@@ -865,7 +865,7 @@ export default function SortPage() {
 
         {/* Item B */}
         <ComparisonCard
-          className="mx-auto md:w-80"
+          className="md:mx-auto md:w-80"
           imageUrl={currentComparison.itemB.imageUrl}
           title={currentComparison.itemB.title}
           onClick={() => handleChoice(currentComparison.itemB.id)}
