@@ -200,7 +200,7 @@ export default function TagManagement({
               type="button"
               onClick={handleAddTag}
               disabled={!inputValue.trim()}
-              className="text-foreground bg-main hover:bg-main border-border absolute top-0 right-0 bottom-0 flex w-10 items-center justify-center rounded-r-[10px] border-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="text-foreground bg-main hover:bg-main border-border absolute top-0 right-0 bottom-0 flex w-10 items-center justify-center border-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus size={16} strokeWidth={2.5} />
             </button>
