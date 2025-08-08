@@ -31,7 +31,7 @@ import {
   PanelTitle,
   PanelContent,
 } from "@/components/ui/panel";
-import { Plus, X, Image as ImageIcon, ArrowLeft, Pencil } from "lucide-react";
+import { Plus, X, Image as ImageIcon, ArrowLeft, Pencil, Loader2 } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
 import { generateUniqueId, addSuffixToFileName } from "@/lib/utils";
 import CoverImageUpload from "@/components/cover-image-upload";
@@ -877,6 +877,9 @@ export default function EditSorterForm({
                   disabled={isLoading || isUploading || !hasChanged}
                   className="min-w-[120px]"
                 >
+                  {(isLoading || isUploading) && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   {isLoading || isUploading
                     ? "Updating..."
                     : hasChanged

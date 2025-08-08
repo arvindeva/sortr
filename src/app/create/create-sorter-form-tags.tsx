@@ -31,7 +31,7 @@ import {
   PanelContent,
 } from "@/components/ui/panel";
 // Note: Image compression is now handled by the upload hook
-import { Plus, X, Image as ImageIcon } from "lucide-react";
+import { Plus, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
 import { generateUniqueId, addSuffixToFileName } from "@/lib/utils";
 import CoverImageUpload from "@/components/cover-image-upload";
@@ -917,6 +917,9 @@ export default function CreateSorterFormTags() {
                   }
                   className="w-full md:mt-4"
                 >
+                  {(isLoading || isUploading || directUpload.isUploading) && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   {isLoading || isUploading || directUpload.isUploading
                     ? "Creating..."
                     : "Create Sorter"}

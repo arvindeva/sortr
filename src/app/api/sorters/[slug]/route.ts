@@ -500,18 +500,8 @@ async function handleFileOperations(
         operation: "session→sorter (cover)",
       });
       
-      // Also copy cover thumbnail if it exists in session
-      const sessionThumbKey = sessionKey.replace(/\.([^.]+)$/, "-thumb.jpg");
-      const destThumbKey = destKey.replace(/\.([^.]+)$/, "-thumb.jpg");
-      copyOperations.push({
-        sourceKey: sessionThumbKey,
-        destKey: destThumbKey,
-        operation: "session→sorter (cover thumbnail)",
-      });
-      
       newCoverImageUrl = getR2PublicUrl(destKey);
       console.log(`📷 Cover image: session upload → ${destKey}`);
-      console.log(`📷 Cover image: session upload (thumbnail) → ${destThumbKey}`);
     } else if (validatedData.coverImageUrl === currentSorter.coverImageUrl) {
       // Case: Cover image unchanged - copy to new version
       const currentKey = extractR2KeyFromUrl(currentSorter.coverImageUrl);
@@ -527,18 +517,8 @@ async function handleFileOperations(
         operation: "copy unchanged cover",
       });
 
-      // Also copy cover thumbnail if it exists
-      const currentThumbKey = currentKey.replace(/\.([^.]+)$/, "-thumb.jpg");
-      const destThumbKey = destKey.replace(/\.([^.]+)$/, "-thumb.jpg");
-      copyOperations.push({
-        sourceKey: currentThumbKey,
-        destKey: destThumbKey,
-        operation: "copy unchanged cover (thumbnail)",
-      });
-
       newCoverImageUrl = getR2PublicUrl(destKey);
       console.log(`📷 Cover image: unchanged → ${destKey}`);
-      console.log(`📷 Cover image: unchanged (thumbnail) → ${destThumbKey}`);
     }
   } else if (validatedData.coverImageUrl?.includes("/sessions/")) {
     // Case: Adding new cover image
@@ -552,18 +532,8 @@ async function handleFileOperations(
       operation: "session→sorter (new cover)",
     });
     
-    // Also copy cover thumbnail if it exists in session
-    const sessionThumbKey = sessionKey.replace(/\.([^.]+)$/, "-thumb.jpg");
-    const destThumbKey = destKey.replace(/\.([^.]+)$/, "-thumb.jpg");
-    copyOperations.push({
-      sourceKey: sessionThumbKey,
-      destKey: destThumbKey,
-      operation: "session→sorter (new cover thumbnail)",
-    });
-    
     newCoverImageUrl = getR2PublicUrl(destKey);
     console.log(`📷 Cover image: new from session → ${destKey}`);
-    console.log(`📷 Cover image: new from session (thumbnail) → ${destThumbKey}`);
   }
 
   // ITEM IMAGES HANDLING - ALL 5 CASES

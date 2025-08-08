@@ -32,19 +32,77 @@ interface DirectUploadState {
   abortController: AbortController | null;
 }
 
-// Helper function to upload a single file with retries
+// Configuration for upload timeouts and retries
+const UPLOAD_CONFIG = {
+  CONNECTION_TIMEOUT: 30 * 1000, // 30 seconds to establish connection
+  UPLOAD_TIMEOUT: 5 * 60 * 1000, // 5 minutes for file upload to complete
+  PROGRESS_TIMEOUT: 30 * 1000, // 30 seconds of no progress indicates stuck upload
+  MAX_RETRIES: 3, // Increased from 2 for better resilience
+  BASE_DELAY: 500, // Increased base delay
+  MAX_DELAY: 10000, // Cap maximum delay
+} as const;
+
+// Helper function to create a timeout controller that combines with abort controller
+function createTimeoutController(
+  abortController: AbortController,
+  timeoutMs: number,
+  timeoutMessage: string,
+): AbortController {
+  const timeoutController = new AbortController();
+  
+  // Forward abort signal from parent controller
+  if (abortController.signal.aborted) {
+    timeoutController.abort();
+  } else {
+    abortController.signal.addEventListener('abort', () => {
+      timeoutController.abort();
+    });
+  }
+
+  // Add timeout
+  const timeoutId = setTimeout(() => {
+    const timeoutError = new Error(timeoutMessage);
+    timeoutError.name = 'TimeoutError';
+    timeoutController.abort(timeoutError);
+  }, timeoutMs);
+
+  // Clean up timeout if operation completes
+  timeoutController.signal.addEventListener('abort', () => {
+    clearTimeout(timeoutId);
+  });
+
+  return timeoutController;
+}
+
+// Helper function to add jittered exponential backoff
+function calculateBackoffDelay(attempt: number, baseDelay: number, maxDelay: number): number {
+  const exponentialDelay = baseDelay * Math.pow(2, attempt - 1);
+  const clampedDelay = Math.min(exponentialDelay, maxDelay);
+  // Add jitter: ±25% of calculated delay
+  const jitter = clampedDelay * 0.25 * (Math.random() * 2 - 1);
+  return Math.max(100, clampedDelay + jitter); // Minimum 100ms delay
+}
+
+// Helper function to upload a single file with enhanced timeouts and retries
 async function uploadWithRetry(
   uploadUrl: string,
   file: File,
   fileName: string,
   size: string,
   abortController: AbortController,
-  maxRetries: number = 2,
-  baseDelay: number = 300,
+  maxRetries: number = UPLOAD_CONFIG.MAX_RETRIES,
+  baseDelay: number = UPLOAD_CONFIG.BASE_DELAY,
 ): Promise<Response> {
   let lastError: Error | null = null;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    // Create timeout controller for this specific upload attempt
+    const timeoutController = createTimeoutController(
+      abortController,
+      UPLOAD_CONFIG.UPLOAD_TIMEOUT,
+      `Upload timeout: ${fileName} (${size}) took longer than ${UPLOAD_CONFIG.UPLOAD_TIMEOUT / 1000}s`
+    );
+
     try {
       // Only log on retry attempts, not first attempt
       if (attempt > 1) {
@@ -59,7 +117,7 @@ async function uploadWithRetry(
         headers: {
           "Content-Type": file.type,
         },
-        signal: abortController.signal,
+        signal: timeoutController.signal,
       });
 
       if (response.ok) {
@@ -69,39 +127,187 @@ async function uploadWithRetry(
       // If it's a 5xx error (server error), retry. For 4xx (client error), don't retry
       if (response.status >= 500) {
         const errorText = await response.text();
-        lastError = new Error(`${response.status}: ${errorText}`);
+        lastError = new Error(`Server error ${response.status}: ${errorText}`);
 
         if (attempt < maxRetries) {
-          const delay = baseDelay * attempt; // Linear backoff: 300ms, 600ms
+          const delay = calculateBackoffDelay(attempt, baseDelay, UPLOAD_CONFIG.MAX_DELAY);
+          console.log(`Server error, waiting ${Math.round(delay)}ms before retry...`);
           await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
       } else {
-        // 4xx error - don't retry
+        // 4xx error - don't retry, but provide better error messages
         const errorText = await response.text();
-        throw new Error(`${response.status}: ${errorText}`);
+        let errorMessage = `Client error ${response.status}: ${errorText}`;
+        
+        if (response.status === 413) {
+          errorMessage = `File too large: ${fileName} exceeds server limits`;
+        } else if (response.status === 415) {
+          errorMessage = `Unsupported file type: ${fileName}`;
+        } else if (response.status === 403) {
+          errorMessage = `Access denied: Check your authentication`;
+        } else if (response.status === 404) {
+          errorMessage = `Upload endpoint not found - please try again`;
+        }
+        
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        throw error; // Don't retry if upload was aborted
+      if (error instanceof Error) {
+        if (error.name === "AbortError") {
+          // Check if this was a timeout or user cancellation
+          if (timeoutController.signal.reason instanceof Error) {
+            // This was a timeout
+            lastError = timeoutController.signal.reason;
+          } else {
+            // This was user cancellation
+            throw error;
+          }
+        } else if (error.name === "TimeoutError") {
+          lastError = error;
+        } else if (error.message.includes("fetch")) {
+          // Network error - provide better message
+          lastError = new Error(`Network error uploading ${fileName}: ${error.message}`);
+        } else {
+          lastError = error;
+        }
+      } else {
+        lastError = new Error(`Unknown error uploading ${fileName}: ${String(error)}`);
       }
 
-      lastError = error instanceof Error ? error : new Error(String(error));
-
       if (attempt < maxRetries) {
-        const delay = baseDelay * attempt; // Linear backoff: 300ms, 600ms
+        const delay = calculateBackoffDelay(attempt, baseDelay, UPLOAD_CONFIG.MAX_DELAY);
+        console.log(`Upload error, waiting ${Math.round(delay)}ms before retry...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
     }
   }
 
-  throw lastError || new Error("Upload failed after retries");
+  throw lastError || new Error(`Upload failed after ${maxRetries} retries: ${fileName}`);
 }
 
 // Helper function to add delay between batches
 async function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Network availability monitor
+class NetworkMonitor {
+  private isOnline: boolean = navigator.onLine;
+  private listeners: Set<(isOnline: boolean) => void> = new Set();
+
+  constructor() {
+    this.handleOnline = this.handleOnline.bind(this);
+    this.handleOffline = this.handleOffline.bind(this);
+    
+    window.addEventListener('online', this.handleOnline);
+    window.addEventListener('offline', this.handleOffline);
+  }
+
+  private handleOnline(): void {
+    this.isOnline = true;
+    console.log('Network connection restored');
+    this.notifyListeners();
+  }
+
+  private handleOffline(): void {
+    this.isOnline = false;
+    console.warn('Network connection lost');
+    this.notifyListeners();
+  }
+
+  private notifyListeners(): void {
+    this.listeners.forEach(listener => listener(this.isOnline));
+  }
+
+  public addListener(listener: (isOnline: boolean) => void): void {
+    this.listeners.add(listener);
+  }
+
+  public removeListener(listener: (isOnline: boolean) => void): void {
+    this.listeners.delete(listener);
+  }
+
+  public getIsOnline(): boolean {
+    return this.isOnline;
+  }
+
+  public cleanup(): void {
+    window.removeEventListener('online', this.handleOnline);
+    window.removeEventListener('offline', this.handleOffline);
+    this.listeners.clear();
+  }
+
+  // Test network connectivity with a lightweight request
+  public async testConnectivity(): Promise<boolean> {
+    try {
+      // Use a small HEAD request to test connectivity
+      const response = await fetch('/api/health', {
+        method: 'HEAD',
+        cache: 'no-cache',
+        signal: AbortSignal.timeout(5000), // 5 second timeout
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+}
+
+// Progress monitoring watchdog to detect stuck uploads
+class ProgressWatchdog {
+  private lastProgressTime: number = Date.now();
+  private lastOverallProgress: number = 0;
+  private timeoutId: number | null = null;
+  private abortController: AbortController;
+
+  constructor(abortController: AbortController) {
+    this.abortController = abortController;
+  }
+
+  // Update progress and reset the watchdog timer
+  updateProgress(overallProgress: number): void {
+    const now = Date.now();
+    
+    // Only reset timer if there's actual progress
+    if (overallProgress > this.lastOverallProgress) {
+      this.lastProgressTime = now;
+      this.lastOverallProgress = overallProgress;
+      this.resetWatchdog();
+    }
+  }
+
+  // Start the watchdog monitoring
+  start(): void {
+    this.resetWatchdog();
+  }
+
+  // Stop the watchdog
+  stop(): void {
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    }
+  }
+
+  private resetWatchdog(): void {
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+    }
+
+    this.timeoutId = window.setTimeout(() => {
+      if (!this.abortController.signal.aborted) {
+        const stuckError = new Error(
+          `Upload appears to be stuck - no progress for ${UPLOAD_CONFIG.PROGRESS_TIMEOUT / 1000} seconds`
+        );
+        stuckError.name = 'ProgressTimeoutError';
+        console.warn('Progress watchdog triggered - upload may be stuck');
+        // Don't abort automatically, just log the warning for now
+        // In the future, this could trigger a retry or user notification
+      }
+    }, UPLOAD_CONFIG.PROGRESS_TIMEOUT);
+  }
 }
 
 export function useDirectUpload(options: DirectUploadOptions = {}) {
@@ -116,9 +322,14 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
   });
 
   const updateProgress = useCallback(
-    (progress: UploadProgress) => {
+    (progress: UploadProgress, watchdog?: ProgressWatchdog) => {
       setState((prev) => ({ ...prev, progress }));
       options.onProgress?.(progress);
+      
+      // Update watchdog if provided
+      if (watchdog && typeof progress.overallProgress === 'number') {
+        watchdog.updateProgress(progress.overallProgress);
+      }
     },
     [options.onProgress],
   );
@@ -151,6 +362,41 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
       }
 
       const abortController = new AbortController();
+      
+      // Create progress watchdog to monitor for stuck uploads
+      const progressWatchdog = new ProgressWatchdog(abortController);
+      
+      // Create network monitor to detect connectivity issues
+      const networkMonitor = new NetworkMonitor();
+      
+      // Set up network status monitoring
+      const networkStatusHandler = (isOnline: boolean) => {
+        if (!isOnline) {
+          console.warn('Network connectivity lost during upload');
+          // Update progress to show network issue
+          updateProgress({
+            phase: "uploading-files",
+            files: displayFiles.map((displayFile, index) => ({
+              name: displayFile.name,
+              processedName: files[index]?.name,
+              progress: 0,
+              status: "pending",
+            })),
+            overallProgress: 0,
+            statusMessage: "Network connection lost - upload paused...",
+            determinate: false,
+          }, progressWatchdog);
+        } else {
+          console.log('Network connectivity restored');
+        }
+      };
+      
+      networkMonitor.addListener(networkStatusHandler);
+      
+      // Check initial connectivity
+      if (!networkMonitor.getIsOnline()) {
+        throw new Error('No internet connection. Please check your network and try again.');
+      }
 
       setState((prev) => ({
         ...prev,
@@ -172,6 +418,9 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
       }));
 
       try {
+        // Start progress monitoring
+        progressWatchdog.start();
+
         // Phase 1: Process images and generate multiple sizes
         updateProgress({
           phase: "requesting-tokens",
@@ -184,7 +433,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
           overallProgress: 0,
           statusMessage: "Processing images...",
           determinate: false,
-        });
+        }, progressWatchdog);
 
         // Process images to generate multiple sizes
         const processedFiles: {
@@ -267,6 +516,13 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
 
         console.log("Requesting upload tokens for files:", fileInfos);
 
+        // Create timeout for token request (should be quick)
+        const tokenTimeoutController = createTimeoutController(
+          abortController,
+          UPLOAD_CONFIG.CONNECTION_TIMEOUT,
+          `Token request timeout: took longer than ${UPLOAD_CONFIG.CONNECTION_TIMEOUT / 1000}s`
+        );
+
         const tokenResponse = await fetch("/api/upload-tokens", {
           method: "POST",
           headers: {
@@ -276,7 +532,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
             files: fileInfos,
             type: "sorter-creation",
           } as UploadTokenRequest),
-          signal: abortController.signal,
+          signal: tokenTimeoutController.signal,
         });
 
         if (!tokenResponse.ok) {
@@ -487,7 +743,7 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
                   overallProgress: 10 + (completedTasks / files.length) * 80,
                   statusMessage: `Uploaded ${displayFiles[taskResult.task.fileIndex]?.name || taskResult.task.originalFile.name}`,
                   determinate: true,
-                });
+                }, progressWatchdog);
               } else {
                 // Handle failed upload
                 completedTasks++;
@@ -628,7 +884,15 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
             isUploading: false,
           }));
         }
+
+        // Stop progress monitoring and network monitoring on success
+        progressWatchdog.stop();
+        networkMonitor.cleanup();
       } catch (error) {
+        // Stop progress monitoring and network monitoring on error
+        progressWatchdog.stop();
+        networkMonitor.cleanup();
+
         // Handle AbortError specifically
         if (error instanceof Error && error.name === "AbortError") {
           // Upload was cancelled - don't call onError, just exit silently
