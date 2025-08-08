@@ -20,6 +20,7 @@ import {
 } from "@/lib/r2";
 import { generateTagSlug, generateSorterItemSlug } from "@/lib/utils";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 export async function GET(
   request: NextRequest,
@@ -224,6 +225,15 @@ export async function DELETE(
     // All versioned data remains in database for rankings to reference
     // Future cleanup will only remove versions with no ranking references
 
+    // Revalidate relevant paths after sorter deletion
+    revalidatePath(`/sorter/${slug}`); // The sorter page (will show 404)
+    revalidatePath('/'); // Homepage shows popular sorters
+    revalidatePath('/browse'); // Browse page shows all sorters
+    if (userData[0].username) {
+      revalidatePath(`/user/${userData[0].username}`); // Creator's profile page
+      console.log(`♻️ Revalidated paths for deleted sorter: ${slug}`);
+    }
+
     return Response.json({
       message: "Sorter deleted successfully",
       title: sorter.title,
@@ -312,6 +322,15 @@ export async function PUT(
       newVersion,
       currentUserId,
     );
+
+    // Revalidate relevant paths after sorter update
+    revalidatePath(`/sorter/${slug}`); // The sorter page itself
+    revalidatePath('/'); // Homepage shows popular sorters  
+    revalidatePath('/browse'); // Browse page shows all sorters
+    if (userData[0].username) {
+      revalidatePath(`/user/${userData[0].username}`); // Creator's profile page
+      console.log(`♻️ Revalidated paths for updated sorter: ${slug}`);
+    }
 
     return Response.json({
       message: "Sorter updated successfully",

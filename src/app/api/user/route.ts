@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
-import { user } from "@/db/schema";
+import { user, sorters } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { updateUsernameSchema } from "@/lib/validations";
@@ -102,6 +102,12 @@ export async function PATCH(request: NextRequest) {
     // Update username
     await db.update(user).set({ username }).where(eq(user.id, userId));
 
+    // Get all user's sorters to revalidate their pages
+    const userSorters = await db
+      .select({ slug: sorters.slug })
+      .from(sorters)
+      .where(eq(sorters.userId, userId));
+
     // Revalidate both old and new profile pages if username changed
     if (oldUsername && oldUsername !== username) {
       revalidatePath(`/user/${oldUsername}`);
@@ -111,6 +117,17 @@ export async function PATCH(request: NextRequest) {
       revalidatePath(`/user/${username}`);
       console.log(`♻️ Revalidated new profile path: /user/${username}`);
     }
+
+    // Revalidate all user's sorter pages (they show creatorUsername)
+    for (const sorter of userSorters) {
+      revalidatePath(`/sorter/${sorter.slug}`);
+      console.log(`♻️ Revalidated sorter page: /sorter/${sorter.slug}`);
+    }
+
+    // Revalidate global pages that show usernames
+    revalidatePath('/'); // Homepage shows popular sorters with usernames
+    revalidatePath('/browse'); // Browse page shows sorters with usernames
+    console.log(`♻️ Revalidated homepage and browse page for username change`);
 
     return NextResponse.json({
       message: "Username updated successfully",

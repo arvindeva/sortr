@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
-import { user } from "@/db/schema";
+import { user, sorters } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { deleteFromR2, getAvatarKey } from "@/lib/r2";
 import { revalidatePath } from "next/cache";
@@ -53,6 +53,30 @@ export async function POST(request: NextRequest) {
 
     // Update user's image URL to null in database
     await db.update(user).set({ image: null }).where(eq(user.id, userId));
+
+    // Get all user's sorters to revalidate their pages
+    const userSorters = await db
+      .select({ slug: sorters.slug })
+      .from(sorters)
+      .where(eq(sorters.userId, userId));
+
+    // Revalidate user profile page
+    if (username) {
+      revalidatePath(`/user/${username}`);
+      console.log(`♻️ Revalidated profile page for avatar removal: /user/${username}`);
+    }
+
+    // Revalidate all user's sorter pages (they may show user avatar)
+    for (const sorter of userSorters) {
+      revalidatePath(`/sorter/${sorter.slug}`);
+      console.log(`♻️ Revalidated sorter page for avatar removal: /sorter/${sorter.slug}`);
+    }
+
+    // Revalidate global pages that may show avatars
+    revalidatePath('/'); // Homepage
+    revalidatePath('/browse'); // Browse page
+    console.log(`♻️ Revalidated homepage and browse page for avatar removal`);
+
     return NextResponse.json({
       success: true,
       message: "Avatar removed successfully",

@@ -47,6 +47,7 @@ import {
   processSorterItemImage,
   validateSorterItemImageBuffer,
 } from "@/lib/image-processing";
+import { revalidatePath } from "next/cache";
 
 const MAX_COVER_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_ITEM_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -158,6 +159,15 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
     console.log(
       `✅ Tag-based sorter created: ${result.sorter.title} (${result.sorter.slug})`,
     );
+
+    // Revalidate relevant paths for new sorter
+    revalidatePath('/'); // Homepage shows popular sorters
+    revalidatePath('/browse'); // Browse page shows all sorters
+    revalidatePath(`/sorter/${result.sorter.slug}`); // New sorter page
+    if (userData.username) {
+      revalidatePath(`/user/${userData.username}`); // Creator's profile page
+      console.log(`♻️ Revalidated paths for new sorter: ${result.sorter.slug}`);
+    }
 
     return NextResponse.json({
       success: true,
@@ -524,6 +534,22 @@ export async function POST(request: NextRequest) {
     });
 
     console.log("💾 Database transaction completed successfully");
+
+    // Revalidate relevant paths for new sorter
+    revalidatePath('/'); // Homepage shows popular sorters
+    revalidatePath('/browse'); // Browse page shows all sorters
+    revalidatePath(`/sorter/${result.sorter.slug}`); // New sorter page
+    // Get user data for profile revalidation
+    const creatorData = await db
+      .select({ username: user.username })
+      .from(user)
+      .where(eq(user.id, userData[0].id))
+      .limit(1);
+    
+    if (creatorData.length > 0 && creatorData[0].username) {
+      revalidatePath(`/user/${creatorData[0].username}`); // Creator's profile page
+      console.log(`♻️ Revalidated paths for new sorter: ${result.sorter.slug}`);
+    }
 
     return NextResponse.json({
       success: true,

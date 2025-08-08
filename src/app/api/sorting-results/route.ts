@@ -4,6 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,6 +66,11 @@ export async function POST(request: NextRequest) {
       .update(sorters)
       .set({ completionCount: sql`${sorters.completionCount} + 1` })
       .where(eq(sorters.id, sorterId));
+
+    // Revalidate pages that show completion counts
+    revalidatePath('/'); // Homepage shows popular sorters by completion count
+    revalidatePath('/browse'); // Browse page shows sorters with stats
+    console.log(`♻️ Revalidated homepage and browse page for completion count update`);
 
     return Response.json({
       resultId: result[0].id,
