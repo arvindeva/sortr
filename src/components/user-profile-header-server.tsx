@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { PageHeader } from "@/components/ui/page-header";
 import { EditUsernameButton } from "@/components/edit-username-button";
 import { AvatarManager } from "@/components/avatar-manager";
@@ -15,6 +18,7 @@ export function UserProfileHeaderServer({
   isOwnProfile,
   currentImage,
 }: UserProfileHeaderServerProps) {
+  const [displayedUsername, setDisplayedUsername] = useState(username);
   return (
     <section className="mb-4 md:mb-8">
       <div className="flex items-center space-x-3 py-4 md:space-x-6">
@@ -24,13 +28,13 @@ export function UserProfileHeaderServer({
             {currentImage ? (
               <img
                 src={currentImage}
-                alt={`${username}'s avatar`}
+                alt={`${displayedUsername}'s avatar`}
                 className="h-full w-full object-cover"
               />
             ) : (
               <div className="bg-secondary-background text-main flex h-full w-full items-center justify-center">
                 <span className="text-4xl font-bold">
-                  {username?.charAt(0).toUpperCase()}
+                  {displayedUsername?.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
@@ -47,9 +51,14 @@ export function UserProfileHeaderServer({
         {/* User Info */}
         <div className="flex-1">
           <div className="mb-2 flex items-center gap-2">
-            <PageHeader>{username}</PageHeader>
+            <PageHeader>{displayedUsername}</PageHeader>
             {/* Edit Username Button - Only show for own profile */}
-            {isOwnProfile && <EditUsernameButton currentUsername={username} />}
+            {isOwnProfile && (
+              <EditUsernameButton 
+                currentUsername={displayedUsername} 
+                onUsernameUpdate={setDisplayedUsername}
+              />
+            )}
           </div>
           <p className="font-medium">User since {userSince}</p>
         </div>

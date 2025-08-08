@@ -17,6 +17,7 @@ import { Pencil, Check } from "lucide-react";
 
 interface EditUsernameButtonProps {
   currentUsername: string;
+  onUsernameUpdate?: (newUsername: string) => void;
 }
 
 // Update username mutation
@@ -40,6 +41,7 @@ const updateUsernameMutation = async (username: string) => {
 
 export function EditUsernameButton({
   currentUsername,
+  onUsernameUpdate,
 }: EditUsernameButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [newUsername, setNewUsername] = useState(currentUsername);
@@ -50,9 +52,10 @@ export function EditUsernameButton({
     onSuccess: (data) => {
       // Close dialog immediately to prevent further interaction
       setIsOpen(false);
-      // Navigate to new username URL and refresh to get updated data
+      // Optimistic UI update - immediately show new username
+      onUsernameUpdate?.(data.username);
+      // Navigate to new username URL (no cache-busting needed with optimistic UI)
       router.push(`/user/${data.username}`);
-      router.refresh();
     },
   });
 
