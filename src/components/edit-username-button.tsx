@@ -46,6 +46,8 @@ export function EditUsernameButton({
   const mutation = useMutation({
     mutationFn: updateUsernameMutation,
     onSuccess: (data) => {
+      // Close dialog immediately to prevent further interaction
+      setIsOpen(false);
       // Redirect to new username URL with full page refresh
       window.location.href = `/user/${data.username}`;
     },
