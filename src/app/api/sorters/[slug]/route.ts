@@ -14,9 +14,13 @@ import { authOptions } from "@/lib/auth";
 import { createSorterSchema } from "@/lib/validations";
 import {
   copyR2ObjectsInParallel,
-  getVersionedItemKey,
-  getVersionedCoverKey,
   getR2PublicUrl,
+  getFlatCoverKey,
+  getFlatItemKey,
+  getFlatItemThumbKey,
+  generateUniqueFileId,
+  extractSessionKeyFromUrl,
+  extractR2KeyFromUrl,
 } from "@/lib/r2";
 import { generateTagSlug, generateSorterItemSlug } from "@/lib/utils";
 import { z } from "zod";
@@ -315,8 +319,8 @@ export async function PUT(
       `📈 Creating new version: v${currentSorter.version} → v${newVersion}`,
     );
 
-    // NEW SIMPLE EDIT FLOW - ALWAYS COPY EVERYTHING
-    const result = await handleEditSorterSimple(
+    // OPTIMIZED EDIT FLOW - FLAT STRUCTURE + COPY-ON-WRITE
+    const result = await handleEditSorter(
       validatedData,
       currentSorter,
       newVersion,
@@ -351,21 +355,23 @@ export async function PUT(
   }
 }
 
-// NEW SIMPLE EDIT HANDLER - FOLLOWS 5-CASE FLOW FROM PLAN
-async function handleEditSorterSimple(
+// OPTIMIZED EDIT HANDLER - FLAT STRUCTURE + COPY-ON-WRITE
+async function handleEditSorter(
   validatedData: any,
   currentSorter: any,
   newVersion: number,
   currentUserId: string,
 ) {
-  console.log(`🔧 Starting simple edit handler for sorter ${currentSorter.id}`);
+  console.log(`🔧 Starting optimized edit handler for sorter ${currentSorter.id}`);
 
-  // Get current items to determine file operations needed
+  // Get current items to determine what's changed
   const currentItems = await db
     .select({
       id: sorterItems.id,
       title: sorterItems.title,
+      slug: sorterItems.slug,
       imageUrl: sorterItems.imageUrl,
+      version: sorterItems.version,
     })
     .from(sorterItems)
     .where(eq(sorterItems.sorterId, currentSorter.id));
@@ -373,7 +379,7 @@ async function handleEditSorterSimple(
   console.log(`📋 Current items: ${currentItems.length} items`);
   console.log(`📋 New items: ${validatedData.items.length} items`);
 
-  // STEP 1: FILE OPERATIONS FIRST (fail early if files fail)
+  // STEP 1: OPTIMIZED FILE OPERATIONS (only copy/upload changed files)
   const fileOperationResults = await handleFileOperations(
     currentSorter,
     currentItems,
@@ -382,10 +388,10 @@ async function handleEditSorterSimple(
   );
 
   console.log(
-    `📁 File operations completed: ${fileOperationResults.operations} operations`,
+    `📁 File operations completed: ${fileOperationResults.operations} operations (optimized)`,
   );
 
-  // STEP 2: DATABASE TRANSACTION (after files succeed)
+  // STEP 2: DATABASE TRANSACTION (using item-level versioning)
   const result = await db.transaction(async (trx) => {
     // 1. Archive current version to sorterHistory (if not already archived)
     const existingHistory = await trx
@@ -414,7 +420,7 @@ async function handleEditSorterSimple(
       console.log(`📚 Version v${currentSorter.version} already in history`);
     }
 
-    // 2. Update main sorter record
+    // 2. Update main sorter record (metadata only)
     await trx
       .update(sorters)
       .set({
@@ -457,40 +463,49 @@ async function handleEditSorterSimple(
       console.log(`🏷️ No tags to update`);
     }
 
-    // 5. Update items (delete old, insert new with new URLs)
+    // 5. Update items with ITEM-LEVEL VERSIONING (delete old, insert new)
     await trx
       .delete(sorterItems)
       .where(eq(sorterItems.sorterId, currentSorter.id));
 
-    const newItems = validatedData.items.map((item: any, index: number) => ({
-      sorterId: currentSorter.id,
-      version: newVersion,
-      title: item.title,
-      imageUrl: fileOperationResults.newItemImageUrls[index] || null,
-      tagSlugs: item.tagSlugs || [],
-      sortOrder: index,
-    }));
+    const newItems = validatedData.items.map((item: any, index: number) => {
+      const currentItem = currentItems.find(existing => existing.title === item.title);
+      const hasChanged = !currentItem || 
+        currentItem.title !== item.title ||
+        currentItem.imageUrl !== fileOperationResults.newItemImageUrls[index];
+
+      return {
+        sorterId: currentSorter.id,
+        version: hasChanged ? newVersion : (currentItem?.version || newVersion), // Item-level versioning
+        title: item.title,
+        slug: generateSorterItemSlug(item.title),
+        imageUrl: fileOperationResults.newItemImageUrls[index] || null,
+        tagSlugs: item.tagSlugs || [],
+        sortOrder: index,
+      };
+    });
+    
     await trx.insert(sorterItems).values(newItems);
 
-    console.log(`📝 Updated ${newItems.length} items`);
+    console.log(`📝 Updated ${newItems.length} items with item-level versioning`);
 
     return { newVersion };
   });
 
   console.log(
-    `✅ Simple edit completed successfully - v${currentSorter.version} → v${result.newVersion}`,
+    `✅ Optimized edit completed successfully - v${currentSorter.version} → v${result.newVersion}`,
   );
   return result;
 }
 
-// HANDLE ALL FILE OPERATIONS FOR THE 5-CASE FLOW
+// OPTIMIZED FILE OPERATIONS - FLAT STRUCTURE + COPY-ON-WRITE
 async function handleFileOperations(
   currentSorter: any,
   currentItems: any[],
   validatedData: any,
   newVersion: number,
 ) {
-  console.log(`📁 Starting file operations for v${newVersion}`);
+  console.log(`📁 Starting optimized file operations for sorter ${currentSorter.id}`);
 
   const copyOperations: Array<{
     sourceKey: string;
@@ -502,150 +517,79 @@ async function handleFileOperations(
     validatedData.items.length,
   );
 
-  // COVER IMAGE HANDLING
-  if (currentSorter.coverImageUrl) {
-    if (validatedData.coverImageUrl?.includes("/sessions/")) {
-      // Case: New cover image from session upload
-      const sessionKey = extractSessionKeyFromUrl(validatedData.coverImageUrl);
-      const destKey = getVersionedCoverKey(
-        currentSorter.id.toString(),
-        newVersion,
-      );
-      
-      // Copy main cover image
-      copyOperations.push({
-        sourceKey: sessionKey,
-        destKey,
-        operation: "session→sorter (cover)",
-      });
-      
-      newCoverImageUrl = getR2PublicUrl(destKey);
-      console.log(`📷 Cover image: session upload → ${destKey}`);
-    } else if (validatedData.coverImageUrl === currentSorter.coverImageUrl) {
-      // Case: Cover image unchanged - copy to new version
-      const currentKey = extractR2KeyFromUrl(currentSorter.coverImageUrl);
-      const destKey = getVersionedCoverKey(
-        currentSorter.id.toString(),
-        newVersion,
-      );
-
-      // Copy main cover image
-      copyOperations.push({
-        sourceKey: currentKey,
-        destKey,
-        operation: "copy unchanged cover",
-      });
-
-      newCoverImageUrl = getR2PublicUrl(destKey);
-      console.log(`📷 Cover image: unchanged → ${destKey}`);
-    }
-  } else if (validatedData.coverImageUrl?.includes("/sessions/")) {
-    // Case: Adding new cover image
+  // COVER IMAGE - only copy/upload if changed
+  if (validatedData.coverImageUrl?.includes("/sessions/")) {
+    // New cover from upload - copy to flat structure with unique ID
     const sessionKey = extractSessionKeyFromUrl(validatedData.coverImageUrl);
-    const destKey = getVersionedCoverKey(currentSorter.id, newVersion);
-    
-    // Copy main cover image
+    const uniqueId = generateUniqueFileId();
+    const destKey = getFlatCoverKey(currentSorter.id, uniqueId);
     copyOperations.push({
       sourceKey: sessionKey,
       destKey,
-      operation: "session→sorter (new cover)",
+      operation: "session→flat (cover)",
     });
-    
     newCoverImageUrl = getR2PublicUrl(destKey);
-    console.log(`📷 Cover image: new from session → ${destKey}`);
+    console.log(`📷 Cover image: NEW from session → ${destKey}`);
+  } else if (validatedData.coverImageUrl === currentSorter.coverImageUrl) {
+    // Cover unchanged - keep existing URL, no copy needed
+    newCoverImageUrl = currentSorter.coverImageUrl;
+    console.log(`📷 Cover image: UNCHANGED - no copy needed`);
+  } else if (!validatedData.coverImageUrl && currentSorter.coverImageUrl) {
+    // Cover removed - no copy needed
+    newCoverImageUrl = null;
+    console.log(`📷 Cover image: REMOVED - no copy needed`);
   }
 
-  // ITEM IMAGES HANDLING - ALL 5 CASES
+  // ITEM IMAGES - only process changed/new items
   validatedData.items.forEach((newItem: any, index: number) => {
-    const currentItem = currentItems.find(
-      (item) => item.title === newItem.title,
-    );
-
+    const currentItem = currentItems.find(item => item.title === newItem.title);
+    
     if (newItem.imageUrl?.includes("/sessions/")) {
-      // Case 5: Items added (with image) - session upload
+      // NEW IMAGE from upload session
       const sessionKey = extractSessionKeyFromUrl(newItem.imageUrl);
+      const uniqueId = generateUniqueFileId(); // timestamp + random
       const itemSlug = generateSorterItemSlug(newItem.title);
-      const destKey = getVersionedItemKey(
-        currentSorter.id.toString(),
-        itemSlug,
-        newVersion,
-      );
+      const destKey = getFlatItemKey(currentSorter.id, itemSlug, uniqueId);
+      const destThumbKey = getFlatItemThumbKey(currentSorter.id, itemSlug, uniqueId);
       
-      // Copy main image
+      // Copy main + thumbnail
       copyOperations.push({
         sourceKey: sessionKey,
         destKey,
-        operation: `session→sorter (item ${index})`,
+        operation: `session→flat (item ${index})`,
       });
-      
-      // Also copy thumbnail version if it exists in session
-      const sessionThumbKey = sessionKey.replace(/\.([^.]+)$/, "-thumb.jpg");
-      const destThumbKey = destKey.replace(/\.([^.]+)$/, "-thumb.jpg");
       copyOperations.push({
-        sourceKey: sessionThumbKey,
+        sourceKey: sessionKey.replace('.jpg', '-thumb.jpg'),
         destKey: destThumbKey,
-        operation: `session→sorter (item ${index} thumbnail)`,
+        operation: `session→flat (item ${index} thumb)`,
       });
       
       newItemImageUrls[index] = getR2PublicUrl(destKey);
       console.log(
-        `📝 Item ${index} "${newItem.title}": session upload → ${destKey}`,
+        `📝 Item ${index} "${newItem.title}": NEW from session → ${destKey}`,
       );
-      console.log(
-        `📝 Item ${index} "${newItem.title}": session upload (thumbnail) → ${destThumbKey}`,
-      );
+      
     } else if (currentItem?.imageUrl) {
-      // Cases 1 & 2: Items left untouched OR name changed (copy existing image)
-      const currentKey = extractR2KeyFromUrl(currentItem.imageUrl);
-
-      let destKey: string;
-      let operation: string;
-
-      if (currentItem.title === newItem.title) {
-        // Case 1: Item unchanged - preserve original slug structure but new version
-        const originalFileName = currentKey.split("/").pop() || "item.jpg";
-        destKey = `sorters/${currentSorter.id}/v${newVersion}/${originalFileName}`;
-        operation = `copy unchanged (item ${index})`;
-      } else {
-        // Case 2: Item renamed - need new slug
-        const itemSlug = generateSorterItemSlug(newItem.title);
-        destKey = getVersionedItemKey(
-          currentSorter.id.toString(),
-          itemSlug,
-          newVersion,
-        );
-        operation = `copy + rename (item ${index})`;
-      }
-
-      // Copy main image
-      copyOperations.push({ sourceKey: currentKey, destKey, operation });
-
-      // Also copy thumbnail version if it exists
-      const currentThumbKey = currentKey.replace(/\.([^.]+)$/, "-thumb.jpg");
-      const destThumbKey = destKey.replace(/\.([^.]+)$/, "-thumb.jpg");
-      copyOperations.push({
-        sourceKey: currentThumbKey,
-        destKey: destThumbKey,
-        operation: `${operation} (thumbnail)`,
-      });
-
-      newItemImageUrls[index] = getR2PublicUrl(destKey);
+      // EXISTING IMAGE - keep same URL, no copy needed!
+      newItemImageUrls[index] = currentItem.imageUrl;
       console.log(
-        `📝 Item ${index} "${newItem.title}": ${operation} → ${destKey}`,
+        `📝 Item ${index} "${newItem.title}": UNCHANGED - no copy needed (${currentItem.imageUrl})`,
       );
-      console.log(
-        `📝 Item ${index} "${newItem.title}": ${operation} (thumbnail) → ${destThumbKey}`,
-      );
+      // No copy operation = MASSIVE performance gain
+      
     } else {
-      // Case 4: Items added (no image) OR Case 3: Items removed (no action needed)
+      // No image
       newItemImageUrls[index] = null;
       console.log(`📝 Item ${index} "${newItem.title}": no image`);
     }
   });
 
-  // EXECUTE ALL FILE OPERATIONS
+  // Execute ONLY the necessary copy operations
+  // Result: 60-item edit with 1 new image = 2 operations instead of 122
   if (copyOperations.length > 0) {
-    console.log(`🚀 Executing ${copyOperations.length} R2 copy operations:`);
+    console.log(
+      `🚀 Executing ${copyOperations.length} R2 copy operations (OPTIMIZED):`,
+    );
     copyOperations.forEach((op, i) =>
       console.log(
         `  ${i + 1}. ${op.operation}: ${op.sourceKey} → ${op.destKey}`,
@@ -687,10 +631,10 @@ async function handleFileOperations(
     }
 
     console.log(
-      `✅ All ${copyOperations.length} file operations completed successfully`,
+      `✅ All ${copyOperations.length} OPTIMIZED file operations completed successfully`,
     );
   } else {
-    console.log(`📁 No file operations needed`);
+    console.log(`📁 No file operations needed (MASSIVE performance gain!)`);
   }
 
   return {
@@ -698,19 +642,4 @@ async function handleFileOperations(
     newCoverImageUrl,
     newItemImageUrls,
   };
-}
-
-// UTILITY FUNCTIONS
-function extractSessionKeyFromUrl(url: string): string {
-  // Extract key from session URL: https://example.com/sessions/abc123/item/filename.jpg → sessions/abc123/item/filename.jpg
-  const match = url.match(/\/sessions\/(.+)$/);
-  if (!match) throw new Error(`Invalid session URL: ${url}`);
-  return `sessions/${match[1]}`;
-}
-
-function extractR2KeyFromUrl(url: string): string {
-  // Extract key from R2 URL: https://example.com/sorters/123/v1/item-foo-abc123.jpg → sorters/123/v1/item-foo-abc123.jpg
-  const match = url.match(/\/sorters\/(.+)$/);
-  if (!match) throw new Error(`Invalid R2 URL: ${url}`);
-  return `sorters/${match[1]}`;
 }

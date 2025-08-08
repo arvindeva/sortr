@@ -9,6 +9,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { db } from "@/db";
 import { sortingResults } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { generateUniqueId } from "@/lib/utils";
 
 // Initialize R2 client
 export const r2Client = new S3Client({
@@ -371,6 +372,83 @@ async function copyR2Object(sourceKey: string, destKey: string): Promise<void> {
     );
     throw error;
   }
+}
+
+// =======================
+// NEW: FLAT FILE STRUCTURE UTILITIES
+// =======================
+
+/**
+ * Generate flat R2 key for cover image (no version folders)
+ * @param sorterId - The sorter ID  
+ * @param uniqueId - Unique identifier to prevent conflicts
+ * @returns Flat cover image key: sorters/{id}/cover-{uniqueId}.jpg
+ */
+export function getFlatCoverKey(sorterId: string, uniqueId: string): string {
+  return `sorters/${sorterId}/cover-${uniqueId}.jpg`;
+}
+
+/**
+ * Generate flat R2 key for item image (no version folders)
+ * @param sorterId - The sorter ID
+ * @param itemSlug - The item slug 
+ * @param uniqueId - Unique identifier to prevent conflicts
+ * @returns Flat item image key: sorters/{id}/item-{slug}-{uniqueId}.jpg
+ */
+export function getFlatItemKey(sorterId: string, itemSlug: string, uniqueId: string): string {
+  return `sorters/${sorterId}/item-${itemSlug}-${uniqueId}.jpg`;
+}
+
+/**
+ * Generate flat R2 key for item thumbnail (no version folders)
+ * @param sorterId - The sorter ID
+ * @param itemSlug - The item slug
+ * @param uniqueId - Unique identifier to prevent conflicts  
+ * @returns Flat thumbnail key: sorters/{id}/item-{slug}-{uniqueId}-thumb.jpg
+ */
+export function getFlatItemThumbKey(sorterId: string, itemSlug: string, uniqueId: string): string {
+  return `sorters/${sorterId}/item-${itemSlug}-${uniqueId}-thumb.jpg`;
+}
+
+/**
+ * Extract unique ID from flat URL for cleanup (works for both cover and items)
+ * @param url - The flat structure URL
+ * @returns The unique ID or null if not found
+ */
+export function extractUniqueIdFromFlatUrl(url: string): string | null {
+  const coverMatch = url.match(/cover-([^-/]+)\.jpg/);
+  const itemMatch = url.match(/item-.*?-([^-/]+)(?:-thumb)?\.jpg/);
+  return coverMatch ? coverMatch[1] : (itemMatch ? itemMatch[1] : null);
+}
+
+/**
+ * Generate unique ID for file naming using existing utility
+ * @returns A 6-character unique identifier
+ */
+export function generateUniqueFileId(): string {
+  return generateUniqueId(); // Uses existing 6-character alphanumeric ID
+}
+
+/**
+ * Extract session key from session URL
+ * @param url - Session URL (e.g., https://example.com/sessions/abc123/item/filename.jpg)
+ * @returns Session key (e.g., sessions/abc123/item/filename.jpg)
+ */
+export function extractSessionKeyFromUrl(url: string): string {
+  const match = url.match(/\/sessions\/(.+)$/);
+  if (!match) throw new Error(`Invalid session URL: ${url}`);
+  return `sessions/${match[1]}`;
+}
+
+/**
+ * Extract R2 key from R2 URL
+ * @param url - R2 URL (e.g., https://example.com/sorters/123/v1/item-foo-abc123.jpg)
+ * @returns R2 key (e.g., sorters/123/v1/item-foo-abc123.jpg)
+ */
+export function extractR2KeyFromUrl(url: string): string {
+  const match = url.match(/\/sorters\/(.+)$/);
+  if (!match) throw new Error(`Invalid R2 URL: ${url}`);
+  return `sorters/${match[1]}`;
 }
 
 /**

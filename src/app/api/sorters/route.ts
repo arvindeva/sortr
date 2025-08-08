@@ -24,23 +24,18 @@ import {
 import { handleSorterWithUploadSession } from "@/lib/sorter-session-handler";
 import {
   uploadToR2,
-  getCoverKey,
-  getSorterItemKey,
   getR2PublicUrl,
-  convertSessionKeyToSorterKey,
-  getVersionedCoverKey,
-  getVersionedItemKey,
-  getVersionedGroupKey,
-  r2Client,
+  getFlatCoverKey,
+  getFlatItemKey,
+  getFlatItemThumbKey,
+  generateUniqueFileId,
   copyR2ObjectsInParallel,
 } from "@/lib/r2";
-import { extractIdFromFileName, removeIdFromFileName } from "@/lib/utils";
 import {
   getUploadSession,
   getSessionFiles,
   completeUploadSession,
 } from "@/lib/session-manager";
-import type { UploadedFile } from "@/types/upload";
 import {
   processCoverImage,
   validateCoverImageBuffer,
@@ -81,6 +76,26 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
 
     // Create sorter with tags in a transaction
     const result = await db.transaction(async (tx) => {
+      // Handle cover image conversion from session to flat structure
+      let finalCoverImageUrl = validatedData.coverImageUrl;
+      if (validatedData.coverImageUrl?.includes("/sessions/")) {
+        const sessionKey = validatedData.coverImageUrl.match(/\/sessions\/(.+)$/)?.[1];
+        if (sessionKey) {
+          const uniqueId = generateUniqueFileId();
+          const destKey = getFlatCoverKey(slug, uniqueId); // Use slug as temporary ID, will update after sorter creation
+          
+          // Copy from session to flat structure
+          await copyR2ObjectsInParallel([
+            {
+              sourceKey: `sessions/${sessionKey}`,
+              destKey: destKey,
+            },
+          ]);
+          
+          finalCoverImageUrl = getR2PublicUrl(destKey);
+        }
+      }
+
       // Create the sorter (without useGroups field)
       const [newSorter] = await tx
         .insert(sorters)
@@ -89,12 +104,39 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
           description: validatedData.description || null,
           category: validatedData.category || null,
           slug: slug,
-          coverImageUrl: validatedData.coverImageUrl || null,
+          coverImageUrl: finalCoverImageUrl || null,
           userId: userData.id,
           version: 1,
           // Note: useGroups field removed from schema
         })
         .returning();
+
+      // If we used slug as temporary ID for cover, update to use proper sorter ID
+      if (validatedData.coverImageUrl?.includes("/sessions/") && finalCoverImageUrl) {
+        const tempKey = finalCoverImageUrl.match(/\/sorters\/(.+)$/)?.[1];
+        if (tempKey && tempKey.startsWith(slug)) {
+          const uniqueId = generateUniqueFileId();
+          const correctKey = getFlatCoverKey(newSorter.id, uniqueId);
+          
+          // Copy to correct location with proper sorter ID
+          await copyR2ObjectsInParallel([
+            {
+              sourceKey: `sorters/${tempKey}`,
+              destKey: correctKey,
+            },
+          ]);
+          
+          finalCoverImageUrl = getR2PublicUrl(correctKey);
+          
+          // Update sorter with correct URL
+          await tx
+            .update(sorters)
+            .set({ coverImageUrl: finalCoverImageUrl })
+            .where(eq(sorters.id, newSorter.id));
+            
+          newSorter.coverImageUrl = finalCoverImageUrl;
+        }
+      }
 
       // Add to sorterHistory as version 1
       await tx.insert(sorterHistory).values({
@@ -130,6 +172,32 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
         for (const item of validatedData.items) {
           // Generate item slug
           const itemSlug = generateSorterItemSlug(item.title);
+          
+          // Handle image URL conversion from session to flat structure
+          let finalImageUrl = item.imageUrl;
+          if (item.imageUrl?.includes("/sessions/")) {
+            // Convert session upload to flat structure
+            const sessionKey = item.imageUrl.match(/\/sessions\/(.+)$/)?.[1];
+            if (sessionKey) {
+              const uniqueId = generateUniqueFileId();
+              const destKey = getFlatItemKey(newSorter.id, itemSlug, uniqueId);
+              const destThumbKey = getFlatItemThumbKey(newSorter.id, itemSlug, uniqueId);
+              
+              // Copy from session to flat structure
+              await copyR2ObjectsInParallel([
+                {
+                  sourceKey: `sessions/${sessionKey}`,
+                  destKey: destKey,
+                },
+                {
+                  sourceKey: `sessions/${sessionKey}`.replace('.jpg', '-thumb.jpg'),
+                  destKey: destThumbKey,
+                },
+              ]);
+              
+              finalImageUrl = getR2PublicUrl(destKey);
+            }
+          }
 
           // Map tag names from form to actual slugs
           const actualTagSlugs: string[] = [];
@@ -146,7 +214,7 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
             sorterId: newSorter.id,
             title: item.title,
             slug: itemSlug,
-            imageUrl: item.imageUrl || null,
+            imageUrl: finalImageUrl || null,
             tagSlugs: actualTagSlugs, // Array of tag slugs
             version: 1,
           });
@@ -423,8 +491,9 @@ export async function POST(request: NextRequest) {
         const buffer = Buffer.from(bytes);
         const processedBuffer = await processCoverImage(buffer);
 
-        // Generate versioned cover key and upload processed image to R2
-        const coverKey = getVersionedCoverKey(newSorter.id, 1);
+        // Generate flat cover key and upload processed image to R2
+        const uniqueId = generateUniqueFileId();
+        const coverKey = getFlatCoverKey(newSorter.id, uniqueId);
         await uploadToR2(coverKey, processedBuffer, "image/jpeg");
 
         // Generate R2 public URL with cache-busting timestamp
@@ -503,9 +572,11 @@ export async function POST(request: NextRequest) {
             const processedImage = processedItemImages[imageIndex];
 
             itemSlug = generateSorterItemSlug(item.title);
-            const itemKey = getVersionedItemKey(newSorter.id, itemSlug, 1);
+            const uniqueId = generateUniqueFileId();
+            const itemKey = getFlatItemKey(newSorter.id, itemSlug, uniqueId);
+            const thumbKey = getFlatItemThumbKey(newSorter.id, itemSlug, uniqueId);
 
-            // Upload to R2
+            // Upload main image and thumbnail to R2
             await uploadToR2(itemKey, processedImage.buffer, "image/jpeg");
 
             // Generate public URL with cache-busting timestamp
