@@ -492,13 +492,26 @@ async function handleFileOperations(
         currentSorter.id.toString(),
         newVersion,
       );
+      
+      // Copy main cover image
       copyOperations.push({
         sourceKey: sessionKey,
         destKey,
         operation: "session→sorter (cover)",
       });
+      
+      // Also copy cover thumbnail if it exists in session
+      const sessionThumbKey = sessionKey.replace(/\.([^.]+)$/, "-thumb.jpg");
+      const destThumbKey = destKey.replace(/\.([^.]+)$/, "-thumb.jpg");
+      copyOperations.push({
+        sourceKey: sessionThumbKey,
+        destKey: destThumbKey,
+        operation: "session→sorter (cover thumbnail)",
+      });
+      
       newCoverImageUrl = getR2PublicUrl(destKey);
       console.log(`📷 Cover image: session upload → ${destKey}`);
+      console.log(`📷 Cover image: session upload (thumbnail) → ${destThumbKey}`);
     } else if (validatedData.coverImageUrl === currentSorter.coverImageUrl) {
       // Case: Cover image unchanged - copy to new version
       const currentKey = extractR2KeyFromUrl(currentSorter.coverImageUrl);
@@ -531,13 +544,26 @@ async function handleFileOperations(
     // Case: Adding new cover image
     const sessionKey = extractSessionKeyFromUrl(validatedData.coverImageUrl);
     const destKey = getVersionedCoverKey(currentSorter.id, newVersion);
+    
+    // Copy main cover image
     copyOperations.push({
       sourceKey: sessionKey,
       destKey,
       operation: "session→sorter (new cover)",
     });
+    
+    // Also copy cover thumbnail if it exists in session
+    const sessionThumbKey = sessionKey.replace(/\.([^.]+)$/, "-thumb.jpg");
+    const destThumbKey = destKey.replace(/\.([^.]+)$/, "-thumb.jpg");
+    copyOperations.push({
+      sourceKey: sessionThumbKey,
+      destKey: destThumbKey,
+      operation: "session→sorter (new cover thumbnail)",
+    });
+    
     newCoverImageUrl = getR2PublicUrl(destKey);
     console.log(`📷 Cover image: new from session → ${destKey}`);
+    console.log(`📷 Cover image: new from session (thumbnail) → ${destThumbKey}`);
   }
 
   // ITEM IMAGES HANDLING - ALL 5 CASES
@@ -555,14 +581,29 @@ async function handleFileOperations(
         itemSlug,
         newVersion,
       );
+      
+      // Copy main image
       copyOperations.push({
         sourceKey: sessionKey,
         destKey,
         operation: `session→sorter (item ${index})`,
       });
+      
+      // Also copy thumbnail version if it exists in session
+      const sessionThumbKey = sessionKey.replace(/\.([^.]+)$/, "-thumb.jpg");
+      const destThumbKey = destKey.replace(/\.([^.]+)$/, "-thumb.jpg");
+      copyOperations.push({
+        sourceKey: sessionThumbKey,
+        destKey: destThumbKey,
+        operation: `session→sorter (item ${index} thumbnail)`,
+      });
+      
       newItemImageUrls[index] = getR2PublicUrl(destKey);
       console.log(
         `📝 Item ${index} "${newItem.title}": session upload → ${destKey}`,
+      );
+      console.log(
+        `📝 Item ${index} "${newItem.title}": session upload (thumbnail) → ${destThumbKey}`,
       );
     } else if (currentItem?.imageUrl) {
       // Cases 1 & 2: Items left untouched OR name changed (copy existing image)
