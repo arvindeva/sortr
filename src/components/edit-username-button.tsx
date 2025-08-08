@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -42,14 +43,16 @@ export function EditUsernameButton({
 }: EditUsernameButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [newUsername, setNewUsername] = useState(currentUsername);
+  const router = useRouter();
 
   const mutation = useMutation({
     mutationFn: updateUsernameMutation,
     onSuccess: (data) => {
       // Close dialog immediately to prevent further interaction
       setIsOpen(false);
-      // Redirect to new username URL with full page refresh
-      window.location.href = `/user/${data.username}`;
+      // Navigate to new username URL and refresh to get updated data
+      router.push(`/user/${data.username}`);
+      router.refresh();
     },
   });
 
