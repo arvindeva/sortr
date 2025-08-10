@@ -335,41 +335,40 @@ function chunkArray<T>(array: T[], size: number): T[][] {
  * Copy a single R2 object using server-side copy (no download/upload hop)
  */
 async function copyR2Object(sourceKey: string, destKey: string): Promise<void> {
-  try {
-    const { CopyObjectCommand, HeadObjectCommand } = await import(
-      "@aws-sdk/client-s3"
-    );
+  const { CopyObjectCommand } = await import("@aws-sdk/client-s3");
 
-    // Try to read source metadata once to preserve content-type
-    let contentType: string | undefined;
+  // All uploads are normalized to JPEG on the client, so we can set this directly
+  const contentType = "image/jpeg";
+
+  // Lightweight retry with exponential backoff (e.g., for 429/503)
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      const head = await r2Client.send(
-        new HeadObjectCommand({ Bucket: BUCKET_NAME, Key: sourceKey }),
+      await r2Client.send(
+        new CopyObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: destKey,
+          CopySource: `${BUCKET_NAME}/${encodeURI(sourceKey)}`,
+          MetadataDirective: "REPLACE",
+          CacheControl: "public, max-age=31536000",
+          ContentType: contentType,
+        }),
       );
-      contentType = head.ContentType || undefined;
-    } catch (_e) {
-      // If head fails, fall back to jpeg (all uploads are normalized to jpg)
-      contentType = "image/jpeg";
+      return; // success
+    } catch (error: any) {
+      const status = error?.$metadata?.httpStatusCode;
+      const shouldRetry = attempt < maxAttempts && (status === 429 || status === 503 || !status);
+      if (!shouldRetry) {
+        console.error(
+          `Failed to copy ${sourceKey} -> ${destKey} on attempt ${attempt}:`,
+          error,
+        );
+        throw error;
+      }
+      const base = 200;
+      const delay = base * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 100);
+      await new Promise((r) => setTimeout(r, delay));
     }
-
-    // Use S3-compatible server-side copy within R2
-    await r2Client.send(
-      new CopyObjectCommand({
-        Bucket: BUCKET_NAME,
-        Key: destKey,
-        CopySource: `${BUCKET_NAME}/${encodeURI(sourceKey)}`,
-        // Replace to set cache headers while preserving content type
-        MetadataDirective: "REPLACE",
-        CacheControl: "public, max-age=31536000",
-        ContentType: contentType || "image/jpeg",
-      }),
-    );
-  } catch (error) {
-    console.error(
-      `Failed to copy file from ${sourceKey} to ${destKey}:`,
-      error,
-    );
-    throw error;
   }
 }
 
@@ -455,7 +454,7 @@ export function extractR2KeyFromUrl(url: string): string {
  */
 export async function copyR2ObjectsInParallel(
   operations: Array<{ sourceKey: string; destKey: string }>,
-  concurrency = 10,
+  concurrency = 20,
 ): Promise<
   Array<{
     success: boolean;

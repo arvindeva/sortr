@@ -266,12 +266,16 @@ export async function handleSorterWithUploadSession(
     console.log(
       `Executing ${copyOperations.length} R2 copy operations for ${options.mode}`,
     );
+    const concurrency = Math.min(
+      Math.max(parseInt(process.env.R2_COPY_CONCURRENCY || "20", 10) || 20, 1),
+      50,
+    );
     const copyResults = await copyR2ObjectsInParallel(
       copyOperations.map((op) => ({
         sourceKey: op.sourceKey,
         destKey: op.destKey,
       })),
-      10,
+      concurrency,
     );
 
     const failedOperations = copyResults.filter((result) => !result.success);
