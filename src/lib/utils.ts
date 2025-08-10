@@ -72,10 +72,8 @@ export function slugify(text: string): string {
       .trim()
       // Replace spaces with hyphens
       .replace(/\s+/g, "-")
-      // Replace common special characters with hyphens to preserve meaning
-      .replace(/[:.]/g, "-")
-      // Remove other special characters except hyphens and underscores
-      .replace(/[^a-z0-9-_]/g, "")
+      // Replace ALL special characters with hyphens
+      .replace(/[^a-z0-9-_]/g, "-")
       // Remove multiple consecutive hyphens
       .replace(/-+/g, "-")
       // Remove leading/trailing hyphens
