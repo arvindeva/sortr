@@ -430,6 +430,12 @@ export default function CreateSorterFormTags() {
 
       Object.assign(payload, { items: validItems });
 
+      // Create timeout signal (5 minutes to match server timeout)
+      const timeoutSignal = AbortSignal.timeout(300000); // 5 minutes
+      const combinedSignal = abortController?.signal 
+        ? AbortSignal.any([abortController.signal, timeoutSignal])
+        : timeoutSignal;
+
       // Send sorter creation request with upload session reference
       const response = await fetch("/api/sorters", {
         method: "POST",
@@ -437,7 +443,7 @@ export default function CreateSorterFormTags() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-        signal: abortController?.signal,
+        signal: combinedSignal,
       });
 
       if (!response.ok) {
@@ -480,7 +486,17 @@ export default function CreateSorterFormTags() {
       }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
-        // Was cancelled
+        // Check if this was a timeout or user cancellation
+        if (error.message?.includes("signal timed out")) {
+          setIsUploading(false);
+          setShowProgressDialog(false);
+          console.error("Sorter creation timed out:", error);
+          toast.error(
+            "Request timed out after 5 minutes. The sorter may have been created successfully - please check your profile page.",
+          );
+          return;
+        }
+        // User cancelled
         return;
       }
       setIsUploading(false);

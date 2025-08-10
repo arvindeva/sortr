@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
 
-// Increase function timeout for R2 operations
-export const maxDuration = 60;
+// Increase function timeout for R2 operations (5 minutes for large sorters)
+export const maxDuration = 300;
 import {
   sorters,
   sorterItems,
