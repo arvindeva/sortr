@@ -194,7 +194,7 @@ export async function handleSorterWithUploadSession(
             `🔎 Checking uniqueId ${uniqueId}: "${nameWithoutExt}" vs "${item.title}"`,
           );
 
-          if (nameWithoutExt === item.title) {
+          if (nameWithoutExt.toLowerCase() === item.title.toLowerCase()) {
             matchingFiles = files;
             matchedUniqueId = uniqueId;
             console.log(
