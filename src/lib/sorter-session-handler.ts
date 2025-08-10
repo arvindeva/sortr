@@ -77,26 +77,40 @@ export async function handleSorterWithUploadSession(
     // Phase 2: Validate sorter data
     const validatedData = createSorterSchema.parse(sorterData);
 
-    // Phase 3: Determine version and sorter ID
-    let sorterId: string;
-    let version: number;
-    let finalSlug: string;
+  // Phase 3: Determine version and sorter ID
+  let sorterId: string;
+  let version: number;
+  let finalSlug: string;
 
-    if (options.mode === "create") {
-      // For create, we'll get the ID after database insertion
-      sorterId = `temp-${Date.now()}`;
-      version = 1;
-      finalSlug =
-        options.makeSlugUnique?.(
-          options.generateSlug?.(validatedData.title) || validatedData.title,
-          options.existingSlugs || [],
-        ) || validatedData.title;
-    } else {
-      // For edit, use existing sorter
-      sorterId = options.currentSorter!.id;
-      version = options.currentSorter!.version + 1;
-      finalSlug = ""; // Not needed for edit
-    }
+  if (options.mode === "create") {
+    // Create the sorter first to get the real ID so we can copy directly into final paths
+    version = 1;
+    finalSlug =
+      options.makeSlugUnique?.(
+        options.generateSlug?.(validatedData.title) || validatedData.title,
+        options.existingSlugs || [],
+      ) || validatedData.title;
+
+    const [newSorter] = await db
+      .insert(sorters)
+      .values({
+        title: validatedData.title,
+        slug: finalSlug,
+        description: validatedData.description || null,
+        category: validatedData.category || null,
+        userId: userId,
+        coverImageUrl: null,
+        version: 1,
+      })
+      .returning();
+
+    sorterId = newSorter.id;
+  } else {
+    // For edit, use existing sorter
+    sorterId = options.currentSorter!.id;
+    version = options.currentSorter!.version + 1;
+    finalSlug = ""; // Not needed for edit
+  }
 
     // Phase 4: Copy session files to permanent versioned paths in parallel
     const copyOperations: Array<{
@@ -275,22 +289,21 @@ export async function handleSorterWithUploadSession(
       let finalVersion: number;
 
       if (options.mode === "create") {
-        // Create new sorter
-        const [newSorter] = await trx
-          .insert(sorters)
-          .values({
+        // We already created the sorter to get its ID; just update cover and metadata
+        finalSorterId = sorterId;
+        finalVersion = 1;
+
+        await trx
+          .update(sorters)
+          .set({
             title: validatedData.title,
             slug: finalSlug,
             description: validatedData.description || null,
             category: validatedData.category || null,
-            userId: userId,
             coverImageUrl,
             version: 1,
           })
-          .returning();
-
-        finalSorterId = newSorter.id;
-        finalVersion = 1;
+          .where(eq(sorters.id, finalSorterId));
 
         // Add to sorterHistory as version 1
         await trx.insert(sorterHistory).values({
@@ -430,25 +443,7 @@ export async function handleSorterWithUploadSession(
       };
     });
 
-    // Phase 7: Update R2 keys with real sorter ID (for create mode)
-    if (options.mode === "create" && sorterId.startsWith("temp-")) {
-      // We need to rename the R2 objects to use the real sorter ID
-      const tempSorterId = sorterId;
-      const renameOperations = copyOperations.map((op) => ({
-        sourceKey: op.destKey,
-        destKey: op.destKey.replace(tempSorterId, result.sorterId),
-      }));
-
-      if (renameOperations.length > 0) {
-        console.log(
-          `Renaming ${renameOperations.length} R2 objects with real sorter ID`,
-        );
-        await copyR2ObjectsInParallel(renameOperations, 10);
-
-        // TODO: Delete the temporary files after successful rename
-        // Note: We could implement cleanup here if needed
-      }
-    }
+    // Phase 7: (Removed) No rename needed — we copied directly to final keys
 
     // Phase 8: Mark upload session as complete
     await completeUploadSession(sessionId);

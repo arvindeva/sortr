@@ -332,37 +332,36 @@ function chunkArray<T>(array: T[], size: number): T[][] {
 }
 
 /**
- * Copy a single R2 object (internal utility for parallel operations)
+ * Copy a single R2 object using server-side copy (no download/upload hop)
  */
 async function copyR2Object(sourceKey: string, destKey: string): Promise<void> {
   try {
-    const { GetObjectCommand, PutObjectCommand } = await import(
+    const { CopyObjectCommand, HeadObjectCommand } = await import(
       "@aws-sdk/client-s3"
     );
 
-    // Get the object from the source location
-    const sourceObject = await r2Client.send(
-      new GetObjectCommand({
-        Bucket: BUCKET_NAME,
-        Key: sourceKey,
-      }),
-    );
-
-    if (!sourceObject.Body) {
-      throw new Error(`Source object not found: ${sourceKey}`);
+    // Try to read source metadata once to preserve content-type
+    let contentType: string | undefined;
+    try {
+      const head = await r2Client.send(
+        new HeadObjectCommand({ Bucket: BUCKET_NAME, Key: sourceKey }),
+      );
+      contentType = head.ContentType || undefined;
+    } catch (_e) {
+      // If head fails, fall back to jpeg (all uploads are normalized to jpg)
+      contentType = "image/jpeg";
     }
 
-    // Convert the body to a buffer
-    const bodyBytes = await sourceObject.Body.transformToByteArray();
-
-    // Upload to the destination location (no processing)
+    // Use S3-compatible server-side copy within R2
     await r2Client.send(
-      new PutObjectCommand({
+      new CopyObjectCommand({
         Bucket: BUCKET_NAME,
         Key: destKey,
-        Body: bodyBytes,
-        ContentType: sourceObject.ContentType, // Preserve original content type
-        CacheControl: "public, max-age=31536000", // 1 year cache
+        CopySource: `${BUCKET_NAME}/${encodeURI(sourceKey)}`,
+        // Replace to set cache headers while preserving content type
+        MetadataDirective: "REPLACE",
+        CacheControl: "public, max-age=31536000",
+        ContentType: contentType || "image/jpeg",
       }),
     );
   } catch (error) {
