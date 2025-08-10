@@ -19,6 +19,7 @@ import { Undo2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { SortItem } from "@/lib/sorting";
 import { InteractiveMergeSort, SortState } from "@/lib/interactive-merge-sort";
+import { generateProgressKey, serializeChoices, deserializeChoices } from "@/lib/sort-persistence";
 import LZString from "lz-string";
 import { Box } from "@/components/ui/box";
 import { PageHeader } from "@/components/ui/page-header";
@@ -75,153 +76,7 @@ function extractImageUrls(items: SortItem[]): string[] {
   return [...new Set(imageUrls)];
 }
 
-// Generate localStorage key based on sorter ID and selected groups/tags
-function generateProgressKey(sorterId: string, filterSlugs: string[]): string {
-  if (filterSlugs.length === 0) {
-    return `sorting-progress-${sorterId}-all`;
-  }
-
-  // Sort slugs for consistent key generation
-  const sortedSlugs = filterSlugs.sort().join("-");
-  return `sorting-progress-${sorterId}-${sortedSlugs}`;
-}
-
-// Storage optimization: Convert UUID-based choices to indexed format
-function serializeChoices(
-  items: SortItem[],
-  userChoices: Map<string, string>,
-  stateHistory: any[],
-  shuffledOrder: SortItem[] = [],
-  totalBattles = 0,
-  sortedNo = 0,
-): any {
-  // Create item map for UUID to index conversion
-  const itemMap = items.map((item) => item.id);
-  const itemToIndex = new Map(itemMap.map((id, index) => [id, index]));
-
-  // Convert user choices to indexed format
-  const choices: number[][] = [];
-  for (const [key, winnerId] of userChoices.entries()) {
-    const [id1, id2] = key.split(",");
-    const index1 = itemToIndex.get(id1);
-    const index2 = itemToIndex.get(id2);
-    const winnerIndex = itemToIndex.get(winnerId);
-
-    if (
-      index1 !== undefined &&
-      index2 !== undefined &&
-      winnerIndex !== undefined
-    ) {
-      choices.push([index1, index2, winnerIndex]);
-    }
-  }
-
-  // Convert state history to indexed format
-  const historyChoices = stateHistory.map((state) => {
-    const stateChoices: number[][] = [];
-    for (const [key, winnerId] of state.userChoices.entries()) {
-      const [id1, id2] = key.split(",");
-      const index1 = itemToIndex.get(id1);
-      const index2 = itemToIndex.get(id2);
-      const winnerIndex = itemToIndex.get(winnerId);
-
-      if (
-        index1 !== undefined &&
-        index2 !== undefined &&
-        winnerIndex !== undefined
-      ) {
-        stateChoices.push([index1, index2, winnerIndex]);
-      }
-    }
-    return {
-      choices: stateChoices,
-      comparisonCount: state.comparisonCount,
-      sortedNo: state.sortedNo || 0,
-    };
-  });
-
-  // Convert shuffled order to indexed format
-  const shuffledOrderIndexes = shuffledOrder
-    .map((item) => {
-      const index = itemToIndex.get(item.id);
-      return index !== undefined ? index : -1;
-    })
-    .filter((index) => index !== -1);
-
-  return {
-    itemMap,
-    choices,
-    historyChoices,
-    shuffledOrderIndexes,
-    totalBattles,
-    sortedNo,
-  };
-}
-
-// Convert indexed format back to UUID-based choices
-function deserializeChoices(
-  serializedData: any,
-  allItems: SortItem[],
-): {
-  userChoices: Map<string, string>;
-  stateHistory: any[];
-  shuffledOrder: SortItem[];
-  totalBattles: number;
-  sortedNo: number;
-} {
-  const { itemMap, choices, historyChoices, shuffledOrderIndexes, totalBattles = 0, sortedNo = 0 } =
-    serializedData;
-
-  // Reconstruct user choices map
-  const userChoices = new Map<string, string>();
-  for (const [index1, index2, winnerIndex] of choices) {
-    const id1 = itemMap[index1];
-    const id2 = itemMap[index2];
-    const winnerId = itemMap[winnerIndex];
-
-    if (id1 && id2 && winnerId) {
-      const key = [id1, id2].sort().join(",");
-      userChoices.set(key, winnerId);
-    }
-  }
-
-  // Reconstruct state history
-  const stateHistory = historyChoices.map((historyState: any) => {
-    const stateChoices = new Map<string, string>();
-    for (const [index1, index2, winnerIndex] of historyState.choices) {
-      const id1 = itemMap[index1];
-      const id2 = itemMap[index2];
-      const winnerId = itemMap[winnerIndex];
-
-      if (id1 && id2 && winnerId) {
-        const key = [id1, id2].sort().join(",");
-        stateChoices.set(key, winnerId);
-      }
-    }
-    return {
-      userChoices: stateChoices,
-      comparisonCount: historyState.comparisonCount,
-      sortedNo: historyState.sortedNo || 0,
-    };
-  });
-
-  // Reconstruct shuffled order
-  const shuffledOrder: SortItem[] = [];
-  if (shuffledOrderIndexes && shuffledOrderIndexes.length > 0) {
-    for (const index of shuffledOrderIndexes) {
-      const itemId = itemMap[index];
-      if (itemId) {
-        // Find the full SortItem from allItems
-        const fullItem = allItems.find((item) => item.id === itemId);
-        if (fullItem) {
-          shuffledOrder.push(fullItem);
-        }
-      }
-    }
-  }
-
-  return { userChoices, stateHistory, shuffledOrder, totalBattles, sortedNo };
-}
+// (persistence helpers imported from @/lib/sort-persistence)
 
 export default function SortPage() {
   const params = useParams();
@@ -631,10 +486,11 @@ export default function SortPage() {
     e.preventDefault();
     e.stopPropagation();
     if (sorterRef.current && sorterRef.current.canUndo()) {
-      // Don't clear current comparison - let the restart handle it
-      // Clear any pending resolve function
+      // Keep current comparison visible to avoid UI flicker
+      // Clear only the resolve function so clicks do nothing during restart
       resolveComparisonRef.current = null;
-      // Then call undo
+      
+      // Undo will restore state and restart from that point
       sorterRef.current.undo();
     }
   }, []);
