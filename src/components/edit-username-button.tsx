@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +47,8 @@ export function EditUsernameButton({
   const [isOpen, setIsOpen] = useState(false);
   const [newUsername, setNewUsername] = useState(currentUsername);
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { data: session } = useSession();
 
   const mutation = useMutation({
     mutationFn: updateUsernameMutation,
@@ -54,6 +57,12 @@ export function EditUsernameButton({
       setIsOpen(false);
       // Optimistic UI update - immediately show new username
       onUsernameUpdate?.(data.username);
+      // Invalidate navbar user query to update profile link
+      if (session?.user?.email) {
+        queryClient.invalidateQueries({
+          queryKey: ["user", session.user.email],
+        });
+      }
       // Navigate to new username URL (no cache-busting needed with optimistic UI)
       router.push(`/user/${data.username}`);
     },

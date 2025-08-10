@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     const sorterData = await db
       .select({
         title: sorters.title,
+        slug: sorters.slug, // NEW: For revalidation path
         coverImageUrl: sorters.coverImageUrl,
         version: sorters.version, // NEW: Capture current version
       })
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
 
     const {
       title: sorterTitle,
+      slug: sorterSlug,
       coverImageUrl: sorterCoverImageUrl,
       version: sorterVersion,
     } = sorterData[0];
@@ -70,7 +72,8 @@ export async function POST(request: NextRequest) {
     // Revalidate pages that show completion counts
     revalidatePath('/'); // Homepage shows popular sorters by completion count
     revalidatePath('/browse'); // Browse page shows sorters with stats
-    console.log(`♻️ Revalidated homepage and browse page for completion count update`);
+    revalidatePath(`/sorter/${sorterSlug}`); // Individual sorter page shows completion count
+    console.log(`♻️ Revalidated homepage, browse page, and sorter page for completion count update`);
 
     return Response.json({
       resultId: result[0].id,

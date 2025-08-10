@@ -127,7 +127,10 @@ export async function PATCH(request: NextRequest) {
     // Revalidate global pages that show usernames
     revalidatePath('/'); // Homepage shows popular sorters with usernames
     revalidatePath('/browse'); // Browse page shows sorters with usernames
-    console.log(`♻️ Revalidated homepage and browse page for username change`);
+    
+    // Revalidate layout to update navbar profile link
+    revalidatePath('/', 'layout'); // Force revalidate root layout and all nested layouts/pages
+    console.log(`♻️ Revalidated homepage, browse page, and layout for username change`);
 
     return NextResponse.json({
       message: "Username updated successfully",
