@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
@@ -84,7 +85,38 @@ export default function EditSorterForm({
 }: EditSorterFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Helper function to invalidate all relevant queries after sorter edit
+  const invalidateQueriesAfterEdit = async () => {
+    // Invalidate the specific sorter queries (existing behavior)
+    await queryClient.invalidateQueries({ queryKey: ["sorter", sorter.slug] });
+    await queryClient.invalidateQueries({ queryKey: ["sorter", sorter.slug, "recent-results"] });
+    
+    // Also invalidate broader lists since sorter details might have changed
+    await queryClient.invalidateQueries({ queryKey: ["homepage", "popular-sorters"] });
+    await queryClient.invalidateQueries({ queryKey: ["browse"] });
+    
+    // Invalidate user profile and user data queries
+    if (session?.user?.email) {
+      // Invalidate user data query (used by navbar)
+      await queryClient.invalidateQueries({ queryKey: ["user", session.user.email] });
+      
+      // Invalidate all user profile queries (catch any username-based queries)
+      await queryClient.invalidateQueries({ 
+        queryKey: ["user"], 
+        predicate: (query) => {
+          // Invalidate any query that starts with ["user", ...] and isn't an email
+          const queryKey = query.queryKey;
+          return queryKey.length >= 2 && 
+                 queryKey[0] === "user" && 
+                 typeof queryKey[1] === "string" && 
+                 !queryKey[1].includes("@");
+        }
+      });
+    }
+  };
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
     sorter.coverImageUrl,
@@ -431,8 +463,7 @@ export default function EditSorterForm({
         determinate: false,
       });
 
-      await queryClient.invalidateQueries({ queryKey: ["sorter", sorter.slug] });
-      await queryClient.invalidateQueries({ queryKey: ["sorter", sorter.slug, "recent-results"] });
+      await invalidateQueriesAfterEdit();
       router.push(`/sorter/${sorter.slug}`);
     } catch (error: any) {
       setIsUploading(false);
@@ -498,15 +529,8 @@ export default function EditSorterForm({
         if (response.data) {
           toast.success("Sorter updated successfully!");
 
-          // Invalidate cached sorter data to show updates immediately
-          await queryClient.invalidateQueries({
-            queryKey: ["sorter", sorter.slug],
-          });
-
-          // Also invalidate recent results in case they changed
-          await queryClient.invalidateQueries({
-            queryKey: ["sorter", sorter.slug, "recent-results"],
-          });
+          // Invalidate all relevant queries to show updates immediately
+          await invalidateQueriesAfterEdit();
 
           router.push(`/sorter/${sorter.slug}`);
         }

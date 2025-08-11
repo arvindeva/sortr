@@ -11,9 +11,14 @@ import {
   PanelTitle,
   PanelContent,
 } from "@/components/ui/panel";
+import type { HomepageData } from "@/hooks/api/use-homepage";
 
-export function HomepageClient() {
-  const { data, isLoading, error } = usePopularSorters();
+interface HomepageClientProps {
+  initialData?: HomepageData;
+}
+
+export function HomepageClient({ initialData }: HomepageClientProps) {
+  const { data, isLoading, error } = usePopularSorters(initialData);
 
   if (isLoading) {
     return <HomepageSkeleton />;

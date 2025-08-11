@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +46,35 @@ import { toast } from "sonner";
 
 export default function CreateSorterFormTags() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Helper function to invalidate all relevant queries after sorter creation
+  const invalidateQueriesAfterCreate = async () => {
+    // Always invalidate homepage and browse page
+    await queryClient.invalidateQueries({ queryKey: ["homepage", "popular-sorters"] });
+    await queryClient.invalidateQueries({ queryKey: ["browse"] });
+    
+    // Invalidate user profile and user data queries
+    if (session?.user?.email) {
+      // Invalidate user data query (used by navbar)
+      await queryClient.invalidateQueries({ queryKey: ["user", session.user.email] });
+      
+      // Invalidate all user profile queries (catch any username-based queries)
+      await queryClient.invalidateQueries({ 
+        queryKey: ["user"], 
+        predicate: (query) => {
+          // Invalidate any query that starts with ["user", ...] and isn't an email
+          const queryKey = query.queryKey;
+          return queryKey.length >= 2 && 
+                 queryKey[0] === "user" && 
+                 typeof queryKey[1] === "string" && 
+                 !queryKey[1].includes("@");
+        }
+      });
+    }
+  };
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
     null,
@@ -475,6 +505,8 @@ export default function CreateSorterFormTags() {
         determinate: false,
       });
 
+      // Invalidate queries to show new sorter immediately
+      await invalidateQueriesAfterCreate();
       router.refresh();
       router.push(`/sorter/${slug}`);
       } catch (error: any) {
@@ -548,6 +580,8 @@ export default function CreateSorterFormTags() {
       }
       const out = await res.json();
       toast.success("Sorter created successfully!");
+      // Invalidate queries to show new sorter immediately
+      await invalidateQueriesAfterCreate();
       router.refresh();
       router.push(`/sorter/${out.slug || out.sorter?.slug}`);
     } finally {

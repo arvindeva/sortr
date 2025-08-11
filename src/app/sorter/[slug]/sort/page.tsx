@@ -451,6 +451,14 @@ export default function SortPage() {
         queryKey: ["sorter", sorterSlug, "recent-results"],
       });
 
+      // Invalidate homepage cache since completion count changed (affects popular sorter ordering)
+      queryClient.invalidateQueries({
+        queryKey: ["homepage", "popular-sorters"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["browse"],
+      });
+
       // Redirect to results page
       router.push(`/rankings/${resultId}`);
     } catch (error) {

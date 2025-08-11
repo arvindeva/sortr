@@ -2,6 +2,59 @@ import type { Metadata } from "next";
 import { Box } from "@/components/ui/box";
 import { HomepageClient } from "@/components/homepage-client";
 import Link from "next/link";
+import { db } from "@/db";
+import { sorters, user } from "@/db/schema";
+import { eq, desc } from "drizzle-orm";
+
+// Server-side data fetching for popular sorters
+async function getPopularSorters() {
+  try {
+    console.log("🏠 SSR: Fetching popular sorters for homepage");
+
+    const popularSorters = await db
+      .select({
+        id: sorters.id,
+        title: sorters.title,
+        slug: sorters.slug,
+        category: sorters.category,
+        completionCount: sorters.completionCount,
+        viewCount: sorters.viewCount,
+        coverImageUrl: sorters.coverImageUrl,
+        creatorUsername: user.username,
+      })
+      .from(sorters)
+      .leftJoin(user, eq(sorters.userId, user.id))
+      .where(eq(sorters.deleted, false))
+      .orderBy(desc(sorters.completionCount))
+      .limit(10);
+
+    // Transform data to match expected format
+    const transformedSorters = popularSorters.map((sorter) => ({
+      ...sorter,
+      creatorUsername: sorter.creatorUsername ?? "Unknown",
+      category: sorter.category ?? undefined,
+      coverImageUrl: sorter.coverImageUrl ?? undefined,
+    }));
+
+    console.log(
+      `📊 SSR: Found ${transformedSorters.length} popular sorters`,
+    );
+
+    return {
+      popularSorters: transformedSorters,
+      total: transformedSorters.length,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("❌ SSR: Error fetching popular sorters:", error);
+    // Return empty data on error, client-side will handle the error
+    return {
+      popularSorters: [],
+      total: 0,
+      timestamp: new Date().toISOString(),
+    };
+  }
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const title = "sortr - Create a Sorter for Anything";
@@ -34,7 +87,10 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function Home() {
+export default async function Home() {
+  // Fetch popular sorters server-side
+  const initialData = await getPopularSorters();
+
   // JSON-LD structured data for homepage
   const jsonLd = {
     "@context": "https://schema.org",
@@ -86,8 +142,8 @@ export default function Home() {
           </Box>
         </section>
 
-        {/* Client-side fetched popular sorters */}
-        <HomepageClient />
+        {/* Server-rendered data with client-side hydration */}
+        <HomepageClient initialData={initialData} />
       </main>
     </>
   );

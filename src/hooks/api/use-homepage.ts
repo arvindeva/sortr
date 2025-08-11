@@ -29,10 +29,11 @@ async function fetchPopularSorters(): Promise<HomepageData> {
   return response.json();
 }
 
-export function usePopularSorters() {
+export function usePopularSorters(initialData?: HomepageData) {
   return useQuery({
     queryKey: ["homepage", "popular-sorters"],
     queryFn: fetchPopularSorters,
+    initialData,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
