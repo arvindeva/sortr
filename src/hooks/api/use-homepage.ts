@@ -34,7 +34,8 @@ export function usePopularSorters(initialData?: HomepageData) {
     queryKey: ["homepage", "popular-sorters"],
     queryFn: fetchPopularSorters,
     initialData,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // 30 seconds
+    refetchOnMount: 'always',
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     retry: 3,

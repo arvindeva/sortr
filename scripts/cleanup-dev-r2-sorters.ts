@@ -11,6 +11,8 @@ dotenv.config();
 
 console.log("🔧 Environment check:");
 console.log("R2_BUCKET:", process.env.R2_BUCKET ? "✅ Set" : "❌ Missing");
+console.log("R2_BUCKET value:", `'${process.env.R2_BUCKET}'`);
+console.log("R2_BUCKET length:", process.env.R2_BUCKET?.length || 0);
 console.log("R2_ENDPOINT:", process.env.R2_ENDPOINT ? "✅ Set" : "❌ Missing");
 console.log(
   "R2_ACCESS_KEY_ID:",
