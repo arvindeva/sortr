@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
@@ -7,6 +6,7 @@ import { eq, sql } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { SorterHeaderServer } from "@/components/sorter-header-server";
 import { SorterPageClient } from "@/components/sorter-page-client";
+import { SorterNotFound } from "@/components/sorter-not-found";
 
 interface SorterPageProps {
   params: Promise<{
@@ -140,7 +140,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
   // Basic sorter validation for 404 (server-side)
   const data = await getSorterWithItems(slug);
   if (!data) {
-    notFound();
+    return <SorterNotFound slug={slug} />;
   }
 
   // Get current session to check ownership (server-side)

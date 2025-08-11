@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { RankingNotFound } from "@/components/ranking-not-found";
 import { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
@@ -34,6 +34,12 @@ interface RankingsPageProps {
   params: Promise<{
     id: string;
   }>;
+}
+
+// UUID validation helper
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
 }
 
 interface RankedItem {
@@ -132,6 +138,11 @@ export async function generateMetadata({
 }
 
 async function getResultData(resultId: string): Promise<ResultData | null> {
+  // Validate UUID format first
+  if (!isValidUUID(resultId)) {
+    return null;
+  }
+
   // Get current user session to check ownership
   const session = await getServerSession();
   let currentUserId: string | null = null;
@@ -310,7 +321,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
   const data = await getResultData(id);
 
   if (!data) {
-    notFound();
+    return <RankingNotFound rankingId={id} />;
   }
 
   const { result, sorter, selectedTagSlugs, totalTags, isOwner } = data;
