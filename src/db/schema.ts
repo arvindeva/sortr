@@ -66,6 +66,8 @@ export const sorters = pgTable("sorters", {
   category: text("category"),
   slug: text("slug").notNull().unique(),
   coverImageUrl: text("cover_image_url"),
+  // draft | active | archived (default active for backward compatibility)
+  status: varchar("status", { length: 16 }).default("active").notNull(),
   userId: uuid("userId")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
@@ -179,3 +181,17 @@ export const sorterHistory = pgTable(
     uniqueVersion: unique().on(table.sorterId, table.version),
   }),
 );
+
+// Upload batches for direct-to-final flow
+export const uploadBatches = pgTable("uploadBatches", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sorterId: uuid("sorterId")
+    .notNull()
+    .references(() => sorters.id, { onDelete: "cascade" }),
+  expectedCount: integer("expectedCount").notNull(),
+  uploadedCount: integer("uploadedCount").default(0).notNull(),
+  status: varchar("status", { length: 20 }).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  metadata: jsonb("metadata"),
+});

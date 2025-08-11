@@ -50,7 +50,13 @@ export async function GET(
       })
       .from(sorters)
       .leftJoin(user, eq(sorters.userId, user.id))
-      .where(and(eq(sorters.slug, slug), eq(sorters.deleted, false)))
+      .where(
+        and(
+          eq(sorters.slug, slug),
+          eq(sorters.deleted, false),
+          eq(sorters.status, 'active'),
+        ),
+      )
       .limit(1);
 
     if (sorterData.length === 0) {

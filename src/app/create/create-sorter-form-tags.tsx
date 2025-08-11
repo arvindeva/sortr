@@ -35,9 +35,10 @@ import { Plus, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
 import { generateUniqueId, addSuffixToFileName } from "@/lib/utils";
 import CoverImageUpload from "@/components/cover-image-upload";
-import { useDirectUpload } from "@/hooks/use-direct-upload";
+// Direct-to-final upload flow (no temp sessions)
 import { UploadProgressDialog } from "@/components/upload-progress-dialog";
-import type { UploadedFile, UploadProgress } from "@/types/upload";
+import type { UploadProgress } from "@/types/upload";
+import { compressImage, generateSorterItemSizes } from "@/lib/image-compression";
 import TagManagement, { type Tag } from "@/components/tag-management";
 import { toast } from "sonner";
 
@@ -58,38 +59,9 @@ export default function CreateSorterFormTags() {
   const [showProgressDialog, setShowProgressDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Direct upload hook
-  const directUpload = useDirectUpload({
-    onProgress: (progress) => {
-      // Progress updates are handled by the dialog component
-      // Dialog is shown immediately when upload starts
-    },
-    onSuccess: async (uploadedFiles, abortController) => {
-      // Files uploaded successfully, now create sorter with references
-      const formData = form.getValues();
-      await createSorterWithUploadedFiles(
-        formData,
-        uploadedFiles,
-        abortController,
-      );
-    },
-    onError: (error) => {
-      setIsUploading(false);
-      setShowProgressDialog(false);
-
-      // Don't log AbortError as it's expected during cancellation
-      if (error !== "AbortError") {
-        console.error("Upload error:", error);
-      }
-    },
-    getFileType: (file, index) => {
-      // First file is cover image if coverImageFile exists, rest are item images
-      if (coverImageFile && index === 0) {
-        return "cover";
-      }
-      return "item";
-    },
-  });
+  // Local upload progress (reuses dialog UI)
+  const [progress, setProgress] = useState<UploadProgress | null>(null);
+  const uploadAbortRef = useRef<AbortController | null>(null);
 
   const form = useForm<CreateSorterInput>({
     resolver: zodResolver(createSorterSchema) as any,
@@ -336,234 +308,199 @@ export default function CreateSorterFormTags() {
     removeItem(index);
   };
 
-  // Upload with progress tracking using axios
+  // Upload directly to final keys using presigned PUT URLs
   const uploadWithDirectR2 = async (data: CreateSorterInput) => {
     setIsUploading(true);
     setShowProgressDialog(true); // Show dialog immediately when starting upload
 
     try {
-      // Collect all files for upload
-      const filesToUpload: File[] = [];
-
-      // Add cover image if present with special prefix to identify it
-      if (coverImageFile) {
-        // Create a new File with cover prefix to ensure proper type detection
-        const coverFile = new File(
-          [coverImageFile],
-          `cover-${coverImageFile.name}`,
-          { type: coverImageFile.type },
-        );
-        filesToUpload.push(coverFile);
-      }
-
-      // Get actual image files from itemImagesData
-      const actualImageFiles: File[] = itemImagesData
-        .filter(
-          (data): data is { file: File; preview: string } => data !== null,
-        )
-        .map((data) => data.file);
-
-      // CRITICAL FIX: Add unique suffixes to each file for proper correlation
-      // This ensures each file can be uniquely identified during processing
-      const filesWithUniqueSuffixes = actualImageFiles.map((file) => {
-        const uniqueId = generateUniqueId();
-        const newFileName = addSuffixToFileName(file.name, uniqueId);
-        return new File([file], newFileName, { type: file.type });
-      });
-
-      filesToUpload.push(...filesWithUniqueSuffixes);
-
-      if (filesToUpload.length === 0) {
-        // No files to upload, use direct creation
-        await uploadWithoutImages(data);
-        return;
-      }
-
-      // Track original files for display purposes (matching the structure of filesToUpload)
-      const originalFilesForDisplay: File[] = [];
-      // Add original cover file for display
-      if (coverImageFile) {
-        originalFilesForDisplay.push(coverImageFile);
-      }
-      // Add original image files for display
-      originalFilesForDisplay.push(...actualImageFiles);
-
-      // Upload files to R2 first, passing both processed and original files
-      await directUpload.uploadFiles(filesToUpload, originalFilesForDisplay);
-
-      // The onSuccess callback will handle sorter creation
-    } catch (error) {
-      setIsUploading(false);
-      setShowProgressDialog(false);
-      console.error("Upload error:", error);
-      throw error;
-    }
-  };
-
-  const createSorterWithUploadedFiles = async (
-    data: CreateSorterInput,
-    uploadedFiles: UploadedFile[],
-    abortController: AbortController | null,
-  ) => {
-    try {
-      console.log("Direct upload sessionId:", directUpload.sessionId);
-      console.log("Uploaded files:", uploadedFiles);
-
-      const payload = {
-        title: data.title?.trim() || "",
-        description: data.description?.trim() || undefined,
-        category: data.category?.trim() || undefined,
-        uploadSession: directUpload.sessionId,
-        uploadedFiles: uploadedFiles,
-        // Add tags to payload
-        tags: data.tags || [],
-      };
-
-      // Filter out empty items
+      // 1) Build init payload
       const validItems =
         data.items
-          ?.filter((item) => item.title.trim())
-          .map((item) => ({
+          ?.map((item, idx) => ({
             title: item.title.trim(),
-            tagSlugs: item.tagSlugs || [],
-          })) || [];
+            tagNames: item.tagSlugs || [],
+            hasImage: !!itemImagesData[idx],
+          }))
+          .filter((i) => i.title.length > 0) || [];
 
-      Object.assign(payload, { items: validItems });
-
-      // Create timeout signal (5 minutes to match server timeout)
-      const timeoutSignal = AbortSignal.timeout(300000); // 5 minutes
-      const combinedSignal = abortController?.signal 
-        ? AbortSignal.any([abortController.signal, timeoutSignal])
-        : timeoutSignal;
-
-      // Send sorter creation request with upload session reference
-      const response = await fetch("/api/sorters", {
+      const initRes = await fetch("/api/sorters/init", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-        signal: combinedSignal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: data.title?.trim() || "",
+          description: data.description?.trim() || null,
+          category: data.category?.trim() || null,
+          tags: data.tags || [],
+          items: validItems,
+          includeCover: !!coverImageFile,
+        }),
       });
 
-      if (!response.ok) {
-        let errorMessage = "Failed to create sorter";
-        try {
-          const error = await response.json();
-          errorMessage = error.error || errorMessage;
-        } catch (e) {
-          // Response is not JSON (likely HTML error page)
-          if (response.status === 504) {
-            errorMessage =
-              "Server timeout - please try again. If the issue persists, try creating a smaller sorter first.";
-          } else {
-            errorMessage = `Server error (${response.status}): ${response.statusText}`;
+      if (!initRes.ok) {
+        const err = await initRes.json().catch(() => ({}));
+        throw new Error(err.error || `Init failed (${initRes.status})`);
+      }
+
+      const initData = await initRes.json();
+      const { sorterId, uploadBatchId, slug, keys, presigned } = initData as {
+        sorterId: string;
+        uploadBatchId: string;
+        slug: string;
+        keys: Array<{ key: string; type: string; itemIndex?: number }>;
+        presigned: Record<string, string>;
+      };
+
+      // 2) Prepare files for upload
+      type Task = { name: string; key: string; file: File };
+      const tasks: Task[] = [];
+
+      // Cover
+      if (coverImageFile) {
+        const coverKey = keys.find((k) => k.type === "cover")?.key;
+        if (coverKey) {
+          const c = await compressImage(coverImageFile, {
+            quality: 0.9,
+            maxWidth: 600,
+            maxHeight: 600,
+            format: "jpeg",
+          });
+          tasks.push({ name: coverImageFile.name, key: coverKey, file: c.file });
+        }
+      }
+
+      // Items (use index mapping and image-compression to make thumb + full)
+      for (let i = 0; i < itemImagesData.length; i++) {
+        const img = itemImagesData[i];
+        if (!img) continue; // text-only item
+        const mainKey = keys.find((k: any) => k.type === "item" && k.itemIndex === i)?.key;
+        const thumbKey = keys.find((k: any) => k.type === "thumb" && k.itemIndex === i)?.key;
+        if (!mainKey || !thumbKey) continue; // should not happen
+
+        const { thumbnail, full } = await generateSorterItemSizes(img.file, {
+          quality: 0.9,
+          format: "jpeg",
+        });
+        tasks.push({ name: `${img.file.name} (thumb)`, key: thumbKey, file: thumbnail.file });
+        tasks.push({ name: `${img.file.name} (full)`, key: mainKey, file: full.file });
+      }
+
+      // 3) Upload with progress
+      uploadAbortRef.current = new AbortController();
+      const abortSignal = uploadAbortRef.current.signal;
+
+      setProgress({
+        phase: "uploading-files",
+        files: tasks.map((t) => ({ name: t.name, progress: 0, status: "pending" })),
+        overallProgress: 0,
+        statusMessage: "Uploading images to R2...",
+        determinate: true,
+      });
+
+      let completed = 0;
+      const update = (idx: number, status: "uploading" | "complete" | "failed") => {
+        setProgress((prev) => {
+          if (!prev) return prev;
+          const files = [...prev.files];
+          files[idx] = { ...files[idx], status, progress: status === "complete" ? 100 : files[idx].progress };
+          const overall = Math.round((files.filter((f) => f.status === "complete").length / files.length) * 100);
+          return { ...prev, files, overallProgress: overall };
+        });
+      };
+
+      const CONCURRENCY = 5;
+      const queue = tasks.map((t, index) => ({ ...t, index }));
+      async function put(url: string, file: File) {
+        const res = await fetch(url, { method: "PUT", body: file, headers: { "Content-Type": "image/jpeg" }, signal: abortSignal });
+        if (!res.ok) throw new Error(`Upload failed ${res.status}`);
+      }
+      let cursor = 0;
+      async function worker() {
+        while (cursor < queue.length) {
+          const my = cursor++;
+          const t = queue[my];
+          try {
+            update(t.index, "uploading");
+            await put(presigned[t.key], t.file);
+            completed++;
+            update(t.index, "complete");
+          } catch (e) {
+            update(t.index, "failed");
+            throw e;
           }
         }
-        throw new Error(errorMessage);
+      }
+      const workers = Array(Math.min(CONCURRENCY, queue.length))
+        .fill(0)
+        .map(() => worker());
+      try {
+        await Promise.all(workers);
+      } catch (e: any) {
+        // Swallow user-initiated cancel aborts
+        if (
+          e === "USER_CANCEL" ||
+          e?.name === "AbortError" ||
+          e?.message?.includes("aborted") ||
+          e?.message?.includes("signal is aborted")
+        ) {
+          return; // gracefully exit upload flow
+        }
+        throw e;
       }
 
-      const result = await response.json();
-      console.log("API response:", result);
+      // 4) Finalize
+      setProgress((prev) => prev && { ...prev, phase: "creating-sorter", statusMessage: "Finalizing sorter...", determinate: false });
 
-      // Check if request was aborted before showing success
-      if (abortController?.signal.aborted) {
-        return;
+      const finRes = await fetch(`/api/sorters/${sorterId}/finalize`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uploadBatchId }),
+        signal: AbortSignal.timeout(300000),
+      });
+      if (finRes.status === 409) {
+        const p = await finRes.json();
+        throw new Error(`Missing ${p.missing?.length || 0} files. Please retry.`);
+      }
+      if (!finRes.ok) {
+        const err = await finRes.json().catch(() => ({}));
+        throw new Error(err.error || `Finalize failed (${finRes.status})`);
       }
 
       toast.success("Sorter created successfully!");
-
-      // Clean up local state and redirect - handle different response structures
-      // Upload session path: { slug: "...", id: "..." }
-      // Tag-based path: { success: true, sorter: { slug: "..." } }
-      const slug = result.slug || result.sorter?.slug;
-      if (slug) {
-        router.refresh(); // Clear router cache so homepage shows new sorter
-        router.push(`/sorter/${slug}`);
-      } else {
-        console.error("No slug found in response:", result);
-        toast.error("Sorter created but navigation failed");
-      }
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        // Check if this was a timeout or user cancellation
-        if (error.message?.includes("signal timed out")) {
-          setIsUploading(false);
-          setShowProgressDialog(false);
-          console.error("Sorter creation timed out:", error);
-          toast.error(
-            "Request timed out after 5 minutes. The sorter may have been created successfully - please check your profile page.",
-          );
-          return;
-        }
-        // User cancelled
-        return;
-      }
-      setIsUploading(false);
-      setShowProgressDialog(false);
-      console.error("Error creating sorter:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create sorter",
-      );
-    }
-  };
-
-  // Upload without images (direct creation)
-  const uploadWithoutImages = async (data: CreateSorterInput) => {
-    try {
-      const payload = {
-        title: data.title?.trim() || "",
-        description: data.description?.trim() || undefined,
-        category: data.category?.trim() || undefined,
-        // Add tags to payload
-        tags: data.tags || [],
-      };
-
-      // Filter out empty items
-      const validItems =
-        data.items
-          ?.filter((item) => item.title.trim())
-          .map((item) => ({
-            title: item.title.trim(),
-            tagSlugs: item.tagSlugs || [],
-          })) || [];
-
-      Object.assign(payload, { items: validItems });
-
-      const response = await fetch("/api/sorters", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+      setProgress({
+        phase: "complete",
+        files: tasks.map((t) => ({ name: t.name, progress: 100, status: "complete" })),
+        overallProgress: 100,
+        statusMessage: "Redirecting to sorter...",
+        determinate: false,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create sorter");
+      router.refresh();
+      router.push(`/sorter/${slug}`);
+      } catch (error: any) {
+        setIsUploading(false);
+        setShowProgressDialog(false);
+        // Ignore abort-related errors triggered by user cancel
+        if (
+          error?.name === "AbortError" ||
+          error?.message?.includes("aborted") ||
+          error?.message?.includes("signal is aborted")
+        ) {
+          return;
+        }
+        console.error("Upload error:", error);
+        throw error;
       }
-
-      const result = await response.json();
-      toast.success("Sorter created successfully!");
-      router.refresh(); // Clear router cache so homepage shows new sorter
-      router.push(`/sorter/${result.sorter.slug}`);
-    } catch (error) {
-      console.error("Error creating sorter:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create sorter",
-      );
-    } finally {
-      setIsLoading(false);
-      setIsUploading(false);
-      setShowProgressDialog(false);
-    }
   };
+
+  // Remove legacy upload-with-session flow (replaced by direct-to-final)
 
   // Handle form submission
   const onSubmit = async (data: CreateSorterInput) => {
     setIsLoading(true);
     setShowProgressDialog(false); // Reset dialog state
-    directUpload.reset(); // Reset upload hook state
+    // Reset local upload state
+    setProgress(null);
 
     try {
       if (coverImageFile || itemImagesData.some((imageData) => imageData)) {
@@ -587,15 +524,51 @@ export default function CreateSorterFormTags() {
   // Get number of items with images
   const itemsWithImages = itemImagesData.filter((data) => data !== null).length;
 
+  // Fallback: create sorter without images (legacy path)
+  async function uploadWithoutImages(data: CreateSorterInput) {
+    try {
+      const payload = {
+        title: data.title?.trim() || "",
+        description: data.description?.trim() || undefined,
+        category: data.category?.trim() || undefined,
+        tags: data.tags || [],
+        items: (data.items || [])
+          .filter((i) => i.title.trim())
+          .map((i) => ({ title: i.title.trim(), tagSlugs: i.tagSlugs || [] })),
+      };
+
+      const res = await fetch("/api/sorters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Create failed (${res.status})`);
+      }
+      const out = await res.json();
+      toast.success("Sorter created successfully!");
+      router.refresh();
+      router.push(`/sorter/${out.slug || out.sorter?.slug}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div>
       {/* Upload Progress Dialog */}
       <UploadProgressDialog
-        open={showProgressDialog || directUpload.isUploading}
-        progress={directUpload.progress}
+        open={showProgressDialog || isUploading}
+        progress={progress}
         onCancel={() => {
           // User clicked cancel button
-          directUpload.cancel();
+          if (uploadAbortRef.current) {
+            try {
+              // Provide a simple reason string; avoid throwing in dev overlay
+              uploadAbortRef.current.abort("USER_CANCEL");
+            } catch {}
+          }
           setShowProgressDialog(false);
           setIsUploading(false);
           setIsLoading(false);
@@ -928,15 +901,13 @@ export default function CreateSorterFormTags() {
               <div>
                 <Button
                   type="submit"
-                  disabled={
-                    isLoading || isUploading || directUpload.isUploading
-                  }
+                  disabled={isLoading || isUploading}
                   className="w-full md:mt-4"
                 >
-                  {(isLoading || isUploading || directUpload.isUploading) && (
+                  {(isLoading || isUploading) && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  {isLoading || isUploading || directUpload.isUploading
+                  {isLoading || isUploading
                     ? "Creating..."
                     : "Create Sorter"}
                 </Button>

@@ -35,9 +35,9 @@ import { Plus, X, Image as ImageIcon, ArrowLeft, Pencil, Loader2 } from "lucide-
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
 import { generateUniqueId, addSuffixToFileName } from "@/lib/utils";
 import CoverImageUpload from "@/components/cover-image-upload";
-import { useDirectUpload } from "@/hooks/use-direct-upload";
 import { UploadProgressDialog } from "@/components/upload-progress-dialog";
-import type { UploadedFile, UploadProgress } from "@/types/upload";
+import type { UploadProgress } from "@/types/upload";
+import { compressImage, generateSorterItemSizes } from "@/lib/image-compression";
 import TagManagement, { type Tag } from "@/components/tag-management";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -105,37 +105,8 @@ export default function EditSorterForm({
   // Upload progress state
   const [showProgressDialog, setShowProgressDialog] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-
-  // Direct upload hook
-  const directUpload = useDirectUpload({
-    onProgress: (progress) => {
-      // Progress updates are handled by the dialog component
-      // Dialog is shown immediately when upload starts
-    },
-    onSuccess: async (uploadedFiles, abortController) => {
-      const formData = form.getValues();
-      await updateSorterWithUploadedFiles(
-        formData,
-        uploadedFiles,
-        abortController,
-      );
-    },
-    onError: (error) => {
-      setIsUploading(false);
-      setShowProgressDialog(false);
-
-      if (error !== "AbortError") {
-        console.error("Upload error:", error);
-      }
-    },
-    getFileType: (file, index) => {
-      // First file is cover image if coverImageFile exists, rest are item images
-      if (coverImageFile && index === 0) {
-        return "cover";
-      }
-      return "item";
-    },
-  });
+  const [progress, setProgress] = useState<UploadProgress | null>(null);
+  const uploadAbortRef = useRef<AbortController | null>(null);
 
   // Convert existing data to form format
   const defaultItems = items.map((item) => ({
@@ -301,102 +272,195 @@ export default function EditSorterForm({
     });
   };
 
-  const updateSorterWithUploadedFiles = async (
-    data: CreateSorterInput,
-    uploadedFiles: UploadedFile[],
-    abortController: AbortController | null,
-  ) => {
+  // Direct-to-final upload for edit (only changed assets)
+  async function uploadChangedAssetsAndFinalize(data: CreateSorterInput) {
+    setIsUploading(true);
+    setShowProgressDialog(true);
     try {
-      setIsLoading(true);
+      // 1) Init edit
+      const itemsPayload = (data.items || []).map((it, idx) => ({
+        title: it.title.trim(),
+        tagNames: it.tagSlugs || [],
+        hasImage: !!itemImagesData[idx],
+      }));
 
-      // Map uploaded files to their respective fields
-      let coverImageUrl = data.coverImageUrl; // Keep existing if no new upload
-      const itemImageUrls = [...data.items.map((item) => item.imageUrl)]; // Keep existing URLs
-
-      uploadedFiles.forEach((uploadedFile) => {
-        if (uploadedFile.type === "cover") {
-          // For cover images, use the R2 key to build URL
-          coverImageUrl = buildR2PublicUrl(uploadedFile.key);
-        } else if (uploadedFile.type === "item") {
-          // For items, we need to match by original name to get the correct index
-          const originalName = uploadedFile.originalName;
-          const itemIndex = data.items.findIndex(
-            (item, idx) => itemImagesData[idx]?.file.name === originalName,
-          );
-          if (itemIndex >= 0) {
-            itemImageUrls[itemIndex] = buildR2PublicUrl(uploadedFile.key);
-          }
-        }
+      const initRes = await fetch(`/api/sorters/${sorter.slug}/edit/init`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: data.title?.trim() || sorter.title,
+          description: data.description?.trim() || null,
+          category: data.category?.trim() || null,
+          tags: managedTags,
+          items: itemsPayload,
+          includeCover: !!coverImageFile,
+        }),
       });
-
-      // Prepare the final data
-      const finalData = {
-        ...data,
-        coverImageUrl: coverImageUrl || undefined,
-        items: data.items
-          .map((item, index) => ({
-            ...item,
-            imageUrl: itemImageUrls[index] || undefined,
-          }))
-          .map((item) => ({
-            ...item,
-            // Remove undefined imageUrl to avoid validation issues
-            ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
-          })),
-        tags: managedTags,
+      if (!initRes.ok) {
+        const err = await initRes.json().catch(() => ({}));
+        throw new Error(err.error || `Init failed (${initRes.status})`);
+      }
+      const init = await initRes.json();
+      const { uploadBatchId, keys, presigned } = init as {
+        uploadBatchId: string;
+        keys: Array<{ key: string; type: string; itemIndex?: number }>;
+        presigned: Record<string, string>;
       };
 
-      // Update the sorter via API
-      const response = await axios.put(
-        `/api/sorters/${sorter.slug}`,
-        finalData,
-        {
-          signal: abortController?.signal,
-        },
-      );
+      // 2) Build tasks
+      type Task = { name: string; key: string; file: File };
+      const tasks: Task[] = [];
 
-      if (response.data) {
-        toast.success("Sorter updated successfully!");
-        setShowProgressDialog(false);
-
-        // Invalidate cached sorter data to show updates immediately
-        await queryClient.invalidateQueries({
-          queryKey: ["sorter", sorter.slug],
-        });
-
-        // Also invalidate recent results in case they changed
-        await queryClient.invalidateQueries({
-          queryKey: ["sorter", sorter.slug, "recent-results"],
-        });
-
-        router.push(`/sorter/${sorter.slug}`);
+      if (coverImageFile) {
+        const coverKey = keys.find((k) => k.type === "cover")?.key;
+        if (coverKey) {
+          const c = await compressImage(coverImageFile, {
+            quality: 0.9,
+            maxWidth: 600,
+            maxHeight: 600,
+            format: "jpeg",
+          });
+          tasks.push({ name: coverImageFile.name, key: coverKey, file: c.file });
+        }
       }
-    } catch (error: any) {
-      setIsLoading(false);
-      setShowProgressDialog(false);
 
-      if (axios.isCancel(error)) {
+      for (let i = 0; i < itemImagesData.length; i++) {
+        const img = itemImagesData[i];
+        if (!img) continue;
+        const mainKey = keys.find((k: any) => k.type === "item" && k.itemIndex === i)?.key;
+        const thumbKey = keys.find((k: any) => k.type === "thumb" && k.itemIndex === i)?.key;
+        if (!mainKey || !thumbKey) continue;
+
+        const { thumbnail, full } = await generateSorterItemSizes(img.file, {
+          quality: 0.9,
+          format: "jpeg",
+        });
+        tasks.push({ name: `${img.file.name} (thumb)`, key: thumbKey, file: thumbnail.file });
+        tasks.push({ name: `${img.file.name} (full)`, key: mainKey, file: full.file });
+      }
+
+      // 3) Upload
+      uploadAbortRef.current = new AbortController();
+      const signal = uploadAbortRef.current.signal;
+      setProgress({
+        phase: "uploading-files",
+        files: tasks.map((t) => ({ name: t.name, progress: 0, status: "pending" })),
+        overallProgress: 0,
+        statusMessage: "Uploading images to R2...",
+        determinate: true,
+      });
+      const put = async (url: string, file: File) => {
+        const res = await fetch(url, {
+          method: "PUT",
+          headers: { "Content-Type": "image/jpeg" },
+          body: file,
+          signal,
+        });
+        if (!res.ok) throw new Error(`Upload failed ${res.status}`);
+      };
+      const queue = tasks.map((t, index) => ({ ...t, index }));
+      let cursor = 0;
+      const CONCURRENCY = 5;
+      const update = (idx: number, status: "uploading" | "complete" | "failed") => {
+        setProgress((prev) => {
+          if (!prev) return prev;
+          const files = [...prev.files];
+          files[idx] = { ...files[idx], status, progress: status === "complete" ? 100 : files[idx].progress };
+          const overall = Math.round((files.filter((f) => f.status === "complete").length / files.length) * 100);
+          return { ...prev, files, overallProgress: overall };
+        });
+      };
+      async function worker() {
+        while (cursor < queue.length) {
+          const my = cursor++;
+          const t = queue[my];
+          try {
+            update(t.index, "uploading");
+            await put(presigned[t.key], t.file);
+            update(t.index, "complete");
+          } catch (e: any) {
+            if (
+              e === "USER_CANCEL" ||
+              e?.name === "AbortError" ||
+              e?.message?.includes("aborted")
+            ) {
+              return;
+            }
+            update(t.index, "failed");
+            throw e;
+          }
+        }
+      }
+      const workers = Array(Math.min(CONCURRENCY, queue.length)).fill(0).map(() => worker());
+      try {
+        await Promise.all(workers);
+      } catch (e: any) {
+        if (
+          e === "USER_CANCEL" ||
+          e?.name === "AbortError" ||
+          e?.message?.includes("aborted")
+        ) {
+          return; // user cancelled
+        }
+        throw e;
+      }
+
+      // 4) Finalize
+      setProgress((prev) => prev && { ...prev, phase: "creating-sorter", statusMessage: "Applying edits...", determinate: false });
+      const fin = await fetch(`/api/sorters/${sorter.slug}/edit/finalize`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uploadBatchId }),
+        signal: AbortSignal.timeout(300000),
+      });
+      if (fin.status === 409) {
+        const p = await fin.json();
+        throw new Error(`Missing ${p.missing?.length || 0} files. Please retry.`);
+      }
+      if (!fin.ok) {
+        const err = await fin.json().catch(() => ({}));
+        throw new Error(err.error || `Finalize failed (${fin.status})`);
+      }
+
+      toast.success("Sorter updated successfully!");
+      setProgress({
+        phase: "complete",
+        files: tasks.map((t) => ({ name: t.name, progress: 100, status: "complete" })),
+        overallProgress: 100,
+        statusMessage: "Redirecting to sorter...",
+        determinate: false,
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ["sorter", sorter.slug] });
+      await queryClient.invalidateQueries({ queryKey: ["sorter", sorter.slug, "recent-results"] });
+      router.push(`/sorter/${sorter.slug}`);
+    } catch (error: any) {
+      setIsUploading(false);
+      setShowProgressDialog(false);
+      if (
+        error === "USER_CANCEL" ||
+        error?.name === "AbortError" ||
+        error?.message?.includes("aborted")
+      ) {
         toast.info("Update cancelled");
         return;
       }
-
-      const errorMessage =
-        error.response?.data?.error ||
-        error.message ||
-        "Failed to update sorter";
-
-      toast.error(errorMessage);
-      console.error("Update error:", error);
+      toast.error(error?.message || "Failed to update sorter");
+      console.error("Edit upload error:", error);
       throw error;
     }
-  };
+  }
 
   // Handle upload cancellation
   const handleCancelUpload = () => {
+    if (uploadAbortRef.current) {
+      try {
+        uploadAbortRef.current.abort("USER_CANCEL");
+      } catch {}
+    }
     setShowProgressDialog(false);
     setIsUploading(false);
     setIsLoading(false);
-    directUpload.cancel();
     toast.info("Upload cancelled");
   };
 
@@ -404,7 +468,7 @@ export default function EditSorterForm({
   const onSubmit = async (data: CreateSorterInput) => {
     setIsLoading(true);
     setShowProgressDialog(false); // Reset dialog state
-    directUpload.reset(); // Reset upload hook state
+    setProgress(null);
 
     try {
       // Check if we have new images to upload
@@ -412,23 +476,7 @@ export default function EditSorterForm({
         coverImageFile || itemImagesData.some((imageData) => imageData);
 
       if (hasNewImages) {
-        // Has new images - use upload flow (same as create sorter)
-        const filesToUpload: File[] = [];
-
-        if (coverImageFile) {
-          filesToUpload.push(coverImageFile);
-        }
-
-        itemImagesData.forEach((imageData) => {
-          if (imageData) {
-            filesToUpload.push(imageData.file);
-          }
-        });
-
-        console.log(`🚀 Uploading ${filesToUpload.length} new files for edit`);
-        setIsUploading(true);
-        setShowProgressDialog(true);
-        directUpload.uploadFiles(filesToUpload);
+        await uploadChangedAssetsAndFinalize(data);
       } else {
         // No new images - direct API call with current URLs
         const finalData = {
@@ -476,6 +524,12 @@ export default function EditSorterForm({
 
   return (
     <>
+      <UploadProgressDialog
+        open={showProgressDialog || isUploading}
+        progress={progress}
+        onCancel={handleCancelUpload}
+        isEditMode
+      />
       <Panel className="mx-auto w-full">
         <PanelHeader variant="primary">
           <div className="flex items-center gap-4">
@@ -892,11 +946,11 @@ export default function EditSorterForm({
         </PanelContent>
       </Panel>
 
-      {/* Upload Progress Dialog */}
+      {/* Upload Progress Dialog (direct-to-final) */}
       <UploadProgressDialog
-        open={showProgressDialog}
+        open={showProgressDialog || isUploading}
         onOpenChange={setShowProgressDialog}
-        progress={directUpload.progress}
+        progress={progress}
         onCancel={handleCancelUpload}
         isEditMode={true}
       />
