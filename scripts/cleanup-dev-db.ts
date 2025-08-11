@@ -9,6 +9,7 @@ import {
   sorterTags,
   sortingResults,
   uploadSessions,
+  uploadBatches,
 } from "../src/db/schema";
 
 // Load environment variables
@@ -166,12 +167,15 @@ async function cleanupDevDatabase() {
   try {
     // Tables to clean in dependency order (children first, then parents)
     const tablesToClean = [
+      // Child tables first
       { name: "sessionFiles", table: sessionFiles },
-      { name: "sorterHistory", table: sorterHistory },
+      { name: "uploadBatches", table: uploadBatches },
       { name: "sortingResults", table: sortingResults },
       { name: "sorterItems", table: sorterItems },
       { name: "sorterTags", table: sorterTags },
+      { name: "sorterHistory", table: sorterHistory },
       { name: "uploadSessions", table: uploadSessions },
+      // Parent last
       { name: "sorters", table: sorters },
     ];
 

@@ -126,7 +126,7 @@ async function cleanupAll() {
       console.log(`🎉 Complete dev environment cleanup finished successfully!`);
       console.log(`\n📊 What was cleaned:`);
       console.log(
-        `  🗄️  Database tables: sessionFiles, sorterGroups, sorterHistory, sorterItems, sorters, sortingResults, uploadSessions`,
+        `  🗄️  Database tables: sessionFiles, uploadBatches, sortingResults, sorterItems, sorterTags, sorterHistory, uploadSessions, sorters`,
       );
       console.log(`  📁 R2 folders: sessions/, sorters/`);
       console.log(`\n🛡️  What was preserved:`);
