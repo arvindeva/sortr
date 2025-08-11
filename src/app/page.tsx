@@ -36,9 +36,7 @@ async function getPopularSorters() {
       coverImageUrl: sorter.coverImageUrl ?? undefined,
     }));
 
-    console.log(
-      `📊 SSR: Found ${transformedSorters.length} popular sorters`,
-    );
+    console.log(`📊 SSR: Found ${transformedSorters.length} popular sorters`);
 
     return {
       popularSorters: transformedSorters,
@@ -115,12 +113,12 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-2 py-10 md:px-4">
-        <section className="mx-auto mb-10 flex max-w-xl justify-center">
+      <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-2 py-2 md:px-4">
+        <section className="mx-auto mb-2 flex max-w-xl justify-center">
           <Box
             variant="primary"
             size="sm"
-            className="my-4 text-center sm:my-16 md:my-20 md:p-8"
+            className="my-2 text-center sm:my-8 md:p-8"
           >
             <h1 className="text-4xl font-extrabold tracking-wide md:mb-4 md:text-7xl">
               sortr
