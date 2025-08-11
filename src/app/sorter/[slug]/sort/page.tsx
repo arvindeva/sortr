@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useImagePreloader } from "@/hooks/use-image-preloader";
@@ -84,6 +85,7 @@ export default function SortPage() {
   const searchParams = useSearchParams();
   const sorterSlug = params.slug as string;
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
 
   const [currentComparison, setCurrentComparison] =
     useState<ComparisonState | null>(null);
@@ -458,6 +460,17 @@ export default function SortPage() {
       queryClient.invalidateQueries({
         queryKey: ["browse"],
       });
+
+      // Invalidate user profile cache to show new ranking in user's rankings section
+      if (session?.user?.email) {
+        queryClient.invalidateQueries({
+          queryKey: ["user", session.user.email],
+        });
+        // Also invalidate username-based queries if we have a username
+        queryClient.invalidateQueries({
+          queryKey: ["user"],
+        });
+      }
 
       // Redirect to results page
       router.push(`/rankings/${resultId}`);
