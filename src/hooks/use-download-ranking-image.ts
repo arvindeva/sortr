@@ -104,13 +104,23 @@ export function useDownloadRankingImage() {
           throw new Error("Could not find ranking container");
         }
 
-        // Generate PNG
-        const dataUrl = await toPng(rankingContainer as HTMLElement, {
+        // Generate PNG at actual rendered width for crisp output
+        const containerEl = rankingContainer as HTMLElement;
+        const rect = containerEl.getBoundingClientRect();
+        const renderedWidth = Math.max(1, Math.ceil(rect.width));
+        const MAX_CANVAS_EDGE = 8192; // guard against oversized canvases causing errors
+        let desiredPixelRatio = 2;
+        if (renderedWidth * desiredPixelRatio > MAX_CANVAS_EDGE) {
+          desiredPixelRatio = Math.max(1, Math.floor(MAX_CANVAS_EDGE / renderedWidth));
+        }
+
+        const dataUrl = await toPng(containerEl, {
           quality: 1.0,
-          pixelRatio: 2, // High resolution for better quality
+          pixelRatio: desiredPixelRatio,
           backgroundColor: "transparent", // Transparent background so rounded corners show
-          width: 1092, // Updated width to include shadow space
+          width: renderedWidth,
           height: undefined, // Auto height based on content
+          cacheBust: true,
           style: {
             fontFamily:
               'var(--font-poppins), "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
@@ -140,9 +150,11 @@ export function useDownloadRankingImage() {
         document.body.removeChild(container);
 
         toast.success("Rankings image downloaded!");
-      } catch (error) {
-        console.error("Error generating ranking image:", error);
-        toast.error("Failed to generate image. Please try again.");
+      } catch (error: any) {
+        // Provide more context to help diagnose issues like CORS or canvas size limits
+        const message = error?.message || error?.toString?.() || "Unknown error";
+        console.error("Error generating ranking image:", message, error);
+        toast.error("Failed to generate image. Try again or reduce columns.");
       } finally {
         setIsGenerating(false);
       }

@@ -84,6 +84,17 @@ export async function compressImage(
       canvas.height = height;
 
       // Draw and compress image
+      // Improve resampling quality when downscaling
+      // This yields crisper thumbnails/downsized images, especially for line art
+      // and text-like edges.
+      // Note: imageSmoothingEnabled defaults to true, but set explicitly.
+      (ctx as CanvasRenderingContext2D).imageSmoothingEnabled = true;
+      try {
+        // Not all environments support this property, so wrap in try
+        // to avoid exceptions in strict environments.
+        // @ts-ignore - property exists in modern browsers
+        ctx.imageSmoothingQuality = "high";
+      } catch {}
       ctx.drawImage(
         img,
         sourceX,
@@ -252,7 +263,8 @@ export async function generateSorterItemSizes(
   > = {},
 ): Promise<{ thumbnail: MultiSizeResult; full: MultiSizeResult }> {
   const sizes = [
-    { width: 64, height: 64, suffix: "thumb" },
+    // Use higher-resolution thumbnails for better clarity across the site
+    { width: 128, height: 128, suffix: "thumb" },
     { width: 300, height: 300, suffix: "" }, // No suffix for full size
   ];
 
