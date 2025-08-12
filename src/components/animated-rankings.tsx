@@ -26,94 +26,55 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
             delay: index < 10 ? index * 0.1 : 10 * 0.1,
             ease: "easeOut",
           }}
-          className={`bg-background text-foreground rounded-base border-border shadow-shadow overflow-hidden border-2 p-2 md:p-4 ${
-            index < 3
-              ? "flex flex-col items-center text-center md:flex-row md:items-center md:text-left"
-              : "flex items-center gap-3"
-          }`}
+          className={
+            "bg-background text-foreground rounded-base border-border shadow-shadow overflow-hidden border-2 p-1 md:p-3 flex items-center gap-3"
+          }
         >
-          {index < 3 ? (
-            // Top 3: Special layout with larger images
-            <>
-              {/* Image */}
-              {item.imageUrl ? (
-                <div
-                  className="rounded-base border-border mb-3 flex-shrink-0 overflow-hidden border-2 md:mr-4 md:mb-0"
-                  style={{ width: "200px", height: "200px" }}
-                >
-                  <img
-                    src={getImageUrl(item.imageUrl, "full")}
-                    alt={item.title}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div
-                  className="rounded-base border-border bg-secondary-background mb-3 flex flex-shrink-0 items-center justify-center border-2 md:mr-4 md:mb-0"
-                  style={{ width: "200px", height: "200px" }}
-                >
-                  <span className="text-main text-4xl font-bold md:text-5xl">
-                    {item.title.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-
-              {/* Title with Rank - Below image on mobile, beside on desktop */}
-              <div className="relative min-w-0 flex-1">
-                <h3 className="font-medium break-words md:text-xl">
-                  {index + 1}.&nbsp;&nbsp;{item.title}
-                </h3>
-                {index === 0 && (
-                  <span className="mt-2 block text-3xl md:absolute md:-top-1 md:right-2 md:mt-0 md:text-3xl">
-                    🥇
-                  </span>
-                )}
-                {index === 1 && (
-                  <span className="mt-2 block text-3xl md:absolute md:-top-1 md:right-2 md:mt-0 md:text-3xl">
-                    🥈
-                  </span>
-                )}
-                {index === 2 && (
-                  <span className="mt-2 block text-3xl md:absolute md:-top-1 md:right-2 md:mt-0 md:text-3xl">
-                    🥉
-                  </span>
-                )}
-              </div>
-            </>
+          {/* Image (uniform size for all ranks) */}
+          {item.imageUrl ? (
+            <div className="rounded-base border-border h-10 w-10 flex-shrink-0 overflow-hidden border-2 md:h-16 md:w-16">
+              <img
+                src={getImageUrl(item.imageUrl, "thumbnail")}
+                alt={item.title}
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src.includes("-thumb")) {
+                    target.src = getImageUrl(item.imageUrl, "full");
+                  }
+                }}
+              />
+            </div>
           ) : (
-            // Rest: Standard horizontal layout
-            <>
-              {/* Image */}
-              {item.imageUrl ? (
-                <div className="rounded-base border-border h-10 w-10 flex-shrink-0 overflow-hidden border-2 md:h-16 md:w-16">
-                  <img
-                    src={getImageUrl(item.imageUrl, "thumbnail")}
-                    alt={item.title}
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      // Fallback to full-size image if thumbnail fails to load
-                      const target = e.target as HTMLImageElement;
-                      if (target.src.includes("-thumb")) {
-                        target.src = getImageUrl(item.imageUrl, "full");
-                      }
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="rounded-base border-border bg-secondary-background flex h-10 w-10 flex-shrink-0 items-center justify-center border-2 md:h-16 md:w-16">
-                  <span className="text-main font-bold">
-                    {item.title.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
+            <div className="rounded-base border-border bg-secondary-background flex h-10 w-10 flex-shrink-0 items-center justify-center border-2 md:h-16 md:w-16">
+              <span className="text-main font-bold">
+                {item.title.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
 
-              {/* Title with Rank */}
-              <div className="relative min-w-0 flex-1">
-                <h3 className="font-medium break-words md:text-base">
-                  {index + 1}.&nbsp;&nbsp;{item.title}
-                </h3>
-              </div>
-            </>
+          {/* Title with Rank */}
+          <div className="relative min-w-0 flex-1">
+            <h3 className="font-medium break-words md:text-base">
+              {index + 1}.&nbsp;&nbsp;{item.title}
+            </h3>
+          </div>
+
+          {/* Medal for top 3 only (kept, no layout change) */}
+          {index === 0 && (
+            <span className="text-2xl md:text-3xl" aria-label="Gold medal">
+              🥇
+            </span>
+          )}
+          {index === 1 && (
+            <span className="text-2xl md:text-3xl" aria-label="Silver medal">
+              🥈
+            </span>
+          )}
+          {index === 2 && (
+            <span className="text-2xl md:text-3xl" aria-label="Bronze medal">
+              🥉
+            </span>
           )}
         </motion.div>
       ))}
