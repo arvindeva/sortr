@@ -50,11 +50,11 @@ export function UploadProgressDialog({
       case "requesting-tokens":
         return "Preparing upload...";
       case "uploading-files":
-        const completedFiles = progress.files.filter(
-          (f) => f.status === "complete",
-        ).length;
-        const totalFiles = progress.files.length;
-        return `${completedFiles}/${totalFiles} images uploaded`;
+        // Group thumbnail/full per item for display purposes only
+        const groups = getGroupedFiles();
+        const completed = groups.filter((g) => g.status === "complete").length;
+        const total = groups.length;
+        return `${completed}/${total} images uploaded`;
       case "creating-sorter":
         return isEditMode ? "Processing edits..." : "Processing sorter...";
       case "complete":
@@ -79,6 +79,46 @@ export function UploadProgressDialog({
   };
 
   const canCancel = progress.phase !== "complete";
+
+  // Helper: group files so that `${name} (thumb)` and `${name} (full)` collapse into one UI row
+  const getGroupedFiles = () => {
+    const map = new Map<
+      string,
+      { base: string; statuses: string[]; originals: string[]; variants: boolean[] }
+    >();
+    const deriveBase = (name: string) =>
+      name
+        .replace(/\s\/(thumb|full)$/i, "")
+        .replace(/\s\((thumb|full)\)$/i, "");
+    const isVariant = (name: string) => /\((thumb|full)\)$/i.test(name);
+
+    for (const f of progress.files) {
+      const key = deriveBase(f.name);
+      const entry =
+        map.get(key) || { base: key, statuses: [], originals: [], variants: [] };
+      entry.statuses.push(f.status);
+      entry.originals.push(f.name);
+      entry.variants.push(isVariant(f.name));
+      map.set(key, entry);
+    }
+
+    // Derive a single status per group and friendly display name
+    const groups = Array.from(map.values()).map((g) => {
+      let status: "pending" | "uploading" | "complete" | "failed" = "pending";
+      if (g.statuses.some((s) => s === "failed")) status = "failed";
+      else if (g.statuses.length > 0 && g.statuses.every((s) => s === "complete"))
+        status = "complete";
+      else if (g.statuses.some((s) => s === "uploading")) status = "uploading";
+      else status = "pending";
+
+      // Heuristic: Cover upload is a lone entry without (thumb)/(full) suffix
+      const isCover = g.originals.length === 1 && g.variants[0] === false;
+      const display = isCover ? "Cover" : g.base;
+      return { name: display, status };
+    });
+
+    return groups;
+  };
 
   const handleCancel = () => {
     if (onCancel && canCancel) {
@@ -147,12 +187,12 @@ export function UploadProgressDialog({
             )}
           </div>
 
-          {/* Individual file progress */}
+          {/* Individual item progress (thumb + full grouped) */}
           {progress.phase === "uploading-files" && (
             <div className="space-y-2">
-              <div className="text-sm font-medium">Files:</div>
+              <div className="text-sm font-medium">Uploads:</div>
               <div className="max-h-32 space-y-1 overflow-y-auto">
-                {progress.files.map((file, index) => (
+                {getGroupedFiles().map((file, index) => (
                   <div key={index} className="flex items-center gap-2 text-sm">
                     <span>{getStatusIcon(file.status)}</span>
                     <span className="truncate" title={file.name}>
