@@ -43,12 +43,25 @@ export function useDownloadRankingImage() {
         const ReactDOM = await import("react-dom/client");
 
         // Create React element
+        // Resolve key CSS vars from :root to avoid html-to-image var issues
+        let resolvedMain = "";
+        let resolvedBackground = "";
+        try {
+          const root = document.documentElement;
+          resolvedMain = getComputedStyle(root).getPropertyValue("--main");
+          resolvedBackground = getComputedStyle(root).getPropertyValue(
+            "--background",
+          );
+        } catch {}
+
         const rankingElement = React.createElement(RankingImageLayout, {
           sorterTitle: data.sorterTitle,
           username: data.username,
           rankings: data.rankings,
           createdAt: data.createdAt,
           selectedTags: data.selectedTags,
+          mainColor: resolvedMain,
+          itemBackgroundColor: resolvedBackground,
         });
 
         // Append container to body

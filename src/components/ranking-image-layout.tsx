@@ -15,6 +15,10 @@ interface RankingImageLayoutProps {
   rankings: RankedItem[];
   createdAt: Date;
   selectedTags?: string[];
+  // Optional resolved main color to avoid CSS var issues in html-to-image
+  mainColor?: string;
+  // Resolved background color for item cards
+  itemBackgroundColor?: string;
 }
 
 export function RankingImageLayout({
@@ -23,6 +27,8 @@ export function RankingImageLayout({
   rankings,
   createdAt,
   selectedTags,
+  mainColor,
+  itemBackgroundColor,
 }: RankingImageLayoutProps) {
   // Column logic: 1 column if <= 10 items; otherwise multiple columns with 10 per column
   const totalItems = rankings.length;
@@ -98,7 +104,7 @@ export function RankingImageLayout({
         <PanelContent
           style={{
             backgroundColor: "#ffffff", // Light mode content background
-            padding: "32px 24px 24px 24px",
+            padding: "24px", // Match vertical and horizontal padding
           }}
         >
           {/* Ranked items in columns (text-only), 10 items per column */}
@@ -118,7 +124,10 @@ export function RankingImageLayout({
                     <Card
                       key={item.id}
                       style={{
-                        backgroundColor: "#ffffff",
+                        // Use resolved background color to match bg-background
+                        // Fallback to CSS var for dev preview
+                        backgroundColor:
+                          itemBackgroundColor?.trim() || "var(--background)",
                         border: "2px solid #000000",
                         borderRadius: "0px",
                         boxShadow: "2px 2px 0px 0px #000000",
