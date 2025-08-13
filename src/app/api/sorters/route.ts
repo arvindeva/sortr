@@ -26,8 +26,8 @@ import {
   uploadToR2,
   getR2PublicUrl,
   getFlatCoverKey,
-  getFlatItemKey,
-  getFlatItemThumbKey,
+  getFlatItemKeyStable,
+  getFlatItemThumbKeyStable,
   generateUniqueFileId,
   copyR2ObjectsInParallel,
 } from "@/lib/r2";
@@ -180,8 +180,8 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
             const sessionKey = item.imageUrl.match(/\/sessions\/(.+)$/)?.[1];
             if (sessionKey) {
               const uniqueId = generateUniqueFileId();
-              const destKey = getFlatItemKey(newSorter.id, itemSlug, uniqueId);
-              const destThumbKey = getFlatItemThumbKey(newSorter.id, itemSlug, uniqueId);
+              const destKey = getFlatItemKeyStable(newSorter.id, itemSlug);
+              const destThumbKey = getFlatItemThumbKeyStable(newSorter.id, itemSlug);
               
               // Copy from session to flat structure
               await copyR2ObjectsInParallel([
@@ -572,9 +572,8 @@ export async function POST(request: NextRequest) {
             const processedImage = processedItemImages[imageIndex];
 
             itemSlug = generateSorterItemSlug(item.title);
-            const uniqueId = generateUniqueFileId();
-            const itemKey = getFlatItemKey(newSorter.id, itemSlug, uniqueId);
-            const thumbKey = getFlatItemThumbKey(newSorter.id, itemSlug, uniqueId);
+            const itemKey = getFlatItemKeyStable(newSorter.id, itemSlug);
+            const thumbKey = getFlatItemThumbKeyStable(newSorter.id, itemSlug);
 
             // Upload main image and thumbnail to R2
             await uploadToR2(itemKey, processedImage.buffer, "image/jpeg");

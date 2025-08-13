@@ -16,8 +16,8 @@ import {
   copyR2ObjectsInParallel,
   getR2PublicUrl,
   getFlatCoverKey,
-  getFlatItemKey,
-  getFlatItemThumbKey,
+  getFlatItemKeyStable,
+  getFlatItemThumbKeyStable,
   generateUniqueFileId,
   extractSessionKeyFromUrl,
   extractR2KeyFromUrl,
@@ -553,10 +553,9 @@ async function handleFileOperations(
     if (newItem.imageUrl?.includes("/sessions/")) {
       // NEW IMAGE from upload session
       const sessionKey = extractSessionKeyFromUrl(newItem.imageUrl);
-      const uniqueId = generateUniqueFileId(); // timestamp + random
       const itemSlug = generateSorterItemSlug(newItem.title);
-      const destKey = getFlatItemKey(currentSorter.id, itemSlug, uniqueId);
-      const destThumbKey = getFlatItemThumbKey(currentSorter.id, itemSlug, uniqueId);
+      const destKey = getFlatItemKeyStable(currentSorter.id, itemSlug);
+      const destThumbKey = getFlatItemThumbKeyStable(currentSorter.id, itemSlug);
       
       // Copy main + thumbnail
       copyOperations.push({

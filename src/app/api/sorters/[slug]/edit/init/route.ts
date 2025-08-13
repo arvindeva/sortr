@@ -7,8 +7,8 @@ import {
   generatePresignedUploadUrl,
   getR2PublicUrl,
   getFlatCoverKey,
-  getFlatItemKey,
-  getFlatItemThumbKey,
+  getFlatItemKeyStable,
+  getFlatItemThumbKeyStable,
   generateUniqueFileId,
 } from "@/lib/r2";
 import { and, eq } from "drizzle-orm";
@@ -70,9 +70,8 @@ export async function POST(
       const slug = generateSorterItemSlug(it.title);
       itemSlugs.push(slug);
       if (it.hasImage) {
-        const uid = generateUniqueFileId();
-        const mainKey = getFlatItemKey(sorterId, slug, uid);
-        const thumbKey = getFlatItemThumbKey(sorterId, slug, uid);
+        const mainKey = getFlatItemKeyStable(sorterId, slug);
+        const thumbKey = getFlatItemThumbKeyStable(sorterId, slug);
         expectedKeys.push({ key: mainKey, type: "item", itemIndex: idx });
         expectedKeys.push({ key: thumbKey, type: "thumb", itemIndex: idx });
       }
@@ -123,4 +122,3 @@ export async function POST(
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

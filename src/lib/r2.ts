@@ -409,6 +409,18 @@ export function getFlatItemThumbKey(sorterId: string, itemSlug: string, uniqueId
 }
 
 /**
+ * Generate stable flat keys (no extra unique suffix).
+ * Uses the already-unique itemSlug which contains a random suffix.
+ */
+export function getFlatItemKeyStable(sorterId: string, itemSlug: string): string {
+  return `sorters/${sorterId}/${itemSlug}.jpg`;
+}
+
+export function getFlatItemThumbKeyStable(sorterId: string, itemSlug: string): string {
+  return `sorters/${sorterId}/${itemSlug}-thumb.jpg`;
+}
+
+/**
  * Extract unique ID from flat URL for cleanup (works for both cover and items)
  * @param url - The flat structure URL
  * @returns The unique ID or null if not found

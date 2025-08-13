@@ -6,8 +6,8 @@ import { sorters, uploadBatches } from "@/db/schema";
 import {
   generatePresignedUploadUrl,
   getFlatCoverKey,
-  getFlatItemKey,
-  getFlatItemThumbKey,
+  getFlatItemKeyStable,
+  getFlatItemThumbKeyStable,
   generateUniqueFileId,
 } from "@/lib/r2";
 import { generateSorterItemSlug, generateSorterSlug } from "@/lib/utils";
@@ -76,9 +76,8 @@ export async function POST(req: NextRequest) {
       const slug = generateSorterItemSlug(it.title);
       itemSlugs.push(slug);
       if (it.hasImage) {
-        const uid = generateUniqueFileId();
-        const mainKey = getFlatItemKey(sorterId, slug, uid);
-        const thumbKey = getFlatItemThumbKey(sorterId, slug, uid);
+        const mainKey = getFlatItemKeyStable(sorterId, slug);
+        const thumbKey = getFlatItemThumbKeyStable(sorterId, slug);
         expectedKeys.push({ key: mainKey, type: "item", itemIndex: idx });
         expectedKeys.push({ key: thumbKey, type: "thumb", itemIndex: idx });
       }
