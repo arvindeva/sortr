@@ -5,8 +5,10 @@ import { db } from "@/db";
 import { sorters, uploadBatches } from "@/db/schema";
 import {
   generatePresignedUploadUrl,
-  getVersionedCoverKey,
-  getVersionedItemKey,
+  getFlatCoverKey,
+  getFlatItemKey,
+  getFlatItemThumbKey,
+  generateUniqueFileId,
 } from "@/lib/r2";
 import { generateSorterItemSlug, generateSorterSlug } from "@/lib/utils";
 import { eq } from "drizzle-orm";
@@ -64,7 +66,8 @@ export async function POST(req: NextRequest) {
     // Cover (optional)
     let coverKey: string | null = null;
     if (body.includeCover) {
-      coverKey = getVersionedCoverKey(sorterId, version, "jpg");
+      const uid = generateUniqueFileId();
+      coverKey = getFlatCoverKey(sorterId, uid);
       expectedKeys.push({ key: coverKey, type: "cover" });
     }
 
@@ -73,13 +76,9 @@ export async function POST(req: NextRequest) {
       const slug = generateSorterItemSlug(it.title);
       itemSlugs.push(slug);
       if (it.hasImage) {
-        const mainKey = getVersionedItemKey(sorterId, slug, version, "jpg");
-        const thumbKey = getVersionedItemKey(
-          sorterId,
-          `${slug}-thumb`,
-          version,
-          "jpg",
-        );
+        const uid = generateUniqueFileId();
+        const mainKey = getFlatItemKey(sorterId, slug, uid);
+        const thumbKey = getFlatItemThumbKey(sorterId, slug, uid);
         expectedKeys.push({ key: mainKey, type: "item", itemIndex: idx });
         expectedKeys.push({ key: thumbKey, type: "thumb", itemIndex: idx });
       }

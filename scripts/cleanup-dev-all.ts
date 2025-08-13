@@ -4,6 +4,17 @@ import dotenv from "dotenv";
 
 // Load environment variables
 dotenv.config();
+// Optional: force-load a specific env file for cleanup safety
+if (process.env.CLEANUP_ENV_FILE) {
+  try {
+    dotenv.config({ path: process.env.CLEANUP_ENV_FILE, override: true });
+    console.log(`🔐 Loaded cleanup env from: ${process.env.CLEANUP_ENV_FILE}`);
+  } catch (e) {
+    console.warn(
+      `⚠️  Failed to load CLEANUP_ENV_FILE='${process.env.CLEANUP_ENV_FILE}'. Using default env.`,
+    );
+  }
+}
 
 console.log("🚀 Starting complete dev environment cleanup...");
 console.log("🎯 This will clean both database and R2 storage");
@@ -167,11 +178,20 @@ function askForConfirmation(): Promise<boolean> {
     console.log("🛡️  Users and avatars will be preserved.");
     console.log("");
 
+    // Show targets to confirm
+    const dbUrl = process.env.DATABASE_URL || "(unset)";
+    const maskedDbUrl = dbUrl.replace(/\/\/.*@/, "//***@");
+    const bucket = process.env.R2_BUCKET || process.env.R2_BUCKET_NAME || "(unset)";
+
+    console.log(`Target database (masked): ${maskedDbUrl}`);
+    console.log(`Target R2 bucket: ${bucket}`);
+    const confirmToken = `CONFIRM DEV CLEANUP for '${bucket}'`;
+
     rl.question(
-      "Are you sure you want to continue? (type 'yes' to confirm): ",
+      `Type exactly: ${confirmToken}\n> `,
       (answer: string) => {
         rl.close();
-        resolve(answer.toLowerCase() === "yes");
+        resolve(answer.trim() === confirmToken);
       },
     );
   });

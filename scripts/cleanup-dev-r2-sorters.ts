@@ -8,6 +8,17 @@ import {
 
 // Load environment variables
 dotenv.config();
+// Optional: force-load a specific env file for cleanup safety
+if (process.env.CLEANUP_ENV_FILE) {
+  try {
+    dotenv.config({ path: process.env.CLEANUP_ENV_FILE, override: true });
+    console.log(`🔐 Loaded cleanup env from: ${process.env.CLEANUP_ENV_FILE}`);
+  } catch (e) {
+    console.warn(
+      `⚠️  Failed to load CLEANUP_ENV_FILE='${process.env.CLEANUP_ENV_FILE}'. Using default env.`,
+    );
+  }
+}
 
 console.log("🔧 Environment check:");
 console.log("R2_BUCKET:", process.env.R2_BUCKET ? "✅ Set" : "❌ Missing");
@@ -217,6 +228,21 @@ async function cleanupSorterFolders() {
   console.log(`📦 Bucket: ${BUCKET_NAME}`);
   console.log("🎯 Strategy: Remove sessions/ and sorters/ folders only");
   console.log("🛡️  Preserving: avatars/ and any other folders\n");
+
+  // Interactive confirmation for bucket name
+  const readline = require("readline");
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const token = `DELETE from bucket '${BUCKET_NAME as string}'`;
+  const ok = await new Promise<boolean>((resolve) => {
+    rl.question(`Type exactly to confirm: ${token}\n> `, (answer: string) => {
+      rl.close();
+      resolve(answer.trim() === token);
+    });
+  });
+  if (!ok) {
+    console.log("❌ Cleanup cancelled (bucket confirmation mismatch).");
+    process.exit(1);
+  }
 
   // Folders to clean
   const foldersToClean = ["sessions/", "sorters/"];

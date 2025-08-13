@@ -391,10 +391,10 @@ export function getFlatCoverKey(sorterId: string, uniqueId: string): string {
  * @param sorterId - The sorter ID
  * @param itemSlug - The item slug 
  * @param uniqueId - Unique identifier to prevent conflicts
- * @returns Flat item image key: sorters/{id}/item-{slug}-{uniqueId}.jpg
+ * @returns Flat item image key: sorters/{id}/{slug}-{uniqueId}.jpg
  */
 export function getFlatItemKey(sorterId: string, itemSlug: string, uniqueId: string): string {
-  return `sorters/${sorterId}/item-${itemSlug}-${uniqueId}.jpg`;
+  return `sorters/${sorterId}/${itemSlug}-${uniqueId}.jpg`;
 }
 
 /**
@@ -402,10 +402,10 @@ export function getFlatItemKey(sorterId: string, itemSlug: string, uniqueId: str
  * @param sorterId - The sorter ID
  * @param itemSlug - The item slug
  * @param uniqueId - Unique identifier to prevent conflicts  
- * @returns Flat thumbnail key: sorters/{id}/item-{slug}-{uniqueId}-thumb.jpg
+ * @returns Flat thumbnail key: sorters/{id}/{slug}-{uniqueId}-thumb.jpg
  */
 export function getFlatItemThumbKey(sorterId: string, itemSlug: string, uniqueId: string): string {
-  return `sorters/${sorterId}/item-${itemSlug}-${uniqueId}-thumb.jpg`;
+  return `sorters/${sorterId}/${itemSlug}-${uniqueId}-thumb.jpg`;
 }
 
 /**
@@ -415,7 +415,7 @@ export function getFlatItemThumbKey(sorterId: string, itemSlug: string, uniqueId
  */
 export function extractUniqueIdFromFlatUrl(url: string): string | null {
   const coverMatch = url.match(/cover-([^-/]+)\.jpg/);
-  const itemMatch = url.match(/item-.*?-([^-/]+)(?:-thumb)?\.jpg/);
+  const itemMatch = url.match(/\/sorters\/[^/]+\/[^/]+-([^-/]+)(?:-thumb)?\.jpg/);
   return coverMatch ? coverMatch[1] : (itemMatch ? itemMatch[1] : null);
 }
 
@@ -440,8 +440,8 @@ export function extractSessionKeyFromUrl(url: string): string {
 
 /**
  * Extract R2 key from R2 URL
- * @param url - R2 URL (e.g., https://example.com/sorters/123/v1/item-foo-abc123.jpg)
- * @returns R2 key (e.g., sorters/123/v1/item-foo-abc123.jpg)
+ * @param url - R2 URL (e.g., https://example.com/sorters/123/foo-abc123.jpg)
+ * @returns R2 key (e.g., sorters/123/foo-abc123.jpg)
  */
 export function extractR2KeyFromUrl(url: string): string {
   const match = url.match(/\/sorters\/(.+)$/);

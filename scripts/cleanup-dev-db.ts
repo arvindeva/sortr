@@ -14,6 +14,17 @@ import {
 
 // Load environment variables
 dotenv.config();
+// Optional: force-load a specific env file for cleanup safety
+if (process.env.CLEANUP_ENV_FILE) {
+  try {
+    dotenv.config({ path: process.env.CLEANUP_ENV_FILE, override: true });
+    console.log(`🔐 Loaded cleanup env from: ${process.env.CLEANUP_ENV_FILE}`);
+  } catch (e) {
+    console.warn(
+      `⚠️  Failed to load CLEANUP_ENV_FILE='${process.env.CLEANUP_ENV_FILE}'. Using default env.`,
+    );
+  }
+}
 
 console.log("🔧 Environment check:");
 console.log(
@@ -51,38 +62,24 @@ function isValidDevDatabase(url: string): { valid: boolean; reason?: string } {
     };
   }
 
-  // Development indicators that must be present
-  const devIndicators = [
-    "localhost",
-    "127.0.0.1",
-    "::1",
-    ".dev",
-    "-dev",
-    "dev.",
-    "dev-",
-    "development",
-    // Development platforms
-    "railway", // Railway.app
-    "rlwy.net", // Railway domain
-    "vercel", // Vercel
-    "supabase", // Supabase
-    "planetscale", // PlanetScale
-    "neon.tech", // Neon
-    "render.com", // Render
-    "heroku", // Heroku
-    "fly.io", // Fly.io
-    "test", // Test databases
-    "staging", // Allow staging for development
-  ];
-
-  const hasDevIndicator = devIndicators.some((indicator) =>
-    urlLower.includes(indicator),
-  );
-  if (!hasDevIndicator) {
-    return {
-      valid: false,
-      reason: `Must contain at least one dev indicator: ${devIndicators.join(", ")}`,
-    };
+  // Optionally enforce host allowlist when provided
+  const allowlistEnv = process.env.CLEANUP_DB_HOST_ALLOWLIST;
+  if (allowlistEnv) {
+    try {
+      const allow = allowlistEnv
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean);
+      const host = new URL(url).hostname.toLowerCase();
+      if (!allow.includes(host)) {
+        return {
+          valid: false,
+          reason: `Host '${host}' is not in CLEANUP_DB_HOST_ALLOWLIST=[${allow.join(", ")}]`,
+        };
+      }
+    } catch (e) {
+      return { valid: false, reason: "Invalid URL or host allowlist" };
+    }
   }
 
   return { valid: true };
@@ -114,7 +111,7 @@ if (DEV_CLEANUP_ENABLED !== "true") {
 }
 
 // Check 3: Enhanced database URL validation
-const dbValidation = isValidDevDatabase(DATABASE_URL);
+const dbValidation = isValidDevDatabase(DATABASE_URL as string);
 if (!dbValidation.valid) {
   console.error("❌ Safety check failed: Database URL validation failed");
   console.error(`Reason: ${dbValidation.reason}`);
@@ -128,9 +125,37 @@ console.log("✅ All safety checks passed!");
 
 // Create database connection
 const pool = new Pool({
-  connectionString: DATABASE_URL,
+  connectionString: DATABASE_URL as string,
 });
 const db = drizzle(pool);
+
+async function confirmTargetDatabase(url: string): Promise<boolean> {
+  const readline = require("readline");
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  let host = "";
+  let port = "";
+  let name = "";
+  try {
+    const u = new URL(url);
+    host = u.hostname;
+    port = u.port || "5432";
+    name = (u.pathname || "/").replace(/^\//, "");
+  } catch {
+    // Fallback to masked display
+    console.log(`Target (masked): ${url.replace(/\/\/.*@/, "//***@")}`);
+  }
+
+  const target = `${host}:${port}/${name}`;
+  console.log(`\nAbout to clean database: ${target}`);
+  const prompt = `Type exactly to confirm: ${target}\n> `;
+
+  return await new Promise((resolve) => {
+    rl.question(prompt, (answer: string) => {
+      rl.close();
+      resolve(answer.trim() === target);
+    });
+  });
+}
 
 async function countRecords(tableName: string, table: any): Promise<number> {
   try {
@@ -165,6 +190,12 @@ async function cleanupDevDatabase() {
   );
 
   try {
+    const confirmed = await confirmTargetDatabase(DATABASE_URL as string);
+    if (!confirmed) {
+      console.log("❌ Cleanup cancelled (database confirmation mismatch).");
+      process.exit(1);
+    }
+
     // Tables to clean in dependency order (children first, then parents)
     const tablesToClean = [
       // Child tables first

@@ -32,8 +32,13 @@ export function useDownloadRankingImage() {
         container.style.top = "-9999px";
         container.style.left = "-9999px";
         container.style.zIndex = "-1";
-        // Copy the body's font family class to ensure font variables work
-        container.className = document.body.className;
+        // Copy body's classes to keep font family, but strip any dark-mode class
+        // so the exported image consistently uses light theme colors.
+        const bodyClass = document.body.className || "";
+        container.className = bodyClass
+          .split(/\s+/)
+          .filter((c) => c && c !== "dark")
+          .join(" ");
 
         // Import the RankingImageLayout component dynamically
         const { RankingImageLayout } = await import(
@@ -43,16 +48,8 @@ export function useDownloadRankingImage() {
         const ReactDOM = await import("react-dom/client");
 
         // Create React element
-        // Resolve key CSS vars from :root to avoid html-to-image var issues
-        let resolvedMain = "";
-        let resolvedBackground = "";
-        try {
-          const root = document.documentElement;
-          resolvedMain = getComputedStyle(root).getPropertyValue("--main");
-          resolvedBackground = getComputedStyle(root).getPropertyValue(
-            "--background",
-          );
-        } catch {}
+        // Force light theme color for exported item cards (hardcoded)
+        const LIGHT_ITEM_BG = "#ffe0e3";
 
         const rankingElement = React.createElement(RankingImageLayout, {
           sorterTitle: data.sorterTitle,
@@ -60,8 +57,7 @@ export function useDownloadRankingImage() {
           rankings: data.rankings,
           createdAt: data.createdAt,
           selectedTags: data.selectedTags,
-          mainColor: resolvedMain,
-          itemBackgroundColor: resolvedBackground,
+          itemBackgroundColor: LIGHT_ITEM_BG,
         });
 
         // Append container to body
