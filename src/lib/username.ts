@@ -14,11 +14,16 @@ export async function generateUniqueUsername(): Promise<string> {
 
   do {
     username = uniqueNamesGenerator({
-      dictionaries: [adjectives, adjectives, animals],
+      dictionaries: [adjectives, animals],
       separator: "",
       style: "capital",
-      length: 3,
+      length: 2,
     });
+
+    // Ensure username is under 20 characters
+    if (username.length > 19) {
+      continue;
+    }
 
     const existingUser = await db
       .select()
@@ -33,13 +38,18 @@ export async function generateUniqueUsername(): Promise<string> {
     attempts++;
   } while (attempts < maxAttempts);
 
-  username =
-    uniqueNamesGenerator({
-      dictionaries: [adjectives, adjectives, animals],
+  // Fallback with number suffix, ensuring total length stays under 20
+  do {
+    const baseUsername = uniqueNamesGenerator({
+      dictionaries: [adjectives, animals],
       separator: "",
-      style: "capital",
-      length: 3,
-    }) + Math.floor(Math.random() * 1000);
+      style: "capital", 
+      length: 2,
+    });
+    
+    const randomNum = Math.floor(Math.random() * 1000);
+    username = baseUsername + randomNum;
+  } while (username.length > 19);
 
   return username;
 }
