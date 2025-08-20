@@ -194,7 +194,7 @@ export async function validateCoverImageBuffer(
 }
 
 /**
- * Process sorter item image: crop to square and resize to 300x300
+ * Process sorter item image: preserve aspect ratio with 300px max dimension
  * @param buffer - The image buffer to process
  * @returns Promise<Buffer> - The processed image buffer
  */
@@ -210,38 +210,27 @@ export async function processSorterItemImage(buffer: Buffer): Promise<Buffer> {
 
     const { width, height } = metadata;
 
-    // Calculate square crop dimensions (use the smaller dimension)
-    const side = Math.min(width, height);
+    // Calculate scale factor based on the larger dimension
+    const maxDimension = Math.max(width, height);
+    const scaleFactor = maxDimension > 300 ? 300 / maxDimension : 1;
 
-    // Calculate crop position (center crop)
-    let left = 0;
-    let top = 0;
+    // Calculate new dimensions while preserving aspect ratio
+    const newWidth = Math.round(width * scaleFactor);
+    const newHeight = Math.round(height * scaleFactor);
 
-    if (width > height) {
-      // Image is landscape - crop from left and right
-      left = Math.floor((width - side) / 2);
-      top = 0;
-    } else if (height > width) {
-      // Image is portrait - crop from top and bottom
-      left = 0;
-      top = Math.floor((height - side) / 2);
-    }
-    // If width === height, already square (left = 0, top = 0)
-
-    // Process the image: first crop to square, then resize to 300x300
+    // Process the image: resize while preserving aspect ratio
     const processedBuffer = await image
-      .extract({
-        left,
-        top,
-        width: side,
-        height: side,
+      .resize(newWidth, newHeight, {
+        fit: "inside", // Ensure image fits within dimensions without cropping
+        withoutEnlargement: false, // Allow enlargement up to 300px max dimension
       })
-      .resize(300, 300) // Resize to 300x300 for sorter items
       .jpeg({
         quality: 75, // Good balance of quality and file size for items
         progressive: true,
       })
       .toBuffer();
+
+    console.log(`Processed item image: ${width}x${height} → ${newWidth}x${newHeight}`);
 
     return processedBuffer;
   } catch (error) {

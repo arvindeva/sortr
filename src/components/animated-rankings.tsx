@@ -32,11 +32,11 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
         >
           {/* Image (uniform size for all ranks) */}
           {item.imageUrl ? (
-            <div className="rounded-base border-border h-10 w-10 flex-shrink-0 overflow-hidden border-2 md:h-16 md:w-16">
+            <div className="rounded-base border-border bg-secondary-background h-10 w-10 flex-shrink-0 overflow-hidden border-2 md:h-16 md:w-16">
               <img
                 src={getImageUrl(item.imageUrl, "thumbnail")}
                 alt={item.title}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   if (target.src.includes("-thumb")) {

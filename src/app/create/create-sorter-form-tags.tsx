@@ -789,7 +789,7 @@ export default function CreateSorterFormTags() {
                                       <img
                                         src={itemImagesData[index]!.preview}
                                         alt={`Preview ${index + 1}`}
-                                        className="border-border h-10 w-10 rounded border-2 object-cover"
+                                        className="border-border h-10 w-10 rounded border-2 object-contain"
                                       />
                                     </div>
                                   )}

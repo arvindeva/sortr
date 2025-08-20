@@ -81,11 +81,11 @@ export function SorterPageClient({
                         <div className="flex min-w-0 items-center gap-3 overflow-hidden">
                           {/* Thumbnail */}
                           {item.imageUrl ? (
-                            <div className="border-border rounded-base h-16 w-16 flex-shrink-0 overflow-hidden border-2">
+                            <div className="border-border rounded-base bg-secondary-background h-16 w-16 flex-shrink-0 overflow-hidden border-2">
                               <img
                                 src={getImageUrl(item.imageUrl, "thumbnail")}
                                 alt={item.title}
-                                className="h-full w-full object-cover"
+                                className="h-full w-full object-contain"
                                 onError={(e) => {
                                   // Fallback to full-size image if thumbnail fails to load
                                   const target = e.target as HTMLImageElement;
@@ -184,14 +184,14 @@ export function SorterPageClient({
                               >
                                 <div className="flex min-w-0 flex-1 items-center gap-2">
                                   {item.imageUrl ? (
-                                    <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border-2">
+                                    <div className="border-border rounded-base bg-secondary-background h-6 w-6 flex-shrink-0 overflow-hidden border-2">
                                       <img
                                         src={getImageUrl(
                                           item.imageUrl,
                                           "thumbnail",
                                         )}
                                         alt={item.title}
-                                        className="h-full w-full object-cover"
+                                        className="h-full w-full object-contain"
                                         onError={(e) => {
                                           // Fallback to full-size image if thumbnail fails to load
                                           const target =

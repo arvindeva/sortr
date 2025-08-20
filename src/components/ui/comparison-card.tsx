@@ -47,13 +47,16 @@ function ComparisonCard({
           </div>
 
           {/* Image - always mounted when imageUrl exists */}
-          <div 
-            className="absolute inset-0 h-full w-full bg-cover bg-center bg-no-repeat"
-            style={{ 
-              backgroundImage: imageUrl ? `url(${imageUrl})` : 'none',
-              visibility: imageIsPreloaded && imageUrl ? 'visible' : 'hidden'
-            }}
-          />
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt={title}
+              className="absolute inset-0 h-full w-full object-contain"
+              style={{ 
+                visibility: imageIsPreloaded ? 'visible' : 'hidden'
+              }}
+            />
+          )}
         </div>
 
         {/* Text area at bottom - restore pink background */}

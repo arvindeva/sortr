@@ -253,7 +253,7 @@ export async function generateImageSizes(
 }
 
 /**
- * Generate sorter item images in standard sizes (thumbnail + full)
+ * Generate sorter item images preserving aspect ratio (max 300px dimension)
  */
 export async function generateSorterItemSizes(
   file: File,
@@ -262,17 +262,34 @@ export async function generateSorterItemSizes(
     "maxWidth" | "maxHeight" | "exactSize"
   > = {},
 ): Promise<{ thumbnail: MultiSizeResult; full: MultiSizeResult }> {
-  const sizes = [
-    // Use higher-resolution thumbnails for better clarity across the site
-    { width: 128, height: 128, suffix: "thumb" },
-    { width: 300, height: 300, suffix: "" }, // No suffix for full size
-  ];
+  const { quality = 0.75, format = "jpeg" } = options;
 
-  const results = await generateImageSizes(file, sizes, options);
+  // Create thumbnail (max 128px) and full (max 300px) with preserved aspect ratio
+  const thumbnailResult = await compressImage(file, {
+    quality,
+    format,
+    maxWidth: 128,
+    maxHeight: 128,
+  });
+
+  const fullResult = await compressImage(file, {
+    quality,
+    format,
+    maxWidth: 300,
+    maxHeight: 300,
+  });
 
   return {
-    thumbnail: results.find((r) => r.suffix === "thumb")!,
-    full: results.find((r) => r.suffix === "")!,
+    thumbnail: {
+      ...thumbnailResult,
+      suffix: "thumb",
+      size: { width: 128, height: 128 }, // Max dimensions, actual may be smaller
+    },
+    full: {
+      ...fullResult,
+      suffix: "",
+      size: { width: 300, height: 300 }, // Max dimensions, actual may be smaller
+    },
   };
 }
 

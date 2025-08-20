@@ -760,7 +760,7 @@ export default function EditSorterForm({
                                           );
                                         })()}
                                         alt={`Preview ${index + 1}`}
-                                        className="border-border h-10 w-10 rounded border-2 object-cover"
+                                        className="border-border h-10 w-10 rounded border-2 object-contain"
                                       />
                                       {/* Pencil icon for replacing image */}
                                       <Button
