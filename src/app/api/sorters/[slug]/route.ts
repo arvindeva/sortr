@@ -475,7 +475,8 @@ async function handleEditSorter(
       .where(eq(sorterItems.sorterId, currentSorter.id));
 
     const newItems = validatedData.items.map((item: any, index: number) => {
-      const currentItem = currentItems.find(existing => existing.title.toLowerCase() === item.title.toLowerCase());
+      // Match by index position instead of title to preserve images when names change
+      const currentItem = currentItems[index];
       const hasChanged = !currentItem || 
         currentItem.title !== item.title ||
         currentItem.imageUrl !== fileOperationResults.newItemImageUrls[index];
@@ -548,7 +549,8 @@ async function handleFileOperations(
 
   // ITEM IMAGES - only process changed/new items
   validatedData.items.forEach((newItem: any, index: number) => {
-    const currentItem = currentItems.find(item => item.title.toLowerCase() === newItem.title.toLowerCase());
+    // Match by index position instead of title to preserve images when names change
+    const currentItem = currentItems[index];
     
     if (newItem.imageUrl?.includes("/sessions/")) {
       // NEW IMAGE from upload session
