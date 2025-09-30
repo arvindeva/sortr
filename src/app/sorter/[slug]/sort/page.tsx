@@ -99,6 +99,8 @@ export default function SortPage() {
   const [sorterId, setSorterId] = useState<string>("");
   const [imagesPreloaded, setImagesPreloaded] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState<{ id: string; title: string } | null>(null);
   const sorterRef = useRef<InteractiveMergeSort | null>(null);
   const resolveComparisonRef = useRef<((winnerId: string) => void) | null>(
     null,
@@ -497,10 +499,22 @@ export default function SortPage() {
   }, []);
 
   const handleRemoveItem = useCallback((itemId: string, itemTitle: string) => {
-    if (sorterRef.current) {
-      sorterRef.current.removeItem(itemId);
-      toast.success(`Removed "${itemTitle}" from sorting`);
+    setItemToRemove({ id: itemId, title: itemTitle });
+    setShowRemoveDialog(true);
+  }, []);
+
+  const confirmRemoveItem = useCallback(() => {
+    if (sorterRef.current && itemToRemove) {
+      sorterRef.current.removeItem(itemToRemove.id);
+      toast.success(`Removed "${itemToRemove.title}" from sorting`);
     }
+    setShowRemoveDialog(false);
+    setItemToRemove(null);
+  }, [itemToRemove]);
+
+  const cancelRemoveItem = useCallback(() => {
+    setShowRemoveDialog(false);
+    setItemToRemove(null);
   }, []);
 
   const handleUndo = useCallback((e: React.MouseEvent) => {
@@ -782,6 +796,27 @@ export default function SortPage() {
             </Button>
             <Button variant="default" onClick={confirmReset}>
               Reset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remove Item Confirmation Dialog */}
+      <Dialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Item?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove "{itemToRemove?.title}" from this sorting session? 
+              This will remove it from all remaining comparisons and cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-row justify-end gap-2">
+            <Button variant="neutral" onClick={cancelRemoveItem}>
+              Cancel
+            </Button>
+            <Button variant="default" onClick={confirmRemoveItem}>
+              Remove
             </Button>
           </DialogFooter>
         </DialogContent>
