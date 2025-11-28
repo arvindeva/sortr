@@ -26,6 +26,9 @@ import { generateTagSlug, generateSorterItemSlug } from "@/lib/utils";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 
+// Cache sorter data for 1 hour - sorters rarely change
+export const revalidate = 3600;
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },

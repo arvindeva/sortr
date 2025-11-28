@@ -8,6 +8,9 @@ import { SorterHeaderServer } from "@/components/sorter-header-server";
 import { SorterPageClient } from "@/components/sorter-page-client";
 import { SorterNotFound } from "@/components/sorter-not-found";
 
+// Cache sorter detail pages for 1 hour - content rarely changes
+export const revalidate = 3600;
+
 interface SorterPageProps {
   params: Promise<{
     slug: string;

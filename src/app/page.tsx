@@ -6,6 +6,9 @@ import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 
+// Cache homepage for 5 minutes - popular sorters change frequently
+export const revalidate = 300;
+
 // Server-side data fetching for popular sorters
 async function getPopularSorters() {
   try {

@@ -172,8 +172,9 @@ export async function PUT(
       revalidatePath(`/sorter/${slug}`);
       revalidatePath("/");
       revalidatePath("/browse");
-      // Also revalidate API response used by the page
+      // Also revalidate API responses used by the page
       revalidatePath(`/api/sorters/${slug}`);
+      revalidatePath(`/api/sorters/${slug}/results`);
 
       // Revalidate user profile page if username exists
       const owner = await db

@@ -3,6 +3,9 @@ import { db } from "@/db";
 import { sortingResults, user, sorters } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 
+// Cache recent results for 1 hour - rankings list changes infrequently
+export const revalidate = 3600;
+
 // GET /api/sorters/[slug]/results - Get recent results for a sorter
 export async function GET(
   request: NextRequest,

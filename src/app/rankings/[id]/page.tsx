@@ -30,6 +30,9 @@ import { AnimatedRankings } from "@/components/animated-rankings";
 import { RankingImageLayout } from "@/components/ranking-image-layout";
 import { getImageUrl } from "@/lib/image-utils";
 
+// Cache rankings for 1 week - rankings are immutable once created
+export const revalidate = 604800;
+
 interface RankingsPageProps {
   params: Promise<{
     id: string;
