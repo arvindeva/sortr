@@ -175,15 +175,21 @@ export async function generateMetadata({
 
     const title = `${username}'s Profile`;
     const description = `View ${username}'s sorters on sortr.`;
+    const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.io";
+    const canonicalUrl = `${baseUrl}/user/${username}`;
 
     return {
       title,
       description,
+      alternates: {
+        canonical: canonicalUrl,
+      },
       openGraph: {
         title,
         description,
         type: "profile",
         siteName: "sortr",
+        url: canonicalUrl,
         images: [
           {
             url: "/og-user.png",

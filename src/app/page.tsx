@@ -61,15 +61,20 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = "sortr - Create a Sorter for Anything";
   const description =
     "Create and share a sorter for anything to rank items from best to worst.";
+  const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.io";
 
   return {
     title,
     description,
+    alternates: {
+      canonical: baseUrl,
+    },
     openGraph: {
       title,
       description,
       type: "website",
       siteName: "sortr",
+      url: baseUrl,
       images: [
         {
           url: "/og-home.png",

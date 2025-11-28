@@ -17,4 +17,4 @@ Disallow: /sorter/*/sort
 Disallow: /sorter/*/filters
 
 # Sitemap
-Sitemap: https://sortr.dev/sitemap.xml
+Sitemap: https://sortr.io/sitemap.xml

@@ -73,15 +73,21 @@ export async function generateMetadata({
   const itemCount = items.length;
 
   const fullDescription = `${description}. Sort ${itemCount} items through pairwise comparison and create your personalized results.`;
+  const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.io";
+  const canonicalUrl = `${baseUrl}/sorter/${slug}`;
 
   return {
     title,
     description: fullDescription,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title,
       description: fullDescription,
       type: "website",
       siteName: "sortr",
+      url: canonicalUrl,
       images: [
         {
           url: "/og-sorter.png", // We'll create this later

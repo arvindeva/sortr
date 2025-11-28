@@ -106,15 +106,21 @@ export async function generateMetadata({
       .join(", ");
 
     const description = `See ${result.username}'s ranking of ${sorter.title}. Top 3: ${top3Text}. View the complete personalized ranking.`;
+    const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.io";
+    const canonicalUrl = `${baseUrl}/rankings/${id}`;
 
     return {
       title,
       description,
+      alternates: {
+        canonical: canonicalUrl,
+      },
       openGraph: {
         title,
         description,
         type: "website",
         siteName: "sortr",
+        url: canonicalUrl,
         images: [
           {
             url: "/og-rankings.png", // We'll create this later
