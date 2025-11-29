@@ -21,12 +21,14 @@ interface SorterHeaderServerProps {
   };
   hasFilters: boolean;
   isOwner: boolean;
+  children?: React.ReactNode;
 }
 
 export function SorterHeaderServer({
   sorter,
   hasFilters,
   isOwner,
+  children,
 }: SorterHeaderServerProps) {
   return (
     <>
@@ -108,24 +110,8 @@ export function SorterHeaderServer({
                   </Link>
                 </Button>
               )}
-
-              {/* Edit Button - Only show for sorter owner */}
-              {isOwner && (
-                <Button asChild variant="neutral">
-                  <Link href={`/sorter/${sorter.slug}/edit`}>
-                    <Pencil className="mr-2" size={16} />
-                    Edit
-                  </Link>
-                </Button>
-              )}
-
-              {/* Delete Button - Only show for sorter owner */}
-              {isOwner && (
-                <DeleteSorterButton
-                  sorterSlug={sorter.slug}
-                  sorterTitle={sorter.title}
-                />
-              )}
+              {/* Client-injected owner controls slot */}
+              {children}
             </div>
           </div>
         </div>
@@ -154,24 +140,8 @@ export function SorterHeaderServer({
             </Link>
           </Button>
         )}
-
-        {/* Edit Button - Only show for sorter owner */}
-        {isOwner && (
-          <Button asChild variant="neutral" size="icon">
-            <Link href={`/sorter/${sorter.slug}/edit`}>
-              <Pencil size={16} />
-            </Link>
-          </Button>
-        )}
-
-        {/* Delete Button - Only show for sorter owner */}
-        {isOwner && (
-          <DeleteSorterButton
-            sorterSlug={sorter.slug}
-            sorterTitle={sorter.title}
-            iconOnly
-          />
-        )}
+        {/* Client-injected owner controls slot (mobile) */}
+        {children}
       </div>
 
       {/* Description and Category */}

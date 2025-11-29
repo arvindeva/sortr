@@ -125,6 +125,13 @@ export async function GET(
           imageUrl: item.imageUrl,
           tagSlugs: item.tagSlugs,
         })),
+      }, {
+        headers: {
+          // Edge cache regardless of cookies for 5 minutes
+          "CDN-Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+          // Small browser cache to smooth bursts
+          "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=60",
+        },
       });
     } else {
       // Traditional sorter (no tags, no groups)
@@ -146,6 +153,11 @@ export async function GET(
           },
         },
         items,
+      }, {
+        headers: {
+          "CDN-Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+          "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=60",
+        },
       });
     }
   } catch (error) {

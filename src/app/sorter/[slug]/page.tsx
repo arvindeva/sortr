@@ -1,12 +1,11 @@
 import { Metadata } from "next";
-import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { authOptions } from "@/lib/auth";
 import { SorterHeaderServer } from "@/components/sorter-header-server";
 import { SorterPageClient } from "@/components/sorter-page-client";
 import { SorterNotFound } from "@/components/sorter-not-found";
+import { SorterOwnerControls } from "@/components/sorter-owner-controls";
 
 // Cache sorter detail pages for 1 hour - content rarely changes
 export const revalidate = 3600;
@@ -152,22 +151,6 @@ export default async function SorterPage({ params }: SorterPageProps) {
     return <SorterNotFound slug={slug} />;
   }
 
-  // Get current session to check ownership (server-side)
-  const session = await getServerSession(authOptions);
-  const currentUserEmail = session?.user?.email;
-
-  // Check if current user is the owner
-  let isOwner = false;
-  if (currentUserEmail && data.sorter.user?.id) {
-    const userData = await db
-      .select({ id: user.id })
-      .from(user)
-      .where(eq(user.email, currentUserEmail))
-      .limit(1);
-
-    isOwner = userData.length > 0 && userData[0].id === data.sorter.user.id;
-  }
-
   // Check if sorter has filters/tags
   const hasFilters = Boolean(data.tags && data.tags.length > 0);
 
@@ -209,14 +192,21 @@ export default async function SorterPage({ params }: SorterPageProps) {
         <SorterHeaderServer
           sorter={data.sorter}
           hasFilters={hasFilters}
-          isOwner={isOwner}
-        />
+          isOwner={false}
+        >
+          {/* Client-only owner controls injected next to Sort Now */}
+          <SorterOwnerControls
+            ownerUserId={data.sorter.user.id}
+            sorterSlug={data.sorter.slug}
+            sorterTitle={data.sorter.title}
+          />
+        </SorterHeaderServer>
 
         {/* Client-side data fetching for items and recent results */}
         <SorterPageClient
           slug={slug}
-          isOwner={isOwner}
-          currentUserEmail={currentUserEmail || undefined}
+          isOwner={false}
+          currentUserEmail={undefined}
         />
       </main>
     </>

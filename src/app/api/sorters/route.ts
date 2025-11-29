@@ -678,11 +678,20 @@ export async function GET() {
       `📊 GET /api/sorters - Found ${transformedSorters.length} popular sorters`,
     );
 
-    return NextResponse.json({
-      popularSorters: transformedSorters,
-      total: transformedSorters.length,
-      timestamp: new Date().toISOString(),
-    });
+    return NextResponse.json(
+      {
+        popularSorters: transformedSorters,
+        total: transformedSorters.length,
+        timestamp: new Date().toISOString(),
+      },
+      {
+        headers: {
+          // Cache at CDN for 5 minutes to match homepage ISR
+          "CDN-Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+          "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=60",
+        },
+      },
+    );
   } catch (error) {
     console.error("❌ GET /api/sorters error:", error);
     return NextResponse.json(

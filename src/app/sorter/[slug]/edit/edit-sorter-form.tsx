@@ -32,13 +32,23 @@ import {
   PanelTitle,
   PanelContent,
 } from "@/components/ui/panel";
-import { Plus, X, Image as ImageIcon, ArrowLeft, Pencil, Loader2 } from "lucide-react";
+import {
+  Plus,
+  X,
+  Image as ImageIcon,
+  ArrowLeft,
+  Pencil,
+  Loader2,
+} from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
 import { generateUniqueId, addSuffixToFileName } from "@/lib/utils";
 import CoverImageUpload from "@/components/cover-image-upload";
 import { UploadProgressDialog } from "@/components/upload-progress-dialog";
 import type { UploadProgress } from "@/types/upload";
-import { compressImage, generateSorterItemSizes } from "@/lib/image-compression";
+import {
+  compressImage,
+  generateSorterItemSizes,
+} from "@/lib/image-compression";
 import TagManagement, { type Tag } from "@/components/tag-management";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -92,28 +102,36 @@ export default function EditSorterForm({
   const invalidateQueriesAfterEdit = async () => {
     // Invalidate the specific sorter queries (existing behavior)
     await queryClient.invalidateQueries({ queryKey: ["sorter", sorter.slug] });
-    await queryClient.invalidateQueries({ queryKey: ["sorter", sorter.slug, "recent-results"] });
-    
+    await queryClient.invalidateQueries({
+      queryKey: ["sorter", sorter.slug, "recent-results"],
+    });
+
     // Also invalidate broader lists since sorter details might have changed
-    await queryClient.invalidateQueries({ queryKey: ["homepage", "popular-sorters"] });
+    await queryClient.invalidateQueries({
+      queryKey: ["homepage", "popular-sorters"],
+    });
     await queryClient.invalidateQueries({ queryKey: ["browse"] });
-    
+
     // Invalidate user profile and user data queries
     if (session?.user?.email) {
       // Invalidate user data query (used by navbar)
-      await queryClient.invalidateQueries({ queryKey: ["user", session.user.email] });
-      
+      await queryClient.invalidateQueries({
+        queryKey: ["user", session.user.email],
+      });
+
       // Invalidate all user profile queries (catch any username-based queries)
-      await queryClient.invalidateQueries({ 
-        queryKey: ["user"], 
+      await queryClient.invalidateQueries({
+        queryKey: ["user"],
         predicate: (query) => {
           // Invalidate any query that starts with ["user", ...] and isn't an email
           const queryKey = query.queryKey;
-          return queryKey.length >= 2 && 
-                 queryKey[0] === "user" && 
-                 typeof queryKey[1] === "string" && 
-                 !queryKey[1].includes("@");
-        }
+          return (
+            queryKey.length >= 2 &&
+            queryKey[0] === "user" &&
+            typeof queryKey[1] === "string" &&
+            !queryKey[1].includes("@")
+          );
+        },
       });
     }
   };
@@ -352,23 +370,39 @@ export default function EditSorterForm({
             maxHeight: 600,
             format: "jpeg",
           });
-          tasks.push({ name: coverImageFile.name, key: coverKey, file: c.file });
+          tasks.push({
+            name: coverImageFile.name,
+            key: coverKey,
+            file: c.file,
+          });
         }
       }
 
       for (let i = 0; i < itemImagesData.length; i++) {
         const img = itemImagesData[i];
         if (!img) continue;
-        const mainKey = keys.find((k: any) => k.type === "item" && k.itemIndex === i)?.key;
-        const thumbKey = keys.find((k: any) => k.type === "thumb" && k.itemIndex === i)?.key;
+        const mainKey = keys.find(
+          (k: any) => k.type === "item" && k.itemIndex === i,
+        )?.key;
+        const thumbKey = keys.find(
+          (k: any) => k.type === "thumb" && k.itemIndex === i,
+        )?.key;
         if (!mainKey || !thumbKey) continue;
 
         const { thumbnail, full } = await generateSorterItemSizes(img.file, {
           quality: 0.9,
           format: "jpeg",
         });
-        tasks.push({ name: `${img.file.name} (thumb)`, key: thumbKey, file: thumbnail.file });
-        tasks.push({ name: `${img.file.name} (full)`, key: mainKey, file: full.file });
+        tasks.push({
+          name: `${img.file.name} (thumb)`,
+          key: thumbKey,
+          file: thumbnail.file,
+        });
+        tasks.push({
+          name: `${img.file.name} (full)`,
+          key: mainKey,
+          file: full.file,
+        });
       }
 
       // 3) Upload
@@ -376,7 +410,11 @@ export default function EditSorterForm({
       const signal = uploadAbortRef.current.signal;
       setProgress({
         phase: "uploading-files",
-        files: tasks.map((t) => ({ name: t.name, progress: 0, status: "pending" })),
+        files: tasks.map((t) => ({
+          name: t.name,
+          progress: 0,
+          status: "pending",
+        })),
         overallProgress: 0,
         statusMessage: "Uploading images to R2...",
         determinate: true,
@@ -393,12 +431,23 @@ export default function EditSorterForm({
       const queue = tasks.map((t, index) => ({ ...t, index }));
       let cursor = 0;
       const CONCURRENCY = 5;
-      const update = (idx: number, status: "uploading" | "complete" | "failed") => {
+      const update = (
+        idx: number,
+        status: "uploading" | "complete" | "failed",
+      ) => {
         setProgress((prev) => {
           if (!prev) return prev;
           const files = [...prev.files];
-          files[idx] = { ...files[idx], status, progress: status === "complete" ? 100 : files[idx].progress };
-          const overall = Math.round((files.filter((f) => f.status === "complete").length / files.length) * 100);
+          files[idx] = {
+            ...files[idx],
+            status,
+            progress: status === "complete" ? 100 : files[idx].progress,
+          };
+          const overall = Math.round(
+            (files.filter((f) => f.status === "complete").length /
+              files.length) *
+              100,
+          );
           return { ...prev, files, overallProgress: overall };
         });
       };
@@ -423,7 +472,9 @@ export default function EditSorterForm({
           }
         }
       }
-      const workers = Array(Math.min(CONCURRENCY, queue.length)).fill(0).map(() => worker());
+      const workers = Array(Math.min(CONCURRENCY, queue.length))
+        .fill(0)
+        .map(() => worker());
       try {
         await Promise.all(workers);
       } catch (e: any) {
@@ -438,7 +489,15 @@ export default function EditSorterForm({
       }
 
       // 4) Finalize
-      setProgress((prev) => prev && { ...prev, phase: "creating-sorter", statusMessage: "Applying edits...", determinate: false });
+      setProgress(
+        (prev) =>
+          prev && {
+            ...prev,
+            phase: "creating-sorter",
+            statusMessage: "Applying edits...",
+            determinate: false,
+          },
+      );
       const fin = await fetch(`/api/sorters/${sorter.slug}/edit/finalize`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -447,7 +506,9 @@ export default function EditSorterForm({
       });
       if (fin.status === 409) {
         const p = await fin.json();
-        throw new Error(`Missing ${p.missing?.length || 0} files. Please retry.`);
+        throw new Error(
+          `Missing ${p.missing?.length || 0} files. Please retry.`,
+        );
       }
       if (!fin.ok) {
         const err = await fin.json().catch(() => ({}));
@@ -457,7 +518,11 @@ export default function EditSorterForm({
       toast.success("Sorter updated successfully!");
       setProgress({
         phase: "complete",
-        files: tasks.map((t) => ({ name: t.name, progress: 100, status: "complete" })),
+        files: tasks.map((t) => ({
+          name: t.name,
+          progress: 100,
+          status: "complete",
+        })),
         overallProgress: 100,
         statusMessage: "Redirecting to sorter...",
         determinate: false,
@@ -520,7 +585,6 @@ export default function EditSorterForm({
           tags: managedTags,
         };
 
-        console.log(`📝 Updating sorter without new images`);
         const response = await axios.put(
           `/api/sorters/${sorter.slug}`,
           finalData,

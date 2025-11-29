@@ -69,11 +69,10 @@ export async function POST(request: NextRequest) {
       .set({ completionCount: sql`${sorters.completionCount} + 1` })
       .where(eq(sorters.id, sorterId));
 
-    // Revalidate pages that show completion counts
-    revalidatePath('/'); // Homepage shows popular sorters by completion count
-    revalidatePath('/browse'); // Browse page shows sorters with stats
-    revalidatePath(`/sorter/${sorterSlug}`); // Individual sorter page shows completion count
-    console.log(`♻️ Revalidated homepage, browse page, and sorter page for completion count update`);
+    // Keep revalidation focused to reduce cache churn under load.
+    // Sorter page shows completion count; homepage/browse will refresh via ISR.
+    revalidatePath(`/sorter/${sorterSlug}`);
+    console.log(`♻️ Revalidated sorter page for completion count update: ${sorterSlug}`);
 
     return Response.json({
       resultId: result[0].id,

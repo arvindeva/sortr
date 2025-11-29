@@ -87,14 +87,24 @@ export async function GET(request: NextRequest) {
     const totalCount = countResult[0]?.count || 0;
     const totalPages = Math.ceil(totalCount / limit);
 
-    return NextResponse.json({
-      sorters: sortedSorters,
-      totalCount,
-      currentPage: page,
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
-    });
+    return NextResponse.json(
+      {
+        sorters: sortedSorters,
+        totalCount,
+        currentPage: page,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+      {
+        headers: {
+          // Cache per unique query for 2 minutes at the CDN
+          "CDN-Cache-Control": "public, s-maxage=120, stale-while-revalidate=60",
+          // Browsers can reuse for a short period
+          "Cache-Control": "public, max-age=30, s-maxage=120, stale-while-revalidate=60",
+        },
+      },
+    );
   } catch (error) {
     console.error("Error in browse API:", error);
     return NextResponse.json(

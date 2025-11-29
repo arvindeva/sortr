@@ -12,8 +12,6 @@ export const revalidate = 300;
 // Server-side data fetching for popular sorters
 async function getPopularSorters() {
   try {
-    console.log("🏠 SSR: Fetching popular sorters for homepage");
-
     const popularSorters = await db
       .select({
         id: sorters.id,
@@ -38,8 +36,6 @@ async function getPopularSorters() {
       category: sorter.category ?? undefined,
       coverImageUrl: sorter.coverImageUrl ?? undefined,
     }));
-
-    console.log(`📊 SSR: Found ${transformedSorters.length} popular sorters`);
 
     return {
       popularSorters: transformedSorters,
