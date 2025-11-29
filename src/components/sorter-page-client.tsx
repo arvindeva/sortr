@@ -29,7 +29,7 @@ export function SorterPageClient({
   initialData,
 }: SorterPageClientProps) {
   const { sorterData, recentResults, isLoading, isError, error } =
-    useSorterPage(slug, initialData);
+    useSorterPage(slug, initialData, Date.now());
 
   if (isLoading) {
     return <SorterContentSkeleton />;

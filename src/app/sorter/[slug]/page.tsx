@@ -10,8 +10,8 @@ import { db } from "@/db";
 import { sorters } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 
-// Use ISR with 1 hour revalidation - content rarely changes but needs to be dynamic
-export const revalidate = 3600;
+// Use ISR with 5 minute revalidation - matches data cache duration
+export const revalidate = 300;
 
 interface SorterPageProps {
   params: Promise<{

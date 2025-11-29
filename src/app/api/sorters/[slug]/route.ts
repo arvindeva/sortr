@@ -243,6 +243,9 @@ export async function PUT(
     revalidatePath('/browse'); // Browse page shows all sorters
     revalidateTag(`sorter-${slug}`); // Granular cache tag for this sorter
     revalidateTag(`sorter-results-${slug}`); // Granular cache tag for results
+    // Also revalidate API responses used by the page
+    revalidatePath(`/api/sorters/${slug}`);
+    revalidatePath(`/api/sorters/${slug}/results`);
     if (userData[0].username) {
       revalidatePath(`/user/${userData[0].username}`); // Creator's profile page
       console.log(`♻️ Revalidated paths for updated sorter: ${slug}`);

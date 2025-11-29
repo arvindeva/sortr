@@ -90,13 +90,15 @@ export function useSorterData(
   slug: string,
   enabled: boolean = true,
   initialData?: SorterData,
+  initialDataUpdatedAt?: number,
 ) {
   return useQuery({
     queryKey: ["sorter", slug],
     queryFn: () => fetchSorterData(slug),
     initialData,
+    initialDataUpdatedAt, // Tells TanStack Query when server data was fetched
     staleTime: 30 * 1000, // 30 seconds - shorter since view counts change
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: true, // Will now respect staleTime with fresh initialData
     refetchOnReconnect: true,
     retry: (failureCount, error) => {
       // Don't retry on 404 (sorter not found)
@@ -122,8 +124,12 @@ export function useRecentResults(slug: string, enabled: boolean = true) {
 }
 
 // Combined hook for sorter page data
-export function useSorterPage(slug: string, initialData?: SorterData) {
-  const sorterQuery = useSorterData(slug, true, initialData);
+export function useSorterPage(
+  slug: string,
+  initialData?: SorterData,
+  initialDataUpdatedAt?: number,
+) {
+  const sorterQuery = useSorterData(slug, true, initialData, initialDataUpdatedAt);
   const recentResultsQuery = useRecentResults(slug, !!sorterQuery.data?.sorter);
 
   return {
