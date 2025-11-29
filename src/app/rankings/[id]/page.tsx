@@ -1,6 +1,5 @@
 import { RankingNotFound } from "@/components/ranking-not-found";
 import { Metadata } from "next";
-import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import {
   sortingResults,
@@ -25,10 +24,10 @@ import {
 } from "@/components/ui/panel";
 import { ArrowLeft, Trophy, RotateCcw, Play, Eye } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
-import { DeleteRankingButton } from "@/components/delete-ranking-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
 import { RankingImageLayout } from "@/components/ranking-image-layout";
 import { getImageUrl } from "@/lib/image-utils";
+import { RankingOwnerActions } from "@/components/ranking-owner-actions";
 
 // Cache rankings for 1 week - rankings are immutable once created
 export const revalidate = 604800;
@@ -76,7 +75,7 @@ interface ResultData {
     name: string;
     slug: string;
   }[];
-  isOwner: boolean; // Whether current user owns this ranking
+  ownerUserId: string | null;
 }
 
 export async function generateMetadata({
@@ -152,21 +151,6 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     return null;
   }
 
-  // Get current user session to check ownership
-  const session = await getServerSession();
-  let currentUserId: string | null = null;
-
-  if (session?.user?.email) {
-    const currentUserData = await db
-      .select({ id: user.id })
-      .from(user)
-      .where(eq(user.email, session.user.email))
-      .limit(1);
-
-    if (currentUserData.length > 0) {
-      currentUserId = currentUserData[0].id;
-    }
-  }
   // Get the sorting result with version information
   const resultData = await db
     .select({
@@ -321,7 +305,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     selectedTagSlugs:
       selectedTagNames.length > 0 ? selectedTagNames : undefined,
     totalTags: totalTags.length > 0 ? totalTags : undefined,
-    isOwner: currentUserId !== null && result.userId === currentUserId, // Check ownership
+    ownerUserId: result.userId,
   };
 }
 
@@ -333,7 +317,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
     return <RankingNotFound rankingId={id} />;
   }
 
-  const { result, sorter, selectedTagSlugs, totalTags, isOwner } = data;
+  const { result, sorter, selectedTagSlugs, totalTags, ownerUserId } = data;
 
   // JSON-LD structured data for rankings
   const jsonLd = {
@@ -479,12 +463,11 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                     selectedTags: selectedTagSlugs,
                   }}
                 />
-                {isOwner && (
-                  <DeleteRankingButton
-                    rankingId={result.id}
-                    sorterTitle={sorter.title}
-                  />
-                )}
+                <RankingOwnerActions
+                  ownerUserId={ownerUserId}
+                  rankingId={result.id}
+                  sorterTitle={sorter.title}
+                />
               </div>
             </div>
           </div>
@@ -515,13 +498,12 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
               selectedTags: selectedTagSlugs,
             }}
           />
-          {isOwner && (
-            <DeleteRankingButton
-              rankingId={result.id}
-              sorterTitle={sorter.title}
-              hideTextOnMobile
-            />
-          )}
+          <RankingOwnerActions
+            ownerUserId={ownerUserId}
+            rankingId={result.id}
+            sorterTitle={sorter.title}
+            hideTextOnMobile
+          />
         </div>
 
         {/* Two Column Layout */}

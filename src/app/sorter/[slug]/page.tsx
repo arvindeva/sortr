@@ -1,13 +1,16 @@
 import { Metadata } from "next";
-import { db } from "@/db";
-import { sorters, user } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
 import { SorterHeaderServer } from "@/components/sorter-header-server";
 import { SorterPageClient } from "@/components/sorter-page-client";
 import { SorterNotFound } from "@/components/sorter-not-found";
 import { SorterOwnerControls } from "@/components/sorter-owner-controls";
+import {
+  getSorterDataCached,
+} from "@/lib/sorter-data";
+import { db } from "@/db";
+import { sorters } from "@/db/schema";
+import { eq, sql } from "drizzle-orm";
 
-// Cache sorter detail pages for 1 hour - content rarely changes
+// Use ISR with 1 hour revalidation - content rarely changes but needs to be dynamic
 export const revalidate = 3600;
 
 interface SorterPageProps {
@@ -16,44 +19,19 @@ interface SorterPageProps {
   }>;
 }
 
-interface SorterData {
-  sorter: {
-    id: string;
-    title: string;
-    slug: string;
-    description?: string;
-    category?: string;
-    coverImageUrl?: string;
-    userId: string;
-    createdAt: string;
-    completionCount: number;
-    viewCount: number;
-    user: {
-      username: string;
-      id: string;
-    };
-  };
-  items: any[];
-  tags?: any[];
-}
-
 export async function generateMetadata({
   params,
 }: SorterPageProps): Promise<Metadata> {
   const { slug } = await params;
 
-  // Get sorter data for metadata (without incrementing view count)
-  const response = await fetch(
-    `${process.env.NEXTAUTH_URL}/api/sorters/${slug}`,
-  );
-  if (!response.ok) {
+  const data = await getSorterDataCached(slug);
+  if (!data) {
     return {
       title: "Sorter Not Found | sortr",
       description: "The requested sorter could not be found.",
     };
   }
 
-  const data: SorterData = await response.json();
   const { sorter, items, tags } = data;
 
   // Create dynamic title
@@ -105,54 +83,82 @@ export async function generateMetadata({
   };
 }
 
-async function getSorterWithItems(
-  sorterSlug: string,
-): Promise<SorterData | null> {
-  // First get the sorter ID and deleted status from slug
-  const sorterIdQuery = await db
-    .select({ id: sorters.id, deleted: sorters.deleted })
-    .from(sorters)
-    .where(eq(sorters.slug, sorterSlug))
-    .limit(1);
-
-  if (sorterIdQuery.length === 0) {
-    return null;
-  }
-
-  const sorter = sorterIdQuery[0];
-
-  // Only increment view count for non-deleted sorters
-  if (!sorter.deleted) {
-    await db
-      .update(sorters)
-      .set({ viewCount: sql`${sorters.viewCount} + 1` })
-      .where(eq(sorters.id, sorter.id));
-  }
-
-  // Use the API endpoint to get sorter data with groups support
-  const response = await fetch(
-    `${process.env.NEXTAUTH_URL}/api/sorters/${sorterSlug}`,
-    { next: { revalidate: 300 } } // Cache for 5 minutes
-  );
-  if (!response.ok) {
-    return null;
-  }
-
-  const data: SorterData = await response.json();
-  return data;
-}
-
 export default async function SorterPage({ params }: SorterPageProps) {
   const { slug } = await params;
 
   // Basic sorter validation for 404 (server-side)
-  const data = await getSorterWithItems(slug);
+  const data = await getSorterDataCached(slug);
   if (!data) {
     return <SorterNotFound slug={slug} />;
   }
 
+  // Increment view count asynchronously (don't await, don't block rendering)
+  // Note: We don't invalidate cache tags here because view count updates
+  // happen frequently and don't need to bust the entire cache
+  db.update(sorters)
+    .set({ viewCount: sql`${sorters.viewCount} + 1` })
+    .where(eq(sorters.id, data.sorter.id))
+    .then(() => {
+      console.log(`👁️ Incremented view count for sorter: ${slug}`);
+    })
+    .catch((error) => {
+      console.error(`Failed to increment view count for ${slug}:`, error);
+    });
+
   // Check if sorter has filters/tags
   const hasFilters = Boolean(data.tags && data.tags.length > 0);
+
+  const createdAtIso =
+    data.sorter.createdAt instanceof Date
+      ? data.sorter.createdAt.toISOString()
+      : data.sorter.createdAt;
+  const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.io";
+
+  // Transform data for client components (convert null to undefined for type safety)
+  const transformedSorter = {
+    id: data.sorter.id,
+    title: data.sorter.title,
+    slug: data.sorter.slug,
+    userId: data.sorter.userId,
+    completionCount: data.sorter.completionCount,
+    viewCount: data.sorter.viewCount,
+    createdAt:
+      data.sorter.createdAt instanceof Date
+        ? data.sorter.createdAt.toISOString()
+        : data.sorter.createdAt,
+    description: data.sorter.description ?? undefined,
+    category: data.sorter.category ?? undefined,
+    coverImageUrl: data.sorter.coverImageUrl ?? undefined,
+    user: {
+      username: data.sorter.user.username || "Anonymous",
+      id: data.sorter.user.id || "",
+    },
+  };
+
+  const transformedItems = data.items.map(item => ({
+    id: item.id,
+    title: item.title,
+    imageUrl: item.imageUrl ?? undefined,
+    tagSlugs: item.tagSlugs ?? undefined,
+  }));
+
+  const transformedTags = data.tags?.map(tag => ({
+    id: tag.id,
+    name: tag.name,
+    slug: tag.slug,
+    sortOrder: tag.sortOrder ?? 0,
+    items: tag.items.map(item => ({
+      id: item.id,
+      title: item.title,
+      imageUrl: item.imageUrl ?? undefined,
+    })),
+  }));
+
+  const initialClientData = {
+    sorter: transformedSorter,
+    items: transformedItems,
+    tags: transformedTags,
+  };
 
   // JSON-LD structured data for SEO (server-side)
   const jsonLd = {
@@ -160,8 +166,8 @@ export default async function SorterPage({ params }: SorterPageProps) {
     "@type": "Survey",
     name: data.sorter.title,
     description: data.sorter.description || `Sorter for "${data.sorter.title}"`,
-    url: `${process.env.NEXTAUTH_URL}/sorter/${data.sorter.slug}`,
-    dateCreated: data.sorter.createdAt,
+    url: `${baseUrl}/sorter/${data.sorter.slug}`,
+    dateCreated: createdAtIso,
     creator: {
       "@type": "Person",
       name: data.sorter.user.username || "Anonymous",
@@ -190,13 +196,13 @@ export default async function SorterPage({ params }: SorterPageProps) {
       <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
         {/* Server-rendered Sorter Header */}
         <SorterHeaderServer
-          sorter={data.sorter}
+          sorter={transformedSorter}
           hasFilters={hasFilters}
           isOwner={false}
         >
           {/* Client-only owner controls injected next to Sort Now */}
           <SorterOwnerControls
-            ownerUserId={data.sorter.user.id}
+            ownerUserId={data.sorter.user.id || ""}
             sorterSlug={data.sorter.slug}
             sorterTitle={data.sorter.title}
           />
@@ -207,6 +213,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
           slug={slug}
           isOwner={false}
           currentUserEmail={undefined}
+          initialData={initialClientData}
         />
       </main>
     </>

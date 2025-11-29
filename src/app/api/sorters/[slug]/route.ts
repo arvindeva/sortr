@@ -24,10 +24,8 @@ import {
 } from "@/lib/r2";
 import { generateTagSlug, generateSorterItemSlug } from "@/lib/utils";
 import { z } from "zod";
-import { revalidatePath } from "next/cache";
-
-// Cache sorter data for 1 hour - sorters rarely change
-export const revalidate = 3600;
+import { revalidatePath, revalidateTag } from "next/cache";
+import { getSorterDataCached } from "@/lib/sorter-data";
 
 export async function GET(
   request: NextRequest,
@@ -35,131 +33,20 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
+    const data = await getSorterDataCached(slug);
 
-    // Get sorter data with creator info
-    const sorterData = await db
-      .select({
-        id: sorters.id,
-        title: sorters.title,
-        description: sorters.description,
-        category: sorters.category,
-        slug: sorters.slug,
-        coverImageUrl: sorters.coverImageUrl,
-        createdAt: sorters.createdAt,
-        completionCount: sorters.completionCount,
-        viewCount: sorters.viewCount,
-        creatorUsername: user.username,
-        creatorId: user.id,
-      })
-      .from(sorters)
-      .leftJoin(user, eq(sorters.userId, user.id))
-      .where(
-        and(
-          eq(sorters.slug, slug),
-          eq(sorters.deleted, false),
-          eq(sorters.status, 'active'),
-        ),
-      )
-      .limit(1);
-
-    if (sorterData.length === 0) {
+    if (!data) {
       return Response.json({ error: "Sorter not found" }, { status: 404 });
     }
 
-    const sorter = sorterData[0];
-
-    // First check for tags (new system)
-    const tags = await db
-      .select({
-        id: sorterTags.id,
-        name: sorterTags.name,
-        slug: sorterTags.slug,
-        sortOrder: sorterTags.sortOrder,
-      })
-      .from(sorterTags)
-      .where(eq(sorterTags.sorterId, sorter.id));
-
-    if (tags.length > 0) {
-      // Tag-based sorter (new system)
-      const items = await db
-        .select({
-          id: sorterItems.id,
-          title: sorterItems.title,
-          imageUrl: sorterItems.imageUrl,
-          tagSlugs: sorterItems.tagSlugs,
-        })
-        .from(sorterItems)
-        .where(eq(sorterItems.sorterId, sorter.id));
-
-      // Group items by tags for the filter page
-      // Include untagged items (empty tagSlugs array) in all tag groups
-      const tagsWithItems = tags.map((tag) => ({
-        ...tag,
-        items: items
-          .filter(
-            (item) =>
-              // Include items that have this tag OR items with no tags (empty array)
-              (item.tagSlugs && item.tagSlugs.includes(tag.slug)) ||
-              !item.tagSlugs ||
-              item.tagSlugs.length === 0,
-          )
-          .map((item) => ({
-            id: item.id,
-            title: item.title,
-            imageUrl: item.imageUrl,
-          })),
-      }));
-
-      return Response.json({
-        sorter: {
-          ...sorter,
-          user: {
-            username: sorter.creatorUsername,
-            id: sorter.creatorId,
-          },
-        },
-        tags: tagsWithItems,
-        items: items.map((item) => ({
-          id: item.id,
-          title: item.title,
-          imageUrl: item.imageUrl,
-          tagSlugs: item.tagSlugs,
-        })),
-      }, {
-        headers: {
-          // Edge cache regardless of cookies for 5 minutes
-          "CDN-Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
-          // Small browser cache to smooth bursts
-          "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=60",
-        },
-      });
-    } else {
-      // Traditional sorter (no tags, no groups)
-      const items = await db
-        .select({
-          id: sorterItems.id,
-          title: sorterItems.title,
-          imageUrl: sorterItems.imageUrl,
-        })
-        .from(sorterItems)
-        .where(eq(sorterItems.sorterId, sorter.id));
-
-      return Response.json({
-        sorter: {
-          ...sorter,
-          user: {
-            username: sorter.creatorUsername,
-            id: sorter.creatorId,
-          },
-        },
-        items,
-      }, {
-        headers: {
-          "CDN-Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
-          "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=60",
-        },
-      });
-    }
+    return Response.json(data, {
+      headers: {
+        // Edge cache regardless of cookies for 5 minutes
+        "CDN-Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+        // Small browser cache to smooth bursts
+        "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=60",
+      },
+    });
   } catch (error) {
     console.error("Error fetching sorter:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
@@ -254,6 +141,8 @@ export async function DELETE(
     revalidatePath(`/sorter/${slug}`); // The sorter page (will show 404)
     revalidatePath('/'); // Homepage shows popular sorters
     revalidatePath('/browse'); // Browse page shows all sorters
+    revalidateTag(`sorter-${slug}`); // Granular cache tag for this sorter
+    revalidateTag(`sorter-results-${slug}`); // Granular cache tag for results
     if (userData[0].username) {
       revalidatePath(`/user/${userData[0].username}`); // Creator's profile page
       console.log(`♻️ Revalidated paths for deleted sorter: ${slug}`);
@@ -350,8 +239,10 @@ export async function PUT(
 
     // Revalidate relevant paths after sorter update
     revalidatePath(`/sorter/${slug}`); // The sorter page itself
-    revalidatePath('/'); // Homepage shows popular sorters  
+    revalidatePath('/'); // Homepage shows popular sorters
     revalidatePath('/browse'); // Browse page shows all sorters
+    revalidateTag(`sorter-${slug}`); // Granular cache tag for this sorter
+    revalidateTag(`sorter-results-${slug}`); // Granular cache tag for results
     if (userData[0].username) {
       revalidatePath(`/user/${userData[0].username}`); // Creator's profile page
       console.log(`♻️ Revalidated paths for updated sorter: ${slug}`);

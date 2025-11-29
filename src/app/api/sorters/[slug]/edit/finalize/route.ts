@@ -7,7 +7,7 @@ import { and, eq } from "drizzle-orm";
 import { r2Client, getR2PublicUrl } from "@/lib/r2";
 import { HeadObjectCommand } from "@aws-sdk/client-s3";
 import { generateSorterItemSlug } from "@/lib/utils";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function PUT(
   req: NextRequest,
@@ -172,6 +172,8 @@ export async function PUT(
       revalidatePath(`/sorter/${slug}`);
       revalidatePath("/");
       revalidatePath("/browse");
+      revalidateTag(`sorter-${slug}`); // Granular cache tag for this sorter
+      revalidateTag(`sorter-results-${slug}`); // Granular cache tag for results
       // Also revalidate API responses used by the page
       revalidatePath(`/api/sorters/${slug}`);
       revalidatePath(`/api/sorters/${slug}/results`);

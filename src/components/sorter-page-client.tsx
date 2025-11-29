@@ -1,6 +1,6 @@
 "use client";
 
-import { useSorterPage } from "@/hooks/api/use-sorter";
+import { useSorterPage, type SorterData } from "@/hooks/api/use-sorter";
 import { SorterContentSkeleton } from "@/components/skeletons/sorter-content-skeleton";
 import Link from "next/link";
 import { Box } from "@/components/ui/box";
@@ -19,15 +19,17 @@ interface SorterPageClientProps {
   slug: string;
   isOwner: boolean;
   currentUserEmail?: string;
+  initialData?: SorterData;
 }
 
 export function SorterPageClient({
   slug,
   isOwner,
   currentUserEmail,
+  initialData,
 }: SorterPageClientProps) {
   const { sorterData, recentResults, isLoading, isError, error } =
-    useSorterPage(slug);
+    useSorterPage(slug, initialData);
 
   if (isLoading) {
     return <SorterContentSkeleton />;

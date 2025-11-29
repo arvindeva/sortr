@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,6 +72,8 @@ export async function POST(request: NextRequest) {
     // Keep revalidation focused to reduce cache churn under load.
     // Sorter page shows completion count; homepage/browse will refresh via ISR.
     revalidatePath(`/sorter/${sorterSlug}`);
+    revalidateTag(`sorter-results-${sorterSlug}`); // Granular cache tag for results
+    revalidateTag(`sorter-${sorterSlug}`); // Granular cache tag for this sorter
     console.log(`♻️ Revalidated sorter page for completion count update: ${sorterSlug}`);
 
     return Response.json({

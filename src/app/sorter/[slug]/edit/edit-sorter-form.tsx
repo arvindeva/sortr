@@ -100,7 +100,7 @@ export default function EditSorterForm({
 
   // Helper function to invalidate all relevant queries after sorter edit
   const invalidateQueriesAfterEdit = async () => {
-    // Invalidate the specific sorter queries (existing behavior)
+    // Invalidate the specific sorter queries
     await queryClient.invalidateQueries({ queryKey: ["sorter", sorter.slug] });
     await queryClient.invalidateQueries({
       queryKey: ["sorter", sorter.slug, "recent-results"],
@@ -111,6 +111,13 @@ export default function EditSorterForm({
       queryKey: ["homepage", "popular-sorters"],
     });
     await queryClient.invalidateQueries({ queryKey: ["browse"] });
+
+    // Wait for the main sorter query to refetch before navigating
+    // This ensures fresh data is loaded when we redirect to the sorter page
+    await queryClient.refetchQueries({
+      queryKey: ["sorter", sorter.slug],
+      type: 'active', // Only refetch if query is currently mounted
+    });
 
     // Invalidate user profile and user data queries
     if (session?.user?.email) {

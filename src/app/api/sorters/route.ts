@@ -42,7 +42,7 @@ import {
   processSorterItemImage,
   validateSorterItemImageBuffer,
 } from "@/lib/image-processing";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 const MAX_COVER_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_ITEM_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -232,6 +232,7 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
     revalidatePath('/'); // Homepage shows popular sorters
     revalidatePath('/browse'); // Browse page shows all sorters
     revalidatePath(`/sorter/${result.sorter.slug}`); // New sorter page
+    revalidateTag(`sorter-${result.sorter.slug}`); // Granular cache tag for this sorter
     if (userData.username) {
       revalidatePath(`/user/${userData.username}`); // Creator's profile page
       console.log(`♻️ Revalidated paths for new sorter: ${result.sorter.slug}`);

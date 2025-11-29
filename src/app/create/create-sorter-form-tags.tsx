@@ -563,7 +563,6 @@ export default function CreateSorterFormTags() {
 
       // Invalidate queries to show new sorter immediately
       await invalidateQueriesAfterCreate();
-      router.refresh();
       router.push(`/sorter/${slug}`);
     } catch (error: any) {
       setIsUploading(false);
@@ -638,7 +637,6 @@ export default function CreateSorterFormTags() {
       toast.success("Sorter created successfully!");
       // Invalidate queries to show new sorter immediately
       await invalidateQueriesAfterCreate();
-      router.refresh();
       router.push(`/sorter/${out.slug || out.sorter?.slug}`);
     } finally {
       setIsLoading(false);
