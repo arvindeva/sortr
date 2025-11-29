@@ -82,13 +82,10 @@ export async function GET(
       `✅ GET /api/sorters/${slug}/results - Found ${transformedResults.length} recent results`,
     );
 
-    // Enable Vercel CDN caching even when cookies are present
+    // Disable CDN cache for frequently edited content - rely on Next.js Data Cache instead
     return NextResponse.json(transformedResults, {
       headers: {
-        // Cache at CDN for 10 minutes; allow brief staleness during revalidation
-        "CDN-Cache-Control": "public, s-maxage=600, stale-while-revalidate=60",
-        // Browser cache for 1 minute, CDN for 10 minutes
-        "Cache-Control": "public, max-age=60, s-maxage=600, stale-while-revalidate=60",
+        "Cache-Control": "private, no-cache, must-revalidate",
       },
     });
   } catch (error) {

@@ -149,6 +149,10 @@ export default function EditSorterForm({
   const [itemImagesData, setItemImagesData] = useState<
     Array<{ file: File; preview: string } | null>
   >([]);
+  // Track original item IDs to preserve image mappings when editing
+  const [itemIds, setItemIds] = useState<Array<string>>(
+    items.map((item) => item.id)
+  );
   const [managedTags, setManagedTags] = useState<Tag[]>(
     tags.map((tag) => ({
       id: tag.id,
@@ -317,6 +321,8 @@ export default function EditSorterForm({
   const addItem = () => {
     append({ title: "", tagSlugs: [], imageUrl: undefined });
     setItemImagesData([...itemImagesData, null]);
+    // Use a temporary ID for new items (will be ignored on backend)
+    setItemIds([...itemIds, `new-${Date.now()}`]);
   };
 
   // Remove item
@@ -326,6 +332,11 @@ export default function EditSorterForm({
       const newData = [...prev];
       newData.splice(index, 1);
       return newData;
+    });
+    setItemIds((prev) => {
+      const newIds = [...prev];
+      newIds.splice(index, 1);
+      return newIds;
     });
   };
 
@@ -339,6 +350,7 @@ export default function EditSorterForm({
         title: it.title.trim(),
         tagNames: it.tagSlugs || [],
         hasImage: !!itemImagesData[idx],
+        itemId: itemIds[idx], // Send original item ID for image matching
       }));
 
       const initRes = await fetch(`/api/sorters/${sorter.slug}/edit/init`, {
@@ -567,45 +579,15 @@ export default function EditSorterForm({
     toast.info("Upload cancelled");
   };
 
-  // Handle form submission - SIMPLIFIED VERSION (matches create sorter)
+  // Handle form submission - ALWAYS use init/finalize flow for consistency
   const onSubmit = async (data: CreateSorterInput) => {
     setIsLoading(true);
     setShowProgressDialog(false); // Reset dialog state
     setProgress(null);
 
     try {
-      // Check if we have new images to upload
-      const hasNewImages =
-        coverImageFile || itemImagesData.some((imageData) => imageData);
-
-      if (hasNewImages) {
-        await uploadChangedAssetsAndFinalize(data);
-      } else {
-        // No new images - direct API call with current URLs
-        const finalData = {
-          ...data,
-          items: data.items.map((item) => ({
-            ...item,
-            // Remove undefined imageUrl to avoid validation issues
-            ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
-          })),
-          tags: managedTags,
-        };
-
-        const response = await axios.put(
-          `/api/sorters/${sorter.slug}`,
-          finalData,
-        );
-
-        if (response.data) {
-          toast.success("Sorter updated successfully!");
-
-          // Invalidate all relevant queries to show updates immediately
-          await invalidateQueriesAfterEdit();
-
-          router.push(`/sorter/${sorter.slug}`);
-        }
-      }
+      // Always use the upload/finalize flow - it handles zero uploads gracefully
+      await uploadChangedAssetsAndFinalize(data);
     } catch (error: any) {
       setIsLoading(false);
       const errorMessage =

@@ -19,7 +19,7 @@ type InitBody = {
   description?: string | null;
   category?: string | null;
   tags?: { id?: string; name: string; sortOrder?: number }[];
-  items: { title: string; tagNames?: string[]; hasImage?: boolean }[];
+  items: { title: string; tagNames?: string[]; hasImage?: boolean; itemId?: string }[];
   includeCover?: boolean;
 };
 

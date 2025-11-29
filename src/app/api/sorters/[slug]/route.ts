@@ -41,10 +41,8 @@ export async function GET(
 
     return Response.json(data, {
       headers: {
-        // Edge cache regardless of cookies for 5 minutes
-        "CDN-Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
-        // Small browser cache to smooth bursts
-        "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=60",
+        // Disable CDN cache for frequently edited content - rely on Next.js Data Cache instead
+        "Cache-Control": "private, no-cache, must-revalidate",
       },
     });
   } catch (error) {
@@ -384,18 +382,16 @@ async function handleEditSorter(
       .where(eq(sorterItems.sorterId, currentSorter.id));
 
     const newItems = validatedData.items.map((item: any, index: number) => {
-      // Match by index position instead of title to preserve images when names change
-      const currentItem = currentItems[index];
-      const hasChanged = !currentItem || 
-        currentItem.title !== item.title ||
-        currentItem.imageUrl !== fileOperationResults.newItemImageUrls[index];
+      // Don't match by index - items can be deleted/reordered
+      // fileOperationResults.newItemImageUrls already has the correct URLs from the form
+      const imageUrl = fileOperationResults.newItemImageUrls[index] || null;
 
       return {
         sorterId: currentSorter.id,
-        version: hasChanged ? newVersion : (currentItem?.version || newVersion), // Item-level versioning
+        version: newVersion, // Always use new version for edited sorters
         title: item.title,
         slug: generateSorterItemSlug(item.title),
-        imageUrl: fileOperationResults.newItemImageUrls[index] || null,
+        imageUrl,
         tagSlugs: item.tagSlugs || [],
         sortOrder: index,
       };
@@ -458,9 +454,9 @@ async function handleFileOperations(
 
   // ITEM IMAGES - only process changed/new items
   validatedData.items.forEach((newItem: any, index: number) => {
-    // Match by index position instead of title to preserve images when names change
-    const currentItem = currentItems[index];
-    
+    // Use the imageUrl from the request - it already contains the correct image
+    // Don't match by index since items can be deleted/reordered
+
     if (newItem.imageUrl?.includes("/sessions/")) {
       // NEW IMAGE from upload session
       const sessionKey = extractSessionKeyFromUrl(newItem.imageUrl);
@@ -484,15 +480,15 @@ async function handleFileOperations(
       console.log(
         `📝 Item ${index} "${newItem.title}": NEW from session → ${destKey}`,
       );
-      
-    } else if (currentItem?.imageUrl) {
-      // EXISTING IMAGE - keep same URL, no copy needed!
-      newItemImageUrls[index] = currentItem.imageUrl;
+
+    } else if (newItem.imageUrl) {
+      // EXISTING IMAGE - use the URL from the request (already correct after form changes)
+      newItemImageUrls[index] = newItem.imageUrl;
       console.log(
-        `📝 Item ${index} "${newItem.title}": UNCHANGED - no copy needed (${currentItem.imageUrl})`,
+        `📝 Item ${index} "${newItem.title}": UNCHANGED - no copy needed (${newItem.imageUrl})`,
       );
       // No copy operation = MASSIVE performance gain
-      
+
     } else {
       // No image
       newItemImageUrls[index] = null;

@@ -137,12 +137,29 @@ export async function PUT(
       // Replace items based on new list (meta.items) and expected uploaded images
       await trx.delete(sorterItems).where(eq(sorterItems.sorterId, sorterRow.id));
 
-      const newItemsValues = (meta.items as Array<{ title: string; tagNames?: string[]; hasImage?: boolean }>)
+      const newItemsValues = (meta.items as Array<{ title: string; tagNames?: string[]; hasImage?: boolean; itemId?: string }>)
         .map((item, index) => {
           const mainEntry = expected.find((e) => e.type === "item" && e.itemIndex === index);
+
+          // Debug logging
+          console.log(`🔍 Processing item ${index}:`, {
+            title: item.title,
+            itemId: item.itemId,
+            hasImage: item.hasImage,
+            hasMainEntry: !!mainEntry,
+            currentItemsCount: currentItems.length,
+          });
+
+          // Use itemId to match existing images, fallback to title matching for backward compatibility
           const imageUrl = mainEntry
             ? getR2PublicUrl(mainEntry.key)
-            : (currentItems.find((ci) => ci.title.toLowerCase() === item.title.toLowerCase())?.imageUrl || null);
+            : (item.itemId
+                ? currentItems.find((ci) => ci.id === item.itemId)?.imageUrl || null
+                : currentItems.find((ci) => ci.title.toLowerCase() === item.title.toLowerCase())?.imageUrl || null
+              );
+
+          console.log(`📸 Image for "${item.title}":`, imageUrl);
+
           const tagSlugs = (item.tagNames || [])
             .map((name) => tagNameToSlug.get(name))
             .filter(Boolean) as string[];
