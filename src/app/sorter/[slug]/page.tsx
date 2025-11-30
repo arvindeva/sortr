@@ -169,7 +169,6 @@ export default async function SorterPage({ params }: SorterPageProps) {
     ],
   };
 
-  // Bypass cached initial data to force a fresh client fetch after edits
   return (
     <>
       <script
@@ -196,7 +195,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
           slug={slug}
           isOwner={false}
           currentUserEmail={undefined}
-          initialData={undefined}
+          initialData={initialClientData}
         />
       </main>
     </>
