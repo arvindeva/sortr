@@ -3,9 +3,7 @@ import { SorterHeaderServer } from "@/components/sorter-header-server";
 import { SorterPageClient } from "@/components/sorter-page-client";
 import { SorterNotFound } from "@/components/sorter-not-found";
 import { SorterOwnerControls } from "@/components/sorter-owner-controls";
-import {
-  getSorterDataCached,
-} from "@/lib/sorter-data";
+import { getSorterDataCached } from "@/lib/sorter-data";
 
 interface SorterPageProps {
   params: Promise<{
@@ -116,19 +114,19 @@ export default async function SorterPage({ params }: SorterPageProps) {
     },
   };
 
-  const transformedItems = data.items.map(item => ({
+  const transformedItems = data.items.map((item) => ({
     id: item.id,
     title: item.title,
     imageUrl: item.imageUrl ?? undefined,
     tagSlugs: item.tagSlugs ?? undefined,
   }));
 
-  const transformedTags = data.tags?.map(tag => ({
+  const transformedTags = data.tags?.map((tag) => ({
     id: tag.id,
     name: tag.name,
     slug: tag.slug,
     sortOrder: tag.sortOrder ?? 0,
-    items: tag.items.map(item => ({
+    items: tag.items.map((item) => ({
       id: item.id,
       title: item.title,
       imageUrl: item.imageUrl ?? undefined,
