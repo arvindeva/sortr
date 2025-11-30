@@ -36,6 +36,9 @@ interface RankingsPageProps {
   }>;
 }
 
+// Cache this page forever - rankings are immutable
+export const revalidate = false;
+
 // UUID validation helper
 function isValidUUID(str: string): boolean {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -143,6 +146,8 @@ export async function generateMetadata({
 }
 
 async function getResultDataUncached(resultId: string): Promise<ResultData | null> {
+  console.log(`🔍 [CACHE MISS] Fetching ranking data from database for: ${resultId}`);
+
   // Validate UUID format first
   if (!isValidUUID(resultId)) {
     return null;
@@ -305,16 +310,34 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
 
 // Cached wrapper that handles Date serialization
 async function getResultData(resultId: string): Promise<ResultData | null> {
+  // First, get the sorterId to use in cache tags
+  const resultMeta = await db
+    .select({ sorterId: sortingResults.sorterId })
+    .from(sortingResults)
+    .where(eq(sortingResults.id, resultId))
+    .limit(1);
+
+  if (resultMeta.length === 0) return null;
+
+  const sorterId = resultMeta[0].sorterId;
+  if (!sorterId) return null;
+
+  // Now cache with both individual and sorter-level tags
   const cached = await unstable_cache(
     async () => getResultDataUncached(resultId),
-    [`ranking-data-v3`, resultId],
+    [`ranking-data-v4`, resultId],
     {
       revalidate: false, // Never expire - rankings are immutable
-      tags: [`ranking-${resultId}`],
+      tags: [
+        `ranking-${resultId}`,           // Individual ranking
+        `ranking-sorter-${sorterId}`,    // All rankings for this sorter
+      ],
     }
   )();
 
   if (!cached) return null;
+
+  console.log(`✅ [CACHE HIT] Returning cached ranking data for: ${resultId}`);
 
   // Convert ISO strings back to Date objects
   return {

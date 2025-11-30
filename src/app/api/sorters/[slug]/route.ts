@@ -11,6 +11,7 @@ import { eq, and } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { revalidateTag } from "next/cache";
 import { createSorterSchema } from "@/lib/validations";
 import {
   copyR2ObjectsInParallel,
@@ -124,6 +125,11 @@ export async function DELETE(
       .update(sorters)
       .set({ deleted: true })
       .where(eq(sorters.id, sorter.id));
+
+    // 3. Revalidate all ranking pages for this sorter
+    // This clears cached ranking pages so they show "(Deleted)" status
+    revalidateTag(`ranking-sorter-${sorter.id}`);
+    console.log(`♻️ Revalidated ranking caches for deleted sorter: ${sorter.id}`);
 
     // NOTE: We do NOT delete sorterItems or sorterHistory
     // All versioned data remains in database for rankings to reference
