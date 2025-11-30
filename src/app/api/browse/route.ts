@@ -26,6 +26,8 @@ export async function GET(request: NextRequest) {
 
     // ALWAYS filter out deleted sorters
     conditions.push(eq(sorters.deleted, false));
+    // Only show fully active sorters (hide drafts/pending)
+    conditions.push(eq(sorters.status, "active"));
 
     // Text search - search in title, description, and creator username
     if (query.trim()) {
