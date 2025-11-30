@@ -1,6 +1,5 @@
 import { RankingNotFound } from "@/components/ranking-not-found";
 import { Metadata } from "next";
-import { unstable_cache } from "next/cache";
 import { db } from "@/db";
 import {
   sortingResults,
@@ -142,7 +141,7 @@ export async function generateMetadata({
   }
 }
 
-async function getResultDataUncached(resultId: string): Promise<ResultData | null> {
+async function getResultData(resultId: string): Promise<ResultData | null> {
   // Validate UUID format first
   if (!isValidUUID(resultId)) {
     return null;
@@ -281,7 +280,7 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
     result: {
       id: result.id,
       rankings,
-      createdAt: new Date(result.createdAt), // Ensure Date object
+      createdAt: result.createdAt,
       username: result.username || "Anonymous",
     },
     sorter: {
@@ -292,7 +291,7 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
       category: sorter.category,
       coverImageUrl: sorter.coverImageUrl,
       creatorUsername: sorter.creatorUsername,
-      createdAt: new Date(sorter.createdAt), // Ensure Date object
+      createdAt: sorter.createdAt,
       completionCount: sorter.completionCount,
       isDeleted: sorter.isDeleted,
     },
@@ -301,18 +300,6 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
     totalTags: totalTags.length > 0 ? totalTags : undefined,
     ownerUserId: result.userId,
   };
-}
-
-// Cached wrapper for getResultData
-async function getResultData(resultId: string): Promise<ResultData | null> {
-  return unstable_cache(
-    async () => getResultDataUncached(resultId),
-    [`ranking-data-v2`, resultId], // Changed cache key to force refresh
-    {
-      revalidate: false, // Never expire - rankings are immutable
-      tags: [`ranking-${resultId}`],
-    }
-  )();
 }
 
 export default async function RankingsPage({ params }: RankingsPageProps) {
