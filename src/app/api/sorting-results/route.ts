@@ -4,7 +4,6 @@ import { eq, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
-import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,15 +67,6 @@ export async function POST(request: NextRequest) {
       .update(sorters)
       .set({ completionCount: sql`${sorters.completionCount} + 1` })
       .where(eq(sorters.id, sorterId));
-
-    // Revalidate sorter data and results caches
-    if (sorterSlug) {
-      revalidatePath(`/sorter/${sorterSlug}`);
-      revalidatePath(`/api/sorters/${sorterSlug}`);
-      revalidatePath(`/api/sorters/${sorterSlug}/results`);
-      revalidateTag(`sorter-${sorterSlug}`);
-      revalidateTag(`sorter-results-${sorterSlug}`);
-    }
 
     return Response.json({
       resultId: result[0].id,

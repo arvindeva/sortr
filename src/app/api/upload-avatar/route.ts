@@ -9,7 +9,6 @@ import {
   processAvatarImage,
   validateImageBuffer,
 } from "@/lib/image-processing";
-import { revalidatePath } from "next/cache";
 
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -89,33 +88,6 @@ export async function POST(request: NextRequest) {
 
     // Update user's image URL in database
     await db.update(user).set({ image: avatarUrl }).where(eq(user.id, userId));
-
-    // Get user info for revalidation
-    const userDataForRevalidation = await db
-      .select({ username: user.username })
-      .from(user)
-      .where(eq(user.id, userId))
-      .limit(1);
-
-    // Get all user's sorters to revalidate their pages
-    const userSorters = await db
-      .select({ slug: sorters.slug })
-      .from(sorters)
-      .where(eq(sorters.userId, userId));
-
-    if (userDataForRevalidation.length > 0) {
-      const username = userDataForRevalidation[0].username;
-      
-      if (username) {
-        revalidatePath(`/user/${username}`);
-      }
-      for (const sorter of userSorters) {
-        revalidatePath(`/sorter/${sorter.slug}`);
-        revalidatePath(`/api/sorters/${sorter.slug}`);
-      }
-      revalidatePath("/");
-      revalidatePath("/browse");
-    }
 
     return NextResponse.json({
       success: true,

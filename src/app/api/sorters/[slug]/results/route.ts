@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { sortingResults, user, sorters } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { unstable_cache } from "next/cache";
 
 async function getRecentResultsUncached(slug: string) {
   // First get the sorter ID from slug
@@ -51,14 +50,7 @@ async function getRecentResultsUncached(slug: string) {
 }
 
 async function getRecentResultsCached(slug: string) {
-  return unstable_cache(
-    async () => getRecentResultsUncached(slug),
-    ["sorter-recent-results", slug],
-    {
-      revalidate: 600,
-      tags: [`sorter-results-${slug}`, `sorter-${slug}`],
-    },
-  )();
+  return getRecentResultsUncached(slug);
 }
 
 // GET /api/sorters/[slug]/results - Get recent results for a sorter

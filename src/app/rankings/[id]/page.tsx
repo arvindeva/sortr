@@ -29,9 +29,6 @@ import { RankingImageLayout } from "@/components/ranking-image-layout";
 import { getImageUrl } from "@/lib/image-utils";
 import { RankingOwnerActions } from "@/components/ranking-owner-actions";
 
-// Cache rankings for 7 days (rankings are immutable)
-export const revalidate = 604800;
-
 interface RankingsPageProps {
   params: Promise<{
     id: string;

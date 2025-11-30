@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
-import { revalidatePath, revalidateTag } from "next/cache";
 
 // Increase function timeout for R2 operations (5 minutes for large sorters)
 export const maxDuration = 300;
@@ -227,16 +226,6 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
     console.log(
       `✅ Tag-based sorter created: ${result.sorter.title} (${result.sorter.slug})`,
     );
-
-    // Revalidate pages and caches for new sorter
-    revalidatePath("/");
-    revalidatePath("/browse");
-    revalidatePath(`/sorter/${result.sorter.slug}`);
-    revalidateTag(`sorter-${result.sorter.slug}`);
-    revalidateTag(`sorter-results-${result.sorter.slug}`);
-    if (userData.username) {
-      revalidatePath(`/user/${userData.username}`);
-    }
 
     return NextResponse.json({
       success: true,
@@ -605,21 +594,6 @@ export async function POST(request: NextRequest) {
     });
 
     console.log("💾 Database transaction completed successfully");
-
-    // Revalidate pages and caches for new sorter
-    revalidatePath("/");
-    revalidatePath("/browse");
-    revalidatePath(`/sorter/${result.sorter.slug}`);
-    revalidateTag(`sorter-${result.sorter.slug}`);
-    revalidateTag(`sorter-results-${result.sorter.slug}`);
-    const creatorData = await db
-      .select({ username: user.username })
-      .from(user)
-      .where(eq(user.id, userData[0].id))
-      .limit(1);
-    if (creatorData.length > 0 && creatorData[0].username) {
-      revalidatePath(`/user/${creatorData[0].username}`);
-    }
 
     return NextResponse.json({
       success: true,

@@ -5,7 +5,6 @@ import { user, sorters } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { updateUsernameSchema } from "@/lib/validations";
-import { revalidatePath } from "next/cache";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -101,27 +100,6 @@ export async function PATCH(request: NextRequest) {
 
     // Update username
     await db.update(user).set({ username }).where(eq(user.id, userId));
-
-    // Get all user's sorters to revalidate their pages
-    const userSorters = await db
-      .select({ slug: sorters.slug })
-      .from(sorters)
-      .where(eq(sorters.userId, userId));
-
-    // Revalidate affected pages
-    if (oldUsername && oldUsername !== username) {
-      revalidatePath(`/user/${oldUsername}`);
-    }
-    if (username) {
-      revalidatePath(`/user/${username}`);
-    }
-    for (const sorter of userSorters) {
-      revalidatePath(`/sorter/${sorter.slug}`);
-      revalidatePath(`/api/sorters/${sorter.slug}`);
-    }
-    revalidatePath("/");
-    revalidatePath("/browse");
-    revalidatePath("/", "layout");
 
     return NextResponse.json({
       message: "Username updated successfully",

@@ -91,7 +91,6 @@ export async function GET() {
       status: 200,
       headers: {
         "Content-Type": "application/xml",
-        "Cache-Control": "public, max-age=86400, revalidate", // Cache for 24 hours
       },
     });
   } catch (error) {
