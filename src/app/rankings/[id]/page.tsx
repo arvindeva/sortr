@@ -1,5 +1,6 @@
 import { RankingNotFound } from "@/components/ranking-not-found";
 import { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import { db } from "@/db";
 import {
   sortingResults,
@@ -51,7 +52,7 @@ interface ResultData {
   result: {
     id: string;
     rankings: RankedItem[];
-    createdAt: Date;
+    createdAt: Date | string; // Allow both for caching
     username: string;
   };
   sorter: {
@@ -62,7 +63,7 @@ interface ResultData {
     category: string;
     coverImageUrl?: string;
     creatorUsername: string;
-    createdAt: Date;
+    createdAt: Date | string; // Allow both for caching
     completionCount: number;
     isDeleted: boolean;
   };
@@ -141,7 +142,7 @@ export async function generateMetadata({
   }
 }
 
-async function getResultData(resultId: string): Promise<ResultData | null> {
+async function getResultDataUncached(resultId: string): Promise<ResultData | null> {
   // Validate UUID format first
   if (!isValidUUID(resultId)) {
     return null;
@@ -280,7 +281,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     result: {
       id: result.id,
       rankings,
-      createdAt: result.createdAt,
+      createdAt: result.createdAt.toISOString(), // Convert to string for caching
       username: result.username || "Anonymous",
     },
     sorter: {
@@ -291,7 +292,7 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       category: sorter.category,
       coverImageUrl: sorter.coverImageUrl,
       creatorUsername: sorter.creatorUsername,
-      createdAt: sorter.createdAt,
+      createdAt: sorter.createdAt.toISOString(), // Convert to string for caching
       completionCount: sorter.completionCount,
       isDeleted: sorter.isDeleted,
     },
@@ -299,6 +300,33 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       selectedTagNames.length > 0 ? selectedTagNames : undefined,
     totalTags: totalTags.length > 0 ? totalTags : undefined,
     ownerUserId: result.userId,
+  };
+}
+
+// Cached wrapper that handles Date serialization
+async function getResultData(resultId: string): Promise<ResultData | null> {
+  const cached = await unstable_cache(
+    async () => getResultDataUncached(resultId),
+    [`ranking-data-v3`, resultId],
+    {
+      revalidate: false, // Never expire - rankings are immutable
+      tags: [`ranking-${resultId}`],
+    }
+  )();
+
+  if (!cached) return null;
+
+  // Convert ISO strings back to Date objects
+  return {
+    ...cached,
+    result: {
+      ...cached.result,
+      createdAt: new Date(cached.result.createdAt),
+    },
+    sorter: {
+      ...cached.sorter,
+      createdAt: new Date(cached.sorter.createdAt),
+    },
   };
 }
 
@@ -340,7 +368,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
       "@type": "Person",
       name: result.username || "Anonymous",
     },
-    dateCreated: result.createdAt.toISOString(),
+    dateCreated: result.createdAt instanceof Date ? result.createdAt.toISOString() : result.createdAt,
     name: `${sorter.title} Rankings by ${result.username}`,
     description: `Personalized sorter results for ${sorter.title} by ${result.username}. View the complete ranked list of items.`,
     url: `${process.env.NEXTAUTH_URL}/rankings/${result.id}`,
@@ -447,7 +475,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                     sorterTitle: sorter.title,
                     username: result.username,
                     rankings: result.rankings,
-                    createdAt: result.createdAt,
+                    createdAt: result.createdAt instanceof Date ? result.createdAt : new Date(result.createdAt),
                     selectedTags: selectedTagSlugs,
                   }}
                 />
@@ -482,7 +510,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
               sorterTitle: sorter.title,
               username: result.username,
               rankings: result.rankings,
-              createdAt: result.createdAt,
+              createdAt: result.createdAt instanceof Date ? result.createdAt : new Date(result.createdAt),
               selectedTags: selectedTagSlugs,
             }}
           />
@@ -695,7 +723,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                 sorterTitle={sorter.title}
                 username={result.username}
                 rankings={result.rankings}
-                createdAt={result.createdAt}
+                createdAt={result.createdAt instanceof Date ? result.createdAt : new Date(result.createdAt)}
                 selectedTags={selectedTagSlugs}
               />
             </div>
