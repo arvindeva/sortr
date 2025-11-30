@@ -281,7 +281,7 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
     result: {
       id: result.id,
       rankings,
-      createdAt: result.createdAt,
+      createdAt: new Date(result.createdAt), // Ensure Date object
       username: result.username || "Anonymous",
     },
     sorter: {
@@ -292,7 +292,7 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
       category: sorter.category,
       coverImageUrl: sorter.coverImageUrl,
       creatorUsername: sorter.creatorUsername,
-      createdAt: sorter.createdAt,
+      createdAt: new Date(sorter.createdAt), // Ensure Date object
       completionCount: sorter.completionCount,
       isDeleted: sorter.isDeleted,
     },
