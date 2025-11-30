@@ -307,7 +307,7 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
 async function getResultData(resultId: string): Promise<ResultData | null> {
   return unstable_cache(
     async () => getResultDataUncached(resultId),
-    [`ranking-data`, resultId],
+    [`ranking-data-v2`, resultId], // Changed cache key to force refresh
     {
       revalidate: false, // Never expire - rankings are immutable
       tags: [`ranking-${resultId}`],
