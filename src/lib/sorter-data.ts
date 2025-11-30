@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import { db } from "@/db";
 import {
   sorters,
@@ -18,7 +17,7 @@ export interface SorterPayload {
     coverImageUrl: string | null;
     createdAt: Date;
     completionCount: number;
-    viewCount: number;
+    version: number;
     userId: string;
     creatorUsername: string | null;
     creatorId: string | null;
@@ -57,7 +56,7 @@ async function getSorterDataUncached(slug: string): Promise<SorterPayload | null
         coverImageUrl: sorters.coverImageUrl,
         createdAt: sorters.createdAt,
         completionCount: sorters.completionCount,
-        viewCount: sorters.viewCount,
+        version: sorters.version,
         userId: sorters.userId,
         creatorUsername: user.username,
         creatorId: user.id,
@@ -153,12 +152,6 @@ async function getSorterDataUncached(slug: string): Promise<SorterPayload | null
 }
 
 export async function getSorterDataCached(slug: string): Promise<SorterPayload | null> {
-  return unstable_cache(
-    async () => getSorterDataUncached(slug),
-    [`sorter-data`, slug],
-    {
-      revalidate: 300,
-      tags: [`sorter-data`, `sorter-${slug}`],
-    }
-  )();
+  // Direct database call - no caching layer
+  return getSorterDataUncached(slug);
 }

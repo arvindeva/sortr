@@ -8,8 +8,8 @@ import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function POST(request: NextRequest) {
   try {
-    const { sorterId, rankings, selectedGroups, selectedTagSlugs } =
-      await request.json();
+  const { sorterId, rankings, selectedGroups, selectedTagSlugs } =
+    await request.json();
 
     if (!sorterId || !rankings) {
       return Response.json(
@@ -38,11 +38,11 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Sorter not found" }, { status: 404 });
     }
 
-    const {
-      title: sorterTitle,
-      slug: sorterSlug,
-      coverImageUrl: sorterCoverImageUrl,
-      version: sorterVersion,
+  const {
+    title: sorterTitle,
+    slug: sorterSlug,
+    coverImageUrl: sorterCoverImageUrl,
+    version: sorterVersion,
     } = sorterData[0];
 
     // Save the sorting result with VERSION
@@ -69,12 +69,14 @@ export async function POST(request: NextRequest) {
       .set({ completionCount: sql`${sorters.completionCount} + 1` })
       .where(eq(sorters.id, sorterId));
 
-    // Keep revalidation focused to reduce cache churn under load.
-    // Sorter page shows completion count; homepage/browse will refresh via ISR.
-    revalidatePath(`/sorter/${sorterSlug}`);
-    revalidateTag(`sorter-results-${sorterSlug}`); // Granular cache tag for results
-    revalidateTag(`sorter-${sorterSlug}`); // Granular cache tag for this sorter
-    console.log(`♻️ Revalidated sorter page for completion count update: ${sorterSlug}`);
+    // Revalidate sorter data and results caches
+    if (sorterSlug) {
+      revalidatePath(`/sorter/${sorterSlug}`);
+      revalidatePath(`/api/sorters/${sorterSlug}`);
+      revalidatePath(`/api/sorters/${sorterSlug}/results`);
+      revalidateTag(`sorter-${sorterSlug}`);
+      revalidateTag(`sorter-results-${sorterSlug}`);
+    }
 
     return Response.json({
       resultId: result[0].id,

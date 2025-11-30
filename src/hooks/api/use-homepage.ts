@@ -8,7 +8,6 @@ interface SorterPreview {
   slug: string;
   category?: string;
   completionCount: number;
-  viewCount: number;
   coverImageUrl?: string;
   creatorUsername: string;
 }
@@ -34,10 +33,10 @@ export function usePopularSorters(initialData?: HomepageData) {
     queryKey: ["homepage", "popular-sorters"],
     queryFn: fetchPopularSorters,
     initialData,
-    staleTime: 30 * 1000, // 30 seconds
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     retry: 3,
   });
 }

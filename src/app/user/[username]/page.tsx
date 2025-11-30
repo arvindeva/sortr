@@ -70,7 +70,6 @@ async function getUserProfileData(username: string) {
       category: sorters.category,
       createdAt: sorters.createdAt,
       completionCount: sorters.completionCount,
-      viewCount: sorters.viewCount,
       coverImageUrl: sorters.coverImageUrl,
     })
     .from(sorters)

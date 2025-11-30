@@ -22,14 +22,14 @@ import {
   PanelTitle,
   PanelContent,
 } from "@/components/ui/panel";
-import { ArrowLeft, Trophy, RotateCcw, Play, Eye } from "lucide-react";
+import { ArrowLeft, Trophy, RotateCcw, Play } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
 import { RankingImageLayout } from "@/components/ranking-image-layout";
 import { getImageUrl } from "@/lib/image-utils";
 import { RankingOwnerActions } from "@/components/ranking-owner-actions";
 
-// Cache rankings for 1 week - rankings are immutable once created
+// Cache rankings for 7 days (rankings are immutable)
 export const revalidate = 604800;
 
 interface RankingsPageProps {
@@ -67,7 +67,6 @@ interface ResultData {
     creatorUsername: string;
     createdAt: Date;
     completionCount: number;
-    viewCount: number;
     isDeleted: boolean;
   };
   selectedTagSlugs?: string[];
@@ -207,7 +206,6 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
         creatorUsername: user.username,
         createdAt: sorters.createdAt,
         completionCount: sorters.completionCount,
-        viewCount: sorters.viewCount,
         deleted: sorters.deleted,
       })
       .from(sorters)
@@ -233,7 +231,6 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     creatorUsername: liveSorter?.creatorUsername || "Unknown User",
     createdAt: liveSorter?.createdAt || new Date(),
     completionCount: liveSorter?.completionCount || 0,
-    viewCount: liveSorter?.viewCount || 0,
     isDeleted: !liveSorter || liveSorter.deleted,
   };
 
@@ -299,7 +296,6 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
       creatorUsername: sorter.creatorUsername,
       createdAt: sorter.createdAt,
       completionCount: sorter.completionCount,
-      viewCount: sorter.viewCount,
       isDeleted: sorter.isDeleted,
     },
     selectedTagSlugs:
@@ -336,11 +332,6 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         name: sorter.creatorUsername || "Unknown User",
       },
       interactionStatistic: [
-        {
-          "@type": "InteractionCounter",
-          interactionType: "https://schema.org/ViewAction",
-          userInteractionCount: sorter.viewCount,
-        },
         {
           "@type": "InteractionCounter",
           interactionType: "https://schema.org/CompleteAction",
@@ -597,10 +588,6 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   )}
                   <div className="flex gap-4">
                     <div className="flex items-center gap-1">
-                      <Eye size={16} />
-                      <span>{sorter.viewCount}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
                       <Trophy size={16} />
                       <span>{sorter.completionCount}</span>
                     </div>
@@ -662,10 +649,6 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   </div>
                 )}
                 <div className="flex gap-4">
-                  <div className="flex items-center gap-1">
-                    <Eye size={16} />
-                    <span>{sorter.viewCount}</span>
-                  </div>
                   <div className="flex items-center gap-1">
                     <Trophy size={16} />
                     <span>{sorter.completionCount}</span>

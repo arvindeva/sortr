@@ -23,7 +23,6 @@ interface SorterPreview {
   category?: string;
   createdAt: string;
   completionCount: number;
-  viewCount: number;
   coverImageUrl?: string;
   creatorUsername: string;
 }

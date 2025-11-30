@@ -24,7 +24,6 @@ import {
 } from "@/lib/r2";
 import { generateTagSlug, generateSorterItemSlug } from "@/lib/utils";
 import { z } from "zod";
-import { revalidatePath, revalidateTag } from "next/cache";
 import { getSorterDataCached } from "@/lib/sorter-data";
 
 export async function GET(
@@ -39,12 +38,7 @@ export async function GET(
       return Response.json({ error: "Sorter not found" }, { status: 404 });
     }
 
-    return Response.json(data, {
-      headers: {
-        // Disable CDN cache for frequently edited content - rely on Next.js Data Cache instead
-        "Cache-Control": "private, no-cache, must-revalidate",
-      },
-    });
+    return Response.json(data);
   } catch (error) {
     console.error("Error fetching sorter:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
@@ -135,17 +129,6 @@ export async function DELETE(
     // All versioned data remains in database for rankings to reference
     // Future cleanup will only remove versions with no ranking references
 
-    // Revalidate relevant paths after sorter deletion
-    revalidatePath(`/sorter/${slug}`); // The sorter page (will show 404)
-    revalidatePath('/'); // Homepage shows popular sorters
-    revalidatePath('/browse'); // Browse page shows all sorters
-    revalidateTag(`sorter-${slug}`); // Granular cache tag for this sorter
-    revalidateTag(`sorter-results-${slug}`); // Granular cache tag for results
-    if (userData[0].username) {
-      revalidatePath(`/user/${userData[0].username}`); // Creator's profile page
-      console.log(`♻️ Revalidated paths for deleted sorter: ${slug}`);
-    }
-
     return Response.json({
       message: "Sorter deleted successfully",
       title: sorter.title,
@@ -234,20 +217,6 @@ export async function PUT(
       newVersion,
       currentUserId,
     );
-
-    // Revalidate relevant paths after sorter update
-    revalidatePath(`/sorter/${slug}`); // The sorter page itself
-    revalidatePath('/'); // Homepage shows popular sorters
-    revalidatePath('/browse'); // Browse page shows all sorters
-    revalidateTag(`sorter-${slug}`); // Granular cache tag for this sorter
-    revalidateTag(`sorter-results-${slug}`); // Granular cache tag for results
-    // Also revalidate API responses used by the page
-    revalidatePath(`/api/sorters/${slug}`);
-    revalidatePath(`/api/sorters/${slug}/results`);
-    if (userData[0].username) {
-      revalidatePath(`/user/${userData[0].username}`); // Creator's profile page
-      console.log(`♻️ Revalidated paths for updated sorter: ${slug}`);
-    }
 
     return Response.json({
       message: "Sorter updated successfully",

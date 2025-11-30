@@ -55,27 +55,28 @@ export async function POST(request: NextRequest) {
     await db.update(user).set({ image: null }).where(eq(user.id, userId));
 
     // Get all user's sorters to revalidate their pages
-    const userSorters = await db
-      .select({ slug: sorters.slug })
-      .from(sorters)
-      .where(eq(sorters.userId, userId));
+  const userSorters = await db
+    .select({ slug: sorters.slug })
+    .from(sorters)
+    .where(eq(sorters.userId, userId));
 
-    // Revalidate user profile page
-    if (username) {
-      revalidatePath(`/user/${username}`);
-      console.log(`♻️ Revalidated profile page for avatar removal: /user/${username}`);
-    }
+  // Revalidate user profile page
+  if (username) {
+    revalidatePath(`/user/${username}`);
+    console.log(`♻️ Revalidated profile page for avatar removal: /user/${username}`);
+  }
 
-    // Revalidate all user's sorter pages (they may show user avatar)
-    for (const sorter of userSorters) {
-      revalidatePath(`/sorter/${sorter.slug}`);
-      console.log(`♻️ Revalidated sorter page for avatar removal: /sorter/${sorter.slug}`);
-    }
+  // Revalidate all user's sorter pages (they may show user avatar)
+  for (const sorter of userSorters) {
+    revalidatePath(`/sorter/${sorter.slug}`);
+    revalidatePath(`/api/sorters/${sorter.slug}`);
+    console.log(`♻️ Revalidated sorter page for avatar removal: /sorter/${sorter.slug}`);
+  }
 
-    // Revalidate global pages that may show avatars
-    revalidatePath('/'); // Homepage
-    revalidatePath('/browse'); // Browse page
-    console.log(`♻️ Revalidated homepage and browse page for avatar removal`);
+  // Revalidate global pages that may show avatars
+  revalidatePath('/');
+  revalidatePath('/browse');
+  console.log(`♻️ Revalidated homepage and browse page for avatar removal`);
 
     return NextResponse.json({
       success: true,

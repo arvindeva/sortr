@@ -8,7 +8,6 @@ interface SorterCardProps {
     slug: string;
     creatorUsername: string;
     completionCount: number;
-    viewCount: number;
     category?: string;
     coverImageUrl?: string;
   };

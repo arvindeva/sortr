@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 // Increase function timeout for R2 operations (5 minutes for large sorters)
 export const maxDuration = 300;
@@ -42,7 +43,6 @@ import {
   processSorterItemImage,
   validateSorterItemImageBuffer,
 } from "@/lib/image-processing";
-import { revalidatePath, revalidateTag } from "next/cache";
 
 const MAX_COVER_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_ITEM_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -228,14 +228,14 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
       `✅ Tag-based sorter created: ${result.sorter.title} (${result.sorter.slug})`,
     );
 
-    // Revalidate relevant paths for new sorter
-    revalidatePath('/'); // Homepage shows popular sorters
-    revalidatePath('/browse'); // Browse page shows all sorters
-    revalidatePath(`/sorter/${result.sorter.slug}`); // New sorter page
-    revalidateTag(`sorter-${result.sorter.slug}`); // Granular cache tag for this sorter
+    // Revalidate pages and caches for new sorter
+    revalidatePath("/");
+    revalidatePath("/browse");
+    revalidatePath(`/sorter/${result.sorter.slug}`);
+    revalidateTag(`sorter-${result.sorter.slug}`);
+    revalidateTag(`sorter-results-${result.sorter.slug}`);
     if (userData.username) {
-      revalidatePath(`/user/${userData.username}`); // Creator's profile page
-      console.log(`♻️ Revalidated paths for new sorter: ${result.sorter.slug}`);
+      revalidatePath(`/user/${userData.username}`);
     }
 
     return NextResponse.json({
@@ -606,20 +606,19 @@ export async function POST(request: NextRequest) {
 
     console.log("💾 Database transaction completed successfully");
 
-    // Revalidate relevant paths for new sorter
-    revalidatePath('/'); // Homepage shows popular sorters
-    revalidatePath('/browse'); // Browse page shows all sorters
-    revalidatePath(`/sorter/${result.sorter.slug}`); // New sorter page
-    // Get user data for profile revalidation
+    // Revalidate pages and caches for new sorter
+    revalidatePath("/");
+    revalidatePath("/browse");
+    revalidatePath(`/sorter/${result.sorter.slug}`);
+    revalidateTag(`sorter-${result.sorter.slug}`);
+    revalidateTag(`sorter-results-${result.sorter.slug}`);
     const creatorData = await db
       .select({ username: user.username })
       .from(user)
       .where(eq(user.id, userData[0].id))
       .limit(1);
-    
     if (creatorData.length > 0 && creatorData[0].username) {
-      revalidatePath(`/user/${creatorData[0].username}`); // Creator's profile page
-      console.log(`♻️ Revalidated paths for new sorter: ${result.sorter.slug}`);
+      revalidatePath(`/user/${creatorData[0].username}`);
     }
 
     return NextResponse.json({
@@ -657,7 +656,6 @@ export async function GET() {
         slug: sorters.slug,
         category: sorters.category,
         completionCount: sorters.completionCount,
-        viewCount: sorters.viewCount,
         coverImageUrl: sorters.coverImageUrl,
         creatorUsername: user.username,
       })
@@ -684,13 +682,6 @@ export async function GET() {
         popularSorters: transformedSorters,
         total: transformedSorters.length,
         timestamp: new Date().toISOString(),
-      },
-      {
-        headers: {
-          // Cache at CDN for 5 minutes to match homepage ISR
-          "CDN-Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
-          "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=60",
-        },
       },
     );
   } catch (error) {

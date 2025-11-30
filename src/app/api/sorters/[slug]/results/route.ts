@@ -53,11 +53,11 @@ async function getRecentResultsUncached(slug: string) {
 async function getRecentResultsCached(slug: string) {
   return unstable_cache(
     async () => getRecentResultsUncached(slug),
-    [`sorter-recent-results`, slug],
+    ["sorter-recent-results", slug],
     {
       revalidate: 600,
-      tags: [`sorter-recent-results`, `sorter-results-${slug}`]
-    }
+      tags: [`sorter-results-${slug}`, `sorter-${slug}`],
+    },
   )();
 }
 
@@ -82,12 +82,7 @@ export async function GET(
       `✅ GET /api/sorters/${slug}/results - Found ${transformedResults.length} recent results`,
     );
 
-    // Disable CDN cache for frequently edited content - rely on Next.js Data Cache instead
-    return NextResponse.json(transformedResults, {
-      headers: {
-        "Cache-Control": "private, no-cache, must-revalidate",
-      },
-    });
+    return NextResponse.json(transformedResults);
   } catch (error) {
     console.error(`❌ GET /api/sorters/${slug}/results error:`, error);
     return NextResponse.json(

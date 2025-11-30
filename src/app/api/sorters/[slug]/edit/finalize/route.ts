@@ -7,7 +7,6 @@ import { and, eq } from "drizzle-orm";
 import { r2Client, getR2PublicUrl } from "@/lib/r2";
 import { HeadObjectCommand } from "@aws-sdk/client-s3";
 import { generateSorterItemSlug } from "@/lib/utils";
-import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function PUT(
   req: NextRequest,
@@ -183,31 +182,6 @@ export async function PUT(
       .update(uploadBatches)
       .set({ status: "active" })
       .where(eq(uploadBatches.id, uploadBatchId));
-
-    // Revalidate relevant pages and API caches
-    try {
-      revalidatePath(`/sorter/${slug}`);
-      revalidatePath("/");
-      revalidatePath("/browse");
-      revalidateTag(`sorter-${slug}`); // Granular cache tag for this sorter
-      revalidateTag(`sorter-results-${slug}`); // Granular cache tag for results
-      // Also revalidate API responses used by the page
-      revalidatePath(`/api/sorters/${slug}`);
-      revalidatePath(`/api/sorters/${slug}/results`);
-
-      // Revalidate user profile page if username exists
-      const owner = await db
-        .select({ username: user.username })
-        .from(user)
-        .where(eq(user.id, sorterRow.userId))
-        .limit(1);
-      const username = owner[0]?.username;
-      if (username) {
-        revalidatePath(`/user/${username}`);
-      }
-    } catch (e) {
-      console.warn("Revalidate failed (non-fatal):", e);
-    }
 
     return Response.json({ status: "active", missing: [] });
   } catch (error) {

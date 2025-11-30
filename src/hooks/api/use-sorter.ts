@@ -18,7 +18,7 @@ interface Sorter {
   userId: string;
   createdAt: string;
   completionCount: number;
-  viewCount: number;
+  version?: number;
   user: {
     username: string;
     id: string;
@@ -52,10 +52,16 @@ export interface SorterPageData {
 }
 
 // API functions
-async function fetchSorterData(slug: string): Promise<SorterData> {
+async function fetchSorterData(
+  slug: string,
+  version?: number | string,
+): Promise<SorterData> {
   console.log(`🔍 Fetching sorter data for slug: ${slug}`);
 
-  const response = await fetch(`/api/sorters/${slug}`);
+  const response = await fetch(
+    version ? `/api/sorters/${slug}?v=${version}` : `/api/sorters/${slug}`,
+    { cache: "no-store" },
+  );
 
   if (!response.ok) {
     if (response.status === 404) {
@@ -69,10 +75,18 @@ async function fetchSorterData(slug: string): Promise<SorterData> {
   return data;
 }
 
-async function fetchRecentResults(slug: string): Promise<RecentResult[]> {
+async function fetchRecentResults(
+  slug: string,
+  version?: number | string,
+): Promise<RecentResult[]> {
   console.log(`🔍 Fetching recent results for sorter: ${slug}`);
 
-  const response = await fetch(`/api/sorters/${slug}/results`);
+  const response = await fetch(
+    version
+      ? `/api/sorters/${slug}/results?v=${version}`
+      : `/api/sorters/${slug}/results`,
+    { cache: "no-store" },
+  );
 
   if (!response.ok) {
     // Results endpoint might not exist yet, return empty array
@@ -91,15 +105,16 @@ export function useSorterData(
   enabled: boolean = true,
   initialData?: SorterData,
   initialDataUpdatedAt?: number,
+  version?: number,
 ) {
   return useQuery({
-    queryKey: ["sorter", slug],
-    queryFn: () => fetchSorterData(slug),
+    queryKey: ["sorter", slug, version ?? "noversion"],
+    queryFn: () => fetchSorterData(slug, version),
     initialData,
-    initialDataUpdatedAt, // Tells TanStack Query when server data was fetched
-    staleTime: 30 * 1000, // 30 seconds - shorter since view counts change
-    refetchOnWindowFocus: true, // Will now respect staleTime with fresh initialData
-    refetchOnReconnect: true,
+    staleTime: 0, // Always treat as stale
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     retry: (failureCount, error) => {
       // Don't retry on 404 (sorter not found)
       if (error.message === "Sorter not found") {
@@ -111,13 +126,18 @@ export function useSorterData(
   });
 }
 
-export function useRecentResults(slug: string, enabled: boolean = true) {
+export function useRecentResults(
+  slug: string,
+  enabled: boolean = true,
+  version?: number,
+) {
   return useQuery({
-    queryKey: ["sorter", slug, "recent-results"],
-    queryFn: () => fetchRecentResults(slug),
-    staleTime: 1 * 60 * 1000, // 1 minute
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    queryKey: ["sorter", slug, "recent-results", version ?? "noversion"],
+    queryFn: () => fetchRecentResults(slug, version),
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     retry: 2, // Recent results are optional, less aggressive retry
     enabled,
   });
@@ -126,11 +146,22 @@ export function useRecentResults(slug: string, enabled: boolean = true) {
 // Combined hook for sorter page data
 export function useSorterPage(
   slug: string,
-  initialData?: SorterData,
+  initialData?: SorterData & { version?: number },
   initialDataUpdatedAt?: number,
 ) {
-  const sorterQuery = useSorterData(slug, true, initialData, initialDataUpdatedAt);
-  const recentResultsQuery = useRecentResults(slug, !!sorterQuery.data?.sorter);
+  const version = initialData?.sorter?.version;
+  const sorterQuery = useSorterData(
+    slug,
+    true,
+    initialData,
+    initialDataUpdatedAt,
+    version,
+  );
+  const recentResultsQuery = useRecentResults(
+    slug,
+    !!sorterQuery.data?.sorter,
+    version,
+  );
 
   return {
     sorterData: sorterQuery.data,

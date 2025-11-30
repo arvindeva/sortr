@@ -108,29 +108,20 @@ export async function PATCH(request: NextRequest) {
       .from(sorters)
       .where(eq(sorters.userId, userId));
 
-    // Revalidate both old and new profile pages if username changed
+    // Revalidate affected pages
     if (oldUsername && oldUsername !== username) {
       revalidatePath(`/user/${oldUsername}`);
-      console.log(`♻️ Revalidated old profile path: /user/${oldUsername}`);
     }
     if (username) {
       revalidatePath(`/user/${username}`);
-      console.log(`♻️ Revalidated new profile path: /user/${username}`);
     }
-
-    // Revalidate all user's sorter pages (they show creatorUsername)
     for (const sorter of userSorters) {
       revalidatePath(`/sorter/${sorter.slug}`);
-      console.log(`♻️ Revalidated sorter page: /sorter/${sorter.slug}`);
+      revalidatePath(`/api/sorters/${sorter.slug}`);
     }
-
-    // Revalidate global pages that show usernames
-    revalidatePath('/'); // Homepage shows popular sorters with usernames
-    revalidatePath('/browse'); // Browse page shows sorters with usernames
-    
-    // Revalidate layout to update navbar profile link
-    revalidatePath('/', 'layout'); // Force revalidate root layout and all nested layouts/pages
-    console.log(`♻️ Revalidated homepage, browse page, and layout for username change`);
+    revalidatePath("/");
+    revalidatePath("/browse");
+    revalidatePath("/", "layout");
 
     return NextResponse.json({
       message: "Username updated successfully",

@@ -100,9 +100,9 @@ export default function EditSorterForm({
 
   // Helper function to invalidate all relevant queries after sorter edit
   const invalidateQueriesAfterEdit = async () => {
-    // Invalidate the specific sorter queries
-    await queryClient.invalidateQueries({ queryKey: ["sorter", sorter.slug] });
-    await queryClient.invalidateQueries({
+    // Drop cached sorter data so next view fetches fresh state
+    queryClient.removeQueries({ queryKey: ["sorter", sorter.slug] });
+    queryClient.removeQueries({
       queryKey: ["sorter", sorter.slug, "recent-results"],
     });
 
@@ -549,6 +549,8 @@ export default function EditSorterForm({
 
       await invalidateQueriesAfterEdit();
       router.push(`/sorter/${sorter.slug}`);
+      // Force fresh data from the server so edits are reflected immediately
+      router.refresh();
     } catch (error: any) {
       setIsUploading(false);
       setShowProgressDialog(false);

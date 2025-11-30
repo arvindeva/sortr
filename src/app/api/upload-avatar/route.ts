@@ -106,22 +106,15 @@ export async function POST(request: NextRequest) {
     if (userDataForRevalidation.length > 0) {
       const username = userDataForRevalidation[0].username;
       
-      // Revalidate user profile page
       if (username) {
         revalidatePath(`/user/${username}`);
-        console.log(`♻️ Revalidated profile page for avatar update: /user/${username}`);
       }
-
-      // Revalidate all user's sorter pages (they may show user avatar)
       for (const sorter of userSorters) {
         revalidatePath(`/sorter/${sorter.slug}`);
-        console.log(`♻️ Revalidated sorter page for avatar update: /sorter/${sorter.slug}`);
+        revalidatePath(`/api/sorters/${sorter.slug}`);
       }
-
-      // Revalidate global pages that may show avatars
-      revalidatePath('/'); // Homepage
-      revalidatePath('/browse'); // Browse page
-      console.log(`♻️ Revalidated homepage and browse page for avatar update`);
+      revalidatePath("/");
+      revalidatePath("/browse");
     }
 
     return NextResponse.json({

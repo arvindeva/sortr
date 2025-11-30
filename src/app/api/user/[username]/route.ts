@@ -60,7 +60,6 @@ export async function GET(request: Request, { params }: RouteParams) {
         category: sorters.category,
         createdAt: sorters.createdAt,
         completionCount: sorters.completionCount,
-        viewCount: sorters.viewCount,
         coverImageUrl: sorters.coverImageUrl,
       })
       .from(sorters)

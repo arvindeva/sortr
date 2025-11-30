@@ -53,7 +53,6 @@ export async function GET(request: NextRequest) {
         description: sorters.description,
         category: sorters.category,
         completionCount: sorters.completionCount,
-        viewCount: sorters.viewCount,
         createdAt: sorters.createdAt,
         coverImageUrl: sorters.coverImageUrl,
         creatorUsername: user.username,
@@ -95,14 +94,6 @@ export async function GET(request: NextRequest) {
         totalPages,
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1,
-      },
-      {
-        headers: {
-          // Cache per unique query for 2 minutes at the CDN
-          "CDN-Cache-Control": "public, s-maxage=120, stale-while-revalidate=60",
-          // Browsers can reuse for a short period
-          "Cache-Control": "public, max-age=30, s-maxage=120, stale-while-revalidate=60",
-        },
       },
     );
   } catch (error) {

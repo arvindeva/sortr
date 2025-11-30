@@ -6,12 +6,6 @@ import { SorterOwnerControls } from "@/components/sorter-owner-controls";
 import {
   getSorterDataCached,
 } from "@/lib/sorter-data";
-import { db } from "@/db";
-import { sorters } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
-
-// Use ISR with 5 minute revalidation - matches data cache duration
-export const revalidate = 300;
 
 interface SorterPageProps {
   params: Promise<{
@@ -92,19 +86,6 @@ export default async function SorterPage({ params }: SorterPageProps) {
     return <SorterNotFound slug={slug} />;
   }
 
-  // Increment view count asynchronously (don't await, don't block rendering)
-  // Note: We don't invalidate cache tags here because view count updates
-  // happen frequently and don't need to bust the entire cache
-  db.update(sorters)
-    .set({ viewCount: sql`${sorters.viewCount} + 1` })
-    .where(eq(sorters.id, data.sorter.id))
-    .then(() => {
-      console.log(`👁️ Incremented view count for sorter: ${slug}`);
-    })
-    .catch((error) => {
-      console.error(`Failed to increment view count for ${slug}:`, error);
-    });
-
   // Check if sorter has filters/tags
   const hasFilters = Boolean(data.tags && data.tags.length > 0);
 
@@ -121,7 +102,6 @@ export default async function SorterPage({ params }: SorterPageProps) {
     slug: data.sorter.slug,
     userId: data.sorter.userId,
     completionCount: data.sorter.completionCount,
-    viewCount: data.sorter.viewCount,
     createdAt:
       data.sorter.createdAt instanceof Date
         ? data.sorter.createdAt.toISOString()
@@ -129,6 +109,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
     description: data.sorter.description ?? undefined,
     category: data.sorter.category ?? undefined,
     coverImageUrl: data.sorter.coverImageUrl ?? undefined,
+    version: data.sorter.version,
     user: {
       username: data.sorter.user.username || "Anonymous",
       id: data.sorter.user.id || "",
@@ -158,6 +139,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
     sorter: transformedSorter,
     items: transformedItems,
     tags: transformedTags,
+    version: data.sorter.version,
   };
 
   // JSON-LD structured data for SEO (server-side)
@@ -177,7 +159,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
       {
         "@type": "InteractionCounter",
         interactionType: "https://schema.org/ViewAction",
-        userInteractionCount: data.sorter.viewCount,
+        userInteractionCount: 0,
       },
       {
         "@type": "InteractionCounter",
@@ -187,6 +169,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
     ],
   };
 
+  // Bypass cached initial data to force a fresh client fetch after edits
   return (
     <>
       <script
@@ -213,7 +196,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
           slug={slug}
           isOwner={false}
           currentUserEmail={undefined}
-          initialData={initialClientData}
+          initialData={undefined}
         />
       </main>
     </>

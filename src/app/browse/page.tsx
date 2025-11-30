@@ -36,7 +36,6 @@ interface BrowseResult {
     description?: string;
     category?: string;
     completionCount: number;
-    viewCount: number;
     createdAt: string;
     coverImageUrl?: string;
     creatorUsername: string;
