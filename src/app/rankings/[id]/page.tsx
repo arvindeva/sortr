@@ -1,5 +1,6 @@
 import { RankingNotFound } from "@/components/ranking-not-found";
 import { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import { db } from "@/db";
 import {
   sortingResults,
@@ -141,7 +142,7 @@ export async function generateMetadata({
   }
 }
 
-async function getResultData(resultId: string): Promise<ResultData | null> {
+async function getResultDataUncached(resultId: string): Promise<ResultData | null> {
   // Validate UUID format first
   if (!isValidUUID(resultId)) {
     return null;
@@ -300,6 +301,18 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     totalTags: totalTags.length > 0 ? totalTags : undefined,
     ownerUserId: result.userId,
   };
+}
+
+// Cached wrapper for getResultData
+async function getResultData(resultId: string): Promise<ResultData | null> {
+  return unstable_cache(
+    async () => getResultDataUncached(resultId),
+    [`ranking-data`, resultId],
+    {
+      revalidate: false, // Never expire - rankings are immutable
+      tags: [`ranking-${resultId}`],
+    }
+  )();
 }
 
 export default async function RankingsPage({ params }: RankingsPageProps) {
