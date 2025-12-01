@@ -36,8 +36,8 @@ interface RankingsPageProps {
   }>;
 }
 
-// Cache this page forever - rankings are immutable
-export const revalidate = false;
+// Cache this page with 1 hour revalidation - enables full route cache
+export const revalidate = 3600; // 1 hour
 
 // UUID validation helper
 function isValidUUID(str: string): boolean {
@@ -161,6 +161,9 @@ interface CoreRankingData {
     category: string;
     creatorUsername: string;
     createdAt: string;
+    slug: string | null;
+    completionCount: number;
+    isDeleted: boolean;
   };
   selectedTagSlugs?: string[];
   totalTags?: {
@@ -168,13 +171,6 @@ interface CoreRankingData {
     slug: string;
   }[];
   ownerUserId: string | null;
-}
-
-// Dynamic metadata - fetched on every request
-interface LiveSorterMetadata {
-  slug: string | null;
-  completionCount: number;
-  isDeleted: boolean;
 }
 
 async function getCoreRankingDataUncached(resultId: string): Promise<CoreRankingData | null> {
@@ -221,6 +217,9 @@ async function getCoreRankingDataUncached(resultId: string): Promise<CoreRanking
         category: sorters.category,
         creatorUsername: user.username,
         createdAt: sorters.createdAt,
+        slug: sorters.slug,
+        completionCount: sorters.completionCount,
+        deleted: sorters.deleted,
       })
       .from(sorterHistory)
       .leftJoin(sorters, eq(sorterHistory.sorterId, sorters.id))
@@ -287,6 +286,9 @@ async function getCoreRankingDataUncached(resultId: string): Promise<CoreRanking
       category: historical?.category || "",
       creatorUsername: historical?.creatorUsername || "Unknown User",
       createdAt: historical?.createdAt?.toISOString() || new Date().toISOString(),
+      slug: historical?.slug || null,
+      completionCount: historical?.completionCount || 0,
+      isDeleted: historical?.deleted || false,
     },
     selectedTagSlugs:
       selectedTagNames.length > 0 ? selectedTagNames : undefined,
@@ -295,42 +297,12 @@ async function getCoreRankingDataUncached(resultId: string): Promise<CoreRanking
   };
 }
 
-// Fetch dynamic metadata (cached forever, revalidated on changes)
-async function getLiveSorterMetadata(sorterId: string): Promise<LiveSorterMetadata> {
-  return await unstable_cache(
-    async () => {
-      const liveSorterData = await db
-        .select({
-          slug: sorters.slug,
-          completionCount: sorters.completionCount,
-          deleted: sorters.deleted,
-        })
-        .from(sorters)
-        .where(eq(sorters.id, sorterId))
-        .limit(1);
-
-      const liveSorter = liveSorterData[0];
-
-      return {
-        slug: liveSorter?.slug || null,
-        completionCount: liveSorter?.completionCount || 0,
-        isDeleted: !liveSorter || liveSorter.deleted,
-      };
-    },
-    [`sorter-metadata`, sorterId],
-    {
-      revalidate: false, // Cache forever
-      tags: [`sorter-metadata-${sorterId}`],
-    }
-  )();
-}
-
-// Optimized data fetcher - caches immutable data, fetches dynamic metadata
+// Optimized data fetcher - caches immutable snapshot data only
 async function getResultData(resultId: string): Promise<ResultData | null> {
-  // Cache core ranking data (immutable)
+  // Cache core ranking data (immutable snapshot)
   const coreData = await unstable_cache(
     async () => getCoreRankingDataUncached(resultId),
-    [`ranking-data-v5`, resultId],
+    [`ranking-data-v6`, resultId], // Bumped version for new fields
     {
       revalidate: false, // Never expire - rankings are immutable
       tags: [`ranking-${resultId}`],
@@ -339,12 +311,9 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
 
   if (!coreData) return null;
 
-  console.log(`✅ [CACHE] Core ranking data retrieved for: ${resultId}`);
+  console.log(`✅ [CACHE] Snapshot ranking data retrieved for: ${resultId}`);
 
-  // Fetch live metadata (small query, not cached)
-  const liveMetadata = await getLiveSorterMetadata(coreData.sorter.id);
-
-  // Merge cached core data with live metadata
+  // Return snapshot data with Date conversions
   return {
     ...coreData,
     result: {
@@ -354,10 +323,6 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
     sorter: {
       ...coreData.sorter,
       createdAt: new Date(coreData.sorter.createdAt),
-      // Override with live metadata
-      slug: liveMetadata.slug,
-      completionCount: liveMetadata.completionCount,
-      isDeleted: liveMetadata.isDeleted,
     },
   };
 }
