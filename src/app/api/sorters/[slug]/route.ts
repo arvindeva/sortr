@@ -135,6 +135,23 @@ export async function DELETE(
       `♻️ Revalidated metadata and slug caches for deleted sorter: ${sorter.id}`
     );
 
+    // 4. Revalidate all ranking pages for this sorter
+    // This ensures rankings immediately show "Sorter Deleted" status
+    const rankings = await db
+      .select({ id: sortingResults.id })
+      .from(sortingResults)
+      .where(eq(sortingResults.sorterId, sorter.id));
+
+    for (const ranking of rankings) {
+      revalidateTag(`ranking-${ranking.id}`);
+    }
+
+    if (rankings.length > 0) {
+      console.log(
+        `♻️ Revalidated ${rankings.length} ranking page(s) for deleted sorter: ${sorter.id}`
+      );
+    }
+
     // NOTE: We do NOT delete sorterItems or sorterHistory
     // All versioned data remains in database for rankings to reference
     // Future cleanup will only remove versions with no ranking references
