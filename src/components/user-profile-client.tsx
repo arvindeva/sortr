@@ -112,6 +112,7 @@ export function UserProfileClient({
                   <Link
                     key={result.id}
                     href={`/rankings/${result.id}`}
+                    prefetch={false}
                     className="card-link"
                   >
                     <Card className="card cursor-pointer gap-2 md:min-h-[180px]">

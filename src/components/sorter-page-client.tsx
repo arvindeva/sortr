@@ -161,6 +161,7 @@ export function SorterPageClient({
                     <Link
                       key={result.id}
                       href={`/rankings/${result.id}`}
+                      prefetch={false}
                       className="card-link block"
                     >
                       <Card className="bg-background text-foreground card cursor-pointer gap-2">
