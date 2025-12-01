@@ -126,10 +126,10 @@ export async function DELETE(
       .set({ deleted: true })
       .where(eq(sorters.id, sorter.id));
 
-    // 3. Revalidate all ranking pages for this sorter
-    // This clears cached ranking pages so they show "(Deleted)" status
-    revalidateTag(`ranking-sorter-${sorter.id}`);
-    console.log(`♻️ Revalidated ranking caches for deleted sorter: ${sorter.id}`);
+    // 3. Revalidate sorter metadata cache
+    // This clears cached metadata so ranking pages show "(Deleted)" status
+    revalidateTag(`sorter-metadata-${sorter.id}`);
+    console.log(`♻️ Revalidated metadata cache for deleted sorter: ${sorter.id}`);
 
     // NOTE: We do NOT delete sorterItems or sorterHistory
     // All versioned data remains in database for rankings to reference
@@ -223,6 +223,11 @@ export async function PUT(
       newVersion,
       currentUserId,
     );
+
+    // Revalidate sorter metadata cache
+    // This clears cached metadata so ranking pages show updated slug/completion count
+    revalidateTag(`sorter-metadata-${currentSorter.id}`);
+    console.log(`♻️ Revalidated metadata cache for edited sorter: ${currentSorter.id}`);
 
     return Response.json({
       message: "Sorter updated successfully",

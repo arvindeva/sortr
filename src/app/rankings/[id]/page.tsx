@@ -295,25 +295,34 @@ async function getCoreRankingDataUncached(resultId: string): Promise<CoreRanking
   };
 }
 
-// Fetch dynamic metadata (not cached)
+// Fetch dynamic metadata (cached forever, revalidated on changes)
 async function getLiveSorterMetadata(sorterId: string): Promise<LiveSorterMetadata> {
-  const liveSorterData = await db
-    .select({
-      slug: sorters.slug,
-      completionCount: sorters.completionCount,
-      deleted: sorters.deleted,
-    })
-    .from(sorters)
-    .where(eq(sorters.id, sorterId))
-    .limit(1);
+  return await unstable_cache(
+    async () => {
+      const liveSorterData = await db
+        .select({
+          slug: sorters.slug,
+          completionCount: sorters.completionCount,
+          deleted: sorters.deleted,
+        })
+        .from(sorters)
+        .where(eq(sorters.id, sorterId))
+        .limit(1);
 
-  const liveSorter = liveSorterData[0];
+      const liveSorter = liveSorterData[0];
 
-  return {
-    slug: liveSorter?.slug || null,
-    completionCount: liveSorter?.completionCount || 0,
-    isDeleted: !liveSorter || liveSorter.deleted,
-  };
+      return {
+        slug: liveSorter?.slug || null,
+        completionCount: liveSorter?.completionCount || 0,
+        isDeleted: !liveSorter || liveSorter.deleted,
+      };
+    },
+    [`sorter-metadata`, sorterId],
+    {
+      revalidate: false, // Cache forever
+      tags: [`sorter-metadata-${sorterId}`],
+    }
+  )();
 }
 
 // Optimized data fetcher - caches immutable data, fetches dynamic metadata
