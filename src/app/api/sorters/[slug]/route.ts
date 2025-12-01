@@ -11,7 +11,7 @@ import { eq, and } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { createSorterSchema } from "@/lib/validations";
 import {
   copyR2ObjectsInParallel,
@@ -76,6 +76,7 @@ export async function DELETE(
     const sorterData = await db
       .select({
         id: sorters.id,
+        slug: sorters.slug,
         title: sorters.title,
         description: sorters.description,
         coverImageUrl: sorters.coverImageUrl,
@@ -129,7 +130,10 @@ export async function DELETE(
     // 3. Revalidate sorter metadata cache
     // This clears cached metadata so ranking pages show "(Deleted)" status
     revalidateTag(`sorter-metadata-${sorter.id}`);
-    console.log(`♻️ Revalidated metadata cache for deleted sorter: ${sorter.id}`);
+    revalidateTag(`sorter-slug-${sorter.slug}`);
+    console.log(
+      `♻️ Revalidated metadata and slug caches for deleted sorter: ${sorter.id}`
+    );
 
     // NOTE: We do NOT delete sorterItems or sorterHistory
     // All versioned data remains in database for rankings to reference
@@ -177,6 +181,7 @@ export async function PUT(
     const sorterData = await db
       .select({
         id: sorters.id,
+        slug: sorters.slug,
         title: sorters.title,
         description: sorters.description,
         category: sorters.category,
@@ -227,7 +232,11 @@ export async function PUT(
     // Revalidate sorter metadata cache
     // This clears cached metadata so ranking pages show updated slug/completion count
     revalidateTag(`sorter-metadata-${currentSorter.id}`);
-    console.log(`♻️ Revalidated metadata cache for edited sorter: ${currentSorter.id}`);
+    revalidateTag(`sorter-slug-${currentSorter.slug}`);
+    revalidatePath(`/sorter/${currentSorter.slug}`);
+    console.log(
+      `♻️ Revalidated metadata, slug caches, and path for edited sorter: ${currentSorter.id}`
+    );
 
     return Response.json({
       message: "Sorter updated successfully",
