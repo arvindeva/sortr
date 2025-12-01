@@ -145,8 +145,40 @@ export async function generateMetadata({
   }
 }
 
-async function getResultDataUncached(resultId: string): Promise<ResultData | null> {
-  console.log(`🔍 [CACHE MISS] Fetching ranking data from database for: ${resultId}`);
+// Core immutable data - cached forever
+interface CoreRankingData {
+  result: {
+    id: string;
+    rankings: RankedItem[];
+    createdAt: string;
+    username: string;
+  };
+  sorter: {
+    id: string;
+    title: string;
+    description: string;
+    coverImageUrl?: string;
+    category: string;
+    creatorUsername: string;
+    createdAt: string;
+  };
+  selectedTagSlugs?: string[];
+  totalTags?: {
+    name: string;
+    slug: string;
+  }[];
+  ownerUserId: string | null;
+}
+
+// Dynamic metadata - fetched on every request
+interface LiveSorterMetadata {
+  slug: string | null;
+  completionCount: number;
+  isDeleted: boolean;
+}
+
+async function getCoreRankingDataUncached(resultId: string): Promise<CoreRankingData | null> {
+  console.log(`🔍 [CACHE MISS] Fetching core ranking data from database for: ${resultId}`);
 
   // Validate UUID format first
   if (!isValidUUID(resultId)) {
@@ -158,13 +190,12 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
     .select({
       id: sortingResults.id,
       rankings: sortingResults.rankings,
-      selectedTagSlugs: sortingResults.selectedTagSlugs, // NEW: Get selected tag slugs
+      selectedTagSlugs: sortingResults.selectedTagSlugs,
       createdAt: sortingResults.createdAt,
       sorterId: sortingResults.sorterId,
-      userId: sortingResults.userId, // Get userId for ownership check
-      version: sortingResults.version, // Get version
+      userId: sortingResults.userId,
+      version: sortingResults.version,
       username: user.username,
-      // Sorter-level snapshots
       sorterTitle: sortingResults.sorterTitle,
       sorterCoverImageUrl: sortingResults.sorterCoverImageUrl,
     })
@@ -179,7 +210,7 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
 
   const result = resultData[0];
 
-  // NEW: Always query sorterHistory by version (consistent for all rankings)
+  // Query sorterHistory by version for immutable data
   let historicalData: any[] = [];
   if (result.sorterId && result.version) {
     historicalData = await db
@@ -187,8 +218,13 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
         title: sorterHistory.title,
         description: sorterHistory.description,
         coverImageUrl: sorterHistory.coverImageUrl,
+        category: sorters.category,
+        creatorUsername: user.username,
+        createdAt: sorters.createdAt,
       })
       .from(sorterHistory)
+      .leftJoin(sorters, eq(sorterHistory.sorterId, sorters.id))
+      .leftJoin(user, eq(sorters.userId, user.id))
       .where(
         and(
           eq(sorterHistory.sorterId, result.sorterId),
@@ -198,44 +234,7 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
       .limit(1);
   }
 
-  // Get current sorter data for metadata (slug, stats, etc.)
-  let liveSorterData: any[] = [];
-  if (result.sorterId) {
-    liveSorterData = await db
-      .select({
-        id: sorters.id,
-        slug: sorters.slug,
-        category: sorters.category,
-        creatorUsername: user.username,
-        createdAt: sorters.createdAt,
-        completionCount: sorters.completionCount,
-        deleted: sorters.deleted,
-      })
-      .from(sorters)
-      .leftJoin(user, eq(sorters.userId, user.id))
-      .where(eq(sorters.id, result.sorterId))
-      .limit(1);
-  }
-
-  // Create sorter data using historical data with live metadata
-  const liveSorter = liveSorterData[0];
   const historical = historicalData[0];
-
-  const sorter = {
-    // Use historical data for content (guaranteed to exist for all versions)
-    title: historical?.title || result.sorterTitle || "Deleted Sorter",
-    description: historical?.description || "",
-    coverImageUrl: historical?.coverImageUrl || result.sorterCoverImageUrl,
-
-    // Use live data for metadata and navigation
-    id: result.sorterId || "deleted",
-    slug: liveSorter?.slug || null,
-    category: liveSorter?.category || "",
-    creatorUsername: liveSorter?.creatorUsername || "Unknown User",
-    createdAt: liveSorter?.createdAt || new Date(),
-    completionCount: liveSorter?.completionCount || 0,
-    isDeleted: !liveSorter || liveSorter.deleted,
-  };
 
   // Parse the rankings JSON
   let parsedRankings: RankedItem[];
@@ -246,13 +245,7 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
     return null;
   }
 
-  // REMOVED: No more live group image fetching
-  // Rankings already contain the correct versioned URLs from when they were created
-  const rankings: RankedItem[] = parsedRankings;
-
-  // Groups no longer exist - only tags are supported
-
-  // Get selected tag information (new tag-based system)
+  // Get selected tag information
   let selectedTagNames: string[] = [];
   let totalTags: { name: string; slug: string }[] = [];
 
@@ -262,7 +255,6 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
     result.sorterId
   ) {
     try {
-      // Get all tags for this sorter
       const allTags = await db
         .select({
           name: sorterTags.name,
@@ -272,8 +264,6 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
         .where(eq(sorterTags.sorterId, result.sorterId));
 
       totalTags = allTags;
-
-      // Filter to only selected tags
       selectedTagNames = allTags
         .filter((tag) => result.selectedTagSlugs!.includes(tag.slug))
         .map((tag) => tag.name);
@@ -285,21 +275,18 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
   return {
     result: {
       id: result.id,
-      rankings,
-      createdAt: result.createdAt.toISOString(), // Convert to string for caching
+      rankings: parsedRankings,
+      createdAt: result.createdAt.toISOString(),
       username: result.username || "Anonymous",
     },
     sorter: {
-      id: sorter.id,
-      title: sorter.title,
-      slug: sorter.slug,
-      description: sorter.description,
-      category: sorter.category,
-      coverImageUrl: sorter.coverImageUrl,
-      creatorUsername: sorter.creatorUsername,
-      createdAt: sorter.createdAt.toISOString(), // Convert to string for caching
-      completionCount: sorter.completionCount,
-      isDeleted: sorter.isDeleted,
+      id: result.sorterId || "deleted",
+      title: historical?.title || result.sorterTitle || "Deleted Sorter",
+      description: historical?.description || "",
+      coverImageUrl: historical?.coverImageUrl || result.sorterCoverImageUrl,
+      category: historical?.category || "",
+      creatorUsername: historical?.creatorUsername || "Unknown User",
+      createdAt: historical?.createdAt?.toISOString() || new Date().toISOString(),
     },
     selectedTagSlugs:
       selectedTagNames.length > 0 ? selectedTagNames : undefined,
@@ -308,47 +295,60 @@ async function getResultDataUncached(resultId: string): Promise<ResultData | nul
   };
 }
 
-// Cached wrapper that handles Date serialization
-async function getResultData(resultId: string): Promise<ResultData | null> {
-  // First, get the sorterId to use in cache tags
-  const resultMeta = await db
-    .select({ sorterId: sortingResults.sorterId })
-    .from(sortingResults)
-    .where(eq(sortingResults.id, resultId))
+// Fetch dynamic metadata (not cached)
+async function getLiveSorterMetadata(sorterId: string): Promise<LiveSorterMetadata> {
+  const liveSorterData = await db
+    .select({
+      slug: sorters.slug,
+      completionCount: sorters.completionCount,
+      deleted: sorters.deleted,
+    })
+    .from(sorters)
+    .where(eq(sorters.id, sorterId))
     .limit(1);
 
-  if (resultMeta.length === 0) return null;
+  const liveSorter = liveSorterData[0];
 
-  const sorterId = resultMeta[0].sorterId;
-  if (!sorterId) return null;
+  return {
+    slug: liveSorter?.slug || null,
+    completionCount: liveSorter?.completionCount || 0,
+    isDeleted: !liveSorter || liveSorter.deleted,
+  };
+}
 
-  // Now cache with both individual and sorter-level tags
-  const cached = await unstable_cache(
-    async () => getResultDataUncached(resultId),
-    [`ranking-data-v4`, resultId],
+// Optimized data fetcher - caches immutable data, fetches dynamic metadata
+async function getResultData(resultId: string): Promise<ResultData | null> {
+  // Cache core ranking data (immutable)
+  const coreData = await unstable_cache(
+    async () => getCoreRankingDataUncached(resultId),
+    [`ranking-data-v5`, resultId],
     {
       revalidate: false, // Never expire - rankings are immutable
-      tags: [
-        `ranking-${resultId}`,           // Individual ranking
-        `ranking-sorter-${sorterId}`,    // All rankings for this sorter
-      ],
+      tags: [`ranking-${resultId}`],
     }
   )();
 
-  if (!cached) return null;
+  if (!coreData) return null;
 
-  console.log(`✅ [CACHE HIT] Returning cached ranking data for: ${resultId}`);
+  console.log(`✅ [CACHE] Core ranking data retrieved for: ${resultId}`);
 
-  // Convert ISO strings back to Date objects
+  // Fetch live metadata (small query, not cached)
+  const liveMetadata = await getLiveSorterMetadata(coreData.sorter.id);
+
+  // Merge cached core data with live metadata
   return {
-    ...cached,
+    ...coreData,
     result: {
-      ...cached.result,
-      createdAt: new Date(cached.result.createdAt),
+      ...coreData.result,
+      createdAt: new Date(coreData.result.createdAt),
     },
     sorter: {
-      ...cached.sorter,
-      createdAt: new Date(cached.sorter.createdAt),
+      ...coreData.sorter,
+      createdAt: new Date(coreData.sorter.createdAt),
+      // Override with live metadata
+      slug: liveMetadata.slug,
+      completionCount: liveMetadata.completionCount,
+      isDeleted: liveMetadata.isDeleted,
     },
   };
 }
