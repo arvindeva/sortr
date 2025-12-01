@@ -36,7 +36,8 @@ interface RankingsPageProps {
   }>;
 }
 
-// Cache this page with 1 hour revalidation - enables full route cache
+// Force static generation with 1 hour revalidation - enables full route cache
+export const dynamic = 'force-static';
 export const revalidate = 3600; // 1 hour
 
 // UUID validation helper
