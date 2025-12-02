@@ -4,6 +4,7 @@ import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import NextTopLoader from "nextjs-toploader";
+import Script from "next/script";
 
 import "./globals.css";
 
@@ -48,12 +49,24 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isProd = process.env.NODE_ENV === "production";
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${poppins.variable} flex min-h-screen flex-col antialiased`}
         style={{ fontFamily: "var(--font-poppins)" }}
       >
+        {isProd &&
+          process.env.NEXT_PUBLIC_UMAMI_URL &&
+          process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && (
+            <Script
+              defer
+              src={process.env.NEXT_PUBLIC_UMAMI_URL}
+              data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+              data-domains="sortr.io,www.sortr.io"
+            />
+          )}
         <Providers>
           <NextTopLoader color="#ff6b8a" showSpinner={false} height={3} />
           <Navbar />
