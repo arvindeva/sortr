@@ -50,7 +50,13 @@ async function getUserProfileData(username: string) {
     db
       .select({ count: count() })
       .from(sorters)
-      .where(and(eq(sorters.userId, userData.id), eq(sorters.deleted, false))),
+      .where(
+        and(
+          eq(sorters.userId, userData.id),
+          eq(sorters.deleted, false),
+          eq(sorters.status, "active"),
+        ),
+      ),
     db
       .select({ count: count() })
       .from(sortingResults)
@@ -73,7 +79,13 @@ async function getUserProfileData(username: string) {
       coverImageUrl: sorters.coverImageUrl,
     })
     .from(sorters)
-    .where(and(eq(sorters.userId, userData.id), eq(sorters.deleted, false)))
+    .where(
+      and(
+        eq(sorters.userId, userData.id),
+        eq(sorters.deleted, false),
+        eq(sorters.status, "active"),
+      ),
+    )
     .orderBy(desc(sorters.createdAt));
 
   // Get user's rankings

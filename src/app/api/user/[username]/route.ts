@@ -39,7 +39,11 @@ export async function GET(request: Request, { params }: RouteParams) {
         .select({ count: count() })
         .from(sorters)
         .where(
-          and(eq(sorters.userId, userData.id), eq(sorters.deleted, false)),
+          and(
+            eq(sorters.userId, userData.id),
+            eq(sorters.deleted, false),
+            eq(sorters.status, "active"),
+          ),
         ),
       db
         .select({ count: count() })
@@ -63,7 +67,13 @@ export async function GET(request: Request, { params }: RouteParams) {
         coverImageUrl: sorters.coverImageUrl,
       })
       .from(sorters)
-      .where(and(eq(sorters.userId, userData.id), eq(sorters.deleted, false)))
+      .where(
+        and(
+          eq(sorters.userId, userData.id),
+          eq(sorters.deleted, false),
+          eq(sorters.status, "active"),
+        ),
+      )
       .orderBy(desc(sorters.createdAt));
 
     // Get user's rankings
