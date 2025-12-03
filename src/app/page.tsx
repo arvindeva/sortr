@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import { Box } from "@/components/ui/box";
-import { HomepageClient } from "@/components/homepage-client";
 import Link from "next/link";
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
+import {
+  Panel,
+  PanelHeader,
+  PanelTitle,
+  PanelContent,
+} from "@/components/ui/panel";
+import { SorterCard } from "@/components/ui/sorter-card";
+import { SorterGrid } from "@/components/ui/sorter-grid";
 
 // Server-side data fetching for popular sorters
 async function getPopularSorters() {
@@ -85,9 +92,12 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+// ISR: Revalidate every 5 minutes
+export const revalidate = 300;
+
 export default async function Home() {
   // Fetch popular sorters server-side
-  const initialData = await getPopularSorters();
+  const data = await getPopularSorters();
 
   // JSON-LD structured data for homepage
   const jsonLd = {
@@ -140,8 +150,29 @@ export default async function Home() {
           </Box>
         </section>
 
-        {/* Server-rendered data with client-side hydration */}
-        <HomepageClient initialData={initialData} />
+        {/* Pure server-rendered popular sorters */}
+        <section className="w-full">
+          <Panel variant="primary">
+            <PanelHeader variant="primary">
+              <PanelTitle>Popular Sorters</PanelTitle>
+            </PanelHeader>
+            <PanelContent variant="primary" className="p-2 md:p-6">
+              {data.popularSorters.length === 0 ? (
+                <div className="text-center">
+                  <Box variant="warning" size="md">
+                    <p className="font-medium">No sorters available yet.</p>
+                  </Box>
+                </div>
+              ) : (
+                <SorterGrid>
+                  {data.popularSorters.map((sorter) => (
+                    <SorterCard key={sorter.id} sorter={sorter} />
+                  ))}
+                </SorterGrid>
+              )}
+            </PanelContent>
+          </Panel>
+        </section>
       </main>
     </>
   );
