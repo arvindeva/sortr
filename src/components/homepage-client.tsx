@@ -18,13 +18,18 @@ interface HomepageClientProps {
 }
 
 export function HomepageClient({ initialData }: HomepageClientProps) {
-  const { data, isLoading, error } = usePopularSorters(initialData);
+  const { data, isPending, error } = usePopularSorters(initialData);
 
-  if (isLoading) {
+  // Use initialData as fallback if data is not yet available
+  // This ensures we show SSR data immediately while background fetch happens
+  const displayData = data || initialData;
+
+  // Only show skeleton when there's no data available at all
+  if (isPending && !displayData) {
     return <HomepageSkeleton />;
   }
 
-  if (error) {
+  if (error && !displayData) {
     return (
       <section className="w-full">
         <Panel variant="primary">
@@ -45,7 +50,7 @@ export function HomepageClient({ initialData }: HomepageClientProps) {
     );
   }
 
-  const popularSorters = data?.popularSorters || [];
+  const popularSorters = displayData?.popularSorters || [];
 
   return (
     <section className="w-full">
