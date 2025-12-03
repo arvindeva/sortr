@@ -92,38 +92,27 @@ function parseUserAgent(uaString: string): string {
   return `${browserVersion} (${deviceOs})`;
 }
 
-function getTimestamp(): string {
-  const now = new Date();
-  return now.toLocaleTimeString("en-US", {
-    hour12: false,
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-}
-
-function logRequest(
-  method: string,
-  pathname: string,
-  ip: string,
-  ua: string,
-): void {
-  const timestamp = getTimestamp();
-  console.log(`[${timestamp}] ${method} ${pathname} | ${ip} | ${ua}`);
-}
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Pass request through
   const response = NextResponse.next();
 
-  // Log request with detailed info
+  // Add log info to response header for instrumentation to use
   if (shouldLogRequest(pathname)) {
     const ip = getClientIp(request);
     const uaString = request.headers.get("user-agent") || "";
     const ua = parseUserAgent(uaString);
-    logRequest(request.method, pathname, ip, ua);
+
+    response.headers.set(
+      "x-log-info",
+      JSON.stringify({
+        method: request.method,
+        pathname,
+        ip,
+        ua,
+      }),
+    );
   }
 
   return response;

@@ -1,7 +1,7 @@
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { SorterHeaderServer } from "@/components/sorter-header-server";
 import { SorterPageClient } from "@/components/sorter-page-client";
-import { SorterNotFound } from "@/components/sorter-not-found";
 import { SorterOwnerControls } from "@/components/sorter-owner-controls";
 import { getSorterDataCached } from "@/lib/sorter-data";
 
@@ -81,7 +81,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
   // Basic sorter validation for 404 (server-side)
   const data = await getSorterDataCached(slug);
   if (!data) {
-    return <SorterNotFound slug={slug} />;
+    notFound();
   }
 
   // Check if sorter has filters/tags

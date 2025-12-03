@@ -1,5 +1,5 @@
-import { RankingNotFound } from "@/components/ranking-not-found";
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { db } from "@/db";
 import {
@@ -329,7 +329,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
   const data = await getResultData(id);
 
   if (!data) {
-    return <RankingNotFound rankingId={id} />;
+    notFound();
   }
 
   const { result, sorter, selectedTagSlugs, totalTags, ownerUserId } = data;

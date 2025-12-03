@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import { user, sorters, sortingResults } from "@/db/schema";
@@ -6,7 +7,6 @@ import { eq, and, desc, count } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { UserProfileHeaderServer } from "@/components/user-profile-header-server";
 import { UserProfileClient } from "@/components/user-profile-client";
-import { UserNotFound } from "@/components/user-not-found";
 
 interface UserProfilePageProps {
   params: Promise<{
@@ -233,13 +233,13 @@ export default async function UserProfilePage({
 
   // Handle anonymous user case
   if (username === "Anonymous" || username === "Unknown User") {
-    return <UserNotFound username={username} />;
+    notFound();
   }
 
   // Get complete user profile data server-side
   const profileData = await getUserProfileData(username);
   if (!profileData) {
-    return <UserNotFound username={username} />;
+    notFound();
   }
 
   // Get current session to check ownership
