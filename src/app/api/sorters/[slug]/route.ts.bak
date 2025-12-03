@@ -113,8 +113,12 @@ export async function DELETE(
         coverImageUrl: sorter.coverImageUrl,
         version: sorter.version,
       });
+      console.log(
+        `Archived sorter ${sorter.id} v${sorter.version} to history before deletion`,
+      );
     } catch (error) {
-      // Might already exist (unique constraint), that's OK - silently continue
+      // Might already exist (unique constraint), that's OK
+      console.log(`Sorter ${sorter.id} v${sorter.version} already in history`);
     }
 
     // 2. Soft delete the sorter (set deleted = true)
@@ -127,6 +131,9 @@ export async function DELETE(
     // This clears cached metadata so ranking pages show "(Deleted)" status
     revalidateTag(`sorter-metadata-${sorter.id}`);
     revalidateTag(`sorter-slug-${sorter.slug}`);
+    console.log(
+      `♻️ Revalidated metadata and slug caches for deleted sorter: ${sorter.id}`
+    );
 
     // 4. Revalidate all ranking pages for this sorter
     // This ensures rankings immediately show "Sorter Deleted" status
@@ -137,6 +144,12 @@ export async function DELETE(
 
     for (const ranking of rankings) {
       revalidateTag(`ranking-${ranking.id}`);
+    }
+
+    if (rankings.length > 0) {
+      console.log(
+        `♻️ Revalidated ${rankings.length} ranking page(s) for deleted sorter: ${sorter.id}`
+      );
     }
 
     // NOTE: We do NOT delete sorterItems or sorterHistory
@@ -159,6 +172,8 @@ export async function PUT(
 ) {
   try {
     const { slug } = await params;
+
+    console.log(`🚀 Starting edit sorter request for slug: ${slug}`);
 
     // Check authentication
     const session = await getServerSession(authOptions);
@@ -200,6 +215,9 @@ export async function PUT(
     }
 
     const currentSorter = sorterData[0];
+    console.log(
+      `📄 Current sorter: id=${currentSorter.id}, version=${currentSorter.version}, title="${currentSorter.title}"`,
+    );
 
     // Check ownership
     if (currentSorter.userId !== currentUserId) {
@@ -211,9 +229,14 @@ export async function PUT(
 
     // Parse and validate request body
     const body = await request.json();
+    console.log(`📝 Request body: ${JSON.stringify(body, null, 2)}`);
 
     const validatedData = createSorterSchema.parse(body);
     const newVersion = currentSorter.version + 1;
+
+    console.log(
+      `📈 Creating new version: v${currentSorter.version} → v${newVersion}`,
+    );
 
     // OPTIMIZED EDIT FLOW - FLAT STRUCTURE + COPY-ON-WRITE
     const result = await handleEditSorter(
@@ -228,6 +251,9 @@ export async function PUT(
     revalidateTag(`sorter-metadata-${currentSorter.id}`);
     revalidateTag(`sorter-slug-${currentSorter.slug}`);
     revalidatePath(`/sorter/${currentSorter.slug}`);
+    console.log(
+      `♻️ Revalidated metadata, slug caches, and path for edited sorter: ${currentSorter.id}`
+    );
 
     return Response.json({
       message: "Sorter updated successfully",
@@ -255,6 +281,8 @@ async function handleEditSorter(
   newVersion: number,
   currentUserId: string,
 ) {
+  console.log(`🔧 Starting optimized edit handler for sorter ${currentSorter.id}`);
+
   // Get current items to determine what's changed
   const currentItems = await db
     .select({
@@ -267,12 +295,19 @@ async function handleEditSorter(
     .from(sorterItems)
     .where(eq(sorterItems.sorterId, currentSorter.id));
 
+  console.log(`📋 Current items: ${currentItems.length} items`);
+  console.log(`📋 New items: ${validatedData.items.length} items`);
+
   // STEP 1: OPTIMIZED FILE OPERATIONS (only copy/upload changed files)
   const fileOperationResults = await handleFileOperations(
     currentSorter,
     currentItems,
     validatedData,
     newVersion,
+  );
+
+  console.log(
+    `📁 File operations completed: ${fileOperationResults.operations} operations (optimized)`,
   );
 
   // STEP 2: DATABASE TRANSACTION (using item-level versioning)
@@ -297,6 +332,11 @@ async function handleEditSorter(
         description: currentSorter.description,
         coverImageUrl: currentSorter.coverImageUrl,
       });
+      console.log(
+        `📚 Archived current version v${currentSorter.version} to history`,
+      );
+    } else {
+      console.log(`📚 Version v${currentSorter.version} already in history`);
     }
 
     // 2. Update main sorter record (metadata only)
@@ -311,6 +351,8 @@ async function handleEditSorter(
       })
       .where(eq(sorters.id, currentSorter.id));
 
+    console.log(`🔄 Updated main sorter record to v${newVersion}`);
+
     // 3. Add new version to sorterHistory
     await trx.insert(sorterHistory).values({
       sorterId: currentSorter.id,
@@ -319,6 +361,8 @@ async function handleEditSorter(
       coverImageUrl: fileOperationResults.newCoverImageUrl || null,
       version: newVersion,
     });
+
+    console.log(`📚 Added new version v${newVersion} to history`);
 
     // 4. Update tags (delete old, insert new)
     await trx
@@ -333,6 +377,9 @@ async function handleEditSorter(
         sortOrder: index,
       }));
       await trx.insert(sorterTags).values(newTags);
+      console.log(`🏷️ Updated ${newTags.length} tags`);
+    } else {
+      console.log(`🏷️ No tags to update`);
     }
 
     // 5. Update items with ITEM-LEVEL VERSIONING (delete old, insert new)
@@ -355,12 +402,17 @@ async function handleEditSorter(
         sortOrder: index,
       };
     });
-
+    
     await trx.insert(sorterItems).values(newItems);
+
+    console.log(`📝 Updated ${newItems.length} items with item-level versioning`);
 
     return { newVersion };
   });
 
+  console.log(
+    `✅ Optimized edit completed successfully - v${currentSorter.version} → v${result.newVersion}`,
+  );
   return result;
 }
 
@@ -371,6 +423,8 @@ async function handleFileOperations(
   validatedData: any,
   newVersion: number,
 ) {
+  console.log(`📁 Starting optimized file operations for sorter ${currentSorter.id}`);
+
   const copyOperations: Array<{
     sourceKey: string;
     destKey: string;
@@ -393,12 +447,15 @@ async function handleFileOperations(
       operation: "session→flat (cover)",
     });
     newCoverImageUrl = getR2PublicUrl(destKey);
+    console.log(`📷 Cover image: NEW from session → ${destKey}`);
   } else if (validatedData.coverImageUrl === currentSorter.coverImageUrl) {
     // Cover unchanged - keep existing URL, no copy needed
     newCoverImageUrl = currentSorter.coverImageUrl;
+    console.log(`📷 Cover image: UNCHANGED - no copy needed`);
   } else if (!validatedData.coverImageUrl && currentSorter.coverImageUrl) {
     // Cover removed - no copy needed
     newCoverImageUrl = null;
+    console.log(`📷 Cover image: REMOVED - no copy needed`);
   }
 
   // ITEM IMAGES - only process changed/new items
@@ -411,11 +468,8 @@ async function handleFileOperations(
       const sessionKey = extractSessionKeyFromUrl(newItem.imageUrl);
       const itemSlug = generateSorterItemSlug(newItem.title);
       const destKey = getFlatItemKeyStable(currentSorter.id, itemSlug);
-      const destThumbKey = getFlatItemThumbKeyStable(
-        currentSorter.id,
-        itemSlug,
-      );
-
+      const destThumbKey = getFlatItemThumbKeyStable(currentSorter.id, itemSlug);
+      
       // Copy main + thumbnail
       copyOperations.push({
         sourceKey: sessionKey,
@@ -423,25 +477,43 @@ async function handleFileOperations(
         operation: `session→flat (item ${index})`,
       });
       copyOperations.push({
-        sourceKey: sessionKey.replace(".jpg", "-thumb.jpg"),
+        sourceKey: sessionKey.replace('.jpg', '-thumb.jpg'),
         destKey: destThumbKey,
         operation: `session→flat (item ${index} thumb)`,
       });
-
+      
       newItemImageUrls[index] = getR2PublicUrl(destKey);
+      console.log(
+        `📝 Item ${index} "${newItem.title}": NEW from session → ${destKey}`,
+      );
+
     } else if (newItem.imageUrl) {
       // EXISTING IMAGE - use the URL from the request (already correct after form changes)
       newItemImageUrls[index] = newItem.imageUrl;
+      console.log(
+        `📝 Item ${index} "${newItem.title}": UNCHANGED - no copy needed (${newItem.imageUrl})`,
+      );
       // No copy operation = MASSIVE performance gain
+
     } else {
       // No image
       newItemImageUrls[index] = null;
+      console.log(`📝 Item ${index} "${newItem.title}": no image`);
     }
   });
 
   // Execute ONLY the necessary copy operations
   // Result: 60-item edit with 1 new image = 2 operations instead of 122
   if (copyOperations.length > 0) {
+    console.log(
+      `🚀 Executing ${copyOperations.length} R2 copy operations (OPTIMIZED):`,
+    );
+    copyOperations.forEach((op, i) =>
+      console.log(
+        `  ${i + 1}. ${op.operation}: ${op.sourceKey} → ${op.destKey}`,
+      ),
+    );
+
     const copyResults = await copyR2ObjectsInParallel(
       copyOperations.map((op) => ({
         sourceKey: op.sourceKey,
@@ -475,6 +547,12 @@ async function handleFileOperations(
         `Failed to copy ${criticalFailures.length} critical files to R2`,
       );
     }
+
+    console.log(
+      `✅ All ${copyOperations.length} OPTIMIZED file operations completed successfully`,
+    );
+  } else {
+    console.log(`📁 No file operations needed (MASSIVE performance gain!)`);
   }
 
   return {

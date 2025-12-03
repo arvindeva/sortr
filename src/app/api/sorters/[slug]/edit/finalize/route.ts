@@ -140,15 +140,6 @@ export async function PUT(
         .map((item, index) => {
           const mainEntry = expected.find((e) => e.type === "item" && e.itemIndex === index);
 
-          // Debug logging
-          console.log(`🔍 Processing item ${index}:`, {
-            title: item.title,
-            itemId: item.itemId,
-            hasImage: item.hasImage,
-            hasMainEntry: !!mainEntry,
-            currentItemsCount: currentItems.length,
-          });
-
           // Use itemId to match existing images, fallback to title matching for backward compatibility
           const imageUrl = mainEntry
             ? getR2PublicUrl(mainEntry.key)
@@ -156,8 +147,6 @@ export async function PUT(
                 ? currentItems.find((ci) => ci.id === item.itemId)?.imageUrl || null
                 : currentItems.find((ci) => ci.title.toLowerCase() === item.title.toLowerCase())?.imageUrl || null
               );
-
-          console.log(`📸 Image for "${item.title}":`, imageUrl);
 
           const tagSlugs = (item.tagNames || [])
             .map((name) => tagNameToSlug.get(name))

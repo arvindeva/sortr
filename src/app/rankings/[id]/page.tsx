@@ -175,8 +175,6 @@ interface CoreRankingData {
 }
 
 async function getCoreRankingDataUncached(resultId: string): Promise<CoreRankingData | null> {
-  console.log(`🔍 [CACHE MISS] Fetching core ranking data from database for: ${resultId}`);
-
   // Validate UUID format first
   if (!isValidUUID(resultId)) {
     return null;
@@ -311,8 +309,6 @@ async function getResultData(resultId: string): Promise<ResultData | null> {
   )();
 
   if (!coreData) return null;
-
-  console.log(`✅ [CACHE] Snapshot ranking data retrieved for: ${resultId}`);
 
   // Return snapshot data with Date conversions
   return {

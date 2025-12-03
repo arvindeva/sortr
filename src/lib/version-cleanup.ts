@@ -24,16 +24,8 @@ export async function cleanupVersion(
       .limit(1);
 
     if (rankingsUsingVersion.length > 0) {
-      console.log(
-        `Version ${version} gained references during cleanup, skipping`,
-      );
       return;
     }
-
-    // Safe to delete - no rankings reference this version
-    console.log(
-      `Cleaning up unreferenced version ${version} for sorter ${sorterId}`,
-    );
 
     // Delete from database tables
     await db
@@ -57,10 +49,7 @@ export async function cleanupVersion(
     // Groups table no longer exists
 
     // Clean up R2 images for this version
-    const r2Cleanup = await cleanupSorterVersion(sorterId, version);
-    console.log(
-      `R2 cleanup for v${version}: ${r2Cleanup.deleted.length} deleted, ${r2Cleanup.preserved.length} preserved`,
-    );
+    await cleanupSorterVersion(sorterId, version);
   } catch (error) {
     console.error(
       `Error cleaning up version ${version} for sorter ${sorterId}:`,
@@ -111,9 +100,6 @@ export async function cleanupOrphanedVersions(): Promise<{
       }
     }
 
-    console.log(
-      `Background cleanup completed: ${versionsDeleted}/${versionsChecked} versions cleaned up`,
-    );
     return { versionsChecked, versionsDeleted };
   } catch (error) {
     console.error("Error during background version cleanup:", error);

@@ -230,8 +230,6 @@ export async function processSorterItemImage(buffer: Buffer): Promise<Buffer> {
       })
       .toBuffer();
 
-    console.log(`Processed item image: ${width}x${height} → ${newWidth}x${newHeight}`);
-
     return processedBuffer;
   } catch (error) {
     console.error("Sorter item image processing error:", error);

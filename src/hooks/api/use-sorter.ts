@@ -56,8 +56,6 @@ async function fetchSorterData(
   slug: string,
   version?: number | string,
 ): Promise<SorterData> {
-  console.log(`🔍 Fetching sorter data for slug: ${slug}`);
-
   const response = await fetch(
     version ? `/api/sorters/${slug}?v=${version}` : `/api/sorters/${slug}`,
     { cache: "no-store" },
@@ -71,7 +69,6 @@ async function fetchSorterData(
   }
 
   const data = await response.json();
-  console.log(`✅ Fetched sorter data for: ${data.sorter.title}`);
   return data;
 }
 
@@ -79,8 +76,6 @@ async function fetchRecentResults(
   slug: string,
   version?: number | string,
 ): Promise<RecentResult[]> {
-  console.log(`🔍 Fetching recent results for sorter: ${slug}`);
-
   const response = await fetch(
     version
       ? `/api/sorters/${slug}/results?v=${version}`
@@ -90,12 +85,10 @@ async function fetchRecentResults(
 
   if (!response.ok) {
     // Results endpoint might not exist yet, return empty array
-    console.warn(`⚠️ Failed to fetch recent results for sorter ${slug}`);
     return [];
   }
 
   const data = await response.json();
-  console.log(`✅ Fetched ${data.length} recent results`);
   return data;
 }
 

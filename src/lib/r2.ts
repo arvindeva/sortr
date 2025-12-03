@@ -285,9 +285,6 @@ export async function cleanupSorterVersion(
       .limit(1);
 
     if (rankingsUsingVersion.length > 0) {
-      console.log(
-        `Preserving version ${version} images due to existing rankings`,
-      );
       return { deleted, preserved };
     }
 
@@ -479,11 +476,6 @@ export async function copyR2ObjectsInParallel(
     return [];
   }
 
-  console.log(
-    `Starting parallel R2 copy of ${operations.length} objects with concurrency ${concurrency}`,
-  );
-  const startTime = Date.now();
-
   const results: Array<{
     success: boolean;
     sourceKey: string;
@@ -496,9 +488,6 @@ export async function copyR2ObjectsInParallel(
 
   for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
     const batch = batches[batchIndex];
-    console.log(
-      `Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} operations)`,
-    );
 
     // Execute all operations in this batch in parallel
     const batchPromises = batch.map(async (operation) => {
@@ -542,14 +531,6 @@ export async function copyR2ObjectsInParallel(
       }
     }
   }
-
-  const duration = Date.now() - startTime;
-  const successCount = results.filter((r) => r.success).length;
-  const failureCount = results.length - successCount;
-
-  console.log(
-    `Parallel R2 copy completed in ${duration}ms: ${successCount} success, ${failureCount} failures`,
-  );
 
   return results;
 }

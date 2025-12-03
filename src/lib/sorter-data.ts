@@ -226,8 +226,6 @@ export const getSorterDataCached = cache(async function getSorterDataCachedImpl(
 
   if (!coreData) return null;
 
-  console.log(`✅ [CACHE] Sorter data retrieved for: ${slug} (v${metadata.version})`);
-
   // Merge core data with dynamic metadata
   return {
     sorter: {

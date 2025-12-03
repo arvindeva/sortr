@@ -60,19 +60,11 @@ export async function GET(
 ) {
   const { slug } = await params;
   try {
-    console.log(
-      `🔍 GET /api/sorters/${slug}/results - Fetching recent results`,
-    );
-
     const transformedResults = await getRecentResultsCached(slug);
 
     if (!transformedResults) {
       return NextResponse.json({ error: "Sorter not found" }, { status: 404 });
     }
-
-    console.log(
-      `✅ GET /api/sorters/${slug}/results - Found ${transformedResults.length} recent results`,
-    );
 
     return NextResponse.json(transformedResults);
   } catch (error) {

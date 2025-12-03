@@ -63,12 +63,8 @@ async function handleUploadSessionRequest(body: any, userData: any) {
 
 async function handleTagBasedSorterCreation(body: any, userData: any) {
   try {
-    console.log("🏷️  Creating tag-based sorter");
-    console.log("📝 Body received:", JSON.stringify(body, null, 2));
-
     // Validate the data
     const validatedData = createSorterSchema.parse(body);
-    console.log("✅ Validated data:", JSON.stringify(validatedData, null, 2));
 
     // Generate slug for sorter
     const slug = generateSorterSlug(validatedData.title);
@@ -222,10 +218,6 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
 
       return { sorter: newSorter };
     });
-
-    console.log(
-      `✅ Tag-based sorter created: ${result.sorter.title} (${result.sorter.slug})`,
-    );
 
     return NextResponse.json({
       success: true,
@@ -450,7 +442,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Wrap entire sorter creation in database transaction
-    console.log("🚀 Starting sorter creation transaction...");
     const result = await db.transaction(async (tx) => {
       // Create sorter
       const [newSorter] = await tx
@@ -585,15 +576,10 @@ export async function POST(request: NextRequest) {
       }
 
       // Return the sorter data from transaction
-      console.log(
-        `✅ Sorter created successfully: ${newSorter.title} (${newSorter.slug})`,
-      );
       return {
         sorter: newSorter,
       };
     });
-
-    console.log("💾 Database transaction completed successfully");
 
     return NextResponse.json({
       success: true,
@@ -621,8 +607,6 @@ export async function POST(request: NextRequest) {
 // GET /api/sorters - Get popular sorters for homepage
 export async function GET() {
   try {
-    console.log("🏠 GET /api/sorters - Fetching popular sorters for homepage");
-
     const popularSorters = await db
       .select({
         id: sorters.id,
@@ -646,10 +630,6 @@ export async function GET() {
       category: sorter.category ?? undefined,
       coverImageUrl: sorter.coverImageUrl ?? undefined,
     }));
-
-    console.log(
-      `📊 GET /api/sorters - Found ${transformedSorters.length} popular sorters`,
-    );
 
     return NextResponse.json(
       {

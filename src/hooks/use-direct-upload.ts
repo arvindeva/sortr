@@ -104,13 +104,6 @@ async function uploadWithRetry(
     );
 
     try {
-      // Only log on retry attempts, not first attempt
-      if (attempt > 1) {
-        console.log(
-          `Retrying ${fileName} (${size}) - Attempt ${attempt}/${maxRetries}`,
-        );
-      }
-
       const response = await fetch(uploadUrl, {
         method: "PUT",
         body: file,
@@ -131,7 +124,6 @@ async function uploadWithRetry(
 
         if (attempt < maxRetries) {
           const delay = calculateBackoffDelay(attempt, baseDelay, UPLOAD_CONFIG.MAX_DELAY);
-          console.log(`Server error, waiting ${Math.round(delay)}ms before retry...`);
           await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
@@ -177,7 +169,6 @@ async function uploadWithRetry(
 
       if (attempt < maxRetries) {
         const delay = calculateBackoffDelay(attempt, baseDelay, UPLOAD_CONFIG.MAX_DELAY);
-        console.log(`Upload error, waiting ${Math.round(delay)}ms before retry...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
@@ -207,7 +198,6 @@ class NetworkMonitor {
 
   private handleOnline(): void {
     this.isOnline = true;
-    console.log('Network connection restored');
     this.notifyListeners();
   }
 
@@ -386,8 +376,6 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
             statusMessage: "Network connection lost - upload paused...",
             determinate: false,
           }, progressWatchdog);
-        } else {
-          console.log('Network connectivity restored');
         }
       };
       
@@ -514,8 +502,6 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
           };
         });
 
-        console.log("Requesting upload tokens for files:", fileInfos);
-
         // Create timeout for token request (should be quick)
         const tokenTimeoutController = createTimeoutController(
           abortController,
@@ -626,20 +612,12 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
         let completedTasks = 0;
         const completedFileIndices = new Set<number>(); // Track completed files by index, not name
 
-        console.log(
-          `Uploading ${uploadTasks.length} files in ${uploadBatches.length} batches of ${CONCURRENT_UPLOADS}`,
-        );
-
         for (
           let batchIndex = 0;
           batchIndex < uploadBatches.length;
           batchIndex++
         ) {
           const batch = uploadBatches[batchIndex];
-
-          console.log(
-            `Processing upload batch ${batchIndex + 1}/${uploadBatches.length} (${batch.length} files)`,
-          );
 
           // Create upload promises for this batch
           const batchPromises = batch.map(async (task) => {
@@ -798,8 +776,6 @@ export function useDirectUpload(options: DirectUploadOptions = {}) {
             uploadTasks.length > 150
           ) {
             const batchDelay = 500; // Just 500ms delay for massive batches (150+ files)
-
-            console.log(`Waiting ${batchDelay}ms before next batch...`);
             await delay(batchDelay);
           }
         }

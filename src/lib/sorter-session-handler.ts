@@ -128,7 +128,6 @@ export async function handleSorterWithUploadSession(
       (f: UploadedFile) => f.type === "cover",
     );
     if (coverFile) {
-      console.log(`Processing cover file: ${coverFile.originalName}`);
       const newKey = convertSessionKeyToSorterKey(
         coverFile.key,
         sorterId,
@@ -167,13 +166,6 @@ export async function handleSorterWithUploadSession(
     if (validatedData.items) {
       const usedUniqueIds = new Set<string>(); // Track which file groups have been used
 
-      console.log(
-        `🔍 Processing ${validatedData.items.length} items for file matching`,
-      );
-      console.log(
-        `📁 Available file groups: ${Array.from(filesByUniqueId.keys())}`,
-      );
-
       for (
         let itemIndex = 0;
         itemIndex < validatedData.items.length;
@@ -182,8 +174,6 @@ export async function handleSorterWithUploadSession(
         const item = validatedData.items[itemIndex];
         const itemSlug = generateSorterItemSlug(item.title);
 
-        console.log(`🎯 Processing item ${itemIndex}: "${item.title}"`);
-
         // Find matching files for this item that haven't been used yet
         let matchingFiles: UploadedFile[] = [];
         let matchedUniqueId: string | null = null;
@@ -191,7 +181,6 @@ export async function handleSorterWithUploadSession(
         for (const [uniqueId, files] of filesByUniqueId.entries()) {
           // Skip files that have already been used
           if (usedUniqueIds.has(uniqueId)) {
-            console.log(`⏭️  Skipping already used uniqueId: ${uniqueId}`);
             continue;
           }
 
@@ -204,16 +193,9 @@ export async function handleSorterWithUploadSession(
             "",
           );
 
-          console.log(
-            `🔎 Checking uniqueId ${uniqueId}: "${nameWithoutExt}" vs "${item.title}"`,
-          );
-
           if (nameWithoutExt.toLowerCase() === item.title.toLowerCase()) {
             matchingFiles = files;
             matchedUniqueId = uniqueId;
-            console.log(
-              `✅ Found match! uniqueId: ${uniqueId}, files: ${files.length}`,
-            );
             break; // Take the first available match for this item name
           }
         }
@@ -221,7 +203,6 @@ export async function handleSorterWithUploadSession(
         if (matchingFiles.length > 0 && matchedUniqueId) {
           // Mark this unique ID as used
           usedUniqueIds.add(matchedUniqueId);
-          console.log(`🔒 Marked uniqueId ${matchedUniqueId} as used`);
 
           for (const file of matchingFiles) {
             const newKey = convertSessionKeyToSorterKey(
@@ -244,28 +225,13 @@ export async function handleSorterWithUploadSession(
               // Use a unique key for duplicate names: combine title with item index
               const uniqueItemKey = `${item.title}_${itemIndex}`;
               itemImageUrls.set(uniqueItemKey, itemImageUrl);
-              console.log(
-                `💾 Stored image URL for key "${uniqueItemKey}": ${itemImageUrl}`,
-              );
             }
           }
-        } else {
-          console.log(
-            `❌ No matching files found for item ${itemIndex}: "${item.title}"`,
-          );
         }
       }
-
-      console.log(
-        `📊 Final itemImageUrls map:`,
-        Array.from(itemImageUrls.entries()),
-      );
     }
 
     // Phase 5: Execute R2 copy operations in parallel
-    console.log(
-      `Executing ${copyOperations.length} R2 copy operations for ${options.mode}`,
-    );
     const concurrency = Math.min(
       Math.max(parseInt(process.env.R2_COPY_CONCURRENCY || "20", 10) || 20, 1),
       50,
@@ -410,13 +376,6 @@ export async function handleSorterWithUploadSession(
         const uniqueItemKey = `${item.title}_${itemIndex}`;
         const itemImageUrl =
           itemImageUrls.get(uniqueItemKey) || item.imageUrl || null;
-
-        console.log(
-          `🗄️  DB Insert - Item ${itemIndex}: "${item.title}", key: "${uniqueItemKey}", imageUrl: ${itemImageUrl ? "✅ FOUND" : "❌ NULL"}`,
-        );
-        if (itemImageUrl) {
-          console.log(`🔗 URL: ${itemImageUrl}`);
-        }
 
         // Convert tag names to tag slugs
         const itemTagSlugs: string[] = [];

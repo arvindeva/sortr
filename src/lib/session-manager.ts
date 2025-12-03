@@ -188,10 +188,6 @@ export async function cleanupExpiredSessions(): Promise<{
       sessionsDeleted++;
     }
 
-    console.log(
-      `Cleanup completed: ${sessionsDeleted} sessions, ${filesDeleted} files deleted`,
-    );
-
     return { sessionsDeleted, filesDeleted };
   } catch (error) {
     console.error("Error during session cleanup:", error);

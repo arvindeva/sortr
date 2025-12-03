@@ -10,9 +10,6 @@ interface RouteParams {
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     const { username } = await params;
-    console.log(
-      `👤 GET /api/user/${username} - Fetching complete user profile`,
-    );
 
     // Handle anonymous user case
     if (username === "Anonymous" || username === "Unknown User") {
@@ -30,8 +27,6 @@ export async function GET(request: Request, { params }: RouteParams) {
     if (!userData) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-
-    console.log(`👤 Found user: ${userData.username} (${userData.id})`);
 
     // Get user stats in parallel
     const [sorterCountResult, rankingCountResult] = await Promise.all([
@@ -130,10 +125,6 @@ export async function GET(request: Request, { params }: RouteParams) {
       month: "long",
       year: "numeric",
     });
-
-    console.log(
-      `📊 GET /api/user/${username} - Complete: ${sorterCount} sorters, ${rankingCount} rankings`,
-    );
 
     return NextResponse.json({
       user: {
