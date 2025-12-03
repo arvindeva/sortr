@@ -32,9 +32,8 @@ export function usePopularSorters(initialData?: HomepageData) {
   return useQuery({
     queryKey: ["homepage", "popular-sorters"],
     queryFn: fetchPopularSorters,
-    initialData,
-    staleTime: 0,
-    refetchOnMount: true,
+    placeholderData: initialData, // Use placeholderData instead of initialData for SSR
+    staleTime: 60000, // Keep data fresh for 1 minute
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     retry: 3,
