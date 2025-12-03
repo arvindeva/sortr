@@ -46,13 +46,9 @@ async function getPopularSorters() {
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
+    // Let ISR keep serving the previous page instead of caching an empty state
     console.error("❌ SSR: Error fetching popular sorters:", error);
-    // Return empty data on error, client-side will handle the error
-    return {
-      popularSorters: [],
-      total: 0,
-      timestamp: new Date().toISOString(),
-    };
+    throw error;
   }
 }
 
