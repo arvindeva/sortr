@@ -33,10 +33,10 @@ export function usePopularSorters(initialData?: HomepageData) {
     queryKey: ["homepage", "popular-sorters"],
     queryFn: fetchPopularSorters,
     initialData,
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    staleTime: 60000, // Keep data fresh for 1 minute
+    refetchOnMount: false, // Don't refetch if we have initialData from SSR
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchOnReconnect: true, // Refetch when internet reconnects
     retry: 3,
   });
 }
