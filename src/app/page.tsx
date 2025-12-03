@@ -4,6 +4,7 @@ import Link from "next/link";
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import {
   Panel,
   PanelHeader,
@@ -88,12 +89,28 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-// ISR: Revalidate every 5 minutes
-export const revalidate = 300;
+// Cache the homepage data at runtime (avoid DB lookups during build)
+const getPopularSortersCached = unstable_cache(
+  getPopularSorters,
+  ["homepage-popular-sorters"],
+  { revalidate: 300 },
+);
+
+// Avoid build-time prerender failures when the DB host isn't reachable in the build container
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  // Fetch popular sorters server-side
-  const data = await getPopularSorters();
+  // Fetch popular sorters server-side; on failure, keep page up with a friendly message
+  const data = (await getPopularSortersCached().catch((error) => {
+    console.error("❌ Runtime: Error fetching popular sorters:", error);
+    return null;
+  })) ?? {
+    popularSorters: [],
+    total: 0,
+    timestamp: new Date().toISOString(),
+    __error: true,
+  };
+  const hadError = (data as any).__error === true;
 
   // JSON-LD structured data for homepage
   const jsonLd = {
@@ -153,7 +170,15 @@ export default async function Home() {
               <PanelTitle>Popular Sorters</PanelTitle>
             </PanelHeader>
             <PanelContent variant="primary" className="p-2 md:p-6">
-              {data.popularSorters.length === 0 ? (
+              {hadError ? (
+                <div className="text-center">
+                  <Box variant="warning" size="md">
+                    <p className="font-medium">
+                      Failed to load popular sorters. Please try again.
+                    </p>
+                  </Box>
+                </div>
+              ) : data.popularSorters.length === 0 ? (
                 <div className="text-center">
                   <Box variant="warning" size="md">
                     <p className="font-medium">No sorters available yet.</p>
