@@ -107,7 +107,7 @@ export function UserProfileClient({
                 </Box>
               </div>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+              <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-2">
                 {rankings.map((result) => (
                   <Link
                     key={result.id}
