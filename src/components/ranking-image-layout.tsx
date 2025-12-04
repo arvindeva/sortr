@@ -68,8 +68,8 @@ export function RankingImageLayout({
           fontFamily:
             'var(--font-poppins), "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
           border: "3px solid #000000",
-          borderRadius: "0px", // Square corners to match new look
-          boxShadow: "6px 6px 0px 0px #000000", // Add shadow back
+          borderRadius: "12px", // Rounded corners to match global border radius
+          boxShadow: "none",
           boxSizing: "border-box",
         }}
       >
@@ -80,8 +80,8 @@ export function RankingImageLayout({
             color: "#000000", // Black text
             border: "none",
             borderBottom: "2px solid #000000",
-            borderTopLeftRadius: "0px",
-            borderTopRightRadius: "0px",
+            borderTopLeftRadius: "9px",
+            borderTopRightRadius: "9px",
             padding: "24px", // Match footer padding for same height
             display: "flex",
             alignItems: "center",
@@ -129,8 +129,8 @@ export function RankingImageLayout({
                         backgroundColor:
                           itemBackgroundColor?.trim() || "var(--background)",
                         border: "2px solid #000000",
-                        borderRadius: "0px",
-                        boxShadow: "2px 2px 0px 0px #000000",
+                        borderRadius: "12px",
+                        boxShadow: "none",
                         padding: "0",
                       }}
                     >
@@ -169,7 +169,7 @@ export function RankingImageLayout({
                                 height: "48px",
                                 flexShrink: 0,
                                 border: "2px solid #000000",
-                                borderRadius: "0px",
+                                borderRadius: "12px",
                                 overflow: "hidden",
                                 backgroundColor: "#f2f2f2",
                                 display: "flex",
@@ -234,8 +234,8 @@ export function RankingImageLayout({
               marginLeft: "-24px", // Extend to content edges
               marginRight: "-24px", // Extend to content edges
               marginBottom: "-24px", // Extend to bottom edge
-              borderBottomLeftRadius: "0px",
-              borderBottomRightRadius: "0px",
+              borderBottomLeftRadius: "9px",
+              borderBottomRightRadius: "9px",
               display: "flex",
               alignItems: "center",
               justifyContent: "flex-end",
