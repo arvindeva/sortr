@@ -7,16 +7,18 @@ import { AvatarManager } from "@/components/avatar-manager";
 
 interface UserProfileHeaderServerProps {
   username: string;
-  userSince: string;
   isOwnProfile: boolean;
   currentImage?: string | null;
+  sorterCount: number;
+  rankingCount: number;
 }
 
 export function UserProfileHeaderServer({
   username,
-  userSince,
   isOwnProfile,
   currentImage,
+  sorterCount,
+  rankingCount,
 }: UserProfileHeaderServerProps) {
   const [displayedUsername, setDisplayedUsername] = useState(username);
   return (
@@ -54,13 +56,17 @@ export function UserProfileHeaderServer({
             <PageHeader>{displayedUsername}</PageHeader>
             {/* Edit Username Button - Only show for own profile */}
             {isOwnProfile && (
-              <EditUsernameButton 
-                currentUsername={displayedUsername} 
+              <EditUsernameButton
+                currentUsername={displayedUsername}
                 onUsernameUpdate={setDisplayedUsername}
               />
             )}
           </div>
-          <p className="font-medium">User since {userSince}</p>
+          <p className="font-medium text-text">
+            <span className="font-bold">{sorterCount}</span> {sorterCount === 1 ? 'Sorter' : 'Sorters'}
+            <span className="mx-3">•</span>
+            <span className="font-bold">{rankingCount}</span> {rankingCount === 1 ? 'Ranking' : 'Rankings'}
+          </p>
         </div>
       </div>
     </section>

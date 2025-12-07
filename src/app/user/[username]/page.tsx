@@ -136,13 +136,6 @@ async function getUserProfileData(username: string) {
     };
   });
 
-  const userSince = new Date(
-    userData.emailVerified || new Date(),
-  ).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
-
   return {
     user: {
       id: userData.id,
@@ -157,7 +150,6 @@ async function getUserProfileData(username: string) {
     },
     sorters: transformedSorters,
     rankings: transformedResults,
-    userSince,
   };
 }
 
@@ -247,14 +239,6 @@ export default async function UserProfilePage({
   const currentUserEmail = session?.user?.email;
   const isOwnProfile = currentUserEmail === profileData.user.email;
 
-  // Calculate user since date
-  const userSince = new Date(
-    profileData.user.emailVerified || new Date(),
-  ).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
-
   // JSON-LD structured data for user profile (server-side for SEO)
   const jsonLd = {
     "@context": "https://schema.org",
@@ -280,9 +264,10 @@ export default async function UserProfilePage({
         {/* Server-rendered Profile Header */}
         <UserProfileHeaderServer
           username={profileData.user.username || ""}
-          userSince={profileData.userSince}
           isOwnProfile={isOwnProfile}
           currentImage={profileData.user.image}
+          sorterCount={profileData.stats.sorterCount}
+          rankingCount={profileData.stats.rankingCount}
         />
 
         {/* Client-side data fetching for sorters and rankings */}
