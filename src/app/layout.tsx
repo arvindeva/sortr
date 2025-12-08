@@ -70,7 +70,7 @@ export default function RootLayout({
         <Providers>
           <NextTopLoader color="#ff6b8a" showSpinner={false} height={3} />
           <Navbar />
-          <div className="flex-1">{children}</div>
+          <div className="mb-12 flex-1">{children}</div>
           <Footer />
         </Providers>
       </body>
