@@ -16,6 +16,8 @@ import { SorterGrid } from "@/components/ui/sorter-grid";
 
 // Server-side data fetching for popular sorters
 async function getPopularSorters() {
+  const numberOfPopularSorters = 20;
+
   try {
     const popularSorters = await db
       .select({
@@ -31,7 +33,7 @@ async function getPopularSorters() {
       .leftJoin(user, eq(sorters.userId, user.id))
       .where(eq(sorters.deleted, false))
       .orderBy(desc(sorters.completionCount))
-      .limit(10);
+      .limit(numberOfPopularSorters);
 
     // Transform data to match expected format
     const transformedSorters = popularSorters.map((sorter) => ({
