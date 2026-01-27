@@ -179,12 +179,12 @@ export default async function Home() {
     name: "sortr",
     description:
       "Create and share a sorter for anything to rank items from best to worst",
-    url: process.env.NEXTAUTH_URL || "https://sortr.dev",
+    url: process.env.NEXTAUTH_URL || "https://sortr.io",
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${process.env.NEXTAUTH_URL || "https://sortr.dev"}/browse?q={search_term_string}`,
+        urlTemplate: `${process.env.NEXTAUTH_URL || "https://sortr.io"}/browse?q={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },
@@ -196,7 +196,7 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-2 py-2 md:px-4 flex flex-col gap-8">
+      <main className="container mx-auto flex min-h-[calc(100vh-64px)] max-w-6xl flex-col gap-8 px-2 py-2 md:px-4">
         <section className="mx-auto flex max-w-xl justify-center">
           <Box
             variant="primary"

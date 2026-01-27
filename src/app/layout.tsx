@@ -15,7 +15,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXTAUTH_URL || "https://sortr.dev"),
+  metadataBase: new URL(process.env.NEXTAUTH_URL || "https://sortr.io"),
   title: {
     template: "%s | sortr",
     default: "sortr - Create a Sorter for Anything",
