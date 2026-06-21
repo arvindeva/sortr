@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { GeistSans } from "geist/font/sans";
+import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -7,6 +7,21 @@ import NextTopLoader from "nextjs-toploader";
 import Script from "next/script";
 
 import "./globals.css";
+
+// Body: sleek geometric-humanist sans with distinctive letterforms
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
+
+// Headings: characterful "old-style" serif with optical sizing
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  display: "swap",
+  axes: ["SOFT", "WONK", "opsz"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || "https://sortr.io"),
@@ -48,8 +63,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${GeistSans.variable} flex min-h-screen flex-col antialiased`}
-        style={{ fontFamily: "var(--font-geist-sans)" }}
+        className={`${jakarta.variable} ${fraunces.variable} flex min-h-screen flex-col antialiased`}
+        style={{ fontFamily: "var(--font-jakarta)" }}
       >
         {isProd &&
           process.env.NEXT_PUBLIC_UMAMI_URL &&

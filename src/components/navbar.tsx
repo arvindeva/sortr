@@ -143,7 +143,7 @@ export function Navbar() {
       >
         {/* Two squares facing off — the duel at the heart of the app */}
         <SortrMark size={26} animate />
-        <span className="text-2xl font-bold tracking-tight transition-colors group-hover:text-main">
+        <span className="font-heading text-2xl font-bold tracking-tight transition-colors group-hover:text-main">
           sortr
         </span>
       </Link>
@@ -308,7 +308,9 @@ export function Navbar() {
                 className="flex items-center gap-2"
               >
                 <SortrMark size={26} />
-                <span className="text-2xl font-bold tracking-tight">sortr</span>
+                <span className="font-heading text-2xl font-bold tracking-tight">
+                  sortr
+                </span>
               </Link>
               <DrawerClose asChild>
                 <Button variant="default" size="icon" aria-label="Close menu">

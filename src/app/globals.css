@@ -108,8 +108,8 @@
   --shadow-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --font-weight-base: 400;
   --font-weight-heading: 600;
-  --font-family-base: var(--font-geist-sans);
-  --font-family-heading: var(--font-geist-sans);
+  --font-base: var(--font-jakarta);
+  --font-heading: var(--font-fraunces);
 }
 
 @layer base {
