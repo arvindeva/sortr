@@ -192,7 +192,7 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <PageContainer className="flex min-h-[calc(100vh-64px)] flex-col gap-16">
+      <PageContainer className="flex flex-col gap-12">
         {/* Hero Section - interactive duel */}
         <HeroDuel />
 
