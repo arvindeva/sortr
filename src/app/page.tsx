@@ -3,7 +3,7 @@ import { Box } from "@/components/ui/box";
 import Link from "next/link";
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import {
   Panel,
@@ -31,7 +31,7 @@ async function getPopularSorters() {
       })
       .from(sorters)
       .leftJoin(user, eq(sorters.userId, user.id))
-      .where(eq(sorters.deleted, false))
+      .where(and(eq(sorters.deleted, false), eq(sorters.status, "active")))
       .orderBy(desc(sorters.completionCount))
       .limit(numberOfPopularSorters);
 
@@ -72,7 +72,7 @@ async function getRecentSorters() {
       })
       .from(sorters)
       .leftJoin(user, eq(sorters.userId, user.id))
-      .where(eq(sorters.deleted, false))
+      .where(and(eq(sorters.deleted, false), eq(sorters.status, "active")))
       .orderBy(desc(sorters.createdAt))
       .limit(numberOfRecentSorters);
 
