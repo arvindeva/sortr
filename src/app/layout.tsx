@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -7,12 +7,6 @@ import NextTopLoader from "nextjs-toploader";
 import Script from "next/script";
 
 import "./globals.css";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-poppins",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || "https://sortr.dev"),
@@ -54,8 +48,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${poppins.variable} flex min-h-screen flex-col antialiased`}
-        style={{ fontFamily: "var(--font-poppins)" }}
+        className={`${GeistSans.variable} flex min-h-screen flex-col antialiased`}
+        style={{ fontFamily: "var(--font-geist-sans)" }}
       >
         {isProd &&
           process.env.NEXT_PUBLIC_UMAMI_URL &&
@@ -68,7 +62,7 @@ export default function RootLayout({
             />
           )}
         <Providers>
-          <NextTopLoader color="#ff6b8a" showSpinner={false} height={3} />
+          <NextTopLoader color="#da1b61" showSpinner={false} height={3} />
           <Navbar />
           <div className="mb-12 flex-1">{children}</div>
           <Footer />

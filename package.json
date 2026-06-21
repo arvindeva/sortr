@@ -36,6 +36,7 @@
     "dotenv": "^17.0.1",
     "drizzle-orm": "^0.44.2",
     "framer-motion": "^12.23.6",
+    "geist": "^1.7.2",
     "html-to-image": "^1.11.13",
     "lucide-react": "^0.525.0",
     "lz-string": "^1.5.0",

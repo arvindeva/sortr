@@ -86,7 +86,7 @@ function SortableTag({ tag, onRemove }: SortableTagProps) {
           e.preventDefault();
           onRemove(tag.id);
         }}
-        className="text-foreground absolute top-1/2 right-1 -translate-y-1/2 cursor-pointer rounded-sm p-1 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950"
+        className="text-foreground hover:text-destructive hover:bg-destructive/10 absolute top-1/2 right-1 -translate-y-1/2 cursor-pointer rounded-base p-1"
       >
         <X size={14} strokeWidth={2.5} />
       </button>
@@ -195,12 +195,12 @@ export default function TagManagement({
               onKeyPress={handleKeyPress}
               className="pr-12"
             />
-            {/* Add icon button with pink background and borders */}
+            {/* Add icon button */}
             <button
               type="button"
               onClick={handleAddTag}
               disabled={!inputValue.trim()}
-              className="text-foreground bg-main hover:bg-main border-border absolute top-0 right-0 bottom-0 flex w-10 items-center justify-center rounded-r-[12] border-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="text-main-foreground bg-main hover:bg-main/90 absolute top-0 right-0 bottom-0 flex w-10 items-center justify-center rounded-r-base border-l border-border transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus size={16} strokeWidth={2.5} />
             </button>

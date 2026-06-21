@@ -86,7 +86,7 @@ export function DeleteSorterButton({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="text-red-500" size={20} />
+            <AlertTriangle className="text-destructive" size={20} />
             Delete Sorter
           </DialogTitle>
         </DialogHeader>
@@ -100,7 +100,7 @@ export function DeleteSorterButton({
           </div>
 
           {error && (
-            <div className="rounded-base border-border border-2 bg-red-500 p-3 text-white">
+            <div className="rounded-base border border-border bg-destructive/10 p-3 text-destructive">
               {error}
             </div>
           )}
@@ -116,7 +116,7 @@ export function DeleteSorterButton({
             </Button>
             <Button
               variant="default"
-              className="bg-red-500 hover:bg-red-600"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDelete}
               disabled={isDeleting}
             >

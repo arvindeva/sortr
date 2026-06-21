@@ -4,72 +4,72 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(93.37% 0.0339 12.05);
-  --secondary-background: oklch(100% 0 0);
-  --foreground: oklch(0% 0 0);
-  --main-foreground: oklch(0% 0 0);
-  --main: oklch(70.79% 0.1862 16.25);
-  --border: oklch(0% 0 0);
-  --ring: oklch(0% 0 0);
-  --overlay: oklch(0% 0 0 / 0.8);
-  --shadow: 0px 0px 0px 0px var(--border);
-  --chart-1: #ff6678;
-  --chart-2: #7a83ff;
-  --chart-3: #facc00;
-  --chart-4: #00d696;
-  --chart-5: #5294ff;
-  --chart-active-dot: #000;
+  --background: #ffffff;
+  --secondary-background: #f7f6f8;
+  --foreground: #1a1625;
+  --main-foreground: #ffffff;
+  --main: #da1b61;
+  --border: #e9e6ee;
+  --ring: #da1b61;
+  --overlay: rgb(0 0 0 / 0.5);
+  --shadow: 0px 1px 2px 0px rgb(0 0 0 / 0.05);
+  --chart-1: #da1b61;
+  --chart-2: #ff6e61;
+  --chart-3: #ffb84d;
+  --chart-4: #6d9dc5;
+  --chart-5: #5e4b8b;
+  --chart-active-dot: #da1b61;
 
   /* Additional shadcn variables */
-  --card: var(--secondary-background);
+  --card: #ffffff;
   --card-foreground: var(--foreground);
-  --popover: var(--secondary-background);
+  --popover: #ffffff;
   --popover-foreground: var(--foreground);
   --primary: var(--main);
   --primary-foreground: var(--main-foreground);
-  --secondary: var(--background);
+  --secondary: var(--secondary-background);
   --secondary-foreground: var(--foreground);
-  --muted: var(--background);
-  --muted-foreground: oklch(70% 0 0);
-  --accent: var(--background);
-  --accent-foreground: var(--foreground);
-  --destructive: #ef4444;
+  --muted: #f2f0f5;
+  --muted-foreground: #6f6880;
+  --accent: #fdf0f5;
+  --accent-foreground: #da1b61;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --input: var(--secondary-background);
+  --input: #ffffff;
 }
 
 .dark {
-  --background: oklch(25.15% 0.0495 7.54);
-  --secondary-background: oklch(23.93% 0 0);
-  --foreground: oklch(92.49% 0 0);
-  --main-foreground: oklch(0% 0 0);
-  --main: oklch(67.58% 0.2135 18.63);
-  --border: oklch(0% 0 0);
-  --ring: oklch(100% 0 0);
-  --shadow: 0px 0px 0px 0px var(--border);
-  --chart-1: #ff4d61;
-  --chart-2: #7a83ff;
-  --chart-3: #e0b700;
-  --chart-4: #00bd84;
-  --chart-5: #5294ff;
-  --chart-active-dot: #fff;
+  --background: #000000;
+  --secondary-background: #0e0c11;
+  --foreground: #f4f2f7;
+  --main-foreground: #ffffff;
+  --main: #ec3b7e;
+  --border: #1f1b26;
+  --ring: #ec3b7e;
+  --shadow: 0px 1px 2px 0px rgb(0 0 0 / 0.4);
+  --chart-1: #ec3b7e;
+  --chart-2: #ff6e61;
+  --chart-3: #ffb84d;
+  --chart-4: #6d9dc5;
+  --chart-5: #8a72c4;
+  --chart-active-dot: #ec3b7e;
 
   /* Additional shadcn variables for dark mode */
-  --card: var(--secondary-background);
+  --card: #0b090e;
   --card-foreground: var(--foreground);
-  --popover: var(--secondary-background);
+  --popover: #0b090e;
   --popover-foreground: var(--foreground);
   --primary: var(--main);
   --primary-foreground: var(--main-foreground);
-  --secondary: var(--background);
+  --secondary: var(--secondary-background);
   --secondary-foreground: var(--foreground);
-  --muted: var(--background);
-  --muted-foreground: oklch(70% 0 0);
-  --accent: var(--background);
-  --accent-foreground: var(--foreground);
-  --destructive: #ef4444;
+  --muted: #16131b;
+  --muted-foreground: #9a92a8;
+  --accent: #2a0f1c;
+  --accent-foreground: #f06a9c;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --input: var(--secondary-background);
+  --input: #0e0c11;
 }
 
 @theme inline {
@@ -104,19 +104,19 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-input: var(--input);
 
-  --spacing-boxShadowX: 0px;
-  --spacing-boxShadowY: 0px;
-  --spacing-reverseBoxShadowX: 0px;
-  --spacing-reverseBoxShadowY: 0px;
-  --radius-base: 12px;
-  --shadow-shadow: var(--shadow);
-  --font-weight-base: 500;
-  --font-weight-heading: 800;
-  --font-family-base: var(--font-poppins);
-  --font-family-heading: var(--font-poppins);
+  --radius-base: 10px;
+  --shadow-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --font-weight-base: 400;
+  --font-weight-heading: 600;
+  --font-family-base: var(--font-geist-sans);
+  --font-family-heading: var(--font-geist-sans);
 }
 
 @layer base {
+  html {
+    @apply bg-background;
+  }
+
   body {
     @apply text-foreground font-base bg-background;
     font-size: var(--font-size-base);
@@ -144,39 +144,6 @@
 
   .card-link:active .card {
     @apply translate-y-[1px] transform transition-transform duration-75;
-  }
-
-  /* Pulsing shimmer animation for avatar loading */
-  @keyframes shimmer {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.7;
-    }
-  }
-
-  .shimmer {
-    background-color: var(--secondary-background);
-    animation: shimmer 1.5s ease-in-out infinite;
-  }
-
-  /* Enhanced skeleton shimmer animation - faster with lighter peak */
-  @keyframes skeleton-shimmer {
-    0% {
-      background-color: var(--secondary-background);
-    }
-    50% {
-      background-color: var(--background);
-    }
-    100% {
-      background-color: var(--secondary-background);
-    }
-  }
-
-  .skeleton-shimmer {
-    animation: skeleton-shimmer 1s ease-in-out infinite;
   }
 
   /* Progress bar shimmer animation - sliding highlight */
@@ -234,16 +201,5 @@
 
   .text-base {
     font-size: var(--font-size-base) !important;
-  }
-}
-
-/* Custom pulse animation with white-to-light grey colors */
-@keyframes pulse-white {
-  0%,
-  100% {
-    background-color: #e5e7eb; /* light grey */
-  }
-  50% {
-    background-color: #ffffff; /* white */
   }
 }

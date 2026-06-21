@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
-import { Box } from "@/components/ui/box";
-import Link from "next/link";
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
-import {
-  Panel,
-  PanelHeader,
-  PanelTitle,
-  PanelContent,
-} from "@/components/ui/panel";
 import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
+import { HeroDuel } from "@/components/hero-duel";
+import { PageContainer } from "@/components/ui/page-container";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { EmptyState } from "@/components/ui/empty-state";
 
 // Server-side data fetching for popular sorters
 async function getPopularSorters() {
@@ -196,97 +192,50 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main className="container mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-2 py-2 md:px-4 flex flex-col gap-8">
-        <section className="mx-auto flex max-w-xl justify-center">
-          <Box
-            variant="primary"
-            size="sm"
-            className="my-2 text-center sm:my-8 md:p-8"
-          >
-            <h1 className="text-4xl font-extrabold tracking-wide md:mb-4 md:text-7xl">
-              sortr
-            </h1>
-            <p className="mb-2 text-lg font-bold md:mb-4 md:text-xl">
-              Create a Sorter for Anything
-            </p>
-            <p className="font-medium md:text-lg">
-              Inspired by{" "}
-              <Link
-                href={`https://execfera.github.io/charasort/`}
-                target="_blank"
-                className="text-blue-800 underline dark:text-blue-800"
-              >
-                charasort
-              </Link>
-              .
-            </p>
-          </Box>
-        </section>
+      <PageContainer className="flex min-h-[calc(100vh-64px)] flex-col gap-16">
+        {/* Hero Section - interactive duel */}
+        <HeroDuel />
 
         {/* Pure server-rendered popular sorters */}
         <section className="w-full">
-          <Panel variant="primary">
-            <PanelHeader variant="primary">
-              <PanelTitle>Popular Sorters</PanelTitle>
-            </PanelHeader>
-            <PanelContent variant="primary" className="p-2 md:p-6">
-              {hadPopularError ? (
-                <div className="text-center">
-                  <Box variant="warning" size="md">
-                    <p className="font-medium">
-                      Failed to load popular sorters. Please try again.
-                    </p>
-                  </Box>
-                </div>
-              ) : popularData.popularSorters.length === 0 ? (
-                <div className="text-center">
-                  <Box variant="warning" size="md">
-                    <p className="font-medium">No sorters available yet.</p>
-                  </Box>
-                </div>
-              ) : (
-                <SorterGrid>
-                  {popularData.popularSorters.map((sorter) => (
-                    <SorterCard key={sorter.id} sorter={sorter} />
-                  ))}
-                </SorterGrid>
-              )}
-            </PanelContent>
-          </Panel>
+          <SectionHeading>Popular Sorters</SectionHeading>
+          {hadPopularError ? (
+            <EmptyState
+              variant="error"
+              title="Failed to load popular sorters."
+              description="Please try again."
+            />
+          ) : popularData.popularSorters.length === 0 ? (
+            <EmptyState title="No sorters available yet." />
+          ) : (
+            <SorterGrid>
+              {popularData.popularSorters.map((sorter) => (
+                <SorterCard key={sorter.id} sorter={sorter} />
+              ))}
+            </SorterGrid>
+          )}
         </section>
 
         {/* Pure server-rendered recent sorters */}
         <section className="w-full">
-          <Panel variant="primary">
-            <PanelHeader variant="primary">
-              <PanelTitle>Recent Sorters</PanelTitle>
-            </PanelHeader>
-            <PanelContent variant="primary" className="p-2 md:p-6">
-              {hadRecentError ? (
-                <div className="text-center">
-                  <Box variant="warning" size="md">
-                    <p className="font-medium">
-                      Failed to load recent sorters. Please try again.
-                    </p>
-                  </Box>
-                </div>
-              ) : recentData.recentSorters.length === 0 ? (
-                <div className="text-center">
-                  <Box variant="warning" size="md">
-                    <p className="font-medium">No sorters available yet.</p>
-                  </Box>
-                </div>
-              ) : (
-                <SorterGrid>
-                  {recentData.recentSorters.map((sorter) => (
-                    <SorterCard key={sorter.id} sorter={sorter} />
-                  ))}
-                </SorterGrid>
-              )}
-            </PanelContent>
-          </Panel>
+          <SectionHeading>Recent Sorters</SectionHeading>
+          {hadRecentError ? (
+            <EmptyState
+              variant="error"
+              title="Failed to load recent sorters."
+              description="Please try again."
+            />
+          ) : recentData.recentSorters.length === 0 ? (
+            <EmptyState title="No sorters available yet." />
+          ) : (
+            <SorterGrid>
+              {recentData.recentSorters.map((sorter) => (
+                <SorterCard key={sorter.id} sorter={sorter} />
+              ))}
+            </SorterGrid>
+          )}
         </section>
-      </main>
+      </PageContainer>
     </>
   );
 }

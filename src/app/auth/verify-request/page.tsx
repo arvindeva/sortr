@@ -11,8 +11,8 @@ function VerifyRequestContent() {
 
   return (
     <div className="mt-20 flex flex-col items-center">
-      <div className="dark:bg-secondary-background mb-6 rounded-full bg-white p-4">
-        <Mail className="h-8 w-8 text-red-500 dark:text-red-400" />
+      <div className="mb-6 rounded-full bg-accent p-4">
+        <Mail className="h-8 w-8 text-main" />
       </div>
 
       <h1 className="mb-4 text-3xl font-bold">Check your email</h1>

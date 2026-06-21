@@ -135,7 +135,7 @@ export function FileUploadZone({
         <CardContent className="p-6">
           <div
             {...getRootProps()}
-            className={`cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors ${isDragActive ? "border-primary bg-primary/5" : "border-border"} ${disabled ? "cursor-not-allowed opacity-50" : "hover:border-primary hover:bg-primary/5"} `}
+            className={`cursor-pointer rounded-base border border-dashed p-8 text-center transition-colors ${isDragActive ? "border-main bg-accent" : "border-border"} ${disabled ? "cursor-not-allowed opacity-50" : "hover:border-main hover:bg-accent"} `}
           >
             <input {...getInputProps()} />
 
@@ -165,7 +165,7 @@ export function FileUploadZone({
                       : "Drag & drop images here"}
                   </p>
                   <p className="text-muted-foreground text-sm">
-                    or <span className="text-primary">click to browse</span>
+                    or <span className="text-main">click to browse</span>
                   </p>
                   {enableCompression && (
                     <p className="text-muted-foreground mt-1 text-xs">
@@ -206,7 +206,7 @@ export function FileUploadZone({
                 {existingFiles.map((file, index) => (
                   <div
                     key={index}
-                    className="bg-secondary/20 flex items-center justify-between rounded p-2 text-sm"
+                    className="bg-muted flex items-center justify-between rounded-base p-2 text-sm"
                   >
                     <span className="flex-1 truncate" title={file.name}>
                       {file.name}

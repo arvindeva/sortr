@@ -10,8 +10,8 @@ export function SorterGrid({ children, className = "" }: SorterGridProps) {
   return (
     <div
       className={cn(
-        "grid justify-center gap-2",
-        "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
+        "grid justify-center gap-4 md:gap-6",
+        "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
         className,
       )}
     >

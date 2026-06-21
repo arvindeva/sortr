@@ -62,18 +62,14 @@ export function ShareButton({
           <span className={hideTextOnMobile ? "hidden md:inline md:ml-2" : ""}>Share</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-secondary-background">
-        <DropdownMenuItem
-          onClick={handleCopyLink}
-          className="bg-secondary-background text-foreground"
-        >
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={handleCopyLink}>
           <Link2 className="mr-2" size={16} />
           Copy Link
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={handleDownloadImage}
           disabled={isGenerating || !rankingData}
-          className="bg-secondary-background text-foreground"
         >
           <Download className="mr-2" size={16} />
           {isGenerating ? "Generating..." : "Download Image"}

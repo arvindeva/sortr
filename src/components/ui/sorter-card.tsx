@@ -20,36 +20,40 @@ export function SorterCard({ sorter, className }: SorterCardProps) {
   return (
     <Link
       href={`/sorter/${sorter.slug}`}
-      className={`block w-full ${className || ""}`}
+      className={`group block w-full ${className || ""}`}
     >
-      <Card className="group relative aspect-square overflow-hidden transition-all hover:scale-[1.02]">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-base transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
         {/* Background Image or Placeholder */}
         <div className="absolute inset-0">
           {sorter.coverImageUrl ? (
             <div
-              className="h-full w-full bg-cover bg-center"
+              className="h-full w-full bg-cover bg-center transition-transform duration-200 group-hover:scale-105"
               style={{
                 backgroundImage: `url(${sorter.coverImageUrl})`,
               }}
             />
           ) : (
-            <div className="bg-background dark:bg-secondary flex h-full w-full items-center justify-center">
-              <span className="text-main -translate-y-6 text-6xl font-bold">
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-secondary">
+              <span className="text-6xl font-semibold text-muted-foreground/30">
                 {firstLetter}
               </span>
             </div>
           )}
         </div>
 
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
         {/* Title Overlay */}
-        <div className="bg-main absolute right-0 bottom-0 left-0 p-3">
-          <div className="flex h-6 items-center justify-center sm:h-8">
-            <h3 className="text-main-foreground font-base line-clamp-2 text-center text-base leading-tight">
-              {sorter.title}
-            </h3>
-          </div>
+        <div className="absolute inset-x-0 bottom-0 p-4">
+          <h3 className="line-clamp-2 text-base font-semibold leading-tight text-white">
+            {sorter.title}
+          </h3>
+          <p className="mt-1 text-sm text-white/70">
+            by {sorter.creatorUsername}
+          </p>
         </div>
-      </Card>
+      </div>
     </Link>
   );
 }

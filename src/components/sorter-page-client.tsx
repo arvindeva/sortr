@@ -5,12 +5,8 @@ import { SorterContentSkeleton } from "@/components/skeletons/sorter-content-ske
 import Link from "next/link";
 import { Box } from "@/components/ui/box";
 import { Badge } from "@/components/ui/badge";
-import {
-  Panel,
-  PanelHeader,
-  PanelTitle,
-  PanelContent,
-} from "@/components/ui/panel";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { RankingItem, RankingItemContent } from "@/components/ui/ranking-item";
 import { getImageUrl } from "@/lib/image-utils";
@@ -61,11 +57,10 @@ export function SorterPageClient({
       <div className="grid gap-8 md:grid-cols-2">
         {/* Left Column - Items to Rank */}
         <section>
-          <Panel variant="primary">
-            <PanelHeader variant="primary">
-              <PanelTitle>Items to Rank ({items?.length || 0})</PanelTitle>
-            </PanelHeader>
-            <PanelContent variant="primary" className="p-2 md:p-6">
+          <SectionHeading as="h2">
+            Items to Rank ({items?.length || 0})
+          </SectionHeading>
+          <div>
               {items?.length === 0 ? (
                 <Box variant="warning" size="md">
                   <p className="font-medium italic">
@@ -83,7 +78,7 @@ export function SorterPageClient({
                         <div className="flex min-w-0 items-center gap-3 overflow-hidden">
                           {/* Thumbnail */}
                           {item.imageUrl ? (
-                            <div className="border-border rounded-base bg-secondary-background h-16 w-16 flex-shrink-0 overflow-hidden border-2">
+                            <div className="border-border rounded-base bg-muted h-16 w-16 flex-shrink-0 overflow-hidden border">
                               <img
                                 src={getImageUrl(item.imageUrl, "thumbnail")}
                                 alt={item.title}
@@ -101,8 +96,8 @@ export function SorterPageClient({
                               />
                             </div>
                           ) : (
-                            <div className="border-border bg-secondary-background rounded-base flex h-16 w-16 flex-shrink-0 items-center justify-center border-2">
-                              <span className="text-main text-xl font-bold">
+                            <div className="border-border bg-muted rounded-base flex h-16 w-16 flex-shrink-0 items-center justify-center border">
+                              <span className="text-muted-foreground text-xl font-semibold">
                                 {item.title.charAt(0).toUpperCase()}
                               </span>
                             </div>
@@ -119,42 +114,33 @@ export function SorterPageClient({
                   ))}
                 </div>
               )}
-            </PanelContent>
-          </Panel>
+            </div>
         </section>
 
         {/* Right Column */}
         <section className="space-y-8">
-          {/* Filters Panel - Only show if tags exist */}
+          {/* Filters - Only show if tags exist */}
           {tags && tags.length > 0 && (
-            <Panel variant="primary">
-              <PanelHeader variant="primary">
-                <PanelTitle>Filters</PanelTitle>
-              </PanelHeader>
-              <PanelContent variant="primary" className="p-2 md:p-6">
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((tag) => (
-                    <Badge key={tag.id} variant="neutral">
-                      {tag.name}
-                    </Badge>
-                  ))}
-                </div>
-              </PanelContent>
-            </Panel>
+            <div>
+              <SectionHeading as="h2">Filters</SectionHeading>
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <Badge key={tag.id} variant="neutral">
+                    {tag.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
           )}
 
-          {/* Recent Rankings Panel */}
-          <Panel variant="primary">
-            <PanelHeader variant="primary">
-              <PanelTitle>Recent Rankings ({recentResults.length})</PanelTitle>
-            </PanelHeader>
-            <PanelContent variant="primary" className="p-2 md:p-6">
+          {/* Recent Rankings */}
+          <div>
+            <SectionHeading as="h2">
+              Recent Rankings ({recentResults.length})
+            </SectionHeading>
+            <div>
               {recentResults.length === 0 ? (
-                <Box variant="warning" size="md">
-                  <p className="text-base font-medium italic">
-                    No rankings yet. Be the first to complete this sorter!
-                  </p>
-                </Box>
+                <EmptyState title="No rankings yet. Be the first to complete this sorter!" />
               ) : (
                 <div className="space-y-4">
                   {recentResults.map((result) => (
@@ -187,7 +173,7 @@ export function SorterPageClient({
                               >
                                 <div className="flex min-w-0 flex-1 items-center gap-2">
                                   {item.imageUrl ? (
-                                    <div className="border-border rounded-base bg-secondary-background h-6 w-6 flex-shrink-0 overflow-hidden border-2">
+                                    <div className="border-border rounded-base bg-muted h-6 w-6 flex-shrink-0 overflow-hidden border">
                                       <img
                                         src={getImageUrl(
                                           item.imageUrl,
@@ -209,8 +195,8 @@ export function SorterPageClient({
                                       />
                                     </div>
                                   ) : (
-                                    <div className="border-border bg-secondary-background rounded-base flex h-6 w-6 flex-shrink-0 items-center justify-center border-2">
-                                      <span className="text-main text-xs font-bold">
+                                    <div className="border-border bg-muted rounded-base flex h-6 w-6 flex-shrink-0 items-center justify-center border">
+                                      <span className="text-muted-foreground text-xs font-semibold">
                                         {item.title.charAt(0).toUpperCase()}
                                       </span>
                                     </div>
@@ -242,8 +228,8 @@ export function SorterPageClient({
                   ))}
                 </div>
               )}
-            </PanelContent>
-          </Panel>
+            </div>
+          </div>
         </section>
       </div>
     </>

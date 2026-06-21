@@ -5,12 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Panel,
-  PanelHeader,
-  PanelTitle,
-  PanelContent,
-} from "@/components/ui/panel";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { Spinner } from "@/components/ui/spinner";
 import { ChevronLeft, Filter, Play } from "lucide-react";
 import Link from "next/link";
@@ -131,7 +126,7 @@ export default function FilterPage({ params }: FilterPageProps) {
     return (
       <div className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
         <div className="py-12 text-center">
-          <p className="mb-4 text-red-600">
+          <p className="mb-4 text-destructive">
             {error instanceof Error ? error.message : "An error occurred"}
           </p>
           <Button onClick={() => router.back()}>Go Back</Button>
@@ -185,12 +180,10 @@ export default function FilterPage({ params }: FilterPageProps) {
         </div>
       </div>
 
-      {/* Main Content Panel */}
-      <Panel variant="primary">
-        <PanelHeader variant="primary">
-          <PanelTitle>Filters</PanelTitle>
-        </PanelHeader>
-        <PanelContent variant="primary" className="p-2 md:p-6">
+      {/* Main Content */}
+      <section>
+        <SectionHeading as="h2">Filters</SectionHeading>
+        <div>
           <div className="mb-6">
             <p className="text-foreground mb-4">
               This sorter has filters. Choose which tags you want to include in
@@ -273,8 +266,8 @@ export default function FilterPage({ params }: FilterPageProps) {
             <Play className="mr-2 h-4 w-4" />
             Start Sorting ({totalItems} items)
           </Button>
-        </PanelContent>
-      </Panel>
+        </div>
+      </section>
     </div>
   );
 }

@@ -4,17 +4,12 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Box } from "@/components/ui/box";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Panel,
-  PanelHeader,
-  PanelTitle,
-  PanelContent,
-} from "@/components/ui/panel";
+import { PageContainer } from "@/components/ui/page-container";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select,
   SelectContent,
@@ -22,9 +17,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, ChevronLeft, ChevronRight, X } from "lucide-react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  SlidersHorizontal,
+  ChevronDown,
+} from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { PageHeader } from "@/components/ui/page-header";
 import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
 
@@ -83,6 +84,8 @@ function BrowseContent() {
 
   // Local state for search input (for debouncing)
   const [searchInput, setSearchInput] = useState(query);
+  // Category chips are collapsed by default on mobile (they take a lot of space)
+  const [showFilters, setShowFilters] = useState(false);
 
   // Update search input when URL changes
   useEffect(() => {
@@ -169,11 +172,11 @@ function BrowseContent() {
   };
 
   return (
-    <main className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
+    <PageContainer>
       {/* Page Header */}
-      <Box variant="primary" size="md" className="mb-6 block">
-        <PageHeader>Browse Sorters</PageHeader>
-      </Box>
+      <h1 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl">
+        Browse Sorters
+      </h1>
 
       {/* Search Bar */}
       <div className="mb-6">
@@ -198,7 +201,31 @@ function BrowseContent() {
 
       {/* Category Filter Chips */}
       <div className="mb-6">
-        <div className="flex flex-wrap gap-2">
+        {/* Mobile toggle — chips collapse by default to save space */}
+        <Button
+          variant="neutral"
+          size="sm"
+          onClick={() => setShowFilters((v) => !v)}
+          className="mb-3 flex w-full items-center justify-between lg:hidden"
+        >
+          <span className="flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4" />
+            Filter by category
+            {selectedCategories.length > 0 && (
+              <Badge variant="default" className="h-5">
+                {selectedCategories.length}
+              </Badge>
+            )}
+          </span>
+          <ChevronDown
+            className={`h-4 w-4 transition-transform ${showFilters ? "rotate-180" : ""}`}
+          />
+        </Button>
+
+        {/* Chips: collapsible on mobile, always shown on desktop */}
+        <div
+          className={`${showFilters ? "flex" : "hidden"} flex-wrap gap-2 lg:flex`}
+        >
           <Button
             variant="neutral"
             size="sm"
@@ -250,32 +277,29 @@ function BrowseContent() {
 
       {/* Results */}
       <section>
-        <Panel variant="primary">
-          <PanelHeader variant="primary">
-            <PanelTitle>
-              {query ? `Search Results for "${query}"` : "All Sorters"}
-              {data && ` (${data.totalCount})`}
-            </PanelTitle>
-          </PanelHeader>
-          <PanelContent variant="primary" className="p-2 md:p-6">
+        <SectionHeading>
+          {query ? `Search Results for "${query}"` : "All Sorters"}
+          {data && ` (${data.totalCount})`}
+        </SectionHeading>
+        <div>
             {isLoading ? (
-              <div className="text-center">
+              <div className="py-12 text-center">
                 <div className="mb-4">
                   <Spinner size={32} />
                 </div>
                 <p className="text-lg font-medium">Loading sorters...</p>
               </div>
             ) : error ? (
-              <div className="text-center">
-                <p className="font-medium">
-                  Error loading sorters. Please try again.
-                </p>
-              </div>
+              <EmptyState
+                variant="error"
+                title="Error loading sorters."
+                description="Please try again."
+              />
             ) : !data || data.sorters.length === 0 ? (
-              <div className="text-center">
-                <p className="mb-2 font-medium">No sorters found.</p>
-                <p>Try adjusting your search or filter criteria.</p>
-              </div>
+              <EmptyState
+                title="No sorters found."
+                description="Try adjusting your search or filter criteria."
+              />
             ) : (
               <>
                 {/* Results Grid */}
@@ -341,10 +365,9 @@ function BrowseContent() {
                 )}
               </>
             )}
-          </PanelContent>
-        </Panel>
+        </div>
       </section>
-    </main>
+    </PageContainer>
   );
 }
 
@@ -352,16 +375,14 @@ export default function BrowsePage() {
   return (
     <Suspense
       fallback={
-        <main className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
-          <Box variant="primary" size="md" className="mb-6 block">
-            <PageHeader>Browse Sorters</PageHeader>
-          </Box>
-          <div className="text-center">
-            <Box variant="neutral" size="md">
-              <p className="font-medium">Loading...</p>
-            </Box>
+        <PageContainer>
+          <h1 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl">
+            Browse Sorters
+          </h1>
+          <div className="py-12 text-center">
+            <p className="font-medium text-muted-foreground">Loading...</p>
           </div>
-        </main>
+        </PageContainer>
       }
     >
       <BrowseContent />

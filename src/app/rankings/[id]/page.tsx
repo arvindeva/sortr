@@ -13,17 +13,9 @@ import {
 import { eq, inArray, and } from "drizzle-orm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Box } from "@/components/ui/box";
-import { PageHeader } from "@/components/ui/page-header";
-import {
-  Panel,
-  PanelHeader,
-  PanelTitle,
-  PanelContent,
-} from "@/components/ui/panel";
-import { ArrowLeft, Trophy, RotateCcw, Play } from "lucide-react";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { Trophy, Play } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
 import { RankingImageLayout } from "@/components/ranking-image-layout";
@@ -395,7 +387,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         <section className="mb-3">
           <div className="flex items-center space-x-3 py-4 md:space-x-6">
             {/* Cover Image */}
-            <div className="border-border rounded-base flex h-28 w-28 items-center justify-center overflow-hidden border-2 md:h-48 md:w-48">
+            <div className="border-border rounded-base flex h-28 w-28 items-center justify-center overflow-hidden border shadow-md md:h-48 md:w-48">
               {sorter.coverImageUrl ? (
                 <img
                   src={sorter.coverImageUrl}
@@ -403,8 +395,8 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="bg-secondary-background text-main flex h-full w-full items-center justify-center">
-                  <span className="text-4xl font-bold">
+                <div className="bg-gradient-to-br from-muted to-secondary flex h-full w-full items-center justify-center">
+                  <span className="text-4xl font-semibold text-muted-foreground/40">
                     {sorter.title.charAt(0).toUpperCase()}
                   </span>
                 </div>
@@ -416,19 +408,19 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
               <div className="mb-2 flex items-center gap-2">
                 {!sorter.isDeleted && sorter.slug ? (
                   <Link href={`/sorter/${sorter.slug}`}>
-                    <PageHeader className="cursor-pointer hover:underline">
+                    <h1 className="cursor-pointer text-3xl font-bold tracking-tight hover:underline md:text-4xl">
                       {sorter.title}
-                    </PageHeader>
+                    </h1>
                   </Link>
                 ) : (
-                  <PageHeader>
+                  <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
                     {sorter.title}
                     {sorter.isDeleted && (
-                      <span className="ml-2 text-sm text-red-600 dark:text-red-400">
+                      <span className="ml-2 text-sm text-destructive">
                         (Deleted)
                       </span>
                     )}
-                  </PageHeader>
+                  </h1>
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-medium">
@@ -442,7 +434,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                       {result.username}
                     </Link>
                   ) : (
-                    <span className="text-gray-600 dark:text-gray-400">
+                    <span className="text-muted-foreground">
                       Anonymous
                     </span>
                   )}
@@ -520,47 +512,35 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         <div className="grid gap-8 md:grid-cols-3">
           {/* Left Column - Rankings (spans 2 columns on desktop) */}
           <div className="md:col-span-2">
-            <Panel variant="primary">
-              <PanelHeader variant="primary">
-                <PanelTitle>Rankings</PanelTitle>
-              </PanelHeader>
-              <PanelContent
-                variant="primary"
-                className="overflow-hidden p-2 md:p-6"
-              >
+            <section>
+              <SectionHeading as="h2">Rankings</SectionHeading>
+              <div className="overflow-hidden">
                 <AnimatedRankings rankings={result.rankings} />
-              </PanelContent>
-            </Panel>
+              </div>
+            </section>
           </div>
 
           {/* Right Column (desktop only) */}
           <div className="hidden space-y-8 md:block">
-            {/* Filters Used Panel - Only show if filters were used */}
+            {/* Filters Used - Only show if filters were used */}
             {selectedTagSlugs && (
-              <Panel variant="primary">
-                <PanelHeader variant="primary">
-                  <PanelTitle>Filters Used</PanelTitle>
-                </PanelHeader>
-                <PanelContent variant="primary" className="p-2 md:p-6">
-                  <div className="flex flex-wrap gap-2">
-                    {selectedTagSlugs &&
-                      selectedTagSlugs.map((tagName) => (
-                        <Badge key={tagName} variant="neutral">
-                          {tagName}
-                        </Badge>
-                      ))}
-                  </div>
-                </PanelContent>
-              </Panel>
+              <section>
+                <SectionHeading as="h2">Filters Used</SectionHeading>
+                <div className="flex flex-wrap gap-2">
+                  {selectedTagSlugs &&
+                    selectedTagSlugs.map((tagName) => (
+                      <Badge key={tagName} variant="neutral">
+                        {tagName}
+                      </Badge>
+                    ))}
+                </div>
+              </section>
             )}
 
-            {/* Sorter Info Panel */}
-            <Panel variant="primary">
-              <PanelHeader variant="primary">
-                <PanelTitle>Sorter Info</PanelTitle>
-              </PanelHeader>
-              <PanelContent variant="primary" className="p-2 md:p-6">
-                <div className="space-y-4">
+            {/* Sorter Info */}
+            <section>
+              <SectionHeading as="h2">Sorter Info</SectionHeading>
+              <div className="space-y-4">
                   <div>
                     {!sorter.isDeleted && sorter.slug ? (
                       <Link
@@ -575,7 +555,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                       <h3 className="mb-1 text-lg font-bold">
                         {sorter.title}
                         {sorter.isDeleted && (
-                          <span className="text-sm text-red-600 dark:text-red-400">
+                          <span className="text-sm text-destructive">
                             {" "}
                             (Deleted)
                           </span>
@@ -593,7 +573,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                           {sorter.creatorUsername}
                         </Link>
                       ) : (
-                        <span className="font-medium text-gray-600 dark:text-gray-400">
+                        <span className="font-medium text-muted-foreground">
                           {sorter.creatorUsername}
                         </span>
                       )}
@@ -612,19 +592,15 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                     </div>
                   </div>
                 </div>
-              </PanelContent>
-            </Panel>
+            </section>
           </div>
         </div>
 
-        {/* Mobile: Info Card (shows at bottom on mobile) */}
+        {/* Mobile: Info section (shows at bottom on mobile) */}
         <div className="mt-8 md:hidden">
-          <Panel variant="primary">
-            <PanelHeader variant="primary">
-              <PanelTitle>Sorter Info</PanelTitle>
-            </PanelHeader>
-            <PanelContent variant="primary" className="p-3 md:p-6">
-              <div className="space-y-4">
+          <section>
+            <SectionHeading as="h2">Sorter Info</SectionHeading>
+            <div className="space-y-4">
                 <div>
                   {!sorter.isDeleted && sorter.slug ? (
                     <Link
@@ -637,7 +613,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                     <h3 className="mb-1 text-lg font-bold">
                       {sorter.title}
                       {sorter.isDeleted && (
-                        <span className="text-sm text-red-600 dark:text-red-400">
+                        <span className="text-sm text-destructive">
                           {" "}
                           (Deleted)
                         </span>
@@ -655,7 +631,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                         {sorter.creatorUsername}
                       </Link>
                     ) : (
-                      <span className="font-medium text-gray-600 dark:text-gray-400">
+                      <span className="font-medium text-muted-foreground">
                         {sorter.creatorUsername}
                       </span>
                     )}
@@ -673,9 +649,8 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                     <span>{sorter.completionCount}</span>
                   </div>
                 </div>
-              </div>
-            </PanelContent>
-          </Panel>
+            </div>
+          </section>
         </div>
 
         {/* Actions */}
@@ -701,18 +676,18 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
 
         {/* Development Preview: Image Layout */}
         {process.env.NODE_ENV === "development" && (
-          <div className="mt-12 border-t-2 border-dashed border-gray-300 pt-8">
+          <div className="mt-12 border-t border-dashed border-border pt-8">
             <div className="mb-4">
-              <h2 className="text-lg font-bold text-gray-600">
+              <h2 className="text-lg font-bold text-muted-foreground">
                 Development Preview: Downloadable Image Layout
               </h2>
-              <p className="text-gray-500">
+              <p className="text-muted-foreground">
                 This preview shows what the downloaded image will look like.
                 This section is only visible in development.
               </p>
             </div>
 
-            <div className="overflow-auto bg-gray-100 p-4">
+            <div className="overflow-auto bg-muted p-4">
               <RankingImageLayout
                 sorterTitle={sorter.title}
                 username={result.username}

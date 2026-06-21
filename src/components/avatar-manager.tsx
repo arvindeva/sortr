@@ -140,14 +140,11 @@ export function AvatarManager({ currentImage }: AvatarManagerProps) {
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="bg-secondary-background w-48"
-        >
+        <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem
             onClick={handleUploadClick}
             disabled={isLoading}
-            className="bg-secondary-background text-foreground cursor-pointer"
+            className="cursor-pointer"
           >
             <Upload className="mr-2 h-4 w-4" />
             Upload Avatar
@@ -155,7 +152,7 @@ export function AvatarManager({ currentImage }: AvatarManagerProps) {
           <DropdownMenuItem
             onClick={handleRemoveAvatar}
             disabled={!currentImage || isLoading}
-            className="bg-secondary-background text-foreground cursor-pointer"
+            className="cursor-pointer"
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Remove Avatar

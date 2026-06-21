@@ -1,9 +1,9 @@
 "use client";
 import { useSession, signOut, signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/ui/logo";
 import { LoginButton } from "@/components/login-button";
 import { ModeToggle } from "@/components/mode-toggle";
+import { SortrMark } from "@/components/ui/sortr-mark";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Menu, X, User, Search } from "lucide-react";
@@ -27,7 +27,10 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Solid bg at the very top, frosted-glass once the page scrolls
+  const [scrolled, setScrolled] = useState(false);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+  const desktopSearchInputRef = useRef<HTMLInputElement>(null);
   const mobileMenuFirstButtonRef = useRef<HTMLButtonElement>(null);
   const drawerContentRef = useRef<HTMLDivElement>(null);
 
@@ -43,6 +46,40 @@ export function Navbar() {
     },
     enabled: !!session?.user?.email,
   });
+
+  // Press "/" anywhere to jump to the desktop search box
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "/") return;
+      const target = e.target as HTMLElement | null;
+      // Don't hijack the key while the user is typing in a field
+      const tag = target?.tagName;
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+      const input = desktopSearchInputRef.current;
+      if (input) {
+        e.preventDefault();
+        input.focus();
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  // Toggle the frosted-glass navbar background after a little scroll
+  useEffect(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > 8);
+    }
+    onScroll(); // sync initial state (e.g. on refresh mid-page)
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Focus mobile search input when search opens
   useEffect(() => {
@@ -92,18 +129,23 @@ export function Navbar() {
   };
 
   return (
-    <nav className="border-border bg-secondary-background sticky top-0 z-30 flex w-full items-center justify-between border-b-2 px-4 py-2 md:px-6 md:py-4">
-      <Link href="/" prefetch={false}>
-        <span className="text-2xl font-bold tracking-wide transition-all duration-300 ease-out hover:tracking-widest md:hidden">
+    <nav
+      className={`sticky top-0 z-30 flex w-full items-center justify-between border-b px-4 py-3 transition-colors duration-200 md:px-6 md:py-4 ${
+        scrolled
+          ? "border-border bg-background/70 backdrop-blur-lg"
+          : "border-transparent bg-background"
+      }`}
+    >
+      <Link
+        href="/"
+        prefetch={false}
+        className="group flex items-center gap-2"
+      >
+        {/* Two squares facing off — the duel at the heart of the app */}
+        <SortrMark size={26} animate />
+        <span className="text-2xl font-bold tracking-tight transition-colors group-hover:text-main">
           sortr
         </span>
-        <Logo
-          variant="primary"
-          size="sm"
-          className="hidden text-2xl font-bold tracking-wide transition-all duration-300 ease-out hover:tracking-widest md:block"
-        >
-          sortr
-        </Logo>
       </Link>
 
       {/* Desktop Navigation */}
@@ -112,11 +154,15 @@ export function Navbar() {
         <form onSubmit={handleSearch} className="relative">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
+            ref={desktopSearchInputRef}
             placeholder="Search sorters..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-64 pr-3 pl-9"
+            className="w-64 pr-9 pl-9"
           />
+          <kbd className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 select-none items-center rounded border border-border bg-muted px-1.5 font-mono text-xs text-muted-foreground xl:inline-flex">
+            /
+          </kbd>
         </form>
 
         {/* Create button - always visible */}
@@ -150,9 +196,10 @@ export function Navbar() {
         {/* Browse link */}
         <Link
           href="/browse"
-          className="sorter-title-link font-medium hover:underline"
+          className="group relative font-medium text-foreground transition-colors hover:text-main"
         >
           Browse
+          <span className="absolute -bottom-1 left-0 h-0.5 w-full origin-left scale-x-0 bg-main transition-transform duration-200 ease-out group-hover:scale-x-100" />
         </Link>
 
         {status === "loading" ? (
@@ -164,12 +211,13 @@ export function Navbar() {
             {userData?.username ? (
               <Link
                 href={`/user/${userData.username}`}
-                className="sorter-title-link font-medium hover:underline"
+                className="group relative font-medium text-foreground transition-colors hover:text-main"
               >
                 Profile
+                <span className="absolute -bottom-1 left-0 h-0.5 w-full origin-left scale-x-0 bg-main transition-transform duration-200 ease-out group-hover:scale-x-100" />
               </Link>
             ) : (
-              <span className="text-muted-foreground font-medium">Profile</span>
+              <span className="font-medium text-muted-foreground">Profile</span>
             )}
             <Button variant="neutral" onClick={() => signOut()}>
               Logout
@@ -253,9 +301,14 @@ export function Navbar() {
             </DrawerDescription>
 
             {/* Simplified navbar inside drawer */}
-            <div className="border-border bg-secondary-background flex items-center justify-between border-b-2 px-4 py-2">
-              <Link href="/" prefetch={false}>
-                <span className="text-2xl font-bold tracking-wide">sortr</span>
+            <div className="flex items-center justify-between border-b border-border bg-background px-4 py-3">
+              <Link
+                href="/"
+                prefetch={false}
+                className="flex items-center gap-2"
+              >
+                <SortrMark size={26} />
+                <span className="text-2xl font-bold tracking-tight">sortr</span>
               </Link>
               <DrawerClose asChild>
                 <Button variant="default" size="icon" aria-label="Close menu">
@@ -332,7 +385,7 @@ export function Navbar() {
 
       {/* Mobile Search Input */}
       <div
-        className={`border-border bg-secondary-background absolute top-full right-0 left-0 z-30 border-b-2 transition-all duration-300 ease-out lg:hidden ${mobileSearchOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
+        className={`absolute top-full right-0 left-0 z-30 border-b border-border bg-background/95 backdrop-blur-lg transition-all duration-300 ease-out lg:hidden ${mobileSearchOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
       >
         <div className="p-4">
           <form onSubmit={handleSearch} className="space-y-3">
