@@ -107,7 +107,7 @@ export default function CoverImageUpload({
         <Box
           variant="white"
           size="md"
-          className={`cursor-pointer transition-colors ${isDragging ? "bg-secondary-background" : "bg-background"} ${disabled ? "cursor-not-allowed opacity-50" : "hover:bg-secondary-background"} `}
+          className={`cursor-pointer transition-colors ${isDragging ? "bg-muted" : "bg-background"} ${disabled ? "cursor-not-allowed opacity-50" : "hover:bg-muted"} `}
           onClick={!disabled ? handleSelectClick : undefined}
         >
           <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
@@ -138,7 +138,7 @@ export default function CoverImageUpload({
                 <img
                   src={previewUrl}
                   alt="Cover preview"
-                  className="border-border shadow-shadow h-20 w-20 rounded-lg border-2 object-cover"
+                  className="border-border shadow-sm h-20 w-20 rounded-base border object-cover"
                 />
               </div>
             )}

@@ -64,22 +64,22 @@ export function RankingImageLayout({
         style={{
           width: `${panelWidth}px`,
           backgroundColor: "#ffffff", // Light mode panel background
-          color: "#000000", // Black text
+          color: "#1a1625", // Foreground (new design)
           fontFamily:
-            'var(--font-poppins), "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
-          border: "3px solid #000000",
-          borderRadius: "12px", // Rounded corners to match global border radius
-          boxShadow: "none",
+            'var(--font-geist-sans), "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
+          border: "1px solid #e9e6ee",
+          borderRadius: "10px", // Match global radius (--radius-base)
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
           boxSizing: "border-box",
         }}
       >
         <PanelHeader
           variant="primary"
           style={{
-            backgroundColor: "oklch(67.58% 0.2135 18.63)", // Rosa primary
-            color: "#000000", // Black text
+            backgroundColor: "#da1b61", // Brand magenta (--main)
+            color: "#ffffff", // White text on magenta
             border: "none",
-            borderBottom: "2px solid #000000",
+            borderBottom: "1px solid #e9e6ee",
             borderTopLeftRadius: "9px",
             borderTopRightRadius: "9px",
             padding: "24px", // Match footer padding for same height
@@ -91,9 +91,9 @@ export function RankingImageLayout({
         >
           <PanelTitle
             style={{
-              color: "#000000",
+              color: "#ffffff",
               fontSize: "36px",
-              fontWeight: "800",
+              fontWeight: "700",
               margin: "0",
             }}
           >
@@ -128,9 +128,9 @@ export function RankingImageLayout({
                         // Fallback to CSS var for dev preview
                         backgroundColor:
                           itemBackgroundColor?.trim() || "var(--background)",
-                        border: "2px solid #000000",
-                        borderRadius: "12px",
-                        boxShadow: "none",
+                        border: "1px solid #e9e6ee",
+                        borderRadius: "10px",
+                        boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
                         padding: "0",
                       }}
                     >
@@ -142,7 +142,7 @@ export function RankingImageLayout({
                             gap: "12px", // gap between (rank+thumb) group and title
                             fontSize: "16px",
                             fontWeight: "600",
-                            color: "#000000",
+                            color: "#1a1625",
                           }}
                         >
                           {/* Rank + Thumbnail group with tighter spacing */}
@@ -155,10 +155,10 @@ export function RankingImageLayout({
                           >
                             <span
                               style={{
-                                fontWeight: "800",
+                                fontWeight: "700",
                                 minWidth: "40px",
                                 textAlign: "center",
-                                color: "#555555",
+                                color: "#6f6880",
                               }}
                             >
                               {rankNumber}.
@@ -168,10 +168,10 @@ export function RankingImageLayout({
                                 width: "48px",
                                 height: "48px",
                                 flexShrink: 0,
-                                border: "2px solid #000000",
-                                borderRadius: "12px",
+                                border: "1px solid #e9e6ee",
+                                borderRadius: "10px",
                                 overflow: "hidden",
-                                backgroundColor: "#f2f2f2",
+                                backgroundColor: "#f2f0f5",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
@@ -191,8 +191,8 @@ export function RankingImageLayout({
                                 <span
                                   style={{
                                     fontSize: "18px",
-                                    fontWeight: "800",
-                                    color: "#000000",
+                                    fontWeight: "700",
+                                    color: "#6f6880",
                                   }}
                                 >
                                   {item.title.charAt(0).toUpperCase()}
@@ -226,8 +226,8 @@ export function RankingImageLayout({
           <div
             style={{
               width: "calc(100% + 48px)", // Full content width plus padding
-              backgroundColor: "oklch(67.58% 0.2135 18.63)", // Rosa primary background
-              borderTop: "2px solid #000000", // Black border
+              backgroundColor: "#da1b61", // Brand magenta (--main)
+              borderTop: "1px solid #e9e6ee",
               padding: "12px", // Match header padding for same height
               textAlign: "center",
               marginTop: "32px", // Space above footer
@@ -245,8 +245,8 @@ export function RankingImageLayout({
             <span
               style={{
                 fontSize: "24px",
-                fontWeight: "900",
-              color: "#000000", // Black text on rosa background
+                fontWeight: "800",
+              color: "#ffffff", // White text on magenta
               margin: "0",
             }}
             >

@@ -26,7 +26,7 @@ export function UserProfileHeaderServer({
       <div className="flex items-center space-x-3 py-4 md:space-x-6">
         {/* Avatar */}
         <div className="relative">
-          <div className="border-border rounded-base flex h-28 w-28 items-center justify-center overflow-hidden border-2 md:h-48 md:w-48">
+          <div className="border-border rounded-base flex h-28 w-28 items-center justify-center overflow-hidden border shadow-md md:h-48 md:w-48">
             {currentImage ? (
               <img
                 src={currentImage}
@@ -34,8 +34,8 @@ export function UserProfileHeaderServer({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="bg-secondary-background text-main flex h-full w-full items-center justify-center">
-                <span className="text-4xl font-bold">
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-secondary">
+                <span className="text-muted-foreground/40 text-4xl font-semibold">
                   {displayedUsername?.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -62,7 +62,7 @@ export function UserProfileHeaderServer({
               />
             )}
           </div>
-          <p className="font-medium text-text">
+          <p className="font-medium text-foreground">
             <span className="font-bold">{sorterCount}</span> {sorterCount === 1 ? 'Sorter' : 'Sorters'}
             <span className="mx-3">•</span>
             <span className="font-bold">{rankingCount}</span> {rankingCount === 1 ? 'Ranking' : 'Rankings'}

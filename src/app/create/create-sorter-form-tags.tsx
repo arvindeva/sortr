@@ -6,7 +6,6 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,17 +24,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Box } from "@/components/ui/box";
-import {
-  Panel,
-  PanelHeader,
-  PanelTitle,
-  PanelContent,
-} from "@/components/ui/panel";
+import { SectionHeading } from "@/components/ui/section-heading";
 // Note: Image compression is now handled by the upload hook
 import { Plus, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
-import { generateUniqueId, addSuffixToFileName } from "@/lib/utils";
 import CoverImageUpload from "@/components/cover-image-upload";
 // Direct-to-final upload flow (no temp sessions)
 import { UploadProgressDialog } from "@/components/upload-progress-dialog";
@@ -44,7 +36,6 @@ import {
   compressImage,
   generateSorterItemSizes,
 } from "@/lib/image-compression";
-import TagManagement, { type Tag } from "@/components/tag-management";
 import { toast } from "sonner";
 
 export default function CreateSorterFormTags() {
@@ -91,7 +82,6 @@ export default function CreateSorterFormTags() {
   const [itemImagesData, setItemImagesData] = useState<
     Array<{ file: File; preview: string } | null>
   >([]);
-  const [tags, setTags] = useState<Tag[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Upload progress state
@@ -128,19 +118,6 @@ export default function CreateSorterFormTags() {
       }
       setCoverImagePreview(null);
     }
-  };
-
-  // Handle tag changes and sync with form
-  const handleTagsChange = (newTags: Tag[]) => {
-    setTags(newTags);
-
-    // Convert tags to the format expected by the validation schema
-    const formTags = newTags.map((tag) => ({
-      name: tag.name,
-      sortOrder: tag.sortOrder,
-    }));
-
-    form.setValue("tags", formTags);
   };
 
   // Handle item image selection and auto-populate form fields
@@ -284,40 +261,6 @@ export default function CreateSorterFormTags() {
     control: form.control,
     name: "items",
   });
-
-  // Handle tag selection for an item
-  const handleItemTagToggle = (itemIndex: number, tagId: string) => {
-    const currentItem = form.getValues(`items.${itemIndex}`);
-    const tag = tags.find((t) => t.id === tagId);
-    if (!tag) {
-      return;
-    }
-
-    // Use tag name for now - the backend will convert to slugs
-    const currentTagSlugs = currentItem.tagSlugs || [];
-
-    let newTagSlugs: string[];
-    if (currentTagSlugs.includes(tag.name)) {
-      // Remove tag
-      newTagSlugs = currentTagSlugs.filter((name) => name !== tag.name);
-    } else {
-      // Add tag
-      newTagSlugs = [...currentTagSlugs, tag.name];
-    }
-
-    form.setValue(`items.${itemIndex}.tagSlugs`, newTagSlugs);
-    // Force form to re-render
-    form.trigger(`items.${itemIndex}.tagSlugs`);
-  };
-
-  // Check if item has a specific tag
-  const itemHasTag = (itemIndex: number, tagId: string): boolean => {
-    const tag = tags.find((t) => t.id === tagId);
-    if (!tag) return false;
-
-    const currentItem = form.getValues(`items.${itemIndex}`);
-    return (currentItem.tagSlugs || []).includes(tag.name);
-  };
 
   // Add new item (traditional mode)
   const addItemHandler = () => {
@@ -668,340 +611,300 @@ export default function CreateSorterFormTags() {
         }}
       />
 
-      <Panel variant="primary" className="bg-background">
-        <PanelHeader variant="primary">
-          <PanelTitle>Create New Sorter</PanelTitle>
-        </PanelHeader>
-        <PanelContent variant="primary" className="bg-background p-2 md:p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Sorter Details Section */}
-              <div className="mb-6">
-                <h2 className="mb-4 text-xl font-semibold">Sorter Details</h2>
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Title *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Marvel Movies" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Describe your sorter (optional)"
-                            rows={3}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <FormControl>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Movies & TV">
-                                Movies & TV
-                              </SelectItem>
-                              <SelectItem value="Music">Music</SelectItem>
-                              <SelectItem value="Video Games">
-                                Video Games
-                              </SelectItem>
-                              <SelectItem value="Books">Books</SelectItem>
-                              <SelectItem value="Food">Food</SelectItem>
-                              <SelectItem value="Sports">Sports</SelectItem>
-                              <SelectItem value="Fashion">Fashion</SelectItem>
-                              <SelectItem value="Academics">
-                                Academics
-                              </SelectItem>
-                              <SelectItem value="Anime & Manga">
-                                Anime & Manga
-                              </SelectItem>
-                              <SelectItem value="Tech">Tech</SelectItem>
-                              <SelectItem value="Internet">Internet</SelectItem>
-                              <SelectItem value="Travel">Travel</SelectItem>
-                              <SelectItem value="Nature">Nature</SelectItem>
-                              <SelectItem value="Hobbies">Hobbies</SelectItem>
-                              <SelectItem value="Vehicles">Vehicles</SelectItem>
-                              <SelectItem value="Other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Cover Image Section */}
-              <div className="mb-6">
-                <CoverImageUpload
-                  selectedFile={coverImageFile}
-                  previewUrl={coverImagePreview}
-                  onImageSelect={handleCoverImageSelect}
-                />
-              </div>
-
-              {/* Tags Section */}
-              <div className="mb-6">
-                <h2 className="mb-4 text-xl font-semibold">
-                  Filter Tags (Optional)
-                </h2>
-                <TagManagement tags={tags} onTagsChange={handleTagsChange} />
-              </div>
-
-              {/* Items Section */}
-              <div className="mb-6">
-                <h2 className="mb-4 text-xl font-semibold">Items to Rank *</h2>
-                <div className="mb-4">
-                  {/* Buttons */}
-                  <div className="mt-2 flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="neutral"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1"
-                    >
-                      <ImageIcon size={16} />
-                      Upload Images
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="neutral"
-                      size="sm"
-                      onClick={addItemHandler}
-                      className="flex items-center gap-1"
-                    >
-                      <Plus size={16} />
-                      Add Item
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Hidden file input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleFileInputChange}
-                  className="hidden"
-                />
-
-                {/* Items List */}
-                <div className="space-y-4">
-                  {itemFields.length === 0 ? (
-                    <div className="py-8">
-                      <p className="text-muted-foreground">
-                        No items added yet
-                      </p>
-                      <p className="text-muted-foreground mt-1 text-sm">
-                        Click "Upload Images" or "Add Item" to get started
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      {itemFields.map((field, index) => (
-                        <div key={field.id} className="space-y-0">
-                          <FormField
-                            control={form.control}
-                            name={`items.${index}.title`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <div className="flex items-center gap-2">
-                                  {/* Image preview if available */}
-                                  {itemImagesData[index] && (
-                                    <div className="flex-shrink-0">
-                                      <img
-                                        src={itemImagesData[index]!.preview}
-                                        alt={`Preview ${index + 1}`}
-                                        className="border-border h-10 w-10 rounded border-2 object-contain"
-                                      />
-                                    </div>
-                                  )}
-                                  <FormControl>
-                                    <Input
-                                      placeholder={`Item ${index + 1}`}
-                                      {...field}
-                                      onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                          e.preventDefault();
-                                          // Add new item and focus on it
-                                          addItemHandler();
-                                          // Focus will be set after the new item is rendered
-                                          setTimeout(() => {
-                                            const nextInput =
-                                              document.querySelector(
-                                                `input[name="items.${itemFields.length}.title"]`,
-                                              ) as HTMLInputElement;
-                                            nextInput?.focus();
-                                          }, 0);
-                                        }
-                                      }}
-                                    />
-                                  </FormControl>
-                                  {itemFields.length > 0 && (
-                                    <Button
-                                      type="button"
-                                      variant="neutralNoShadow"
-                                      size="sm"
-                                      onClick={() => removeItemHandler(index)}
-                                      title="Remove item"
-                                      className="h-6 w-6 p-0"
-                                    >
-                                      <X size={14} />
-                                    </Button>
-                                  )}
-                                </div>
-                                <FormMessage />
-
-                                {/* Tag selection for this item */}
-                                {tags.length > 0 && (
-                                  <div className="mb-2 flex flex-wrap gap-2">
-                                    {tags.map((tag) => (
-                                      <Button
-                                        key={tag.id}
-                                        type="button"
-                                        variant={
-                                          itemHasTag(index, tag.id)
-                                            ? "default"
-                                            : "neutral"
-                                        }
-                                        size="sm"
-                                        onClick={() =>
-                                          handleItemTagToggle(index, tag.id)
-                                        }
-                                        className="h-8 text-xs"
-                                      >
-                                        {tag.name}
-                                      </Button>
-                                    ))}
-                                  </div>
-                                )}
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      ))}
-                    </>
-                  )}
-
-                  {/* Add buttons below all items - only show when there's at least one item */}
-                  {itemFields.length > 0 && (
-                    <div className="flex items-center gap-2 pt-2">
-                      <Button
-                        type="button"
-                        variant="neutral"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-1"
-                      >
-                        <ImageIcon size={16} />
-                        Upload Images
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="neutral"
-                        size="sm"
-                        onClick={addItemHandler}
-                        className="flex items-center gap-1"
-                      >
-                        <Plus size={16} />
-                        Add Item
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Items validation error */}
-                {(form.formState.errors.items?.root ||
-                  form.formState.errors.items?.message) && (
-                  <div className="mt-4 text-red-600 dark:text-red-400">
-                    {form.formState.errors.items?.root?.message ||
-                      form.formState.errors.items?.message}
-                  </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+          Create New Sorter
+        </h1>
+        <p className="mt-2 text-muted-foreground">
+          Add a title, an optional cover, and the items you want to rank.
+        </p>
+      </div>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="divide-y divide-border [&>section]:py-8 [&>section:first-of-type]:pt-0"
+        >
+          {/* Sorter Details Section */}
+          <section>
+            <SectionHeading as="h2">Sorter Details</SectionHeading>
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Marvel Movies" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
+              />
 
-                {/* Instructions */}
-                <div className="mt-4 space-y-1 text-sm">
-                  <p>
-                    <strong>Upload Images:</strong> Select multiple images to
-                    automatically create items. Filename (without extension)
-                    will be used as the item name. You can still change the name
-                    after selecting images.
-                  </p>
-                  <p>
-                    <strong>Add Item:</strong> Manually add text-only items.
-                  </p>
-                  {tags.length > 0 && (
-                    <p>
-                      <strong>Tags:</strong> Click tag buttons below each item
-                      to assign tags. Items without tags will always appear in
-                      sorting.
-                    </p>
-                  )}
-                  <p className="text-xs">
-                    Supported formats: JPG, PNG, WebP • Max 5MB each • Empty
-                    fields will be replaced first when uploading images
-                  </p>
-                </div>
-              </div>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe your sorter (optional)"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              {/* Form-level validation errors */}
-              {form.formState.errors.root && (
-                <div className="rounded border-2 border-red-500 bg-red-50 p-3 text-red-700 dark:bg-red-950 dark:text-red-300">
-                  <p className="font-medium">Please fix the following:</p>
-                  <p className="text-sm">
-                    {form.formState.errors.root.message}
-                  </p>
-                </div>
-              )}
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Movies & TV">
+                            Movies & TV
+                          </SelectItem>
+                          <SelectItem value="Music">Music</SelectItem>
+                          <SelectItem value="Video Games">
+                            Video Games
+                          </SelectItem>
+                          <SelectItem value="Books">Books</SelectItem>
+                          <SelectItem value="Food">Food</SelectItem>
+                          <SelectItem value="Sports">Sports</SelectItem>
+                          <SelectItem value="Fashion">Fashion</SelectItem>
+                          <SelectItem value="Academics">Academics</SelectItem>
+                          <SelectItem value="Anime & Manga">
+                            Anime & Manga
+                          </SelectItem>
+                          <SelectItem value="Tech">Tech</SelectItem>
+                          <SelectItem value="Internet">Internet</SelectItem>
+                          <SelectItem value="Travel">Travel</SelectItem>
+                          <SelectItem value="Nature">Nature</SelectItem>
+                          <SelectItem value="Hobbies">Hobbies</SelectItem>
+                          <SelectItem value="Vehicles">Vehicles</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </section>
 
-              {/* Submit */}
-              <div>
+          {/* Cover Image Section */}
+          <section>
+            <CoverImageUpload
+              selectedFile={coverImageFile}
+              previewUrl={coverImagePreview}
+              onImageSelect={handleCoverImageSelect}
+            />
+          </section>
+
+          {/* Items Section */}
+          <section>
+            <SectionHeading as="h2">Items to Rank *</SectionHeading>
+            <div className="mb-4">
+              {/* Buttons */}
+              <div className="mt-2 flex items-center gap-2">
                 <Button
-                  type="submit"
-                  disabled={isLoading || isUploading}
-                  className="w-full md:mt-4"
+                  type="button"
+                  variant="neutral"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-1"
                 >
-                  {(isLoading || isUploading) && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  {isLoading || isUploading ? "Creating..." : "Create Sorter"}
+                  <ImageIcon size={16} />
+                  Upload Images
+                </Button>
+                <Button
+                  type="button"
+                  variant="neutral"
+                  size="sm"
+                  onClick={addItemHandler}
+                  className="flex items-center gap-1"
+                >
+                  <Plus size={16} />
+                  Add Item
                 </Button>
               </div>
-            </form>
-          </Form>
-        </PanelContent>
-      </Panel>
+            </div>
+
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileInputChange}
+              className="hidden"
+            />
+
+            {/* Items List */}
+            <div className="space-y-4">
+              {itemFields.length === 0 ? (
+                <div className="py-8">
+                  <p className="text-muted-foreground">No items added yet</p>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    Click "Upload Images" or "Add Item" to get started
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {itemFields.map((field, index) => (
+                    <div key={field.id} className="space-y-0">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.title`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex items-center gap-2">
+                              {/* Image preview if available */}
+                              {itemImagesData[index] && (
+                                <div className="flex-shrink-0">
+                                  <img
+                                    src={itemImagesData[index]!.preview}
+                                    alt={`Preview ${index + 1}`}
+                                    className="border-border h-10 w-10 rounded border object-contain"
+                                  />
+                                </div>
+                              )}
+                              <FormControl>
+                                <Input
+                                  placeholder={`Item ${index + 1}`}
+                                  {...field}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      // Add new item and focus on it
+                                      addItemHandler();
+                                      // Focus will be set after the new item is rendered
+                                      setTimeout(() => {
+                                        const nextInput =
+                                          document.querySelector(
+                                            `input[name="items.${itemFields.length}.title"]`,
+                                          ) as HTMLInputElement;
+                                        nextInput?.focus();
+                                      }, 0);
+                                    }
+                                  }}
+                                />
+                              </FormControl>
+                              {itemFields.length > 0 && (
+                                <Button
+                                  type="button"
+                                  variant="neutralNoShadow"
+                                  size="sm"
+                                  onClick={() => removeItemHandler(index)}
+                                  title="Remove item"
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <X size={14} />
+                                </Button>
+                              )}
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {/* Add buttons below all items - only show when there's at least one item */}
+              {itemFields.length > 0 && (
+                <div className="flex items-center gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="neutral"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1"
+                  >
+                    <ImageIcon size={16} />
+                    Upload Images
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="neutral"
+                    size="sm"
+                    onClick={addItemHandler}
+                    className="flex items-center gap-1"
+                  >
+                    <Plus size={16} />
+                    Add Item
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Items validation error */}
+            {(form.formState.errors.items?.root ||
+              form.formState.errors.items?.message) && (
+              <div className="text-destructive mt-4">
+                {form.formState.errors.items?.root?.message ||
+                  form.formState.errors.items?.message}
+              </div>
+            )}
+
+            {/* Instructions */}
+            <div className="text-muted-foreground mt-4 space-y-1 text-sm">
+              <p>
+                <strong>Upload Images:</strong> Select multiple images to
+                automatically create items. Filename (without extension) will be
+                used as the item name. You can still change the name after
+                selecting images.
+              </p>
+              <p>
+                <strong>Add Item:</strong> Manually add text-only items.
+              </p>
+              <p className="text-xs">
+                Supported formats: JPG, PNG, WebP • Max 5MB each • Empty fields
+                will be replaced first when uploading images
+              </p>
+            </div>
+          </section>
+
+          {/* Footer: errors + submit */}
+          <div className="space-y-4 pt-8">
+            {/* Form-level validation errors */}
+            {form.formState.errors.root && (
+              <div className="border-destructive/50 bg-destructive/10 text-destructive rounded-lg border p-3">
+                <p className="font-medium">Please fix the following:</p>
+                <p className="text-sm">{form.formState.errors.root.message}</p>
+              </div>
+            )}
+
+            {/* Submit */}
+            <Button
+              type="submit"
+              disabled={isLoading || isUploading}
+              className="w-full"
+            >
+              {(isLoading || isUploading) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {isLoading || isUploading ? "Creating..." : "Create Sorter"}
+            </Button>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }

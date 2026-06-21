@@ -23,7 +23,6 @@ import { InteractiveMergeSort, SortState } from "@/lib/interactive-merge-sort";
 import { generateProgressKey, serializeChoices, deserializeChoices } from "@/lib/sort-persistence";
 import LZString from "lz-string";
 import { Box } from "@/components/ui/box";
-import { PageHeader } from "@/components/ui/page-header";
 import { SortPageSkeleton } from "@/components/sort-page-skeleton";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -554,8 +553,8 @@ export default function SortPage() {
   if (error || !sorterData) {
     return (
       <div className="container mx-auto max-w-6xl px-4 py-8">
-        <div className="text-center">
-          <p className="text-black dark:text-white">Failed to load sorter</p>
+        <div className="space-y-4 text-center">
+          <p className="text-foreground">Failed to load sorter</p>
           <Button onClick={() => router.push(`/sorter/${sorterSlug}`)}>
             Go Back
           </Button>
@@ -618,7 +617,7 @@ export default function SortPage() {
           <div>
             {showPreloadProgress ? (
               <>
-                <p className="mb-2 text-lg text-black dark:text-white">
+                <p className="mb-2 text-lg text-foreground">
                   Loading images... {preloadProgress.loaded}/
                   {preloadProgress.total} ({preloadPercentage}%)
                 </p>
@@ -627,7 +626,7 @@ export default function SortPage() {
                   className="mx-auto mb-4 max-w-md"
                 />
                 {preloadProgress.failed > 0 && (
-                  <p className="text-sm text-red-600 dark:text-red-400">
+                  <p className="text-sm text-destructive">
                     {preloadProgress.failed} image
                     {preloadProgress.failed !== 1 ? "s" : ""} failed to load
                   </p>
@@ -635,10 +634,12 @@ export default function SortPage() {
               </>
             ) : (
               <>
-                <p className="mb-2 text-lg text-black dark:text-white">
+                <p className="mb-2 text-lg text-foreground">
                   Preparing comparison...
                 </p>
-                <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2"></div>
+                <div className="mb-4">
+                  <Spinner size={32} />
+                </div>
               </>
             )}
           </div>
@@ -671,17 +672,15 @@ export default function SortPage() {
   const progress = Math.floor(totalComparisons);
 
   return (
-    <div className="container mx-auto max-w-6xl px-0 py-8 text-black md:px-4 dark:text-white">
+    <div className="container mx-auto max-w-6xl px-0 py-8 text-foreground md:px-4">
       {/* Header */}
       <div className="mb-6 px-2 md:px-0">
-        <Box variant="primary" size="md" className="mb-6 block">
-          <div>
-            <PageHeader>{sorterData.sorter.title}</PageHeader>
-          </div>
-        </Box>
+        <h1 className="mb-6 text-2xl font-bold tracking-tight md:text-3xl">
+          {sorterData.sorter.title}
+        </h1>
         {/* Progress and Actions - Compact */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-black dark:text-white">
+          <div className="flex items-center justify-between text-foreground">
             <span>
               {completedComparisons} comparisons • {progress}% complete
             </span>
@@ -764,11 +763,11 @@ export default function SortPage() {
           onRemove={() => handleRemoveItem(currentComparison.itemB.id, currentComparison.itemB.title)}
         />
 
-        {/* VS Divider - neobrutalist styling, visible on all devices */}
+        {/* VS Divider - matches the homepage duel badge */}
         <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 transform">
-          <div className="bg-main border-border shadow-shadow rounded-base border-2 px-3 py-2">
-            <span className="font-bold text-black">VS</span>
-          </div>
+          <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-sm font-bold tracking-tight text-foreground shadow-md">
+            VS
+          </span>
         </div>
       </div>
 

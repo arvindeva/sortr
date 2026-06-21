@@ -6,7 +6,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,13 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Box } from "@/components/ui/box";
-import {
-  Panel,
-  PanelHeader,
-  PanelTitle,
-  PanelContent,
-} from "@/components/ui/panel";
+import { SectionHeading } from "@/components/ui/section-heading";
 import {
   Plus,
   X,
@@ -41,7 +34,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
-import { generateUniqueId, addSuffixToFileName } from "@/lib/utils";
 import CoverImageUpload from "@/components/cover-image-upload";
 import { UploadProgressDialog } from "@/components/upload-progress-dialog";
 import type { UploadProgress } from "@/types/upload";
@@ -116,7 +108,7 @@ export default function EditSorterForm({
     // This ensures fresh data is loaded when we redirect to the sorter page
     await queryClient.refetchQueries({
       queryKey: ["sorter", sorter.slug],
-      type: 'active', // Only refetch if query is currently mounted
+      type: "active", // Only refetch if query is currently mounted
     });
 
     // Invalidate user profile and user data queries
@@ -151,7 +143,7 @@ export default function EditSorterForm({
   >([]);
   // Track original item IDs to preserve image mappings when editing
   const [itemIds, setItemIds] = useState<Array<string>>(
-    items.map((item) => item.id)
+    items.map((item) => item.id),
   );
   const [managedTags, setManagedTags] = useState<Tag[]>(
     tags.map((tag) => ({
@@ -609,421 +601,410 @@ export default function EditSorterForm({
         onCancel={handleCancelUpload}
         isEditMode
       />
-      <Panel className="mx-auto w-full">
-        <PanelHeader variant="primary">
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/sorter/${sorter.slug}`}
-              className="flex items-center justify-center transition-opacity hover:opacity-70"
-              title="Back to sorter"
-            >
-              <ArrowLeft size={20} />
-            </Link>
-            <PanelTitle>Edit Sorter</PanelTitle>
-          </div>
-        </PanelHeader>
-        <PanelContent variant="primary" className="bg-background p-2 md:p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Sorter Details Section */}
-              <div className="mb-6">
-                <h2 className="mb-4 text-xl font-semibold">Sorter Details</h2>
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Title *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Marvel Movies" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Describe your sorter (optional)"
-                            className="resize-none"
-                            rows={3}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value || ""}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a category (optional)" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Movies & TV">
-                              Movies & TV
-                            </SelectItem>
-                            <SelectItem value="Music">Music</SelectItem>
-                            <SelectItem value="Video Games">
-                              Video Games
-                            </SelectItem>
-                            <SelectItem value="Books">Books</SelectItem>
-                            <SelectItem value="Food">Food</SelectItem>
-                            <SelectItem value="Sports">Sports</SelectItem>
-                            <SelectItem value="Fashion">Fashion</SelectItem>
-                            <SelectItem value="Academics">Academics</SelectItem>
-                            <SelectItem value="Anime & Manga">
-                              Anime & Manga
-                            </SelectItem>
-                            <SelectItem value="Tech">Tech</SelectItem>
-                            <SelectItem value="Internet">Internet</SelectItem>
-                            <SelectItem value="Travel">Travel</SelectItem>
-                            <SelectItem value="Nature">Nature</SelectItem>
-                            <SelectItem value="Hobbies">Hobbies</SelectItem>
-                            <SelectItem value="Vehicles">Vehicles</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Cover Image Upload */}
-                  <div>
-                    <CoverImageUpload
-                      onImageSelect={handleCoverImageSelect}
-                      selectedFile={coverImageFile}
-                      previewUrl={coverImagePreview}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Tags Section */}
-              <div className="mb-6">
-                <h2 className="mb-4 text-xl font-semibold">Tags</h2>
-                <p className="text-muted-foreground mb-4 text-sm">
-                  Create tags to organize your items. Users can filter by tags
-                  before sorting.
-                </p>
-                <TagManagement
-                  tags={managedTags}
-                  onTagsChange={setManagedTags}
-                />
-              </div>
-
-              {/* Items Section */}
-              <div className="mb-6">
-                <h2 className="mb-4 text-xl font-semibold">Items to Rank *</h2>
-                <div className="mb-4">
-                  {/* Buttons */}
-                  <div className="mt-2 flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="neutral"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1"
-                    >
-                      <ImageIcon size={16} />
-                      Upload Images
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="neutral"
-                      size="sm"
-                      onClick={addItem}
-                      className="flex items-center gap-1"
-                    >
-                      <Plus size={16} />
-                      Add Item
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Hidden file input for multiple uploads */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleMultipleImageSelect}
-                  className="hidden"
-                />
-
-                {/* Items List */}
-                <div className="space-y-4">
-                  {fields.length === 0 ? (
-                    <div className="py-8">
-                      <p className="text-muted-foreground">
-                        No items added yet
-                      </p>
-                      <p className="text-muted-foreground mt-1 text-sm">
-                        Click "Upload Images" or "Add Item" to get started
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      {fields.map((field, index) => (
-                        <div key={field.id} className="space-y-0">
-                          <FormField
-                            control={form.control}
-                            name={`items.${index}.title`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <div className="flex items-center gap-2">
-                                  {/* Image preview if available */}
-                                  {(() => {
-                                    const currentItem = form.watch(
-                                      `items.${index}`,
-                                    );
-                                    const hasNewImage =
-                                      itemImagesData[index]?.preview;
-                                    const hasExistingImage =
-                                      currentItem?.imageUrl;
-                                    return hasNewImage || hasExistingImage;
-                                  })() && (
-                                    <div className="relative flex-shrink-0">
-                                      <img
-                                        src={(() => {
-                                          const currentItem = form.watch(
-                                            `items.${index}`,
-                                          );
-                                          return (
-                                            itemImagesData[index]?.preview ||
-                                            currentItem?.imageUrl ||
-                                            ""
-                                          );
-                                        })()}
-                                        alt={`Preview ${index + 1}`}
-                                        className="border-border h-10 w-10 rounded border-2 object-contain"
-                                      />
-                                      {/* Pencil icon for replacing image */}
-                                      <Button
-                                        type="button"
-                                        variant="neutralNoShadow"
-                                        size="icon"
-                                        className="absolute -right-1 -bottom-1 h-6 w-6 p-0"
-                                        onClick={() => {
-                                          const input = document.getElementById(
-                                            `item-image-replace-${index}`,
-                                          ) as HTMLInputElement;
-                                          input?.click();
-                                        }}
-                                        title="Replace image"
-                                      >
-                                        <Pencil size={8} />
-                                      </Button>
-                                      {/* Hidden file input for replacing individual images */}
-                                      <input
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        id={`item-image-replace-${index}`}
-                                        onChange={(e) => {
-                                          const file = e.target.files?.[0];
-                                          if (file) {
-                                            handleItemImageSelect(index, file);
-                                          }
-                                        }}
-                                      />
-                                    </div>
-                                  )}
-                                  <FormControl>
-                                    <Input
-                                      placeholder={`Item ${index + 1}`}
-                                      {...field}
-                                      onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                          e.preventDefault();
-                                          // Add new item and focus on it
-                                          addItem();
-                                          // Focus will be set after the new item is rendered
-                                          setTimeout(() => {
-                                            const nextInput =
-                                              document.querySelector(
-                                                `input[name="items.${fields.length}.title"]`,
-                                              ) as HTMLInputElement;
-                                            nextInput?.focus();
-                                          }, 0);
-                                        }
-                                      }}
-                                    />
-                                  </FormControl>
-                                  {fields.length > 0 && (
-                                    <Button
-                                      type="button"
-                                      variant="neutralNoShadow"
-                                      size="sm"
-                                      onClick={() => removeItem(index)}
-                                      title="Remove item"
-                                      className="h-6 w-6 p-0"
-                                    >
-                                      <X size={14} />
-                                    </Button>
-                                  )}
-                                </div>
-                                <FormMessage />
-
-                                {/* Tag selection for this item */}
-                                {managedTags.length > 0 && (
-                                  <div className="mb-2 flex flex-wrap gap-2">
-                                    {managedTags.map((tag) => {
-                                      const tagSlug = tag.name
-                                        .toLowerCase()
-                                        .replace(/\s+/g, "-");
-                                      const currentTags =
-                                        form.watch(`items.${index}.tagSlugs`) ||
-                                        [];
-                                      const isSelected =
-                                        currentTags.includes(tagSlug);
-                                      return (
-                                        <Button
-                                          key={tag.id}
-                                          type="button"
-                                          variant={
-                                            isSelected ? "default" : "neutral"
-                                          }
-                                          size="sm"
-                                          onClick={() => {
-                                            const currentTagSlugs =
-                                              form.getValues(
-                                                `items.${index}.tagSlugs`,
-                                              ) || [];
-                                            if (isSelected) {
-                                              form.setValue(
-                                                `items.${index}.tagSlugs`,
-                                                currentTagSlugs.filter(
-                                                  (t) => t !== tagSlug,
-                                                ),
-                                              );
-                                            } else {
-                                              form.setValue(
-                                                `items.${index}.tagSlugs`,
-                                                [...currentTagSlugs, tagSlug],
-                                              );
-                                            }
-                                          }}
-                                          className="h-8 text-xs"
-                                        >
-                                          {tag.name}
-                                        </Button>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      ))}
-                    </>
-                  )}
-
-                  {/* Add buttons below all items - only show when there's at least one item */}
-                  {fields.length > 0 && (
-                    <div className="flex items-center gap-2 pt-2">
-                      <Button
-                        type="button"
-                        variant="neutral"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-1"
-                      >
-                        <ImageIcon size={16} />
-                        Upload Images
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="neutral"
-                        size="sm"
-                        onClick={addItem}
-                        className="flex items-center gap-1"
-                      >
-                        <Plus size={16} />
-                        Add Item
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Items validation error */}
-                {fields.length < 2 && (
-                  <p className="mt-4 text-sm text-red-500">
-                    You need at least 2 items to create a sorter.
-                  </p>
+      <div className="mb-6 flex items-center gap-4">
+        <Link
+          href={`/sorter/${sorter.slug}`}
+          className="text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+          title="Back to sorter"
+        >
+          <ArrowLeft size={24} />
+        </Link>
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+          Edit Sorter
+        </h1>
+      </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          {/* Sorter Details Section */}
+          <section>
+            <SectionHeading as="h2">Sorter Details</SectionHeading>
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Marvel Movies" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
+              />
 
-                {/* Instructions */}
-                <div className="mt-4 space-y-1 text-sm">
-                  <p>
-                    <strong>Upload Images:</strong> Select multiple images to
-                    automatically create items. Filename (without extension)
-                    will be used as the item name. You can still change the name
-                    after selecting images.
-                  </p>
-                  <p>
-                    <strong>Add Item:</strong> Manually add text-only items.
-                  </p>
-                  {managedTags.length > 0 && (
-                    <p>
-                      <strong>Tags:</strong> Click tag buttons below each item
-                      to assign tags. Items without tags will always appear in
-                      sorting.
-                    </p>
-                  )}
-                  <p className="text-xs">
-                    Supported formats: JPG, PNG, WebP • Max 5MB each • Empty
-                    fields will be replaced first when uploading images
-                  </p>
-                </div>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe your sorter (optional)"
+                        className="resize-none"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category (optional)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Movies & TV">Movies & TV</SelectItem>
+                        <SelectItem value="Music">Music</SelectItem>
+                        <SelectItem value="Video Games">Video Games</SelectItem>
+                        <SelectItem value="Books">Books</SelectItem>
+                        <SelectItem value="Food">Food</SelectItem>
+                        <SelectItem value="Sports">Sports</SelectItem>
+                        <SelectItem value="Fashion">Fashion</SelectItem>
+                        <SelectItem value="Academics">Academics</SelectItem>
+                        <SelectItem value="Anime & Manga">
+                          Anime & Manga
+                        </SelectItem>
+                        <SelectItem value="Tech">Tech</SelectItem>
+                        <SelectItem value="Internet">Internet</SelectItem>
+                        <SelectItem value="Travel">Travel</SelectItem>
+                        <SelectItem value="Nature">Nature</SelectItem>
+                        <SelectItem value="Hobbies">Hobbies</SelectItem>
+                        <SelectItem value="Vehicles">Vehicles</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Cover Image Upload */}
+              <div>
+                <CoverImageUpload
+                  onImageSelect={handleCoverImageSelect}
+                  selectedFile={coverImageFile}
+                  previewUrl={coverImagePreview}
+                />
               </div>
+            </div>
+          </section>
 
-              {/* Submit Button */}
-              <div className="flex justify-end gap-2">
-                <Link href={`/sorter/${sorter.slug}`}>
-                  <Button type="button" variant="neutralNoShadow">
-                    Cancel
-                  </Button>
-                </Link>
+          {/* Tags Section — only shown for sorters that already have tags.
+              The filter-tags feature is deactivated for new sorters, but
+              existing ones keep manageable tags so owners aren't locked out. */}
+          {tags.length > 0 && (
+            <section>
+              <SectionHeading
+                as="h2"
+                description="Manage the filter tags on this sorter. New sorters no longer use tags."
+              >
+                Tags
+              </SectionHeading>
+              <TagManagement tags={managedTags} onTagsChange={setManagedTags} />
+            </section>
+          )}
+
+          {/* Items Section */}
+          <section>
+            <SectionHeading as="h2">Items to Rank *</SectionHeading>
+            <div className="mb-4">
+              {/* Buttons */}
+              <div className="mt-2 flex items-center gap-2">
                 <Button
-                  type="submit"
-                  disabled={isLoading || isUploading || !hasChanged}
-                  className="min-w-[120px]"
+                  type="button"
+                  variant="neutral"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-1"
                 >
-                  {(isLoading || isUploading) && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  {isLoading || isUploading
-                    ? "Updating..."
-                    : hasChanged
-                      ? "Update Sorter"
-                      : "No Changes"}
+                  <ImageIcon size={16} />
+                  Upload Images
+                </Button>
+                <Button
+                  type="button"
+                  variant="neutral"
+                  size="sm"
+                  onClick={addItem}
+                  className="flex items-center gap-1"
+                >
+                  <Plus size={16} />
+                  Add Item
                 </Button>
               </div>
-            </form>
-          </Form>
-        </PanelContent>
-      </Panel>
+            </div>
+
+            {/* Hidden file input for multiple uploads */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleMultipleImageSelect}
+              className="hidden"
+            />
+
+            {/* Items List */}
+            <div className="space-y-4">
+              {fields.length === 0 ? (
+                <div className="py-8">
+                  <p className="text-muted-foreground">No items added yet</p>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    Click "Upload Images" or "Add Item" to get started
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="space-y-0">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.title`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex items-center gap-2">
+                              {/* Image preview if available */}
+                              {(() => {
+                                const currentItem = form.watch(
+                                  `items.${index}`,
+                                );
+                                const hasNewImage =
+                                  itemImagesData[index]?.preview;
+                                const hasExistingImage = currentItem?.imageUrl;
+                                return hasNewImage || hasExistingImage;
+                              })() && (
+                                <div className="relative flex-shrink-0">
+                                  <img
+                                    src={(() => {
+                                      const currentItem = form.watch(
+                                        `items.${index}`,
+                                      );
+                                      return (
+                                        itemImagesData[index]?.preview ||
+                                        currentItem?.imageUrl ||
+                                        ""
+                                      );
+                                    })()}
+                                    alt={`Preview ${index + 1}`}
+                                    className="border-border h-10 w-10 rounded border object-contain"
+                                  />
+                                  {/* Pencil icon for replacing image */}
+                                  <Button
+                                    type="button"
+                                    variant="neutralNoShadow"
+                                    size="icon"
+                                    className="absolute -right-1 -bottom-1 h-6 w-6 p-0"
+                                    onClick={() => {
+                                      const input = document.getElementById(
+                                        `item-image-replace-${index}`,
+                                      ) as HTMLInputElement;
+                                      input?.click();
+                                    }}
+                                    title="Replace image"
+                                  >
+                                    <Pencil size={8} />
+                                  </Button>
+                                  {/* Hidden file input for replacing individual images */}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    id={`item-image-replace-${index}`}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        handleItemImageSelect(index, file);
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              <FormControl>
+                                <Input
+                                  placeholder={`Item ${index + 1}`}
+                                  {...field}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      // Add new item and focus on it
+                                      addItem();
+                                      // Focus will be set after the new item is rendered
+                                      setTimeout(() => {
+                                        const nextInput =
+                                          document.querySelector(
+                                            `input[name="items.${fields.length}.title"]`,
+                                          ) as HTMLInputElement;
+                                        nextInput?.focus();
+                                      }, 0);
+                                    }
+                                  }}
+                                />
+                              </FormControl>
+                              {fields.length > 0 && (
+                                <Button
+                                  type="button"
+                                  variant="neutralNoShadow"
+                                  size="sm"
+                                  onClick={() => removeItem(index)}
+                                  title="Remove item"
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <X size={14} />
+                                </Button>
+                              )}
+                            </div>
+                            <FormMessage />
+
+                            {/* Tag selection for this item */}
+                            {managedTags.length > 0 && (
+                              <div className="mb-2 flex flex-wrap gap-2">
+                                {managedTags.map((tag) => {
+                                  const tagSlug = tag.name
+                                    .toLowerCase()
+                                    .replace(/\s+/g, "-");
+                                  const currentTags =
+                                    form.watch(`items.${index}.tagSlugs`) || [];
+                                  const isSelected =
+                                    currentTags.includes(tagSlug);
+                                  return (
+                                    <Button
+                                      key={tag.id}
+                                      type="button"
+                                      variant={
+                                        isSelected ? "default" : "neutral"
+                                      }
+                                      size="sm"
+                                      onClick={() => {
+                                        const currentTagSlugs =
+                                          form.getValues(
+                                            `items.${index}.tagSlugs`,
+                                          ) || [];
+                                        if (isSelected) {
+                                          form.setValue(
+                                            `items.${index}.tagSlugs`,
+                                            currentTagSlugs.filter(
+                                              (t) => t !== tagSlug,
+                                            ),
+                                          );
+                                        } else {
+                                          form.setValue(
+                                            `items.${index}.tagSlugs`,
+                                            [...currentTagSlugs, tagSlug],
+                                          );
+                                        }
+                                      }}
+                                      className="h-8 text-xs"
+                                    >
+                                      {tag.name}
+                                    </Button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {/* Add buttons below all items - only show when there's at least one item */}
+              {fields.length > 0 && (
+                <div className="flex items-center gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="neutral"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1"
+                  >
+                    <ImageIcon size={16} />
+                    Upload Images
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="neutral"
+                    size="sm"
+                    onClick={addItem}
+                    className="flex items-center gap-1"
+                  >
+                    <Plus size={16} />
+                    Add Item
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Items validation error */}
+            {fields.length < 2 && (
+              <p className="text-destructive mt-4 text-sm">
+                You need at least 2 items to create a sorter.
+              </p>
+            )}
+
+            {/* Instructions */}
+            <div className="text-muted-foreground mt-4 space-y-1 text-sm">
+              <p>
+                <strong>Upload Images:</strong> Select multiple images to
+                automatically create items. Filename (without extension) will be
+                used as the item name. You can still change the name after
+                selecting images.
+              </p>
+              <p>
+                <strong>Add Item:</strong> Manually add text-only items.
+              </p>
+              {managedTags.length > 0 && (
+                <p>
+                  <strong>Tags:</strong> Click tag buttons below each item to
+                  assign tags. Items without tags will always appear in sorting.
+                </p>
+              )}
+              <p className="text-xs">
+                Supported formats: JPG, PNG, WebP • Max 5MB each • Empty fields
+                will be replaced first when uploading images
+              </p>
+            </div>
+          </section>
+
+          {/* Submit Button */}
+          <div className="flex justify-end gap-2">
+            <Link href={`/sorter/${sorter.slug}`}>
+              <Button type="button" variant="neutralNoShadow">
+                Cancel
+              </Button>
+            </Link>
+            <Button
+              type="submit"
+              disabled={isLoading || isUploading || !hasChanged}
+              className="min-w-[120px]"
+            >
+              {(isLoading || isUploading) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {isLoading || isUploading
+                ? "Updating..."
+                : hasChanged
+                  ? "Update Sorter"
+                  : "No Changes"}
+            </Button>
+          </div>
+        </form>
+      </Form>
 
       {/* Upload Progress Dialog (direct-to-final) */}
       <UploadProgressDialog

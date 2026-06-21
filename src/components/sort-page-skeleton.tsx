@@ -1,38 +1,31 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Box } from "@/components/ui/box";
-
 export function SortPageSkeleton() {
   return (
-    <div className="container mx-auto max-w-4xl px-0 py-8 text-black md:px-4 dark:text-white">
+    <div className="container mx-auto max-w-6xl px-0 py-8 text-foreground md:px-4">
       {/* Header */}
       <div className="mb-6 px-2 md:px-0">
-        {/* Title Box Skeleton */}
-        <Box variant="primary" size="md" className="mb-6 block">
-          <div>
-            <Skeleton className="h-6 w-48" />
-          </div>
-        </Box>
+        {/* Title Skeleton */}
+        <div className="mb-6 h-8 w-64 rounded-base bg-muted animate-pulse md:h-9" />
 
         {/* Progress and Actions - Compact */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-black dark:text-white">
-            <Skeleton className="h-4 w-32" />
+          <div className="flex items-center justify-between">
+            <div className="h-4 w-40 rounded-base bg-muted animate-pulse" />
             <div className="hidden md:block">
               <div className="flex gap-1">
-                <Skeleton className="h-7 w-16" />
-                <Skeleton className="h-7 w-16" />
+                <div className="h-7 w-16 rounded-base bg-muted animate-pulse" />
+                <div className="h-7 w-16 rounded-base bg-muted animate-pulse" />
               </div>
             </div>
           </div>
 
           {/* Progress Bar Skeleton */}
-          <Skeleton className="h-4 w-full md:h-6" />
+          <div className="h-4 w-full rounded-base bg-muted animate-pulse md:h-6" />
 
           {/* Mobile Action Buttons */}
           <div className="block md:hidden">
             <div className="flex gap-1">
-              <Skeleton className="h-7 w-16" />
-              <Skeleton className="h-7 w-16" />
+              <div className="h-7 w-16 rounded-base bg-muted animate-pulse" />
+              <div className="h-7 w-16 rounded-base bg-muted animate-pulse" />
             </div>
           </div>
         </div>
@@ -50,11 +43,11 @@ export function SortPageSkeleton() {
           <ComparisonCardSkeleton />
         </div>
 
-        {/* VS Divider - actual component since it's static */}
+        {/* VS Divider - matches the homepage duel badge */}
         <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 transform">
-          <div className="bg-main border-border shadow-shadow rounded-base border-2 px-3 py-2">
-            <span className="font-bold text-black">VS</span>
-          </div>
+          <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-sm font-bold tracking-tight text-foreground shadow-md">
+            VS
+          </span>
         </div>
       </div>
     </div>
@@ -63,16 +56,13 @@ export function SortPageSkeleton() {
 
 function ComparisonCardSkeleton() {
   return (
-    <div className="bg-main border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY rounded-base cursor-pointer overflow-hidden border-2 transition-all duration-150 ease-in-out hover:shadow-none">
+    <div className="flex w-full flex-col overflow-hidden rounded-base border border-border bg-card shadow-md">
       {/* Image area skeleton - aspect square, flush with top */}
-      <div className="aspect-square w-full">
-        <Skeleton className="h-full w-full rounded-none border-none" />
-      </div>
+      <div className="aspect-square w-full bg-muted animate-pulse" />
 
       {/* Text area with border separator */}
-      <div className="border-border border-t-2 p-4">
-        <Skeleton className="h-5 w-full" />
-        <Skeleton className="mt-2 h-4 w-3/4" />
+      <div className="border-t border-border p-4">
+        <div className="mx-auto h-5 w-3/4 rounded-base bg-muted animate-pulse" />
       </div>
     </div>
   );

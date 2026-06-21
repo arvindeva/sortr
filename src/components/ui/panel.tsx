@@ -3,14 +3,14 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const panelVariants = cva(
-  "border-2 border-border shadow-shadow overflow-hidden rounded-base",
+  "border border-border shadow-lg overflow-hidden rounded-base",
   {
     variants: {
       variant: {
-        default: "bg-secondary-background text-foreground",
-        primary: "bg-secondary-background text-foreground",
-        accent: "bg-secondary-background text-foreground",
-        secondary: "bg-secondary-background text-foreground",
+        default: "bg-card text-foreground",
+        primary: "bg-card text-foreground",
+        accent: "bg-accent text-accent-foreground",
+        secondary: "bg-secondary text-foreground",
       },
     },
     defaultVariants: {
@@ -19,13 +19,13 @@ const panelVariants = cva(
   },
 );
 
-const panelHeaderVariants = cva("px-3 md:px-6 py-4 border-b-2 border-border", {
+const panelHeaderVariants = cva("px-3 md:px-6 py-4 border-b border-border", {
   variants: {
     variant: {
-      default: "bg-secondary-background text-foreground",
+      default: "bg-card text-foreground",
       primary: "bg-main text-main-foreground",
-      accent: "bg-secondary-background text-foreground",
-      secondary: "bg-secondary-background text-foreground",
+      accent: "bg-accent text-accent-foreground",
+      secondary: "bg-secondary text-foreground",
     },
   },
   defaultVariants: {
@@ -74,10 +74,10 @@ function PanelTitle({ className, ...props }: React.ComponentProps<"h2">) {
 const panelContentVariants = cva("p-6", {
   variants: {
     variant: {
-      default: "bg-secondary-background text-foreground",
-      primary: "bg-secondary-background text-foreground",
-      accent: "bg-secondary-background text-foreground",
-      secondary: "bg-secondary-background text-foreground",
+      default: "bg-card text-foreground",
+      primary: "bg-card text-foreground",
+      accent: "bg-accent text-accent-foreground",
+      secondary: "bg-secondary text-foreground",
     },
   },
   defaultVariants: {

@@ -36,7 +36,7 @@ export function SorterHeaderServer({
       <section className="mb-4 md:mb-8">
         <div className="flex items-center space-x-3 py-4 md:space-x-6">
           {/* Cover Image */}
-          <div className="border-border rounded-base flex h-20 w-20 items-center justify-center overflow-hidden border-2 sm:h-36 sm:w-36 md:h-48 md:w-48">
+          <div className="border-border rounded-base flex h-20 w-20 items-center justify-center overflow-hidden border shadow-sm sm:h-36 sm:w-36 md:h-48 md:w-48">
             {sorter.coverImageUrl ? (
               <img
                 src={sorter.coverImageUrl}
@@ -44,8 +44,8 @@ export function SorterHeaderServer({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="bg-secondary-background text-main flex h-full w-full items-center justify-center">
-                <span className="text-4xl font-bold">
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-secondary">
+                <span className="text-4xl font-semibold text-muted-foreground/40">
                   {sorter.title.charAt(0).toUpperCase()}
                 </span>
               </div>

@@ -128,7 +128,7 @@ export function EditUsernameButton({
           </div>
 
           {mutation.error && (
-            <Badge variant="default" className="bg-red-500 text-white">
+            <Badge variant="default" className="bg-destructive text-destructive-foreground">
               {mutation.error instanceof Error
                 ? mutation.error.message
                 : "Failed to update username. Please try again."}

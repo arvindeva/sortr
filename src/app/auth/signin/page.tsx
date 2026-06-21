@@ -61,7 +61,7 @@ function SignInContent() {
     <div className="mt-20 flex flex-col items-center px-4">
       <h1 className="mb-6 text-3xl font-bold">Sign in to sortr</h1>
       {errorMessage && (
-        <div className="mb-4 rounded border border-red-300 bg-red-100 p-4 text-red-700">
+        <div className="mb-4 rounded-base border border-destructive/50 bg-destructive/10 p-4 text-destructive">
           {errorMessage}
         </div>
       )}

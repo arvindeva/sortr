@@ -27,12 +27,12 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
             ease: "easeOut",
           }}
           className={
-            "bg-background text-foreground rounded-base border-border shadow-shadow overflow-hidden border-2 p-1 md:p-3 flex items-center gap-3"
+            "bg-card text-foreground rounded-base border border-border shadow-md overflow-hidden p-1 md:p-3 flex items-center gap-3"
           }
         >
           {/* Image (uniform size for all ranks) */}
           {item.imageUrl ? (
-            <div className="rounded-base border-border bg-secondary-background h-10 w-10 flex-shrink-0 overflow-hidden border-2 md:h-16 md:w-16">
+            <div className="rounded-base border border-border bg-muted h-10 w-10 flex-shrink-0 overflow-hidden md:h-16 md:w-16">
               <img
                 src={getImageUrl(item.imageUrl, "thumbnail")}
                 alt={item.title}
@@ -46,7 +46,7 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
               />
             </div>
           ) : (
-            <div className="rounded-base border-border bg-secondary-background flex h-10 w-10 flex-shrink-0 items-center justify-center border-2 md:h-16 md:w-16">
+            <div className="rounded-base border border-border bg-muted flex h-10 w-10 flex-shrink-0 items-center justify-center md:h-16 md:w-16">
               <span className="text-main font-bold">
                 {item.title.charAt(0).toUpperCase()}
               </span>
