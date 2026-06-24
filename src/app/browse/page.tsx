@@ -312,15 +312,16 @@ function BrowseContent() {
                 {/* Pagination */}
                 {data.totalPages > 1 && (
                   <div className="mt-8 flex justify-center">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2">
                       <Button
                         variant="neutral"
                         size="sm"
                         onClick={() => handlePageChange(page - 1)}
                         disabled={!data.hasPrevPage}
+                        aria-label="Previous page"
                       >
                         <ChevronLeft className="h-4 w-4" />
-                        Previous
+                        <span className="hidden sm:inline">Previous</span>
                       </Button>
 
                       <div className="flex items-center gap-1">
@@ -343,6 +344,7 @@ function BrowseContent() {
                                 }
                                 size="sm"
                                 onClick={() => handlePageChange(pageNum)}
+                                className="w-9 px-0"
                               >
                                 {pageNum}
                               </Button>
@@ -356,8 +358,9 @@ function BrowseContent() {
                         size="sm"
                         onClick={() => handlePageChange(page + 1)}
                         disabled={!data.hasNextPage}
+                        aria-label="Next page"
                       >
-                        Next
+                        <span className="hidden sm:inline">Next</span>
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
