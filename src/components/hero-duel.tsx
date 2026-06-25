@@ -129,7 +129,7 @@ export function HeroDuel() {
           <span>a </span>
           <span className="text-main">versus.</span>
         </h1>
-        <p className="text-muted-foreground mt-5 max-w-lg text-lg leading-relaxed md:text-xl">
+        <p className="text-muted-foreground mt-4 max-w-lg text-[15px] leading-relaxed md:mt-5 md:text-xl">
           Rank anything by picking a favorite, one matchup at a time. Sortr
           builds the list for you.
         </p>
@@ -198,22 +198,14 @@ export function HeroDuel() {
           Greatest album of the 2010s
         </div>
 
-        {/* Pip progress — filled pips use the magenta→cyan gradient. */}
+        {/* Pip progress — filled pips are solid magenta. */}
         <div className="mb-5 flex gap-1.5">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <span
               key={i}
               className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                i < completed ? "" : "bg-foreground/15"
+                i < completed ? "bg-main" : "bg-foreground/15"
               }`}
-              style={
-                i < completed
-                  ? {
-                      background:
-                        "linear-gradient(90deg,var(--main),var(--cyan))",
-                    }
-                  : undefined
-              }
             />
           ))}
         </div>
@@ -250,14 +242,16 @@ export function HeroDuel() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-[1fr_64px_1fr] items-center gap-2">
+              <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-1.5 sm:gap-2">
                 <ContenderTile
                   item={left!}
                   side="left"
                   onClick={() => choose(left!.id)}
                 />
-                <div className="flex justify-center">
-                  <VsMarker size={56} />
+                {/* Smaller VS on mobile so the cards get more width */}
+                <div className="flex items-center justify-center">
+                  <VsMarker size={40} className="sm:hidden" />
+                  <VsMarker size={56} className="hidden sm:flex" />
                 </div>
                 <ContenderTile
                   item={right!}
@@ -285,18 +279,18 @@ function ContenderTile({
   side: "left" | "right";
   onClick: () => void;
 }) {
-  // Left contender glows cyan on hover, right glows magenta — mirrors the duel.
+  // Magenta (primary) on the left for brand consistency, cyan on the right.
   const glow =
     side === "left"
-      ? "hover:border-cyan hover:shadow-[0_0_28px_rgba(25,227,223,.45)]"
-      : "hover:border-main hover:shadow-[0_0_28px_rgba(255,46,126,.45)]";
+      ? "hover:border-main hover:shadow-[0_0_28px_rgba(255,46,126,.45)]"
+      : "hover:border-cyan hover:shadow-[0_0_28px_rgba(25,227,223,.45)]";
 
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={`Pick ${item.name}`}
-      className={`group border-border bg-card overflow-hidden rounded-xl border text-left transition-all duration-150 hover:-translate-y-1 ${glow}`}
+      className={`group border-border bg-card flex h-full flex-col overflow-hidden rounded-xl border text-left transition-all duration-150 hover:-translate-y-1 ${glow}`}
     >
       <div
         className="relative flex h-[148px] items-center justify-center p-3.5 text-center"
@@ -317,11 +311,14 @@ function ContenderTile({
           {item.name}
         </span>
       </div>
-      <div className="px-3.5 py-2.5">
-        <div className="text-muted-foreground font-mono text-xs">
+      {/* Reserve 2 lines for the sub-label so a 1-line sub doesn't make this
+          card shorter than its taller (2-line) neighbor. */}
+      <div className="flex flex-1 items-start px-3.5 py-2.5">
+        <div className="text-muted-foreground line-clamp-2 min-h-[2.5em] font-mono text-xs leading-tight">
           {item.sub}
         </div>
       </div>
     </button>
   );
 }
+
