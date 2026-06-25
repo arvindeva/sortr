@@ -27,12 +27,20 @@
   --overlay: rgb(5 4 12 / 0.7);
   --shadow: 0px 1px 2px 0px rgb(0 0 0 / 0.5);
 
-  /* Brand accents */
-  --main: #ff2e7e; /* magenta — PRIMARY */
+  /* Brand accents.
+     Two families per hue: the bright FILL (covers, buttons, pips, badges) and
+     the INK used for text/links. On dark they're identical — the bright value
+     is legible. In light, the ink values deepen so they pass contrast on white
+     while the fills stay vibrant. Components use the bg- and border- utilities
+     for fills, and the text-*-ink utilities for text. */
+  --main: #ff2e7e; /* magenta — PRIMARY (fill) */
+  --main-ink: #ff2e7e; /* magenta as text */
   --main-foreground: #ffffff;
   --main-gradient: linear-gradient(180deg, #ff2e7e, #e01e65);
-  --cyan: #19e3df; /* SECONDARY — links, accents */
-  --yellow: #ffd23f; /* gold / accent */
+  --cyan: #19e3df; /* SECONDARY (fill) */
+  --cyan-ink: #19e3df; /* cyan as text/link */
+  --yellow: #ffd23f; /* gold / accent (fill) */
+  --yellow-ink: #ffd23f; /* yellow as text */
   --violet: #9b6bff;
   --coral: #ff7a59;
   --ring: #ff2e7e;
@@ -45,6 +53,10 @@
   );
   --panel-border: rgba(255, 46, 126, 0.4);
   --panel-glow: 0 0 60px rgba(255, 46, 126, 0.18);
+
+  /* VS marker pulse: magenta halo glow. */
+  --vs-pulse-from: 0 0 0 0 rgba(255, 46, 126, 0.55);
+  --vs-pulse-to: 0 0 46px 6px rgba(255, 46, 126, 0.55);
 
   /* Atmosphere layers painted on the page background */
   --atmo-glow: radial-gradient(
@@ -91,50 +103,61 @@
 }
 
 /*
- * Light variant — derived (not in the handoff), and also the no-class default
- * so any pre-hydration / no-JS paint is a valid theme. Keeps the arcade
- * identity: magenta/cyan accents and uppercase display on a warm off-white so
- * the neon reads. This is an interpretation; dark remains the fidelity target.
+ * Light variant — from the design lead's spec (CLAUDE.md "Light mode" + the
+ * Sortr *Light.dc.html references). Same VERSUS-arcade identity on light: keep
+ * accent FILLS bright (they pop on white), turn every glow into a crisp colored
+ * shadow, and deepen accents used as TEXT (the *-ink tokens) so they pass
+ * contrast. Also the no-class default, so any pre-hydration paint is valid.
  */
 :root {
-  --background: #f7f5fb;
+  --background: #f4f2fb;
   --secondary-background: #ffffff;
-  --foreground: #17132b;
-  --border: rgba(20, 12, 40, 0.1);
+  --foreground: #17132e;
+  --border: rgba(22, 16, 52, 0.1);
   --overlay: rgb(10 6 24 / 0.4);
-  --shadow: 0px 1px 2px 0px rgb(20 12 40 / 0.08);
+  --shadow: 0 6px 16px rgba(22, 16, 52, 0.06);
 
-  --main: #e01e65;
+  /* Fills stay bright; ink deepens for legibility on white. */
+  --main: #ff2e7e;
+  --main-ink: #d81b65;
   --main-foreground: #ffffff;
   --main-gradient: linear-gradient(180deg, #ff2e7e, #e01e65);
-  --cyan: #0bb3af;
-  --yellow: #e0a500;
-  --violet: #7d4ee0;
-  --coral: #e85c38;
-  --ring: #e01e65;
+  --cyan: #19e3df;
+  --cyan-ink: #0a9d9a; /* teal — raw cyan is illegible on white as text */
+  --yellow: #ffd23f;
+  --yellow-ink: #b07d00;
+  --violet: #9b6bff;
+  --coral: #ff7a59;
+  --ring: #d81b65;
 
-  --panel: linear-gradient(180deg, #ffffff, #fbf7fd);
-  --panel-border: rgba(224, 30, 101, 0.35);
-  --panel-glow: 0 10px 40px rgba(224, 30, 101, 0.12);
+  /* Elevated panel: white with a soft magenta shadow (no glow). */
+  --panel: #ffffff;
+  --panel-border: rgba(255, 46, 126, 0.45);
+  --panel-glow: 0 16px 44px rgba(255, 46, 126, 0.16);
 
+  /* VS marker pulse: soft drop shadow, no blur ring. */
+  --vs-pulse-from: 0 4px 0 0 rgba(255, 46, 126, 0);
+  --vs-pulse-to: 0 8px 22px 0 rgba(255, 46, 126, 0.35);
+
+  /* Atmosphere: glows at ~⅓ strength, grid as faint ink lines. */
   --atmo-glow: radial-gradient(
       1100px 560px at 82% -4%,
-      rgba(255, 46, 126, 0.1),
+      rgba(255, 46, 126, 0.07),
       transparent 60%
     ),
     radial-gradient(
       900px 620px at 2% 24%,
-      rgba(11, 179, 175, 0.08),
+      rgba(25, 227, 223, 0.06),
       transparent 55%
     );
-  --atmo-grid-line: rgba(20, 12, 40, 0.04);
+  --atmo-grid-line: rgba(22, 16, 52, 0.045);
 
-  --chart-1: #e01e65;
-  --chart-2: #0bb3af;
-  --chart-3: #e0a500;
+  --chart-1: #d81b65;
+  --chart-2: #0a9d9a;
+  --chart-3: #b07d00;
   --chart-4: #7d4ee0;
   --chart-5: #e85c38;
-  --chart-active-dot: #e01e65;
+  --chart-active-dot: #d81b65;
 
   --card: #ffffff;
   --card-foreground: var(--foreground);
@@ -144,10 +167,10 @@
   --primary-foreground: var(--main-foreground);
   --secondary: var(--secondary-background);
   --secondary-foreground: var(--foreground);
-  --muted: rgba(20, 12, 40, 0.04);
-  --muted-foreground: #6b6486;
-  --accent: rgba(224, 30, 101, 0.08);
-  --accent-foreground: #e01e65;
+  --muted: #ffffff;
+  --muted-foreground: #5a5478;
+  --accent: rgba(255, 46, 126, 0.08);
+  --accent-foreground: #d81b65;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
   --input: #ffffff;
@@ -168,11 +191,16 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
-  /* Brand accents — usable as bg-cyan, text-yellow, border-violet, etc. */
+  /* Brand accents — bright FILLS: bg-cyan, border-violet, etc. */
   --color-cyan: var(--cyan);
   --color-yellow: var(--yellow);
   --color-violet: var(--violet);
   --color-coral: var(--coral);
+  /* INK variants for TEXT — text-main-ink / text-cyan-ink / text-yellow-ink.
+     Same as the fill on dark; deepened on light for contrast. */
+  --color-main-ink: var(--main-ink);
+  --color-cyan-ink: var(--cyan-ink);
+  --color-yellow-ink: var(--yellow-ink);
   --color-medal-gold: var(--medal-gold);
   --color-medal-silver: var(--medal-silver);
   --color-medal-bronze: var(--medal-bronze);
@@ -321,18 +349,19 @@
 
   /* ---- VERSUS arcade motion ---- */
 
-  /* VS marker pulse — scale + magenta halo. The 45° rotation lives on the
-     element itself (see VsMarker), so this only animates scale/shadow and the
-     marker stays a diamond even with reduced motion. */
+  /* VS marker pulse — scale + a shadow that differs per theme: a magenta halo
+     glow on dark, a soft drop shadow (no blur ring) on light. The 45° rotation
+     lives on the element itself (see VsMarker), so this only animates
+     scale/shadow and the marker stays a diamond even with reduced motion. */
   @keyframes sortrPulse {
     0%,
     100% {
       transform: rotate(45deg) scale(1);
-      box-shadow: 0 0 0 0 rgba(255, 46, 126, 0.55);
+      box-shadow: var(--vs-pulse-from);
     }
     50% {
       transform: rotate(45deg) scale(1.07);
-      box-shadow: 0 0 46px 6px rgba(255, 46, 126, 0.55);
+      box-shadow: var(--vs-pulse-to);
     }
   }
   .sortr-pulse {

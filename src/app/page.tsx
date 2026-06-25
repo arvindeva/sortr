@@ -243,7 +243,7 @@ export default async function Home() {
         <section className="w-full">
           <div className="mb-6 flex items-end justify-between gap-3">
             <h2 className="display text-3xl font-black text-foreground md:text-[42px]">
-              Fresh sorters <span className="text-cyan">▸</span>
+              Fresh sorters <span className="text-cyan-ink">▸</span>
             </h2>
           </div>
           {hadRecentError ? (

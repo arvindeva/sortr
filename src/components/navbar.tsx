@@ -194,7 +194,7 @@ export function Navbar() {
         {/* Browse link */}
         <Link
           href="/browse"
-          className="group relative font-medium text-foreground transition-colors hover:text-main"
+          className="group relative font-medium text-foreground transition-colors hover:text-main-ink"
         >
           Browse
           <span className="absolute -bottom-1 left-0 h-0.5 w-full origin-left scale-x-0 bg-main transition-transform duration-200 ease-out group-hover:scale-x-100" />
@@ -209,7 +209,7 @@ export function Navbar() {
             {userData?.username ? (
               <Link
                 href={`/user/${userData.username}`}
-                className="group relative font-medium text-foreground transition-colors hover:text-main"
+                className="group relative font-medium text-foreground transition-colors hover:text-main-ink"
               >
                 Profile
                 <span className="absolute -bottom-1 left-0 h-0.5 w-full origin-left scale-x-0 bg-main transition-transform duration-200 ease-out group-hover:scale-x-100" />

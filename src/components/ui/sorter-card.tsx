@@ -65,7 +65,7 @@ export function SorterCard({ sorter, badge, className }: SorterCardProps) {
               @{sorter.creatorUsername}
             </span>
             {sorter.completionCount > 0 && (
-              <span className="shrink-0 pl-2 text-cyan">{plays} ▸</span>
+              <span className="shrink-0 pl-2 text-cyan-ink">{plays} ▸</span>
             )}
           </div>
         </div>

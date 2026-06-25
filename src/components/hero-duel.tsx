@@ -91,7 +91,12 @@ function finalRanking(s: SortState): Item[] {
   return s.runs[0].map((id) => BY_ID[id]);
 }
 
-const MEDALS = ["#ffd23f", "#cdd6e8", "#d68a4e"];
+// Theme-aware medal colors for rank 1/2/3 (gold/silver/bronze stay across themes).
+const MEDALS = [
+  "var(--medal-gold)",
+  "var(--medal-silver)",
+  "var(--medal-bronze)",
+];
 
 export function HeroDuel() {
   const [state, setState] = useState<SortState>(initialState);
@@ -149,7 +154,7 @@ export function HeroDuel() {
           No account needed.{" "}
           <Link
             href="/auth/signin"
-            className="font-semibold text-cyan hover:underline"
+            className="font-semibold text-cyan-ink hover:underline"
           >
             Sign up
           </Link>{" "}
@@ -168,16 +173,16 @@ export function HeroDuel() {
       >
         {/* Header */}
         <div className="mb-1.5 flex items-center justify-between">
-          <span className="hud text-xs text-yellow">▶ Featured sorter</span>
+          <span className="hud text-xs text-yellow-ink">▶ Featured sorter</span>
           {done ? (
             <button
               onClick={reset}
-              className="font-mono text-[13px] text-cyan transition-opacity hover:opacity-80"
+              className="font-mono text-[13px] text-cyan-ink transition-opacity hover:opacity-80"
             >
               ↺ play again
             </button>
           ) : (
-            <span className="font-mono text-[13px] text-cyan">
+            <span className="font-mono text-[13px] text-cyan-ink">
               ROUND {round}/{TOTAL_STEPS}
             </span>
           )}
@@ -186,15 +191,19 @@ export function HeroDuel() {
           Greatest album of the 2010s
         </div>
 
-        {/* Pip progress */}
+        {/* Pip progress — filled pips use the magenta→cyan gradient. */}
         <div className="mb-5 flex gap-1.5">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <span
               key={i}
-              className="h-1.5 flex-1 rounded-full transition-colors duration-300"
-              style={{
-                background: i < completed ? "#19e3df" : "rgba(255,255,255,.12)",
-              }}
+              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                i < completed ? "" : "bg-foreground/15"
+              }`}
+              style={
+                i < completed
+                  ? { background: "linear-gradient(90deg,var(--main),var(--cyan))" }
+                  : undefined
+              }
             />
           ))}
         </div>
@@ -203,16 +212,16 @@ export function HeroDuel() {
         <div className="flex min-h-[240px] flex-col justify-center">
           {done ? (
             <div className="text-center">
-              <div className="hud text-xs text-cyan">★ Your ranking ★</div>
+              <div className="hud text-xs text-cyan-ink">★ Your ranking ★</div>
               <div className="my-4 flex flex-col gap-2">
                 {ranking.map((item, i) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-3 rounded-[10px] border border-border bg-white/[0.04] px-3.5 py-2.5 text-left"
+                    className="flex items-center gap-3 rounded-[10px] border border-border bg-foreground/[0.04] px-3.5 py-2.5 text-left"
                   >
                     <span
-                      className="display w-[34px] text-[28px] font-black"
-                      style={{ color: i < 3 ? MEDALS[i] : "#6f6a86" }}
+                      className="display w-[34px] text-[28px] font-black text-muted-foreground"
+                      style={i < 3 ? { color: MEDALS[i] } : undefined}
                     >
                       {i + 1}
                     </span>
@@ -246,7 +255,7 @@ export function HeroDuel() {
                   onClick={() => choose(right!.id)}
                 />
               </div>
-              <div className="mt-4 flex items-center justify-center gap-2 font-mono text-xs text-cyan">
+              <div className="mt-4 flex items-center justify-center gap-2 font-mono text-xs text-cyan-ink">
                 <span className="sortr-blink">▮</span> tap a side to keep going
               </div>
             </>
@@ -277,7 +286,7 @@ function ContenderTile({
       type="button"
       onClick={onClick}
       aria-label={`Pick ${item.name}`}
-      className={`group overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] text-left transition-all duration-150 hover:-translate-y-1 ${glow}`}
+      className={`group overflow-hidden rounded-xl border border-border bg-card text-left transition-all duration-150 hover:-translate-y-1 ${glow}`}
     >
       <div
         className="relative flex h-[148px] items-center justify-center p-3.5 text-center"

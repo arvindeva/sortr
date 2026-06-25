@@ -96,8 +96,27 @@ only to create & save.
 
 ## Light mode
 
-> **PENDING** — light-mode token values are being defined by the design lead.
-> The current `:root` block is a functional placeholder so the toggle works; it
-> will be replaced wholesale with the real light spec. Until then, dark is the
-> only high-fidelity theme. Do not invest in light-mode polish before the spec
-> lands.
+Same VERSUS-arcade identity on light (spec from the design lead). Three rules:
+**keep accent fills bright** (covers, button gradient, pips, badges pop on white),
+**turn every glow into a crisp colored shadow** (no blur rings), and **deepen
+accents used as text** so they pass contrast.
+
+This is why accents come in two token families:
+
+- **Fills** — `--main`, `--cyan`, `--yellow` (utilities `bg-*`, `border-*`).
+  Bright in both themes.
+- **Ink** (text/links) — `--main-ink`, `--cyan-ink`, `--yellow-ink` (utilities
+  `text-main-ink`, `text-cyan-ink`, `text-yellow-ink`). Identical to the fill on
+  dark; deepened on light: magenta `#ff2e7e`→`#d81b65`, cyan `#19e3df`→teal
+  `#0a9d9a` (raw cyan is illegible on white), yellow `#ffd23f`→`#b07d00`.
+
+**When to use which:** large display magenta (the hero "versus.", section
+arrows) stays the bright `text-main`; small magenta/cyan/yellow text and links
+use the `-ink` utilities. If you add accent-colored *text* anywhere, use ink.
+
+Key light values: bg `#f4f2fb`; surfaces `#fff` + border `rgba(22,16,52,.1)` +
+soft shadow `0 6px 16px rgba(22,16,52,.06)`; panel white + magenta shadow (no
+glow); atmosphere glows at ~⅓ strength; grid `rgba(22,16,52,.045)`; text primary
+`#17132e` / muted `#5a5478`. The VS-marker pulse and panel glow swap to soft
+drop shadows via the `--vs-pulse-*` and `--panel-glow` tokens. Medals unchanged.
+Reference builds: `~/Sortr Redesign - Light Mode/sortr_update/Sortr *Light.dc.html`.
