@@ -1,7 +1,7 @@
 import * as React from "react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { isImagePreloaded } from "@/lib/preload-store";
+import { accentFor } from "@/lib/utils";
 
 interface ComparisonCardProps extends React.ComponentProps<"div"> {
   imageUrl?: string;
@@ -9,6 +9,8 @@ interface ComparisonCardProps extends React.ComponentProps<"div"> {
   onClick?: () => void;
   canRemove?: boolean;
   onRemove?: () => void;
+  /** Which contender — drives the hover glow (cyan left / magenta right). */
+  side?: "left" | "right";
 }
 
 function ComparisonCard({
@@ -18,73 +20,86 @@ function ComparisonCard({
   onClick,
   canRemove,
   onRemove,
+  side = "right",
   ...props
 }: ComparisonCardProps) {
-  // Check if image is preloaded (simple Set lookup - no memoization needed)
   const imageIsPreloaded = imageUrl ? isImagePreloaded(imageUrl) : false;
+  const glow =
+    side === "left"
+      ? "hover:border-cyan hover:shadow-[0_0_48px_rgba(25,227,223,.4)]"
+      : "hover:border-main hover:shadow-[0_0_48px_rgba(255,46,126,.4)]";
 
   return (
-    <div className={cn("flex flex-col md:items-center", className)} {...props}>
+    <div className={cn("flex flex-col", className)} {...props}>
       {/* Main comparison card */}
-      <div
-        className="group flex w-full cursor-pointer flex-col overflow-hidden rounded-base border border-border bg-card shadow-md transition-all duration-200 hover:-translate-y-1 hover:border-main/40 hover:shadow-xl"
+      <button
+        type="button"
         onClick={onClick}
+        aria-label={`Pick ${title}`}
+        className={cn(
+          "group flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-border bg-card text-left transition-all duration-200 hover:-translate-y-1.5",
+          glow,
+        )}
       >
-        {/* Image area - square aspect ratio */}
-        <div className="relative w-full aspect-square overflow-hidden">
-          {/* Always render both elements - use visibility instead of opacity to avoid any rendering delays */}
-
-          {/* Placeholder - always mounted */}
+        {/* Cover — colored tile (with stripe) or image */}
+        <div className="relative aspect-square w-full overflow-hidden">
+          {/* Colored placeholder tile with the name, always mounted */}
           <div
-            className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted to-secondary"
+            className="absolute inset-0 flex items-center justify-center p-4 text-center"
             style={{
-              visibility: imageIsPreloaded && imageUrl ? 'hidden' : 'visible'
+              background: accentFor(title),
+              visibility: imageIsPreloaded && imageUrl ? "hidden" : "visible",
             }}
           >
-            <span className="text-lg font-semibold text-muted-foreground/40 md:text-4xl">
-              {title.charAt(0).toUpperCase()}
+            <div
+              aria-hidden
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  "repeating-linear-gradient(45deg, rgba(0,0,0,.05) 0 16px, transparent 16px 32px)",
+              }}
+            />
+            <span
+              className="display relative text-2xl font-extrabold sm:text-4xl"
+              style={{ color: "rgba(0,0,0,.74)" }}
+            >
+              {title}
             </span>
           </div>
 
-          {/* Image - always mounted when imageUrl exists */}
           {imageUrl && (
             <img
               src={imageUrl}
               alt={title}
               className="absolute inset-0 h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
-              style={{
-                visibility: imageIsPreloaded ? 'visible' : 'hidden'
-              }}
+              style={{ visibility: imageIsPreloaded ? "visible" : "hidden" }}
             />
           )}
         </div>
 
-        {/* Text area at bottom */}
-        <div className="border-t border-border bg-main px-2 py-2 text-center sm:px-4 sm:py-3 md:py-4">
-          <h3 className="flex min-h-[2rem] items-center justify-center font-semibold leading-tight text-main-foreground line-clamp-2 sm:min-h-[2.5rem] md:min-h-[3rem]">
-            <span className="hidden sm:block" style={{ fontSize: '1.125rem' }}>
-              {title}
-            </span>
-            <span className="block sm:hidden" style={{ fontSize: '0.75rem' }}>
-              {title}
-            </span>
+        {/* Name bar — dark "label plate" in both themes, white text. */}
+        <div
+          className="px-3 py-3.5 text-center md:py-4"
+          style={{ background: "var(--name-plate)" }}
+        >
+          <h3 className="display line-clamp-2 text-base font-extrabold text-white sm:text-[25px]">
+            {title}
           </h3>
         </div>
-      </div>
+      </button>
 
-      {/* Remove button below the card */}
+      {/* Remove link below the card */}
       {canRemove && (
-        <Button
-          variant="neutral"
-          size="sm"
+        <button
+          type="button"
           onClick={(e) => {
-            e.stopPropagation(); // Prevent triggering card selection
+            e.stopPropagation();
             onRemove?.();
           }}
-          className="mt-2 text-xs sm:text-sm"
+          className="mt-2.5 self-center font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          Remove
-        </Button>
+          ✕ remove from sorter
+        </button>
       )}
     </div>
   );

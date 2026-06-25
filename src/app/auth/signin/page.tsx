@@ -4,8 +4,10 @@ import { useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { VsMarker } from "@/components/ui/sortr-mark";
 import {
   Form,
   FormControl,
@@ -46,56 +48,103 @@ function SignInContent() {
 
   if (session?.user) {
     return (
-      <div className="mt-20 flex flex-col items-center px-4">
-        <p className="mb-4">
-          You are already signed in as <strong>{session.user.email}</strong>
-        </p>
-        <a href="/" className="text-blue-600 hover:underline">
-          Go to home
-        </a>
+      <div className="flex min-h-[70vh] items-center justify-center px-4">
+        <div className="w-full max-w-[440px] text-center">
+          <div className="mb-6 flex justify-center">
+            <VsMarker size={56} glyph="✓" glyphColor="var(--cyan)" />
+          </div>
+          <h1 className="display text-[clamp(2.25rem,6vw,3rem)] font-black text-foreground">
+            You&apos;re in
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            Signed in as{" "}
+            <strong className="text-foreground">{session.user.email}</strong>.
+          </p>
+          <div className="mt-6">
+            <Button asChild arcade size="lg" className="w-full">
+              <Link href="/">Go to home &rarr;</Link>
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mt-20 flex flex-col items-center px-4">
-      <h1 className="mb-6 text-3xl font-bold">Sign in to sortr</h1>
-      {errorMessage && (
-        <div className="mb-4 rounded-base border border-destructive/50 bg-destructive/10 p-4 text-destructive">
-          {errorMessage}
+    <div className="flex min-h-[70vh] items-center justify-center px-4">
+      <div className="w-full max-w-[440px]">
+        <div className="mb-6 text-center">
+          <div className="mb-6 flex justify-center">
+            <VsMarker size={56} />
+          </div>
+          <h1 className="display text-[clamp(2.25rem,6vw,3rem)] font-black text-foreground">
+            Sign in to sortr
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            Save your rankings, create sorters, and build a profile. We&apos;ll
+            email you a magic link &mdash; no password.
+          </p>
         </div>
-      )}
-      <div className="w-full max-w-md">
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4"
-            noValidate
-          >
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="Enter your email"
-                      {...field}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && form.handleSubmit(onSubmit)()
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" disabled={isLoading} className="w-full">
-              {isLoading ? "Sending..." : "Sign in with Email"}
-            </Button>
-          </form>
-        </Form>
+
+        {errorMessage && (
+          <div className="mb-4 rounded-md border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+            {errorMessage}
+          </div>
+        )}
+
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4"
+              noValidate
+            >
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <label
+                      htmlFor="signin-email"
+                      className="hud text-xs text-muted-foreground"
+                    >
+                      Email
+                    </label>
+                    <FormControl>
+                      <Input
+                        id="signin-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        className="h-12"
+                        {...field}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && form.handleSubmit(onSubmit)()
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                arcade
+                size="lg"
+                disabled={isLoading}
+                className="w-full"
+              >
+                {isLoading ? "Sending..." : "Sign in with email →"}
+              </Button>
+            </form>
+          </Form>
+        </div>
+
+        <p className="mt-5 text-center font-mono text-xs text-muted-foreground">
+          no account? entering your email makes one.{" "}
+          <Link href="/browse" className="text-cyan-ink hover:underline">
+            or just browse →
+          </Link>
+        </p>
       </div>
     </div>
   );
@@ -105,8 +154,8 @@ export default function SignInPage() {
   return (
     <Suspense
       fallback={
-        <div className="mt-20 flex items-center justify-center px-4">
-          Loading...
+        <div className="flex min-h-[70vh] items-center justify-center px-4">
+          <p className="hud text-xs text-muted-foreground">Loading…</p>
         </div>
       }
     >

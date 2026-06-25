@@ -84,7 +84,11 @@ function advance(s: SortState, winnerId: string): SortState {
     const merged = [...nOut, ...nLeft, ...nRight];
     return { runs: [...runs, merged], merging: null, comparisons };
   }
-  return { runs, merging: { left: nLeft, right: nRight, out: nOut }, comparisons };
+  return {
+    runs,
+    merging: { left: nLeft, right: nRight, out: nOut },
+    comparisons,
+  };
 }
 
 function finalRanking(s: SortState): Item[] {
@@ -119,12 +123,13 @@ export function HeroDuel() {
     <section className="grid items-center gap-10 py-10 md:py-14 lg:grid-cols-[1.02fr_.98fr] lg:gap-12">
       {/* Left — the entry point */}
       <div>
-        <h1 className="display text-[clamp(3rem,9vw,5rem)] font-black text-foreground">
+        <h1 className="display text-foreground text-[clamp(3rem,9vw,5rem)] font-black">
           Everything&apos;s
           <br />
-          <span className="text-main">a versus.</span>
+          <span>a </span>
+          <span className="text-main">versus.</span>
         </h1>
-        <p className="mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground md:text-xl">
+        <p className="text-muted-foreground mt-5 max-w-lg text-lg leading-relaxed md:text-xl">
           Rank anything by picking a favorite, one matchup at a time. Sortr
           builds the list for you.
         </p>
@@ -150,11 +155,11 @@ export function HeroDuel() {
           </Button>
         </div>
 
-        <p className="mt-6 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-6 text-sm">
           No account needed.{" "}
           <Link
             href="/auth/signin"
-            className="font-semibold text-cyan-ink hover:underline"
+            className="text-cyan-ink font-semibold hover:underline"
           >
             Sign up
           </Link>{" "}
@@ -173,21 +178,23 @@ export function HeroDuel() {
       >
         {/* Header */}
         <div className="mb-1.5 flex items-center justify-between">
-          <span className="hud text-xs text-yellow-ink">▶ Featured sorter</span>
+          <span className="hud text-yellow-ink text-xs">
+            ▶ Featured sorter
+          </span>
           {done ? (
             <button
               onClick={reset}
-              className="font-mono text-[13px] text-cyan-ink transition-opacity hover:opacity-80"
+              className="text-cyan-ink font-mono text-[13px] transition-opacity hover:opacity-80"
             >
               ↺ play again
             </button>
           ) : (
-            <span className="font-mono text-[13px] text-cyan-ink">
+            <span className="text-cyan-ink font-mono text-[13px]">
               ROUND {round}/{TOTAL_STEPS}
             </span>
           )}
         </div>
-        <div className="display mb-3.5 text-[26px] font-extrabold text-foreground">
+        <div className="display text-foreground mb-3.5 text-[26px] font-extrabold">
           Greatest album of the 2010s
         </div>
 
@@ -201,7 +208,10 @@ export function HeroDuel() {
               }`}
               style={
                 i < completed
-                  ? { background: "linear-gradient(90deg,var(--main),var(--cyan))" }
+                  ? {
+                      background:
+                        "linear-gradient(90deg,var(--main),var(--cyan))",
+                    }
                   : undefined
               }
             />
@@ -212,23 +222,23 @@ export function HeroDuel() {
         <div className="flex min-h-[240px] flex-col justify-center">
           {done ? (
             <div className="text-center">
-              <div className="hud text-xs text-cyan-ink">★ Your ranking ★</div>
+              <div className="hud text-cyan-ink text-xs">★ Your ranking ★</div>
               <div className="my-4 flex flex-col gap-2">
                 {ranking.map((item, i) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-3 rounded-[10px] border border-border bg-foreground/[0.04] px-3.5 py-2.5 text-left"
+                    className="border-border bg-foreground/[0.04] flex items-center gap-3 rounded-[10px] border px-3.5 py-2.5 text-left"
                   >
                     <span
-                      className="display w-[34px] text-[28px] font-black text-muted-foreground"
+                      className="display text-muted-foreground w-[34px] text-[28px] font-black"
                       style={i < 3 ? { color: MEDALS[i] } : undefined}
                     >
                       {i + 1}
                     </span>
-                    <span className="flex-1 font-bold text-foreground">
+                    <span className="text-foreground flex-1 font-bold">
                       {item.name}
                     </span>
-                    <span className="font-mono text-xs text-muted-foreground">
+                    <span className="text-muted-foreground font-mono text-xs">
                       {item.sub}
                     </span>
                   </div>
@@ -255,7 +265,7 @@ export function HeroDuel() {
                   onClick={() => choose(right!.id)}
                 />
               </div>
-              <div className="mt-4 flex items-center justify-center gap-2 font-mono text-xs text-cyan-ink">
+              <div className="text-cyan-ink mt-4 flex items-center justify-center gap-2 font-mono text-xs">
                 <span className="sortr-blink">▮</span> tap a side to keep going
               </div>
             </>
@@ -286,7 +296,7 @@ function ContenderTile({
       type="button"
       onClick={onClick}
       aria-label={`Pick ${item.name}`}
-      className={`group overflow-hidden rounded-xl border border-border bg-card text-left transition-all duration-150 hover:-translate-y-1 ${glow}`}
+      className={`group border-border bg-card overflow-hidden rounded-xl border text-left transition-all duration-150 hover:-translate-y-1 ${glow}`}
     >
       <div
         className="relative flex h-[148px] items-center justify-center p-3.5 text-center"
@@ -308,7 +318,7 @@ function ContenderTile({
         </span>
       </div>
       <div className="px-3.5 py-2.5">
-        <div className="font-mono text-xs text-muted-foreground">
+        <div className="text-muted-foreground font-mono text-xs">
           {item.sub}
         </div>
       </div>

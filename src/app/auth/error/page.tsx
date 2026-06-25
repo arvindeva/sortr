@@ -2,6 +2,8 @@
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
+import { Button } from "@/components/ui/button";
+import { VsMarker } from "@/components/ui/sortr-mark";
 
 function ErrorContent() {
   const params = useSearchParams();
@@ -22,15 +24,25 @@ function ErrorContent() {
   // See: https://next-auth.js.org/configuration/pages#error-codes
 
   return (
-    <div className="mt-24 flex flex-col items-center">
-      <div className="bg-destructive/10 border-destructive/20 w-full max-w-md rounded-xl border p-8 text-center">
-        <h1 className="text-destructive mb-3 text-2xl font-bold">
-          Sign in Error
+    <div className="flex min-h-[70vh] items-center justify-center px-4">
+      <div className="w-full max-w-[440px] text-center">
+        <div className="mb-6 flex justify-center">
+          <VsMarker size={56} glyph="!" />
+        </div>
+
+        <h1 className="display text-[clamp(2.25rem,6vw,3rem)] font-black text-foreground">
+          Sign in error
         </h1>
-        <p className="text-destructive mb-4">{message}</p>
-        <Link href="/auth/signin" className="text-blue-600 hover:underline">
-          Return to Sign In
-        </Link>
+
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6">
+          <p className="text-muted-foreground">{message}</p>
+        </div>
+
+        <div className="mt-6">
+          <Button asChild arcade size="lg" className="w-full">
+            <Link href="/auth/signin">Return to sign in &rarr;</Link>
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -40,7 +52,9 @@ export default function AuthErrorPage() {
   return (
     <Suspense
       fallback={
-        <div className="mt-24 flex items-center justify-center">Loading...</div>
+        <div className="flex min-h-[70vh] items-center justify-center px-4">
+          <p className="hud text-xs text-muted-foreground">Loading…</p>
+        </div>
       }
     >
       <ErrorContent />

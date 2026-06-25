@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { sorters, sorterItems, sorterTags, user } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { PageContainer } from "@/components/ui/page-container";
 import EditSorterForm from "./edit-sorter-form";
 
 interface EditSorterPageProps {
@@ -81,8 +82,8 @@ export default async function EditSorterPage({ params }: EditSorterPageProps) {
     .where(eq(sorterItems.sorterId, sorter.id));
 
   return (
-    <div className="container mx-auto max-w-4xl px-2 py-8 md:px-4">
+    <PageContainer width="narrow">
       <EditSorterForm sorter={sorter} tags={tags} items={items} />
-    </div>
+    </PageContainer>
   );
 }

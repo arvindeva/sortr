@@ -107,6 +107,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
     description: data.sorter.description ?? undefined,
     category: data.sorter.category ?? undefined,
     coverImageUrl: data.sorter.coverImageUrl ?? undefined,
+    itemCount: data.items.length,
     version: data.sorter.version,
     user: {
       username: data.sorter.user.username || "Anonymous",
@@ -173,7 +174,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main className="container mx-auto max-w-6xl px-2 py-2 md:px-4 md:py-8">
+      <main className="container mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-12">
         {/* Server-rendered Sorter Header */}
         <SorterHeaderServer
           sorter={transformedSorter}

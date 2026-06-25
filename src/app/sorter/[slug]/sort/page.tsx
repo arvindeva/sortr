@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useImagePreloader } from "@/hooks/use-image-preloader";
 import { ComparisonCard } from "@/components/ui/comparison-card";
+import { VsMarker } from "@/components/ui/sortr-mark";
 import {
   Dialog,
   DialogContent,
@@ -565,14 +566,16 @@ export default function SortPage() {
 
   if (saving) {
     return (
-      <div className="container mx-auto max-w-6xl px-4 py-8">
-        <div className="text-center">
-          <h1 className="mb-3 animate-pulse text-2xl font-bold">
-            Saving Results...
+      <div className="container mx-auto max-w-6xl px-4 py-16">
+        <div className="flex flex-col items-center gap-5 text-center">
+          <VsMarker size={56} glyph="★" glyphColor="var(--yellow)" />
+          <h1 className="display text-3xl font-black text-foreground">
+            Ranking locked
           </h1>
-          <div className="mb-6">
-            <Spinner size={32} />
-          </div>
+          <p className="flex items-center gap-2 font-mono text-[13px] text-cyan-ink">
+            <span className="sortr-blink">▮</span> tallying your picks — taking
+            you to your results…
+          </p>
         </div>
       </div>
     );
@@ -672,80 +675,62 @@ export default function SortPage() {
   const progress = Math.floor(totalComparisons);
 
   return (
-    <div className="container mx-auto max-w-6xl px-0 py-8 text-foreground md:px-4">
+    <div className="container mx-auto max-w-5xl px-4 py-8 text-foreground md:px-6 md:py-12">
       {/* Header */}
-      <div className="mb-6 px-2 md:px-0">
-        <h1 className="mb-6 text-2xl font-bold tracking-tight md:text-3xl">
-          {sorterData.sorter.title}
-        </h1>
-        {/* Progress and Actions - Compact */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-foreground">
-            <span>
-              {completedComparisons} comparisons • {progress}% complete
-            </span>
-            <div className="hidden md:block">
-              <div className="flex gap-1">
-                <Button
-                  type="button"
-                  variant="neutral"
-                  size="sm"
-                  onClick={handleUndo}
-                  disabled={!canUndo}
-                  className="h-7 px-2"
-                >
-                  <Undo2 className="mr-1" size={12} />
-                  Undo
-                </Button>
-                <Button
-                  type="button"
-                  variant="neutral"
-                  size="sm"
-                  onClick={handleReset}
-                  disabled={completedComparisons === 0}
-                  className="h-7 px-2"
-                >
-                  <RotateCcw className="mr-1" size={12} />
-                  Reset
-                </Button>
-              </div>
+      <div className="mb-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="hud mb-2 text-xs text-cyan-ink">▶ Now sorting</div>
+            <h1 className="display text-[clamp(2rem,5.5vw,3.375rem)] font-black text-foreground">
+              {sorterData.sorter.title}
+            </h1>
+            <div className="mt-2.5 font-mono text-[13px] text-muted-foreground">
+              {completedComparisons} comparison
+              {completedComparisons === 1 ? "" : "s"} · {progress}% complete
             </div>
           </div>
-          <Progress value={progress} className="h-4 w-full md:h-6" />
-          <div className="block md:hidden">
-            <div className="flex gap-1">
-              <Button
-                type="button"
-                variant="neutral"
-                size="sm"
-                onClick={handleUndo}
-                disabled={!canUndo}
-                className="h-7 px-2 text-xs"
-              >
-                <Undo2 className="mr-1" size={12} />
-                Undo
-              </Button>
-              <Button
-                type="button"
-                variant="neutral"
-                size="sm"
-                onClick={handleReset}
-                disabled={completedComparisons === 0}
-                className="h-7 px-2 text-xs"
-              >
-                <RotateCcw className="mr-1" size={12} />
-                Reset
-              </Button>
-            </div>
+          {/* Undo / Reset */}
+          <div className="flex shrink-0 gap-2">
+            <Button
+              type="button"
+              variant="neutral"
+              size="sm"
+              onClick={handleUndo}
+              disabled={!canUndo}
+            >
+              <Undo2 size={14} />
+              Undo
+            </Button>
+            <Button
+              type="button"
+              variant="neutral"
+              size="sm"
+              onClick={handleReset}
+              disabled={completedComparisons === 0}
+            >
+              <RotateCcw size={14} />
+              Reset
+            </Button>
           </div>
+        </div>
+
+        {/* Gradient progress track */}
+        <div className="mt-6 h-2.5 w-full overflow-hidden rounded-full border border-border bg-foreground/[0.06]">
+          <div
+            className="h-full rounded-full transition-[width] duration-300 ease-out"
+            style={{
+              width: `${progress}%`,
+              background: "linear-gradient(90deg,var(--main),var(--cyan))",
+            }}
+          />
         </div>
       </div>
 
       {/* Comparison Cards */}
-      <div className="relative grid grid-cols-2 items-stretch gap-2 px-0 md:gap-4 md:px-0">
+      <div className="relative mt-10 grid grid-cols-[1fr_auto_1fr] items-center gap-2 md:gap-4">
         {/* Item A */}
         <ComparisonCard
-          className="md:mx-auto md:w-80"
+          side="left"
           imageUrl={currentComparison.itemA.imageUrl}
           title={currentComparison.itemA.title}
           onClick={() => handleChoice(currentComparison.itemA.id)}
@@ -753,29 +738,27 @@ export default function SortPage() {
           onRemove={() => handleRemoveItem(currentComparison.itemA.id, currentComparison.itemA.title)}
         />
 
+        {/* VS marker between contenders */}
+        <VsMarker size={60} className="mx-1 md:mx-2" />
+
         {/* Item B */}
         <ComparisonCard
-          className="md:mx-auto md:w-80"
+          side="right"
           imageUrl={currentComparison.itemB.imageUrl}
           title={currentComparison.itemB.title}
           onClick={() => handleChoice(currentComparison.itemB.id)}
           canRemove={filteredItems.length > 1}
           onRemove={() => handleRemoveItem(currentComparison.itemB.id, currentComparison.itemB.title)}
         />
-
-        {/* VS Divider - matches the homepage duel badge */}
-        <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 transform">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-sm font-bold tracking-tight text-foreground shadow-md">
-            VS
-          </span>
-        </div>
       </div>
 
-      {/* Progress Saving Reassurance */}
-      <div className="mt-6 px-2 text-center md:px-0">
-        <p className="text-foreground text-sm">
-          Your progress is automatically saved in your browser. Feel free to
-          take breaks or navigate away - you can continue anytime!
+      {/* Keyboard hint + autosave note */}
+      <div className="mt-8 flex flex-col items-center gap-3 text-center">
+        <p className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
+          <span className="sortr-blink text-cyan-ink">▮</span> tap a side to pick
+        </p>
+        <p className="font-mono text-xs text-muted-foreground">
+          ✓ progress saved in your browser — take a break and come back anytime.
         </p>
       </div>
 

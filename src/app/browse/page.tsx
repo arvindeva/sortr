@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageContainer } from "@/components/ui/page-container";
-import { SectionHeading } from "@/components/ui/section-heading";
+import { ArcadePageHeader } from "@/components/ui/arcade-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select,
@@ -174,26 +174,33 @@ function BrowseContent() {
   return (
     <PageContainer>
       {/* Page Header */}
-      <h1 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl">
-        Browse Sorters
-      </h1>
+      <ArcadePageHeader
+        className="mb-7"
+        eyebrow={
+          data
+            ? `${data.totalCount.toLocaleString()} sorters live — pick your fight`
+            : "pick your fight"
+        }
+        title="Browse sorters"
+      />
 
       {/* Search Bar */}
-      <div className="mb-6">
+      <div className="mb-5">
         <div className="relative">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+          <Search className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search sorters by title, creator, or description..."
+            placeholder="Search sorters by title or creator…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="pr-10 pl-9"
+            className="h-[52px] rounded-[10px] pr-11 pl-12 text-base"
           />
           {searchInput && (
             <button
               onClick={() => setSearchInput("")}
-              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2"
+              className="absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Clear search"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </button>
           )}
         </div>
@@ -222,65 +229,65 @@ function BrowseContent() {
           />
         </Button>
 
-        {/* Chips: collapsible on mobile, always shown on desktop */}
+        {/* Chips: collapsible on mobile, always shown on desktop. Mono pills;
+            active = magenta fill, idle = bordered surface. */}
         <div
           className={`${showFilters ? "flex" : "hidden"} flex-wrap gap-2 lg:flex`}
         >
-          <Button
-            variant="neutral"
-            size="sm"
+          <button
             onClick={clearCategories}
-            className="h-6"
             disabled={selectedCategories.length === 0}
+            className="rounded-full border border-border px-3.5 py-1.5 font-mono text-[13px] text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
           >
-            Clear All
-          </Button>
-          {CATEGORIES.map((category) => (
-            <Badge
-              key={category}
-              variant={
-                selectedCategories.includes(category) ? "default" : "neutral"
-              }
-              className="flex h-6 cursor-pointer items-center transition-opacity hover:opacity-80"
-              onClick={() => toggleCategory(category)}
-            >
-              {category}
-            </Badge>
-          ))}
+            Clear all
+          </button>
+          {CATEGORIES.map((category) => {
+            const active = selectedCategories.includes(category);
+            return (
+              <button
+                key={category}
+                onClick={() => toggleCategory(category)}
+                className={`rounded-full border px-3.5 py-1.5 font-mono text-[13px] transition-colors ${
+                  active
+                    ? "border-main bg-main text-main-foreground"
+                    : "border-border bg-muted text-foreground hover:border-main/50 hover:text-main-ink"
+                }`}
+              >
+                {category}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Sort and Results Info */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="font-medium">Sort by:</span>
-            <Select value={sort} onValueChange={handleSortChange}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="popular">Popular</SelectItem>
-                <SelectItem value="recent">Recent</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <span className="hud text-xs text-muted-foreground">Sort by</span>
+          <Select value={sort} onValueChange={handleSortChange}>
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="popular">Most played</SelectItem>
+              <SelectItem value="recent">Most recent</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {data && (
-          <div className="text-foreground">
-            Showing {(page - 1) * 20 + 1}-{Math.min(page * 20, data.totalCount)}{" "}
-            of {data.totalCount} sorters
-          </div>
+          <span className="font-mono text-[13px] text-muted-foreground">
+            Showing {Math.min((page - 1) * 20 + 1, data.totalCount)}–
+            {Math.min(page * 20, data.totalCount)} of{" "}
+            {data.totalCount.toLocaleString()}
+          </span>
         )}
       </div>
 
+      <div className="mb-7 h-px bg-border" />
+
       {/* Results */}
       <section>
-        <SectionHeading>
-          {query ? `Search Results for "${query}"` : "All Sorters"}
-          {data && ` (${data.totalCount})`}
-        </SectionHeading>
         <div>
             {isLoading ? (
               <div className="py-12 text-center">
@@ -305,7 +312,7 @@ function BrowseContent() {
                 {/* Results Grid */}
                 <SorterGrid>
                   {data.sorters.map((sorter) => (
-                    <SorterCard key={sorter.id} sorter={sorter} />
+                    <SorterCard key={sorter.id} sorter={sorter} showCategory />
                   ))}
                 </SorterGrid>
 
@@ -379,11 +386,13 @@ export default function BrowsePage() {
     <Suspense
       fallback={
         <PageContainer>
-          <h1 className="mb-6 text-3xl font-bold tracking-tight md:text-4xl">
-            Browse Sorters
-          </h1>
+          <ArcadePageHeader
+            className="mb-7"
+            eyebrow="pick your fight"
+            title="Browse sorters"
+          />
           <div className="py-12 text-center">
-            <p className="font-medium text-muted-foreground">Loading...</p>
+            <p className="font-mono text-sm text-muted-foreground">Loading…</p>
           </div>
         </PageContainer>
       }

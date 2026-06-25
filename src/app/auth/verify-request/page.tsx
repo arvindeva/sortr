@@ -2,43 +2,50 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Mail } from "lucide-react";
+import { VsMarker } from "@/components/ui/sortr-mark";
 
 function VerifyRequestContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
 
   return (
-    <div className="mt-20 flex flex-col items-center">
-      <div className="mb-6 rounded-full bg-accent p-4">
-        <Mail className="h-8 w-8 text-main" />
-      </div>
+    <div className="flex min-h-[70vh] items-center justify-center px-4">
+      <div className="w-full max-w-[440px] text-center">
+        <div className="mb-6 flex justify-center">
+          <VsMarker size={56} glyph="✓" glyphColor="var(--cyan)" />
+        </div>
 
-      <h1 className="mb-4 text-3xl font-bold">Check your email</h1>
-
-      <div className="mb-8 max-w-md text-center">
-        <p className="text-foreground mb-4">
-          We've sent you a magic link to sign in to your account.
+        <h1 className="display text-[clamp(2.25rem,6vw,3rem)] font-black text-foreground">
+          Check your email
+        </h1>
+        <p className="mt-3 text-muted-foreground">
+          We&apos;ve sent you a magic link to sign in &mdash; no password
+          needed.
         </p>
-        {email && (
-          <p className="text-foreground">
-            Check your email at <strong>{email}</strong> and click the link to
-            continue.
+
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6">
+          {email ? (
+            <p className="text-muted-foreground">
+              Open the link we sent to{" "}
+              <strong className="text-foreground">{email}</strong> to continue.
+            </p>
+          ) : (
+            <p className="text-muted-foreground">
+              Open the link we sent to your inbox to continue.
+            </p>
+          )}
+          <p className="mt-3 font-mono text-xs text-muted-foreground">
+            no email? check your spam folder or try again.
           </p>
-        )}
-      </div>
+        </div>
 
-      <div className="text-center">
-        <p className="text-foreground mb-4">
-          Didn't receive the email? Check your spam folder or try again.
-        </p>
-        <Button
-          variant="neutral"
-          onClick={() => (window.location.href = "/auth/signin")}
-        >
-          Back to Sign In
-        </Button>
+        <div className="mt-6">
+          <Button asChild variant="neutral" size="lg" className="w-full">
+            <Link href="/auth/signin">Back to sign in</Link>
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -48,7 +55,9 @@ export default function VerifyRequestPage() {
   return (
     <Suspense
       fallback={
-        <div className="mt-20 flex items-center justify-center">Loading...</div>
+        <div className="flex min-h-[70vh] items-center justify-center px-4">
+          <p className="hud text-xs text-muted-foreground">Loading…</p>
+        </div>
       }
     >
       <VerifyRequestContent />

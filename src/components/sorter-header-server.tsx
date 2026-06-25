@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/ui/page-header";
-import { Play, Trophy, Pencil } from "lucide-react";
-import { DeleteSorterButton } from "@/components/delete-sorter-button";
+import { CoverTile } from "@/components/ui/cover-tile";
+import { Play } from "lucide-react";
 
 interface SorterHeaderServerProps {
   sorter: {
@@ -14,6 +12,8 @@ interface SorterHeaderServerProps {
     category?: string;
     coverImageUrl?: string;
     completionCount: number;
+    itemCount?: number;
+    rankingCount?: number;
     user: {
       username: string;
       id: string;
@@ -27,136 +27,92 @@ interface SorterHeaderServerProps {
 export function SorterHeaderServer({
   sorter,
   hasFilters,
-  isOwner,
   children,
 }: SorterHeaderServerProps) {
+  const sortHref = hasFilters
+    ? `/sorter/${sorter.slug}/filters`
+    : `/sorter/${sorter.slug}/sort`;
+
+  // mono meta line: by @user · N plays · N rankings
+  const meta: React.ReactNode[] = [];
+  meta.push(
+    <span key="by">
+      by{" "}
+      {sorter.user.username ? (
+        <Link
+          href={`/user/${sorter.user.username}`}
+          className="text-cyan-ink hover:underline"
+        >
+          @{sorter.user.username}
+        </Link>
+      ) : (
+        <span className="text-foreground">Unknown</span>
+      )}
+    </span>,
+  );
+  meta.push(
+    <span key="plays">{sorter.completionCount.toLocaleString()} plays</span>,
+  );
+  if (sorter.rankingCount != null) {
+    meta.push(
+      <span key="rankings">{sorter.rankingCount.toLocaleString()} rankings</span>,
+    );
+  }
+
   return (
-    <>
-      {/* Sorter Header */}
-      <section className="mb-4 md:mb-8">
-        <div className="flex items-center space-x-3 py-4 md:space-x-6">
-          {/* Cover Image */}
-          <div className="border-border rounded-base flex h-20 w-20 items-center justify-center overflow-hidden border shadow-sm sm:h-36 sm:w-36 md:h-48 md:w-48">
-            {sorter.coverImageUrl ? (
-              <img
-                src={sorter.coverImageUrl}
-                alt={`${sorter.title}'s cover`}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-secondary">
-                <span className="text-4xl font-semibold text-muted-foreground/40">
-                  {sorter.title.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
+    <section className="mb-8">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-7">
+        {/* Cover */}
+        <CoverTile
+          imageUrl={sorter.coverImageUrl}
+          name={sorter.title}
+          colorKey={sorter.slug}
+          nameSize={26}
+          radius={14}
+          className="h-28 w-28 shrink-0 sm:h-[170px] sm:w-[170px]"
+        />
+
+        {/* Info */}
+        <div className="min-w-0 flex-1">
+          <div className="hud mb-2 text-xs text-cyan-ink">
+            {[sorter.category, sorter.itemCount != null && `${sorter.itemCount} items`]
+              .filter(Boolean)
+              .join(" · ")}
+          </div>
+          <h1 className="display text-[clamp(2.25rem,6vw,3.875rem)] font-black text-foreground">
+            {sorter.title}
+          </h1>
+          <div className="mt-2.5 flex flex-wrap items-center gap-x-1.5 font-mono text-[13px] text-muted-foreground">
+            {meta.map((m, i) => (
+              <span key={i} className="flex items-center gap-1.5">
+                {i > 0 && <span className="text-muted-foreground/50">·</span>}
+                {m}
+              </span>
+            ))}
           </div>
 
-          {/* Sorter Info */}
-          <div className="flex-1">
-            <div className="mb-2 flex items-center gap-2">
-              <PageHeader>{sorter.title}</PageHeader>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-medium">
-              <div className="flex items-center gap-1">
-                <span>by</span>
-                {sorter.user.username ? (
-                  <Link
-                    href={`/user/${sorter.user.username}`}
-                    className="font-bold hover:underline"
-                  >
-                    {sorter.user.username}
-                  </Link>
-                ) : (
-                  <span className="font-bold">Unknown User</span>
-                )}
-              </div>
-              <div className="flex items-center gap-1">
-                <Trophy size={16} />
-                <span>{sorter.completionCount}</span>
-              </div>
-            </div>
+          {sorter.description && (
+            <p className="mt-4 max-w-2xl leading-relaxed text-muted-foreground">
+              {sorter.description}
+            </p>
+          )}
 
-            {/* Desktop Action Buttons */}
-            <div className="mt-4 hidden items-center gap-4 md:flex">
-              {hasFilters ? (
-                <Button
-                  asChild
-                  size="default"
-                  variant="default"
-                  className="group"
-                >
-                  <Link href={`/sorter/${sorter.slug}/filters`}>
-                    <Play
-                      className="transition-transform duration-200 group-hover:translate-x-1"
-                      size={20}
-                    />
-                    Sort Now
-                  </Link>
-                </Button>
-              ) : (
-                <Button
-                  asChild
-                  size="default"
-                  variant="default"
-                  className="group"
-                >
-                  <Link href={`/sorter/${sorter.slug}/sort`}>
-                    <Play
-                      className="transition-transform duration-200 group-hover:translate-x-1"
-                      size={20}
-                    />
-                    Sort now
-                  </Link>
-                </Button>
-              )}
-              {/* Client-injected owner controls slot */}
-              {children}
-            </div>
+          {/* Actions */}
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <Button asChild size="lg" arcade className="group">
+              <Link href={sortHref}>
+                <Play
+                  className="transition-transform duration-200 group-hover:translate-x-1"
+                  size={20}
+                />
+                Sort now
+              </Link>
+            </Button>
+            {/* Client-injected owner controls slot */}
+            {children}
           </div>
         </div>
-      </section>
-
-      {/* Mobile Action Buttons */}
-      <div className="mb-8 flex items-center gap-4 md:hidden">
-        {hasFilters ? (
-          <Button asChild size="default" variant="default" className="group">
-            <Link href={`/sorter/${sorter.slug}/filters`}>
-              <Play
-                className="transition-transform duration-200 group-hover:translate-x-1"
-                size={20}
-              />
-              Sort Now
-            </Link>
-          </Button>
-        ) : (
-          <Button asChild size="default" variant="default" className="group">
-            <Link href={`/sorter/${sorter.slug}/sort`}>
-              <Play
-                className="transition-transform duration-200 group-hover:translate-x-1"
-                size={20}
-              />
-              Sort now
-            </Link>
-          </Button>
-        )}
-        {/* Client-injected owner controls slot (mobile) */}
-        {children}
       </div>
-
-      {/* Description and Category */}
-      <div className="mb-8 space-y-4">
-        {sorter.description && (
-          <div>
-            <p className="font-medium">{sorter.description}</p>
-          </div>
-        )}
-        {sorter.category && (
-          <div>
-            <Badge variant="default">{sorter.category}</Badge>
-          </div>
-        )}
-      </div>
-    </>
+    </section>
   );
 }

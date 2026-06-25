@@ -14,6 +14,8 @@ interface SorterCardProps {
   };
   /** Optional corner badge, e.g. "#1" (popular) or "NEW" (fresh). */
   badge?: { label: string; tone?: "rank" | "new" };
+  /** Show the sorter's category as a chip in the cover's bottom-right (browse). */
+  showCategory?: boolean;
   className?: string;
 }
 
@@ -22,7 +24,12 @@ interface SorterCardProps {
  * tile cycling the arcade accents) above a display-font title and a mono meta
  * row (@author · plays). Lifts and gains an accent glow on hover.
  */
-export function SorterCard({ sorter, badge, className }: SorterCardProps) {
+export function SorterCard({
+  sorter,
+  badge,
+  showCategory,
+  className,
+}: SorterCardProps) {
   const plays = sorter.completionCount.toLocaleString();
 
   return (
@@ -52,6 +59,11 @@ export function SorterCard({ sorter, badge, className }: SorterCardProps) {
               )}
             >
               {badge.label}
+            </span>
+          )}
+          {showCategory && sorter.category && (
+            <span className="absolute right-2 bottom-2 rounded bg-black/40 px-[7px] py-[3px] font-mono text-[10px] tracking-wide text-white">
+              {sorter.category}
             </span>
           )}
         </div>

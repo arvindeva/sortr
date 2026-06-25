@@ -4,11 +4,9 @@ import { useUserProfile } from "@/hooks/api";
 import { UserProfileContentSkeleton } from "@/components/skeletons/user-profile-content-skeleton";
 import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { SectionHeading } from "@/components/ui/section-heading";
 import { EmptyState } from "@/components/ui/empty-state";
 import Link from "next/link";
+import { accentFor } from "@/lib/utils";
 import { getImageUrl } from "@/lib/image-utils";
 
 interface UserProfileClientProps {
@@ -16,6 +14,28 @@ interface UserProfileClientProps {
   isOwnProfile: boolean;
   currentUserEmail?: string;
   initialData?: any; // Will use the same type as useUserProfile returns
+}
+
+// Display-font section title with a colored arrow + count, matching the
+// arcade section headings used across the app.
+function SectionTitle({
+  children,
+  count,
+  arrowClass = "text-main",
+}: {
+  children: React.ReactNode;
+  count?: number;
+  arrowClass?: string;
+}) {
+  return (
+    <h2 className="display mb-4 text-[clamp(1.75rem,5vw,2.125rem)] font-black text-foreground">
+      {children}
+      {count != null && (
+        <span className="font-bold text-muted-foreground"> ({count})</span>
+      )}{" "}
+      <span className={arrowClass}>▸</span>
+    </h2>
+  );
 }
 
 export function UserProfileClient({
@@ -58,8 +78,8 @@ export function UserProfileClient({
   return (
     <>
       {/* Sorters Section */}
-      <section className="mb-8">
-        <SectionHeading as="h2">Sorters ({sorters.length})</SectionHeading>
+      <section className="mb-10">
+        <SectionTitle count={sorters.length}>Sorters</SectionTitle>
         <div>
           {sorters.length === 0 ? (
             <EmptyState
@@ -78,7 +98,9 @@ export function UserProfileClient({
 
       {/* Rankings Section */}
       <section>
-        <SectionHeading as="h2">Rankings ({rankings.length})</SectionHeading>
+        <SectionTitle count={rankings.length} arrowClass="text-cyan-ink">
+          Rankings
+        </SectionTitle>
         <div>
           {rankings.length === 0 ? (
             <EmptyState
@@ -86,88 +108,82 @@ export function UserProfileClient({
               description="Complete some sorting sessions to see rankings!"
             />
           ) : (
-            <div className="grid items-stretch gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               {rankings.map((result) => (
                 <Link
                   key={result.id}
                   href={`/rankings/${result.id}`}
                   prefetch={false}
-                  className="card-link"
+                  className="group block rounded-xl border border-border bg-card p-4 transition-colors hover:border-main/40 md:p-5"
                 >
-                  <Card className="card h-full cursor-pointer gap-2">
-                    <CardHeader className="flex flex-col justify-start">
-                      <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="line-clamp-2 leading-relaxed">
-                          {result.sorterTitle}
-                        </CardTitle>
-                        {result.sorterCategory && (
-                          <Badge variant="default" className="shrink-0">
-                            {result.sorterCategory}
-                          </Badge>
-                        )}
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {/* Top 3 Rankings Preview */}
-                      <div className="mb-3 space-y-2">
-                        {result.top3.map((item: any, index: number) => (
-                          <div
-                            key={item.id || index}
-                            className="flex items-center gap-2"
-                          >
-                            <div className="flex min-w-0 flex-1 items-center gap-2">
-                              {item.imageUrl ? (
-                                <div className="border-border rounded-base h-6 w-6 flex-shrink-0 overflow-hidden border shadow-sm">
-                                  <img
-                                    src={getImageUrl(
-                                      item.imageUrl,
-                                      "thumbnail",
-                                    )}
-                                    alt={item.title}
-                                    className="h-full w-full object-contain"
-                                    onError={(e) => {
-                                      // Fallback to full-size image if thumbnail fails to load
-                                      const target =
-                                        e.target as HTMLImageElement;
-                                      if (target.src.includes("-thumb")) {
-                                        target.src = getImageUrl(
-                                          item.imageUrl,
-                                          "full",
-                                        );
-                                      }
-                                    }}
-                                  />
-                                </div>
-                              ) : (
-                                <div className="border-border rounded-base flex h-6 w-6 flex-shrink-0 items-center justify-center border bg-gradient-to-br from-muted to-secondary">
-                                  <span className="text-muted-foreground/40 text-xs font-semibold">
-                                    {item.title.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                              )}
-                              <span className="min-w-[1.5rem] text-center font-bold">
-                                {index + 1}.
-                              </span>
-                              <span className="font-medium break-words">
-                                {item.title}
-                              </span>
-                            </div>
+                  {/* Title + category chip */}
+                  <div className="mb-3.5 flex items-start justify-between gap-3">
+                    <h3 className="display text-[22px] leading-tight font-extrabold text-foreground">
+                      {result.sorterTitle}
+                    </h3>
+                    {result.sorterCategory && (
+                      <span className="shrink-0 rounded-full border border-main/40 bg-accent px-2.5 py-1 font-mono text-[11px] text-main-ink">
+                        {result.sorterCategory}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Top 3 preview */}
+                  <div className="flex flex-col gap-2.5">
+                    {result.top3.map((item: any, index: number) => (
+                      <div
+                        key={item.id || index}
+                        className="flex items-center gap-3"
+                      >
+                        <span
+                          className="display w-[22px] text-lg font-black"
+                          style={{
+                            color:
+                              index === 0
+                                ? "var(--medal-gold)"
+                                : index === 1
+                                  ? "var(--medal-silver)"
+                                  : index === 2
+                                    ? "var(--medal-bronze)"
+                                    : "var(--muted-foreground)",
+                          }}
+                        >
+                          {index + 1}
+                        </span>
+                        {item.imageUrl ? (
+                          <div className="h-[26px] w-[26px] shrink-0 overflow-hidden rounded-[6px] border border-border bg-muted">
+                            <img
+                              src={getImageUrl(item.imageUrl, "thumbnail")}
+                              alt={item.title}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                const t = e.target as HTMLImageElement;
+                                if (t.src.includes("-thumb"))
+                                  t.src = getImageUrl(item.imageUrl, "full");
+                              }}
+                            />
                           </div>
-                        ))}
-                      </div>
-                      {/* Date */}
-                      <div className="text-foreground text-xs font-medium">
-                        {new Date(result.createdAt).toLocaleDateString(
-                          "en-US",
-                          {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          },
+                        ) : (
+                          <span
+                            className="h-[26px] w-[26px] shrink-0 rounded-[6px]"
+                            style={{ background: accentFor(item.id || index) }}
+                          />
                         )}
+                        <span className="min-w-0 font-medium break-words text-foreground">
+                          {item.title}
+                        </span>
                       </div>
-                    </CardContent>
-                  </Card>
+                    ))}
+                  </div>
+
+                  {/* Date */}
+                  <div className="mt-3.5 font-mono text-[11px] text-muted-foreground">
+                    {new Date(result.createdAt).toLocaleDateString("en-US", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </div>
                 </Link>
               ))}
             </div>

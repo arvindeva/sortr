@@ -13,13 +13,11 @@ import {
 import { eq, inArray, and } from "drizzle-orm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { SectionHeading } from "@/components/ui/section-heading";
-import { Trophy, Play } from "lucide-react";
+import { CoverTile } from "@/components/ui/cover-tile";
+import { Play } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
 import { RankingImageLayout } from "@/components/ranking-image-layout";
-import { getImageUrl } from "@/lib/image-utils";
 import { RankingOwnerActions } from "@/components/ranking-owner-actions";
 
 interface RankingsPageProps {
@@ -382,78 +380,68 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="container mx-auto max-w-6xl overflow-hidden px-2 py-2 md:px-4 md:py-8">
+      <div className="container mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-12">
         {/* Header */}
-        <section className="mb-3">
-          <div className="flex items-center space-x-3 py-4 md:space-x-6">
-            {/* Cover Image */}
-            <div className="border-border rounded-base flex h-28 w-28 items-center justify-center overflow-hidden border shadow-md md:h-48 md:w-48">
-              {sorter.coverImageUrl ? (
-                <img
-                  src={sorter.coverImageUrl}
-                  alt={`${sorter.title}'s cover`}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="bg-gradient-to-br from-muted to-secondary flex h-full w-full items-center justify-center">
-                  <span className="text-4xl font-semibold text-muted-foreground/40">
-                    {sorter.title.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-            </div>
+        <section className="mb-9">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-7">
+            <CoverTile
+              imageUrl={sorter.coverImageUrl}
+              name={sorter.title}
+              colorKey={sorter.slug ?? sorter.title}
+              nameSize={26}
+              radius={14}
+              className="h-28 w-28 shrink-0 sm:h-40 sm:w-40"
+            />
 
-            {/* Ranking Info */}
-            <div className="flex-1">
-              <div className="mb-2 flex items-center gap-2">
-                {!sorter.isDeleted && sorter.slug ? (
-                  <Link href={`/sorter/${sorter.slug}`}>
-                    <h1 className="cursor-pointer text-3xl font-bold tracking-tight hover:underline md:text-4xl">
-                      {sorter.title}
-                    </h1>
-                  </Link>
-                ) : (
-                  <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-                    {sorter.title}
-                    {sorter.isDeleted && (
-                      <span className="ml-2 text-sm text-destructive">
-                        (Deleted)
-                      </span>
-                    )}
-                  </h1>
-                )}
+            <div className="min-w-0 flex-1">
+              <div className="hud mb-2 text-xs text-cyan-ink">
+                ★ Your ranking
               </div>
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-medium">
-                <div className="flex items-center gap-1">
-                  <span>sorted by</span>
-                  {result.username && result.username !== "Anonymous" ? (
-                    <Link
-                      href={`/user/${result.username}`}
-                      className="font-bold hover:underline"
-                    >
-                      {result.username}
-                    </Link>
-                  ) : (
-                    <span className="text-muted-foreground">
-                      Anonymous
+              {!sorter.isDeleted && sorter.slug ? (
+                <Link href={`/sorter/${sorter.slug}`}>
+                  <h1 className="display text-[clamp(2.25rem,6vw,3.75rem)] font-black text-foreground transition-colors hover:text-main-ink">
+                    {sorter.title}
+                  </h1>
+                </Link>
+              ) : (
+                <h1 className="display text-[clamp(2.25rem,6vw,3.75rem)] font-black text-foreground">
+                  {sorter.title}
+                  {sorter.isDeleted && (
+                    <span className="ml-2 align-middle font-mono text-sm text-destructive">
+                      (deleted)
                     </span>
                   )}
-                </div>
+                </h1>
+              )}
+              <div className="mt-2.5 font-mono text-[13px] text-muted-foreground">
+                sorted by{" "}
+                {result.username && result.username !== "Anonymous" ? (
+                  <Link
+                    href={`/user/${result.username}`}
+                    className="text-cyan-ink hover:underline"
+                  >
+                    @{result.username}
+                  </Link>
+                ) : (
+                  <span className="text-foreground">Anonymous</span>
+                )}
               </div>
 
-              {/* Desktop Action Buttons */}
-              <div className="mt-4 hidden items-center gap-4 md:flex">
+              {/* Action Buttons */}
+              <div className="mt-5 flex flex-wrap items-center gap-3">
                 {!sorter.isDeleted && sorter.slug ? (
-                  <Button asChild variant="default">
+                  <Button asChild size="lg" arcade className="group">
                     <Link href={`/sorter/${sorter.slug}/sort`}>
-                      <Play size={16} />
-                      Sort This
+                      <Play
+                        className="transition-transform duration-200 group-hover:translate-x-1"
+                        size={18}
+                      />
+                      Sort it yourself
                     </Link>
                   </Button>
                 ) : (
-                  <Button variant="neutral" disabled>
-                    <Play size={16} />
-                    Sorter Deleted
+                  <Button variant="neutral" size="lg" arcade disabled>
+                    Sorter deleted
                   </Button>
                 )}
                 <ShareButton
@@ -475,203 +463,77 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
           </div>
         </section>
 
-        {/* Mobile Action Buttons */}
-        <div className="mb-8 flex flex-wrap gap-4 md:hidden">
-          {!sorter.isDeleted && sorter.slug ? (
-            <Button asChild variant="default">
-              <Link href={`/sorter/${sorter.slug}/sort`}>
-                <Play size={16} />
-                Sort This
-              </Link>
-            </Button>
-          ) : (
-            <Button variant="neutral" disabled>
-              <Play size={16} />
-              Sorter Deleted
-            </Button>
-          )}
-          <ShareButton
-            hideTextOnMobile
-            rankingData={{
-              sorterTitle: sorter.title,
-              username: result.username,
-              rankings: result.rankings,
-              createdAt: result.createdAt instanceof Date ? result.createdAt : new Date(result.createdAt),
-              selectedTags: selectedTagSlugs,
-            }}
-          />
-          <RankingOwnerActions
-            ownerUserId={ownerUserId}
-            rankingId={result.id}
-            sorterTitle={sorter.title}
-            hideTextOnMobile
-          />
-        </div>
-
-        {/* Two Column Layout */}
-        <div className="grid gap-8 md:grid-cols-3">
-          {/* Left Column - Rankings (spans 2 columns on desktop) */}
-          <div className="md:col-span-2">
-            <section>
-              <SectionHeading as="h2">Rankings</SectionHeading>
-              <div className="overflow-hidden">
-                <AnimatedRankings rankings={result.rankings} />
-              </div>
-            </section>
-          </div>
-
-          {/* Right Column (desktop only) */}
-          <div className="hidden space-y-8 md:block">
-            {/* Filters Used - Only show if filters were used */}
-            {selectedTagSlugs && (
-              <section>
-                <SectionHeading as="h2">Filters Used</SectionHeading>
-                <div className="flex flex-wrap gap-2">
-                  {selectedTagSlugs &&
-                    selectedTagSlugs.map((tagName) => (
-                      <Badge key={tagName} variant="neutral">
-                        {tagName}
-                      </Badge>
-                    ))}
-                </div>
-              </section>
-            )}
-
-            {/* Sorter Info */}
-            <section>
-              <SectionHeading as="h2">Sorter Info</SectionHeading>
-              <div className="space-y-4">
-                  <div>
-                    {!sorter.isDeleted && sorter.slug ? (
-                      <Link
-                        href={`/sorter/${sorter.slug}`}
-                        className="sorter-title-link hover:underline"
-                      >
-                        <h3 className="mb-1 text-lg font-bold">
-                          {sorter.title}
-                        </h3>
-                      </Link>
-                    ) : (
-                      <h3 className="mb-1 text-lg font-bold">
-                        {sorter.title}
-                        {sorter.isDeleted && (
-                          <span className="text-sm text-destructive">
-                            {" "}
-                            (Deleted)
-                          </span>
-                        )}
-                      </h3>
-                    )}
-                    <p>
-                      by{" "}
-                      {sorter.creatorUsername &&
-                      sorter.creatorUsername !== "Unknown User" ? (
-                        <Link
-                          href={`/user/${sorter.creatorUsername}`}
-                          className="font-medium hover:underline"
-                        >
-                          {sorter.creatorUsername}
-                        </Link>
-                      ) : (
-                        <span className="font-medium text-muted-foreground">
-                          {sorter.creatorUsername}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  {/* Category */}
-                  {sorter.category && (
-                    <div>
-                      <Badge variant="default">{sorter.category}</Badge>
-                    </div>
-                  )}
-                  <div className="flex gap-4">
-                    <div className="flex items-center gap-1">
-                      <Trophy size={16} />
-                      <span>{sorter.completionCount}</span>
-                    </div>
-                  </div>
-                </div>
-            </section>
-          </div>
-        </div>
-
-        {/* Mobile: Info section (shows at bottom on mobile) */}
-        <div className="mt-8 md:hidden">
+        {/* Body: Final order + Sorter info */}
+        <div className="grid gap-8 md:grid-cols-[1fr_320px] md:items-start">
+          {/* Final order */}
           <section>
-            <SectionHeading as="h2">Sorter Info</SectionHeading>
-            <div className="space-y-4">
-                <div>
-                  {!sorter.isDeleted && sorter.slug ? (
-                    <Link
-                      href={`/sorter/${sorter.slug}`}
-                      className="sorter-title-link hover:underline"
-                    >
-                      <h3 className="mb-1 text-lg font-bold">{sorter.title}</h3>
-                    </Link>
-                  ) : (
-                    <h3 className="mb-1 text-lg font-bold">
-                      {sorter.title}
-                      {sorter.isDeleted && (
-                        <span className="text-sm text-destructive">
-                          {" "}
-                          (Deleted)
-                        </span>
-                      )}
-                    </h3>
-                  )}
-                  <p>
-                    by{" "}
-                    {sorter.creatorUsername &&
-                    sorter.creatorUsername !== "Unknown User" ? (
-                      <Link
-                        href={`/user/${sorter.creatorUsername}`}
-                        className="font-medium hover:underline"
-                      >
-                        {sorter.creatorUsername}
-                      </Link>
-                    ) : (
-                      <span className="font-medium text-muted-foreground">
-                        {sorter.creatorUsername}
-                      </span>
-                    )}
-                  </p>
-                </div>
-                {/* Category */}
-                {sorter.category && (
-                  <div>
-                    <Badge variant="default">{sorter.category}</Badge>
-                  </div>
-                )}
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-1">
-                    <Trophy size={16} />
-                    <span>{sorter.completionCount}</span>
-                  </div>
-                </div>
+            <h2 className="display mb-5 text-[34px] font-black text-foreground">
+              Final order <span className="text-main">▸</span>
+            </h2>
+            <div className="overflow-hidden">
+              <AnimatedRankings rankings={result.rankings} />
             </div>
           </section>
-        </div>
 
-        {/* Actions */}
-        <div className="mt-8 flex justify-center gap-4">
-          {!sorter.isDeleted && sorter.slug ? (
-            <>
-              <Button asChild>
-                <Link href={`/sorter/${sorter.slug}/sort`}>
-                  <Play className="mr-2" size={16} />
-                  Sort now
+          {/* Sorter info panel */}
+          <aside className="rounded-2xl border border-border bg-card p-6">
+            <div className="hud mb-3.5 text-xs text-muted-foreground">
+              Sorter info
+            </div>
+            {!sorter.isDeleted && sorter.slug ? (
+              <Link href={`/sorter/${sorter.slug}`}>
+                <h3 className="display text-2xl font-extrabold text-foreground transition-colors hover:text-main-ink">
+                  {sorter.title}
+                </h3>
+              </Link>
+            ) : (
+              <h3 className="display text-2xl font-extrabold text-foreground">
+                {sorter.title}
+              </h3>
+            )}
+            <p className="mt-2 text-sm text-muted-foreground">
+              by{" "}
+              {sorter.creatorUsername &&
+              sorter.creatorUsername !== "Unknown User" ? (
+                <Link
+                  href={`/user/${sorter.creatorUsername}`}
+                  className="font-semibold text-cyan-ink hover:underline"
+                >
+                  @{sorter.creatorUsername}
                 </Link>
+              ) : (
+                <span className="text-foreground">{sorter.creatorUsername}</span>
+              )}
+            </p>
+            {sorter.category && (
+              <div className="mt-3.5">
+                <span className="inline-block rounded-full border border-main/40 bg-accent px-3 py-1 font-mono text-xs text-main-ink">
+                  {sorter.category}
+                </span>
+              </div>
+            )}
+
+            <div className="my-4.5 h-px bg-border" />
+
+            <dl className="flex flex-col gap-3 font-mono text-[13px]">
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">PLAYS</dt>
+                <dd className="text-foreground">
+                  {sorter.completionCount.toLocaleString()}
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">ITEMS</dt>
+                <dd className="text-foreground">{result.rankings.length}</dd>
+              </div>
+            </dl>
+
+            {!sorter.isDeleted && sorter.slug && (
+              <Button asChild variant="neutral" className="mt-5 w-full">
+                <Link href={`/sorter/${sorter.slug}`}>View sorter page →</Link>
               </Button>
-              <Button asChild variant="neutral">
-                <Link href={`/sorter/${sorter.slug}`}>View Sorter Details</Link>
-              </Button>
-            </>
-          ) : (
-            <Button variant="neutral" disabled>
-              Original sorter no longer available
-            </Button>
-          )}
+            )}
+          </aside>
         </div>
 
         {/* Development Preview: Image Layout */}

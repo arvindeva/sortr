@@ -24,15 +24,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { SectionHeading } from "@/components/ui/section-heading";
-import {
-  Plus,
-  X,
-  Image as ImageIcon,
-  ArrowLeft,
-  Pencil,
-  Loader2,
-} from "lucide-react";
+import { ArcadePageHeader } from "@/components/ui/arcade-page-header";
+import { accentFor } from "@/lib/utils";
+import { Plus, X, Image as ImageIcon, ArrowLeft, Pencil, Loader2 } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
 import CoverImageUpload from "@/components/cover-image-upload";
 import { UploadProgressDialog } from "@/components/upload-progress-dialog";
@@ -601,32 +595,43 @@ export default function EditSorterForm({
         onCancel={handleCancelUpload}
         isEditMode
       />
-      <div className="mb-6 flex items-center gap-4">
-        <Link
-          href={`/sorter/${sorter.slug}`}
-          className="text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
-          title="Back to sorter"
-        >
-          <ArrowLeft size={24} />
-        </Link>
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-          Edit Sorter
-        </h1>
-      </div>
+      <ArcadePageHeader
+        className="mb-8"
+        eyebrow="Edit sorter"
+        title="Edit sorter"
+        subtitle="Update the title, cover, and the things you want to rank."
+        actions={
+          <Link
+            href={`/sorter/${sorter.slug}`}
+            className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:text-foreground"
+            title="Back to sorter"
+          >
+            <ArrowLeft size={16} />
+            Back
+          </Link>
+        }
+      />
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           {/* Sorter Details Section */}
-          <section>
-            <SectionHeading as="h2">Sorter Details</SectionHeading>
-            <div className="space-y-4">
+          <section className="rounded-2xl border border-border bg-card p-6 md:p-7">
+            <div className="hud mb-5 text-xs text-muted-foreground">
+              01 — Details
+            </div>
+            <div className="space-y-5">
               <FormField
                 control={form.control}
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title *</FormLabel>
+                    <FormLabel className="text-[13px] font-semibold text-foreground">
+                      Title <span className="text-main-ink">*</span>
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Marvel Movies" {...field} />
+                      <Input
+                        placeholder="e.g. Best Studio Ghibli Film"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -638,10 +643,12 @@ export default function EditSorterForm({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel className="text-[13px] font-semibold text-foreground">
+                      Description
+                    </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Describe your sorter (optional)"
+                        placeholder="What's this sorter about? (optional)"
                         className="resize-none"
                         rows={3}
                         {...field}
@@ -657,13 +664,15 @@ export default function EditSorterForm({
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel className="text-[13px] font-semibold text-foreground">
+                      Category
+                    </FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value || ""}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-muted text-foreground">
                           <SelectValue placeholder="Select a category (optional)" />
                         </SelectTrigger>
                       </FormControl>
@@ -694,13 +703,11 @@ export default function EditSorterForm({
               />
 
               {/* Cover Image Upload */}
-              <div>
-                <CoverImageUpload
-                  onImageSelect={handleCoverImageSelect}
-                  selectedFile={coverImageFile}
-                  previewUrl={coverImagePreview}
-                />
-              </div>
+              <CoverImageUpload
+                onImageSelect={handleCoverImageSelect}
+                selectedFile={coverImageFile}
+                previewUrl={coverImagePreview}
+              />
             </div>
           </section>
 
@@ -708,23 +715,36 @@ export default function EditSorterForm({
               The filter-tags feature is deactivated for new sorters, but
               existing ones keep manageable tags so owners aren't locked out. */}
           {tags.length > 0 && (
-            <section>
-              <SectionHeading
-                as="h2"
-                description="Manage the filter tags on this sorter. New sorters no longer use tags."
-              >
+            <section className="rounded-2xl border border-border bg-card p-6 md:p-7">
+              <div className="hud mb-1.5 text-xs text-muted-foreground">
                 Tags
-              </SectionHeading>
+              </div>
+              <p className="mb-5 text-sm text-muted-foreground">
+                Manage the filter tags on this sorter. New sorters no longer use
+                tags.
+              </p>
               <TagManagement tags={managedTags} onTagsChange={setManagedTags} />
             </section>
           )}
 
           {/* Items Section */}
-          <section>
-            <SectionHeading as="h2">Items to Rank *</SectionHeading>
+          <section className="rounded-2xl border border-border bg-card p-6 md:p-7">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div className="hud text-xs text-muted-foreground">
+                02 — Items to rank
+              </div>
+              <span
+                className={`font-mono text-xs ${
+                  fields.length >= 2 ? "text-cyan-ink" : "text-muted-foreground"
+                }`}
+              >
+                {fields.length} items{" "}
+                {fields.length >= 2 ? "· ready" : "· min 2"}
+              </span>
+            </div>
             <div className="mb-4">
               {/* Buttons */}
-              <div className="mt-2 flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   type="button"
                   variant="neutral"
@@ -733,7 +753,7 @@ export default function EditSorterForm({
                   className="flex items-center gap-1"
                 >
                   <ImageIcon size={16} />
-                  Upload Images
+                  Upload images
                 </Button>
                 <Button
                   type="button"
@@ -743,7 +763,7 @@ export default function EditSorterForm({
                   className="flex items-center gap-1"
                 >
                   <Plus size={16} />
-                  Add Item
+                  Add item
                 </Button>
               </div>
             </div>
@@ -761,171 +781,165 @@ export default function EditSorterForm({
             {/* Items List */}
             <div className="space-y-4">
               {fields.length === 0 ? (
-                <div className="py-8">
-                  <p className="text-muted-foreground">No items added yet</p>
-                  <p className="text-muted-foreground mt-1 text-sm">
-                    Click "Upload Images" or "Add Item" to get started
-                  </p>
+                <div className="rounded-[10px] border border-dashed border-border bg-muted/40 px-4 py-8 text-center font-mono text-xs text-muted-foreground">
+                  no items yet — add at least two to start a sorter.
                 </div>
               ) : (
-                <>
-                  {fields.map((field, index) => (
-                    <div key={field.id} className="space-y-0">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.title`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="flex items-center gap-2">
-                              {/* Image preview if available */}
-                              {(() => {
-                                const currentItem = form.watch(
-                                  `items.${index}`,
-                                );
-                                const hasNewImage =
-                                  itemImagesData[index]?.preview;
-                                const hasExistingImage = currentItem?.imageUrl;
-                                return hasNewImage || hasExistingImage;
-                              })() && (
-                                <div className="relative flex-shrink-0">
-                                  <img
-                                    src={(() => {
-                                      const currentItem = form.watch(
-                                        `items.${index}`,
-                                      );
-                                      return (
-                                        itemImagesData[index]?.preview ||
-                                        currentItem?.imageUrl ||
-                                        ""
-                                      );
-                                    })()}
-                                    alt={`Preview ${index + 1}`}
-                                    className="border-border h-10 w-10 rounded border object-contain"
-                                  />
-                                  {/* Pencil icon for replacing image */}
-                                  <Button
-                                    type="button"
-                                    variant="neutralNoShadow"
-                                    size="icon"
-                                    className="absolute -right-1 -bottom-1 h-6 w-6 p-0"
-                                    onClick={() => {
-                                      const input = document.getElementById(
-                                        `item-image-replace-${index}`,
-                                      ) as HTMLInputElement;
-                                      input?.click();
-                                    }}
-                                    title="Replace image"
-                                  >
-                                    <Pencil size={8} />
-                                  </Button>
-                                  {/* Hidden file input for replacing individual images */}
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    id={`item-image-replace-${index}`}
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0];
-                                      if (file) {
-                                        handleItemImageSelect(index, file);
-                                      }
-                                    }}
-                                  />
-                                </div>
-                              )}
-                              <FormControl>
-                                <Input
-                                  placeholder={`Item ${index + 1}`}
-                                  {...field}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                      e.preventDefault();
-                                      // Add new item and focus on it
-                                      addItem();
-                                      // Focus will be set after the new item is rendered
-                                      setTimeout(() => {
-                                        const nextInput =
-                                          document.querySelector(
-                                            `input[name="items.${fields.length}.title"]`,
-                                          ) as HTMLInputElement;
-                                        nextInput?.focus();
-                                      }, 0);
-                                    }
-                                  }}
+                <div className="space-y-2.5">
+                  {fields.map((itemField, index) => (
+                    <FormField
+                      key={itemField.id}
+                      control={form.control}
+                      name={`items.${index}.title`}
+                      render={({ field }) => (
+                        <FormItem className="gap-1.5">
+                          <div className="flex items-center gap-3 rounded-[10px] border border-border bg-muted px-3 py-2.5">
+                            {/* Image preview (with replace) or color thumb */}
+                            {(() => {
+                              const currentItem = form.watch(`items.${index}`);
+                              const hasNewImage = itemImagesData[index]?.preview;
+                              const hasExistingImage = currentItem?.imageUrl;
+                              return hasNewImage || hasExistingImage;
+                            })() ? (
+                              <div className="relative flex-shrink-0">
+                                <img
+                                  src={(() => {
+                                    const currentItem = form.watch(
+                                      `items.${index}`,
+                                    );
+                                    return (
+                                      itemImagesData[index]?.preview ||
+                                      currentItem?.imageUrl ||
+                                      ""
+                                    );
+                                  })()}
+                                  alt={`Preview ${index + 1}`}
+                                  className="h-8 w-8 rounded-[7px] border border-border object-cover"
                                 />
-                              </FormControl>
-                              {fields.length > 0 && (
+                                {/* Pencil icon for replacing image */}
                                 <Button
                                   type="button"
                                   variant="neutralNoShadow"
-                                  size="sm"
-                                  onClick={() => removeItem(index)}
-                                  title="Remove item"
-                                  className="h-6 w-6 p-0"
+                                  size="icon"
+                                  className="absolute -right-1 -bottom-1 h-5 w-5 p-0"
+                                  onClick={() => {
+                                    const input = document.getElementById(
+                                      `item-image-replace-${index}`,
+                                    ) as HTMLInputElement;
+                                    input?.click();
+                                  }}
+                                  title="Replace image"
                                 >
-                                  <X size={14} />
+                                  <Pencil size={8} />
                                 </Button>
-                              )}
-                            </div>
-                            <FormMessage />
-
-                            {/* Tag selection for this item */}
-                            {managedTags.length > 0 && (
-                              <div className="mb-2 flex flex-wrap gap-2">
-                                {managedTags.map((tag) => {
-                                  const tagSlug = tag.name
-                                    .toLowerCase()
-                                    .replace(/\s+/g, "-");
-                                  const currentTags =
-                                    form.watch(`items.${index}.tagSlugs`) || [];
-                                  const isSelected =
-                                    currentTags.includes(tagSlug);
-                                  return (
-                                    <Button
-                                      key={tag.id}
-                                      type="button"
-                                      variant={
-                                        isSelected ? "default" : "neutral"
-                                      }
-                                      size="sm"
-                                      onClick={() => {
-                                        const currentTagSlugs =
-                                          form.getValues(
-                                            `items.${index}.tagSlugs`,
-                                          ) || [];
-                                        if (isSelected) {
-                                          form.setValue(
-                                            `items.${index}.tagSlugs`,
-                                            currentTagSlugs.filter(
-                                              (t) => t !== tagSlug,
-                                            ),
-                                          );
-                                        } else {
-                                          form.setValue(
-                                            `items.${index}.tagSlugs`,
-                                            [...currentTagSlugs, tagSlug],
-                                          );
-                                        }
-                                      }}
-                                      className="h-8 text-xs"
-                                    >
-                                      {tag.name}
-                                    </Button>
-                                  );
-                                })}
+                                {/* Hidden file input for replacing individual images */}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  id={`item-image-replace-${index}`}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      handleItemImageSelect(index, file);
+                                    }
+                                  }}
+                                />
                               </div>
+                            ) : (
+                              <span
+                                className="h-8 w-8 flex-shrink-0 rounded-[7px]"
+                                style={{ background: accentFor(itemField.id || index) }}
+                              />
                             )}
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                            <FormControl>
+                              <Input
+                                placeholder={`Item ${index + 1}`}
+                                {...field}
+                                className="h-auto flex-1 border-0 bg-transparent px-0 py-0 font-semibold text-foreground focus-visible:ring-0"
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    // Add new item and focus on it
+                                    addItem();
+                                    // Focus will be set after the new item is rendered
+                                    setTimeout(() => {
+                                      const nextInput = document.querySelector(
+                                        `input[name="items.${fields.length}.title"]`,
+                                      ) as HTMLInputElement;
+                                      nextInput?.focus();
+                                    }, 0);
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            {fields.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => removeItem(index)}
+                                title="Remove item"
+                                className="flex-shrink-0 px-1 text-muted-foreground transition-colors hover:text-foreground"
+                              >
+                                <X size={16} />
+                              </button>
+                            )}
+                          </div>
+                          <FormMessage />
+
+                          {/* Tag selection for this item */}
+                          {managedTags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 pl-1">
+                              {managedTags.map((tag) => {
+                                const tagSlug = tag.name
+                                  .toLowerCase()
+                                  .replace(/\s+/g, "-");
+                                const currentTags =
+                                  form.watch(`items.${index}.tagSlugs`) || [];
+                                const isSelected =
+                                  currentTags.includes(tagSlug);
+                                return (
+                                  <Button
+                                    key={tag.id}
+                                    type="button"
+                                    variant={isSelected ? "default" : "neutral"}
+                                    size="sm"
+                                    onClick={() => {
+                                      const currentTagSlugs =
+                                        form.getValues(
+                                          `items.${index}.tagSlugs`,
+                                        ) || [];
+                                      if (isSelected) {
+                                        form.setValue(
+                                          `items.${index}.tagSlugs`,
+                                          currentTagSlugs.filter(
+                                            (t) => t !== tagSlug,
+                                          ),
+                                        );
+                                      } else {
+                                        form.setValue(
+                                          `items.${index}.tagSlugs`,
+                                          [...currentTagSlugs, tagSlug],
+                                        );
+                                      }
+                                    }}
+                                    className="h-8 text-xs"
+                                  >
+                                    {tag.name}
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </FormItem>
+                      )}
+                    />
                   ))}
-                </>
+                </div>
               )}
 
               {/* Add buttons below all items - only show when there's at least one item */}
               {fields.length > 0 && (
-                <div className="flex items-center gap-2 pt-2">
+                <div className="flex flex-wrap items-center gap-2 pt-2">
                   <Button
                     type="button"
                     variant="neutral"
@@ -934,7 +948,7 @@ export default function EditSorterForm({
                     className="flex items-center gap-1"
                   >
                     <ImageIcon size={16} />
-                    Upload Images
+                    Upload images
                   </Button>
                   <Button
                     type="button"
@@ -944,7 +958,7 @@ export default function EditSorterForm({
                     className="flex items-center gap-1"
                   >
                     <Plus size={16} />
-                    Add Item
+                    Add item
                   </Button>
                 </div>
               )}
@@ -952,55 +966,64 @@ export default function EditSorterForm({
 
             {/* Items validation error */}
             {fields.length < 2 && (
-              <p className="text-destructive mt-4 text-sm">
+              <p className="mt-4 text-sm text-destructive">
                 You need at least 2 items to create a sorter.
               </p>
             )}
 
             {/* Instructions */}
-            <div className="text-muted-foreground mt-4 space-y-1 text-sm">
+            <div className="mt-5 space-y-1 text-sm text-muted-foreground">
               <p>
-                <strong>Upload Images:</strong> Select multiple images to
-                automatically create items. Filename (without extension) will be
-                used as the item name. You can still change the name after
-                selecting images.
+                <strong className="text-foreground">Upload images:</strong>{" "}
+                Select multiple images to automatically create items. Filename
+                (without extension) will be used as the item name. You can still
+                change the name after selecting images.
               </p>
               <p>
-                <strong>Add Item:</strong> Manually add text-only items.
+                <strong className="text-foreground">Add item:</strong> Manually
+                add text-only items.
               </p>
               {managedTags.length > 0 && (
                 <p>
-                  <strong>Tags:</strong> Click tag buttons below each item to
-                  assign tags. Items without tags will always appear in sorting.
+                  <strong className="text-foreground">Tags:</strong> Click tag
+                  buttons below each item to assign tags. Items without tags
+                  will always appear in sorting.
                 </p>
               )}
-              <p className="text-xs">
-                Supported formats: JPG, PNG, WebP • Max 5MB each • Empty fields
-                will be replaced first when uploading images
+              <p className="font-mono text-xs">
+                Supported formats: JPG, PNG, WebP &middot; Max 5MB each &middot;
+                Empty fields will be replaced first when uploading images
               </p>
             </div>
           </section>
 
           {/* Submit Button */}
-          <div className="flex justify-end gap-2">
-            <Link href={`/sorter/${sorter.slug}`}>
-              <Button type="button" variant="neutralNoShadow">
-                Cancel
-              </Button>
-            </Link>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <Button
+              asChild
+              type="button"
+              variant="neutral"
+              arcade
+              size="lg"
+              className="w-full sm:w-auto"
+            >
+              <Link href={`/sorter/${sorter.slug}`}>Cancel</Link>
+            </Button>
             <Button
               type="submit"
+              arcade
+              size="lg"
               disabled={isLoading || isUploading || !hasChanged}
-              className="min-w-[120px]"
+              className="w-full sm:w-auto"
             >
               {(isLoading || isUploading) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               {isLoading || isUploading
-                ? "Updating..."
+                ? "Updating…"
                 : hasChanged
-                  ? "Update Sorter"
-                  : "No Changes"}
+                  ? "▶ Save changes"
+                  : "No changes"}
             </Button>
           </div>
         </form>

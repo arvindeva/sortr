@@ -3,8 +3,6 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FormLabel } from "@/components/ui/form";
-import { Box } from "@/components/ui/box";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { compressImages, isCompressibleImage } from "@/lib/image-compression";
@@ -89,8 +87,11 @@ export default function CoverImageUpload({
   };
 
   return (
-    <div className="space-y-3">
-      <FormLabel>Cover Image (Optional)</FormLabel>
+    <div className="space-y-2.5">
+      <label className="block text-[13px] font-semibold text-foreground">
+        Cover image{" "}
+        <span className="font-normal text-muted-foreground">(optional)</span>
+      </label>
 
       {/* Hidden file input */}
       <Input
@@ -104,33 +105,37 @@ export default function CoverImageUpload({
 
       {/* Upload area */}
       {!selectedFile && !previewUrl ? (
-        <Box
-          variant="white"
-          size="md"
-          className={`cursor-pointer transition-colors ${isDragging ? "bg-muted" : "bg-background"} ${disabled ? "cursor-not-allowed opacity-50" : "hover:bg-muted"} `}
+        <div
+          className={`flex h-60 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-foreground/20 bg-muted text-center transition-colors ${
+            isDragging ? "bg-muted/70" : ""
+          } ${
+            disabled
+              ? "cursor-not-allowed opacity-50"
+              : "cursor-pointer hover:bg-muted/70"
+          }`}
           onClick={!disabled ? handleSelectClick : undefined}
         >
-          <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
-            <ImageIcon size={48} className="text-muted-foreground mb-4" />
-            <div className="mb-2">
-              <p className="font-medium">Click to upload cover image</p>
-              <p className="mt-1 text-xs">JPG, PNG, or WebP up to 10MB</p>
-            </div>
-            <Button
-              type="button"
-              variant="neutral"
-              size="sm"
-              disabled={disabled}
-              className="mt-2"
-            >
-              <Upload size={16} className="mr-2" />
-              Select Image
-            </Button>
+          <ImageIcon size={40} className="text-muted-foreground" />
+          <div className="font-heading text-lg font-semibold text-foreground">
+            Click to upload cover image
           </div>
-        </Box>
+          <div className="font-mono text-xs text-muted-foreground">
+            JPG, PNG or WebP up to 10MB
+          </div>
+          <Button
+            type="button"
+            variant="neutral"
+            size="sm"
+            disabled={disabled}
+            className="mt-1"
+          >
+            <Upload size={16} className="mr-2" />
+            Select image
+          </Button>
+        </div>
       ) : (
         /* Preview area */
-        <Box variant="white" size="md" className="relative">
+        <div className="relative overflow-hidden rounded-xl border border-border bg-muted">
           <div className="flex items-start gap-4 p-4">
             {/* Image preview */}
             {previewUrl && (
@@ -138,7 +143,7 @@ export default function CoverImageUpload({
                 <img
                   src={previewUrl}
                   alt="Cover preview"
-                  className="border-border shadow-sm h-20 w-20 rounded-base border object-cover"
+                  className="h-20 w-20 rounded-[10px] border border-border object-cover"
                 />
               </div>
             )}
@@ -147,22 +152,26 @@ export default function CoverImageUpload({
             <div className="min-w-0 flex-1">
               {selectedFile ? (
                 <>
-                  <p className="truncate font-medium">{selectedFile.name}</p>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="truncate font-semibold text-foreground">
+                    {selectedFile.name}
+                  </p>
+                  <p className="font-mono text-xs text-muted-foreground">
                     {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
                   </p>
-                  <p className="text-muted-foreground mt-1 text-xs">
+                  <p className="mt-1 font-mono text-xs text-muted-foreground">
                     Will be resized to 300x300px
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="truncate font-medium">Current cover image</p>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="truncate font-semibold text-foreground">
+                    Current cover image
+                  </p>
+                  <p className="font-mono text-xs text-muted-foreground">
                     Existing cover image
                   </p>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Click "Replace Image" to change
+                  <p className="mt-1 font-mono text-xs text-muted-foreground">
+                    Click "Replace image" to change
                   </p>
                 </>
               )}
@@ -172,7 +181,7 @@ export default function CoverImageUpload({
             <Button
               type="button"
               variant="neutralNoShadow"
-              size="sm"
+              size="icon"
               onClick={handleRemoveImage}
               disabled={disabled}
               className="h-8 w-8 flex-shrink-0 p-0"
@@ -183,7 +192,7 @@ export default function CoverImageUpload({
           </div>
 
           {/* Replace button */}
-          <div className="border-border border-t px-4 py-3">
+          <div className="border-t border-border px-4 py-3">
             <Button
               type="button"
               variant="neutral"
@@ -193,16 +202,16 @@ export default function CoverImageUpload({
               className="w-full"
             >
               <Upload size={16} className="mr-2" />
-              Replace Image
+              Replace image
             </Button>
           </div>
-        </Box>
+        </div>
       )}
 
       {/* Helper text */}
-      <p className="text-xs">
-        The cover image will be displayed on your sorter's profile and in
-        listings. Images are automatically cropped to square and resized.
+      <p className="font-mono text-xs text-muted-foreground">
+        Shown on your sorter&apos;s page and in listings &middot; cropped to
+        square.
       </p>
     </div>
   );

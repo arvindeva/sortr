@@ -3,12 +3,9 @@
 import { useSorterPage, type SorterData } from "@/hooks/api/use-sorter";
 import { SorterContentSkeleton } from "@/components/skeletons/sorter-content-skeleton";
 import Link from "next/link";
-import { Box } from "@/components/ui/box";
-import { Badge } from "@/components/ui/badge";
-import { SectionHeading } from "@/components/ui/section-heading";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { RankingItem, RankingItemContent } from "@/components/ui/ranking-item";
+import { CoverTile } from "@/components/ui/cover-tile";
+import { accentFor } from "@/lib/utils";
 import { getImageUrl } from "@/lib/image-utils";
 
 interface SorterPageClientProps {
@@ -18,220 +15,176 @@ interface SorterPageClientProps {
   initialData?: SorterData;
 }
 
+// Small display-font section title with a colored arrow + optional count.
+function SectionTitle({
+  children,
+  count,
+  arrowClass = "text-main",
+}: {
+  children: React.ReactNode;
+  count?: number;
+  arrowClass?: string;
+}) {
+  return (
+    <h2 className="display mb-4 text-[30px] font-black text-foreground">
+      {children}
+      {count != null && (
+        <span className="font-bold text-muted-foreground"> ({count})</span>
+      )}{" "}
+      <span className={arrowClass}>▸</span>
+    </h2>
+  );
+}
+
 export function SorterPageClient({
   slug,
-  isOwner,
-  currentUserEmail,
   initialData,
 }: SorterPageClientProps) {
   const { sorterData, recentResults, isLoading, isError, error } =
     useSorterPage(slug, initialData, Date.now());
 
-  if (isLoading) {
+  if (isLoading || !sorterData) {
     return <SorterContentSkeleton />;
   }
 
   if (isError) {
     return (
-      <section className="mb-8">
-        <Box variant="warning" size="md">
-          <p className="font-medium">
-            {error?.message === "Sorter not found"
-              ? "Sorter not found. This sorter may not exist or has been deleted."
-              : "Failed to load sorter. Please try again."}
-          </p>
-        </Box>
-      </section>
+      <EmptyState
+        variant="error"
+        title={
+          error?.message === "Sorter not found"
+            ? "Sorter not found."
+            : "Failed to load sorter."
+        }
+        description="This sorter may not exist, or try again."
+      />
     );
   }
 
-  if (!sorterData) {
-    return <SorterContentSkeleton />;
-  }
-
-  const { items, tags } = sorterData;
+  const { items } = sorterData;
 
   return (
-    <>
-      {/* Two Column Layout */}
-      <div className="grid gap-8 md:grid-cols-2">
-        {/* Left Column - Items to Rank */}
-        <section>
-          <SectionHeading as="h2">
-            Items to Rank ({items?.length || 0})
-          </SectionHeading>
-          <div>
-              {items?.length === 0 ? (
-                <Box variant="warning" size="md">
-                  <p className="font-medium italic">
-                    No items found for this sorter.
-                  </p>
-                </Box>
-              ) : (
-                <div className="space-y-3">
-                  {items?.map((item) => (
-                    <RankingItem
-                      key={item.id}
-                      className="bg-background text-foreground"
-                    >
-                      <RankingItemContent>
-                        <div className="flex min-w-0 items-center gap-3 overflow-hidden">
-                          {/* Thumbnail */}
-                          {item.imageUrl ? (
-                            <div className="border-border rounded-base bg-muted h-16 w-16 flex-shrink-0 overflow-hidden border">
-                              <img
-                                src={getImageUrl(item.imageUrl, "thumbnail")}
-                                alt={item.title}
-                                className="h-full w-full object-contain"
-                                onError={(e) => {
-                                  // Fallback to full-size image if thumbnail fails to load
-                                  const target = e.target as HTMLImageElement;
-                                  if (target.src.includes("-thumb")) {
-                                    target.src = getImageUrl(
-                                      item.imageUrl,
-                                      "full",
-                                    );
-                                  }
-                                }}
-                              />
-                            </div>
-                          ) : (
-                            <div className="border-border bg-muted rounded-base flex h-16 w-16 flex-shrink-0 items-center justify-center border">
-                              <span className="text-muted-foreground text-xl font-semibold">
-                                {item.title.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
-                          {/* Item Name */}
-                          <div className="w-0 min-w-0 flex-1">
-                            <p className="font-medium break-words hyphens-auto">
-                              {item.title}
-                            </p>
-                          </div>
-                        </div>
-                      </RankingItemContent>
-                    </RankingItem>
-                  ))}
-                </div>
-              )}
-            </div>
-        </section>
-
-        {/* Right Column */}
-        <section className="space-y-8">
-          {/* Filters - Only show if tags exist */}
-          {tags && tags.length > 0 && (
-            <div>
-              <SectionHeading as="h2">Filters</SectionHeading>
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <Badge key={tag.id} variant="neutral">
-                    {tag.name}
-                  </Badge>
-                ))}
+    <div className="grid gap-8 md:grid-cols-2 md:items-start">
+      {/* Left — Items to rank */}
+      <section>
+        <SectionTitle count={items?.length || 0}>Items to rank</SectionTitle>
+        {items?.length === 0 ? (
+          <EmptyState title="No items found for this sorter." />
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {items?.map((item, i) => (
+              <div
+                key={item.id}
+                className="flex items-center gap-3 rounded-[10px] border border-border bg-card px-3.5 py-3"
+              >
+                {item.imageUrl ? (
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-[7px] border border-border bg-muted">
+                    <img
+                      src={getImageUrl(item.imageUrl, "thumbnail")}
+                      alt={item.title}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        const t = e.target as HTMLImageElement;
+                        if (t.src.includes("-thumb"))
+                          t.src = getImageUrl(item.imageUrl, "full");
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <span
+                    className="h-10 w-10 shrink-0 rounded-[7px]"
+                    style={{ background: accentFor(item.id || i) }}
+                  />
+                )}
+                <span className="min-w-0 font-semibold break-words text-foreground">
+                  {item.title}
+                </span>
               </div>
-            </div>
-          )}
-
-          {/* Recent Rankings */}
-          <div>
-            <SectionHeading as="h2">
-              Recent Rankings ({recentResults.length})
-            </SectionHeading>
-            <div>
-              {recentResults.length === 0 ? (
-                <EmptyState title="No rankings yet. Be the first to complete this sorter!" />
-              ) : (
-                <div className="space-y-4">
-                  {recentResults.map((result) => (
-                    <Link
-                      key={result.id}
-                      href={`/rankings/${result.id}`}
-                      prefetch={false}
-                      className="card-link block"
-                    >
-                      <Card className="bg-background text-foreground card cursor-pointer gap-2">
-                        <CardHeader>
-                          {/* Username only */}
-                          <span
-                            className={`font-bold ${
-                              result.username === "Anonymous"
-                                ? "text-gray-600 dark:text-gray-400"
-                                : ""
-                            }`}
-                          >
-                            {result.username}
-                          </span>
-                        </CardHeader>
-                        <CardContent>
-                          {/* Top 3 Rankings */}
-                          <div className="mb-3 space-y-2">
-                            {result.top3.map((item: any, index: number) => (
-                              <div
-                                key={item.id || index}
-                                className="flex items-center gap-2"
-                              >
-                                <div className="flex min-w-0 flex-1 items-center gap-2">
-                                  {item.imageUrl ? (
-                                    <div className="border-border rounded-base bg-muted h-6 w-6 flex-shrink-0 overflow-hidden border">
-                                      <img
-                                        src={getImageUrl(
-                                          item.imageUrl,
-                                          "thumbnail",
-                                        )}
-                                        alt={item.title}
-                                        className="h-full w-full object-contain"
-                                        onError={(e) => {
-                                          // Fallback to full-size image if thumbnail fails to load
-                                          const target =
-                                            e.target as HTMLImageElement;
-                                          if (target.src.includes("-thumb")) {
-                                            target.src = getImageUrl(
-                                              item.imageUrl,
-                                              "full",
-                                            );
-                                          }
-                                        }}
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className="border-border bg-muted rounded-base flex h-6 w-6 flex-shrink-0 items-center justify-center border">
-                                      <span className="text-muted-foreground text-xs font-semibold">
-                                        {item.title.charAt(0).toUpperCase()}
-                                      </span>
-                                    </div>
-                                  )}
-                                  <span className="min-w-[1.5rem] text-center font-bold">
-                                    {index + 1}.
-                                  </span>
-                                  <span className="font-medium break-words">
-                                    {item.title}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          {/* Date moved below items */}
-                          <div className="text-foreground text-xs font-medium">
-                            {new Date(result.createdAt).toLocaleDateString(
-                              "en-US",
-                              {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                              },
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+            ))}
           </div>
-        </section>
-      </div>
-    </>
+        )}
+      </section>
+
+      {/* Right — Recent rankings */}
+      <section>
+        <SectionTitle count={recentResults.length} arrowClass="text-cyan-ink">
+          Recent rankings
+        </SectionTitle>
+        {recentResults.length === 0 ? (
+          <EmptyState
+            title="No rankings yet."
+            description="Be the first to complete this sorter."
+          />
+        ) : (
+          <div className="flex flex-col gap-3">
+            {recentResults.map((result) => {
+              const anon = result.username === "Anonymous";
+              return (
+                <Link
+                  key={result.id}
+                  href={`/rankings/${result.id}`}
+                  prefetch={false}
+                  className="group block rounded-xl border border-border bg-card p-4 transition-colors hover:border-main/40"
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <span
+                      className={`text-sm font-bold ${anon ? "text-muted-foreground" : "text-cyan-ink"}`}
+                    >
+                      {anon ? "Anonymous" : `@${result.username}`}
+                    </span>
+                    <span className="font-mono text-[11px] text-muted-foreground">
+                      {new Date(result.createdAt).toLocaleDateString("en-US", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+                    {result.top3.map((item: any, index: number) => (
+                      <div
+                        key={item.id || index}
+                        className="flex min-w-0 flex-1 items-center gap-2"
+                      >
+                        <span
+                          className="display w-[18px] text-lg font-black"
+                          style={{
+                            color:
+                              index === 0
+                                ? "var(--medal-gold)"
+                                : index === 1
+                                  ? "var(--medal-silver)"
+                                  : "var(--medal-bronze)",
+                          }}
+                        >
+                          {index + 1}
+                        </span>
+                        {item.imageUrl ? (
+                          <div className="h-6 w-6 shrink-0 overflow-hidden rounded-[6px] border border-border bg-muted">
+                            <img
+                              src={getImageUrl(item.imageUrl, "thumbnail")}
+                              alt={item.title}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <span
+                            className="h-6 w-6 shrink-0 rounded-[6px]"
+                            style={{ background: accentFor(item.id || index) }}
+                          />
+                        )}
+                        <span className="truncate text-[13px] font-semibold text-foreground">
+                          {item.title}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
