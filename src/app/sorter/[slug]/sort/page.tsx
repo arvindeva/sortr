@@ -714,14 +714,11 @@ export default function SortPage() {
           </div>
         </div>
 
-        {/* Gradient progress track */}
+        {/* Progress track — solid magenta fill. */}
         <div className="mt-6 h-2.5 w-full overflow-hidden rounded-full border border-border bg-foreground/[0.06]">
           <div
-            className="h-full rounded-full transition-[width] duration-300 ease-out"
-            style={{
-              width: `${progress}%`,
-              background: "linear-gradient(90deg,var(--main),var(--cyan))",
-            }}
+            className="bg-main h-full rounded-full transition-[width] duration-300 ease-out"
+            style={{ width: `${progress}%` }}
           />
         </div>
       </div>

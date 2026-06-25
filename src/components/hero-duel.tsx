@@ -109,7 +109,6 @@ export function HeroDuel() {
   const done = pair === null;
   const ranking = done ? finalRanking(state) : [];
   const completed = done ? TOTAL_STEPS : state.comparisons;
-  const round = Math.min(state.comparisons + 1, TOTAL_STEPS);
 
   const left = pair ? BY_ID[pair.a] : null;
   const right = pair ? BY_ID[pair.b] : null;
@@ -178,44 +177,35 @@ export function HeroDuel() {
       >
         {/* Header */}
         <div className="mb-1.5 flex items-center justify-between">
-          <span className="hud text-yellow-ink text-xs">
-            ▶ Featured sorter
-          </span>
-          {done ? (
+          <span className="hud text-yellow-ink text-xs">▶ Try it now</span>
+          {done && (
             <button
               onClick={reset}
               className="text-cyan-ink font-mono text-[13px] transition-opacity hover:opacity-80"
             >
               ↺ play again
             </button>
-          ) : (
-            <span className="text-cyan-ink font-mono text-[13px]">
-              ROUND {round}/{TOTAL_STEPS}
-            </span>
           )}
         </div>
         <div className="display text-foreground mb-3.5 text-[26px] font-extrabold">
           Greatest album of the 2010s
         </div>
 
-        {/* Pip progress — filled pips are solid magenta. */}
-        <div className="mb-5 flex gap-1.5">
-          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-            <span
-              key={i}
-              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                i < completed ? "bg-main" : "bg-foreground/15"
-              }`}
-            />
-          ))}
+        {/* One progress track that fills — solid magenta. */}
+        <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-foreground/15">
+          <div
+            className="bg-main h-full rounded-full transition-[width] duration-300 ease-out"
+            style={{ width: `${(completed / TOTAL_STEPS) * 100}%` }}
+          />
         </div>
 
-        {/* Fixed height so finishing never shifts the hero */}
-        <div className="flex min-h-[240px] flex-col justify-center">
+        {/* Fixed height (fits both the duel and the taller result list) so
+            finishing never grows the panel / shifts the hero layout. */}
+        <div className="flex h-[264px] flex-col justify-center">
           {done ? (
             <div className="text-center">
               <div className="hud text-cyan-ink text-xs">★ Your ranking ★</div>
-              <div className="my-4 flex flex-col gap-2">
+              <div className="my-3.5 flex flex-col gap-1.5">
                 {ranking.map((item, i) => (
                   <div
                     key={item.id}
@@ -236,9 +226,6 @@ export function HeroDuel() {
                   </div>
                 ))}
               </div>
-              <Button onClick={reset} arcade size="sm">
-                ↺ Play again
-              </Button>
             </div>
           ) : (
             <>
@@ -259,7 +246,7 @@ export function HeroDuel() {
                   onClick={() => choose(right!.id)}
                 />
               </div>
-              <div className="text-cyan-ink mt-4 flex items-center justify-center gap-2 font-mono text-xs">
+              <div className="text-cyan-ink mt-2.5 flex items-center justify-center gap-2 font-mono text-xs">
                 <span className="sortr-blink">▮</span> tap a side to keep going
               </div>
             </>
