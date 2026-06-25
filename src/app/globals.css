@@ -61,6 +61,9 @@
   /* Dark "label plate" behind contender names — dark in both themes. */
   --name-plate: #13102a;
 
+  /* Mobile menu sheet panel gradient. */
+  --menu-sheet-bg: linear-gradient(180deg, #120f24, #0b0918);
+
   /* Atmosphere layers painted on the page background */
   --atmo-glow: radial-gradient(
       1100px 560px at 82% -4%,
@@ -144,6 +147,9 @@
 
   /* Dark "label plate" behind contender names — stays dark on light too. */
   --name-plate: #17132e;
+
+  /* Mobile menu sheet panel — light surface in light mode. */
+  --menu-sheet-bg: linear-gradient(180deg, #ffffff, #f4f2fb);
 
   /* Atmosphere: glows at ~⅓ strength, grid as faint ink lines. */
   --atmo-glow: radial-gradient(

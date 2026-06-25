@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Menu, X, Search } from "lucide-react";
 import { forwardRef, useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 
@@ -19,6 +20,9 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   // Solid bg at the very top, frosted-glass once the page scrolls
   const [scrolled, setScrolled] = useState(false);
+  // Portal target only exists after mount (avoids SSR document access)
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const desktopSearchInputRef = useRef<HTMLInputElement>(null);
   const mobileMenuFirstButtonRef = useRef<HTMLElement>(null);
@@ -262,16 +266,23 @@ export function Navbar() {
         </button>
       </div>
 
-      {/* Page dim behind the menu sheet */}
-      <div
-        onClick={() => setMobileMenuOpen(false)}
-        aria-hidden
-        className={`fixed inset-0 top-[var(--nav-h,64px)] z-20 bg-black/50 transition-opacity duration-200 lg:hidden ${
-          mobileMenuOpen
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0"
-        }`}
-      />
+      {/* Page dim behind the menu sheet. Portaled to <body> so it isn't trapped
+          inside the nav — once scrolled, the nav's backdrop-blur becomes a
+          containing block for fixed children, which would otherwise shrink this
+          overlay to the nav's box and leave the page undimmed. */}
+      {mounted &&
+        createPortal(
+          <div
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden
+            className={`fixed inset-0 z-20 bg-black/50 transition-opacity duration-200 lg:hidden ${
+              mobileMenuOpen
+                ? "pointer-events-auto opacity-100"
+                : "pointer-events-none opacity-0"
+            }`}
+          />,
+          document.body,
+        )}
 
       {/* Menu sheet — opens below the bar with fade + slight translateY */}
       <div
@@ -279,22 +290,19 @@ export function Navbar() {
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
-        className={`absolute top-full right-0 left-0 z-30 origin-top overflow-hidden border-b border-foreground/[0.08] transition-all duration-[220ms] ease-out lg:hidden ${
+        className={`absolute top-full right-0 left-0 z-30 origin-top overflow-hidden border-b border-border bg-[image:var(--menu-sheet-bg)] transition-all duration-[220ms] ease-out lg:hidden ${
           mobileMenuOpen
             ? "pointer-events-auto translate-y-0 opacity-100"
             : "pointer-events-none -translate-y-[10px] opacity-0"
         }`}
-        style={{
-          background: "linear-gradient(180deg,#120f24,#0b0918)",
-        }}
       >
-        {/* faint 48px grid on the panel */}
+        {/* faint 48px grid on the panel — tracks the active theme */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px)",
+              "linear-gradient(var(--atmo-grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--atmo-grid-line) 1px, transparent 1px)",
             backgroundSize: "48px 48px",
           }}
         />
@@ -302,12 +310,12 @@ export function Navbar() {
         <div className="relative flex flex-col gap-5 p-5">
           {/* Search */}
           <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute top-1/2 left-3.5 h-5 w-5 -translate-y-1/2 text-[#6f6a86]" />
-            <input
+            <Search className="absolute top-1/2 left-3.5 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input
               placeholder="Search sorters…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-[50px] w-full rounded-[10px] border border-white/10 bg-white/[0.05] pr-4 pl-11 text-base text-[#f3f0ff] outline-none placeholder:text-[#6f6a86] focus:border-main"
+              className="h-[50px] rounded-[10px] pr-4 pl-11 text-base"
             />
           </form>
 
@@ -367,8 +375,8 @@ export function Navbar() {
           </Button>
 
           {/* Theme toggle pinned at the bottom */}
-          <div className="flex items-center justify-between border-t border-white/[0.08] pt-4">
-            <span className="hud text-xs text-[#6f6a86]">Theme</span>
+          <div className="flex items-center justify-between border-t border-border pt-4">
+            <span className="hud text-xs text-muted-foreground">Theme</span>
             <ModeToggle />
           </div>
         </div>
@@ -427,9 +435,9 @@ const MobileNavRow = forwardRef<
     children: React.ReactNode;
   }
 >(function MobileNavRow({ href, onSelect, muted, children }, ref) {
-  const className = `group flex items-center justify-between border-b border-white/[0.08] py-4 text-left font-heading text-[26px] font-extrabold uppercase tracking-[0.01em] transition-colors ${
-    muted ? "text-[#8c87a6]" : "text-[#f3f0ff]"
-  } hover:text-main`;
+  const className = `group flex items-center justify-between border-b border-border py-4 text-left font-heading text-[26px] font-extrabold uppercase tracking-[0.01em] transition-colors ${
+    muted ? "text-muted-foreground" : "text-foreground"
+  } hover:text-main-ink`;
   const arrow = (
     <span className="text-main transition-transform duration-200 group-hover:translate-x-1">
       ▸
