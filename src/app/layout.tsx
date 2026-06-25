@@ -10,12 +10,15 @@ import Script from "next/script";
 import "./globals.css";
 
 // Display / headings / wordmark / numbers — condensed, loud, uppercase.
+// Explicit fallback + adjustFontFallback:false stops next/font from trying to
+// derive fallback metrics for this family (which it can't, and warns about).
 const bigShoulders = Big_Shoulders({
   subsets: ["latin"],
   variable: "--font-big-shoulders",
   display: "swap",
   weight: ["600", "700", "800", "900"],
   adjustFontFallback: false,
+  fallback: ["Arial Narrow", "Helvetica Neue", "Arial", "sans-serif"],
 });
 
 // HUD / labels / meta / counters — the scoreboard voice.
