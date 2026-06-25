@@ -21,16 +21,12 @@ const MEDAL_VARS = [
 ];
 
 export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
-  const total = rankings.length;
-
   return (
     <div className="flex flex-col gap-2.5">
       {rankings.map((item, index) => {
         const isTop3 = index < 3;
         const numColor = isTop3 ? MEDAL_VARS[index] : "var(--muted-foreground)";
         const accent = accentFor(item.id || index);
-        // A gentle descending bar: #1 full, tapering toward the bottom.
-        const barPct = Math.round(((total - index) / total) * 100);
 
         return (
           <motion.div
@@ -87,23 +83,15 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
               {item.title}
             </span>
 
-            {/* Score bar + medal badge (desktop) */}
-            <div className="ml-auto hidden items-center gap-4 sm:flex">
-              <div className="h-2 w-32 overflow-hidden rounded-full bg-foreground/[0.08] md:w-40">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${barPct}%`, background: accent }}
-                />
-              </div>
-              {isTop3 && (
-                <span
-                  className="display flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full text-[17px] font-black"
-                  style={{ background: MEDAL_VARS[index], color: "rgba(0,0,0,.75)" }}
-                >
-                  {index + 1}
-                </span>
-              )}
-            </div>
+            {/* Medal badge for the top 3 */}
+            {isTop3 && (
+              <span
+                className="display ml-auto flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full text-[17px] font-black"
+                style={{ background: MEDAL_VARS[index], color: "rgba(0,0,0,.75)" }}
+              >
+                {index + 1}
+              </span>
+            )}
           </motion.div>
         );
       })}
