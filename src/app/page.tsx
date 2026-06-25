@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { db } from "@/db";
 import { sorters, user, sortingResults } from "@/db/schema";
 import { eq, desc, and, isNotNull } from "drizzle-orm";
@@ -248,6 +249,12 @@ export default async function Home() {
             <h2 className="display text-3xl font-black text-foreground md:text-[42px]">
               Popular sorters <span className="text-main">▸</span>
             </h2>
+            <Link
+              href="/browse?sort=popular"
+              className="shrink-0 font-mono text-[13px] text-muted-foreground transition-colors hover:text-main-ink"
+            >
+              view all →
+            </Link>
           </div>
           {hadPopularError ? (
             <EmptyState
@@ -281,6 +288,12 @@ export default async function Home() {
             <h2 className="display text-3xl font-black text-foreground md:text-[42px]">
               Fresh sorters <span className="text-cyan-ink">▸</span>
             </h2>
+            <Link
+              href="/browse?sort=recent"
+              className="shrink-0 font-mono text-[13px] text-muted-foreground transition-colors hover:text-cyan-ink"
+            >
+              view all →
+            </Link>
           </div>
           {hadRecentError ? (
             <EmptyState
