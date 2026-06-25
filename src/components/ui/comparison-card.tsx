@@ -24,20 +24,21 @@ function ComparisonCard({
   ...props
 }: ComparisonCardProps) {
   const imageIsPreloaded = imageUrl ? isImagePreloaded(imageUrl) : false;
+  // Magenta (primary) on the left for brand consistency, cyan on the right.
   const glow =
     side === "left"
-      ? "hover:border-cyan hover:shadow-[0_0_48px_rgba(25,227,223,.4)]"
-      : "hover:border-main hover:shadow-[0_0_48px_rgba(255,46,126,.4)]";
+      ? "hover:border-main hover:shadow-[0_0_48px_rgba(255,46,126,.4)]"
+      : "hover:border-cyan hover:shadow-[0_0_48px_rgba(25,227,223,.4)]";
 
   return (
-    <div className={cn("flex flex-col", className)} {...props}>
+    <div className={cn("flex h-full flex-col", className)} {...props}>
       {/* Main comparison card */}
       <button
         type="button"
         onClick={onClick}
         aria-label={`Pick ${title}`}
         className={cn(
-          "group flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-border bg-card text-left transition-all duration-200 hover:-translate-y-1.5",
+          "group flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-border bg-card text-left transition-all duration-200 hover:-translate-y-1.5",
           glow,
         )}
       >
@@ -77,12 +78,14 @@ function ComparisonCard({
           )}
         </div>
 
-        {/* Name bar — dark "label plate" in both themes, white text. */}
+        {/* Name bar — dark "label plate" in both themes, white text. Grows to
+            fill remaining height; the title reserves 2 lines so a 1-line name
+            doesn't make this card shorter than a 2-line neighbour. */}
         <div
-          className="px-3 py-3.5 text-center md:py-4"
+          className="flex flex-1 items-center justify-center px-3 py-3.5 text-center md:py-4"
           style={{ background: "var(--name-plate)" }}
         >
-          <h3 className="display line-clamp-2 text-base font-extrabold text-white sm:text-[25px]">
+          <h3 className="display line-clamp-2 flex min-h-[2.1em] items-center text-base font-extrabold leading-[1.05] text-white sm:text-[25px]">
             {title}
           </h3>
         </div>

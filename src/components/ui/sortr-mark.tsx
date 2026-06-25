@@ -79,31 +79,39 @@ interface VsMarkerProps {
   glyph?: string;
   /** Color of the glyph. Defaults to magenta; results screen uses gold. */
   glyphColor?: string;
+  /** Whether the marker pulses/glows. Off where it'd distract (e.g. the duel). */
+  pulse?: boolean;
   className?: string;
 }
 
 /**
  * The VS marker: a square rotated 45°, magenta-bordered, with "VS" upright in
- * the display face, pulsing. The signature device that sits between two
- * contenders. The glyph counter-rotates so it stays upright.
+ * the display face. The signature device that sits between two contenders. The
+ * glyph counter-rotates so it stays upright. Pulses by default; pass
+ * `pulse={false}` to keep it static (the 45° rotation is preserved either way).
  */
 export function VsMarker({
   size = 56,
   glyph = "VS",
   glyphColor = "var(--main)",
+  pulse = true,
   className,
 }: VsMarkerProps) {
   return (
     <span
       aria-hidden
       className={cn(
-        "sortr-pulse inline-flex shrink-0 items-center justify-center border-2 border-main",
+        "inline-flex shrink-0 items-center justify-center border-2 border-main",
+        pulse && "sortr-pulse",
         className,
       )}
       style={{
         width: size,
         height: size,
         background: "var(--background)",
+        // When not pulsing, apply the 45° rotation here (the .sortr-pulse class
+        // normally carries it). Keeps the marker a diamond either way.
+        ...(pulse ? {} : { transform: "rotate(45deg)" }),
       }}
     >
       <span

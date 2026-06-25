@@ -727,7 +727,7 @@ export default function SortPage() {
       </div>
 
       {/* Comparison Cards */}
-      <div className="relative mt-10 grid grid-cols-[1fr_auto_1fr] items-center gap-2 md:gap-4">
+      <div className="relative mt-10 grid grid-cols-[1fr_auto_1fr] items-stretch gap-1.5 md:gap-4">
         {/* Item A */}
         <ComparisonCard
           side="left"
@@ -738,8 +738,16 @@ export default function SortPage() {
           onRemove={() => handleRemoveItem(currentComparison.itemA.id, currentComparison.itemA.title)}
         />
 
-        {/* VS marker between contenders */}
-        <VsMarker size={60} className="mx-1 md:mx-2" />
+        {/* VS marker between contenders — static (no pulse) so it doesn't
+            distract from the actual duel. Smaller on mobile for more card width. */}
+        <div className="flex items-center justify-center">
+          <VsMarker size={40} pulse={false} className="sm:hidden" />
+          <VsMarker
+            size={60}
+            pulse={false}
+            className="mx-2 hidden sm:flex"
+          />
+        </div>
 
         {/* Item B */}
         <ComparisonCard
