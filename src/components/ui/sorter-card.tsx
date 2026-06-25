@@ -84,7 +84,10 @@ export function SorterCard({
               @{sorter.creatorUsername}
             </span>
             {sorter.completionCount > 0 && (
-              <span className="shrink-0 pl-2 text-cyan-ink">{plays} ▸</span>
+              <span className="flex shrink-0 items-center gap-1 pl-2 text-cyan-ink">
+                {plays}
+                <span className="text-base leading-none">▸</span>
+              </span>
             )}
           </div>
         </div>
