@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { db } from "@/db";
-import { sorters, user } from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { sorters, user, sortingResults } from "@/db/schema";
+import { eq, desc, and, isNotNull } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
@@ -91,6 +91,33 @@ async function getRecentSorters() {
   }
 }
 
+// Latest sorting activity for the ticker — the most recent completed rankings.
+async function getRecentActivity() {
+  try {
+    const rows = await db
+      .select({
+        title: sortingResults.sorterTitle,
+        username: user.username,
+        createdAt: sortingResults.createdAt,
+      })
+      .from(sortingResults)
+      .leftJoin(user, eq(sortingResults.userId, user.id))
+      .where(isNotNull(sortingResults.sorterTitle))
+      .orderBy(desc(sortingResults.createdAt))
+      .limit(12);
+
+    const activity = rows.map((r) => ({
+      title: r.title ?? "a sorter",
+      by: r.username ?? null, // null = anonymous
+    }));
+
+    return { activity, timestamp: new Date().toISOString() };
+  } catch (error) {
+    console.error("❌ SSR: Error fetching recent activity:", error);
+    throw error;
+  }
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const title = "sortr - Create a Sorter for Anything";
   const description =
@@ -140,6 +167,14 @@ const getRecentSortersCached = unstable_cache(
   { revalidate: 300 },
 );
 
+// Activity changes often; cache briefly so the ticker feels live without
+// hammering the DB on every request.
+const getRecentActivityCached = unstable_cache(
+  getRecentActivity,
+  ["homepage-recent-activity"],
+  { revalidate: 60 },
+);
+
 // Avoid build-time prerender failures when the DB host isn't reachable in the build container
 export const dynamic = "force-dynamic";
 
@@ -167,6 +202,12 @@ export default async function Home() {
     __error: true,
   };
   const hadRecentError = (recentData as any).__error === true;
+
+  // Fetch latest sorting activity for the ticker (non-critical)
+  const activityData = (await getRecentActivityCached().catch((error) => {
+    console.error("❌ Runtime: Error fetching recent activity:", error);
+    return null;
+  })) ?? { activity: [] };
 
   // JSON-LD structured data for homepage
   const jsonLd = {
@@ -196,21 +237,16 @@ export default async function Home() {
         {/* Hero — headline + live featured duel */}
         <HeroDuel />
 
-        {/* Full-bleed activity ticker built from real popular sorters */}
-        {!hadPopularError && popularData.popularSorters.length > 0 && (
-          <ActivityTicker
-            items={popularData.popularSorters.slice(0, 8).map((s) => ({
-              title: s.title,
-              by: s.creatorUsername,
-            }))}
-          />
+        {/* Full-bleed ticker of the latest real sorting activity */}
+        {activityData.activity.length > 0 && (
+          <ActivityTicker items={activityData.activity} />
         )}
 
-        {/* Popular this week */}
+        {/* Popular sorters (by all-time completions) */}
         <section className="w-full">
           <div className="mb-6 flex items-end justify-between gap-3">
             <h2 className="display text-3xl font-black text-foreground md:text-[42px]">
-              Popular this week <span className="text-main">▸</span>
+              Popular sorters <span className="text-main">▸</span>
             </h2>
           </div>
           {hadPopularError ? (

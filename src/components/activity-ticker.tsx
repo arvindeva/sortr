@@ -1,6 +1,7 @@
 interface TickerItem {
   title: string;
-  by: string;
+  /** Username, or null for an anonymous ranking. */
+  by: string | null;
 }
 
 /**
@@ -13,7 +14,7 @@ export function ActivityTicker({ items }: { items: TickerItem[] }) {
   if (items.length === 0) return null;
 
   const segment = items
-    .map((it) => `@${it.by} ranked ${it.title}`)
+    .map((it) => `${it.by ? `@${it.by}` : "Anonymous"} ranked ${it.title}`)
     .join("  ·  ");
   // Trailing separator so the wrap-around has a gap too.
   const text = `● ${segment}  ·  `;
