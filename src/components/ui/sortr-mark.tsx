@@ -1,50 +1,122 @@
 import { cn } from "@/lib/utils";
 
 interface SortrMarkProps {
-  /** Pixel size of the square mark. Defaults to 24. */
+  /** Pixel size of each square. Defaults to 12 (the brand spec size). */
   size?: number;
   className?: string;
-  /** When true, the two squares lean toward each other (used on hover). */
-  animate?: boolean;
 }
 
 /**
- * The sortr brand mark: two squares facing off — the duel at the heart
- * of the app. Left square is the "winner" (filled), right is the
- * "contender" (outlined). Built from divs so it inherits theme colors
- * and animates cheaply.
+ * The sortr brand mark: two small squares — one filled magenta with a soft
+ * glow pulse, one cyan outline — evoking the two VS panels of a versus screen.
+ * Square corners are barely rounded (2px) per the VERSUS arcade spec.
  */
-export function SortrMark({
-  size = 24,
-  className,
-  animate = false,
-}: SortrMarkProps) {
-  // Gap and square size derive from the overall size so it scales cleanly.
-  const square = Math.round(size * 0.42);
-  const radius = Math.max(2, Math.round(size * 0.16));
-
+export function SortrMark({ size = 12, className }: SortrMarkProps) {
   return (
     <span
       aria-hidden
-      className={cn("relative inline-flex items-center", className)}
-      style={{ width: size, height: square, gap: Math.round(size * 0.14) }}
+      className={cn("inline-flex items-center", className)}
+      style={{ gap: 5 }}
     >
-      {/* Winner — filled */}
+      {/* Filled, glowing */}
       <span
-        className={cn(
-          "block bg-main transition-transform duration-300 ease-out",
-          animate && "group-hover:translate-x-[1px] group-hover:-rotate-6",
-        )}
-        style={{ width: square, height: square, borderRadius: radius }}
+        className="sortr-glow block bg-main"
+        style={{ width: size, height: size, borderRadius: 2 }}
       />
-      {/* Contender — outlined */}
+      {/* Cyan outline */}
       <span
-        className={cn(
-          "block border-2 border-main/40 transition-transform duration-300 ease-out",
-          animate && "group-hover:-translate-x-[1px] group-hover:rotate-6",
-        )}
-        style={{ width: square, height: square, borderRadius: radius }}
+        className="block border-2 border-cyan"
+        style={{
+          width: size,
+          height: size,
+          borderRadius: 2,
+          boxSizing: "border-box",
+        }}
       />
+    </span>
+  );
+}
+
+interface WordmarkProps {
+  /** Font size of the SORTR wordmark in px. Defaults to 30. */
+  size?: number;
+  /** Append a magenta period (the footer lockup uses this). */
+  withPeriod?: boolean;
+  className?: string;
+}
+
+/** The "SORTR" wordmark in the display face, optionally with a magenta dot. */
+export function Wordmark({
+  size = 30,
+  withPeriod = false,
+  className,
+}: WordmarkProps) {
+  return (
+    <span
+      className={cn("font-heading font-black text-foreground", className)}
+      style={{ fontSize: size, letterSpacing: "0.02em", lineHeight: 1 }}
+    >
+      SORTR
+      {withPeriod && <span className="text-main">.</span>}
+    </span>
+  );
+}
+
+/** The full logo lockup: mark + wordmark. Used in the navbar. */
+export function SortrLogo({ className }: { className?: string }) {
+  return (
+    <span className={cn("inline-flex items-center gap-3", className)}>
+      <SortrMark />
+      <Wordmark />
+    </span>
+  );
+}
+
+interface VsMarkerProps {
+  /** Pixel size of the (pre-rotation) square. Defaults to 56. */
+  size?: number;
+  /** Glyph in the center — "VS" by default, or "★" on the results hand-off. */
+  glyph?: string;
+  /** Color of the glyph. Defaults to magenta; results screen uses gold. */
+  glyphColor?: string;
+  className?: string;
+}
+
+/**
+ * The VS marker: a square rotated 45°, magenta-bordered, with "VS" upright in
+ * the display face, pulsing. The signature device that sits between two
+ * contenders. The glyph counter-rotates so it stays upright.
+ */
+export function VsMarker({
+  size = 56,
+  glyph = "VS",
+  glyphColor = "var(--main)",
+  className,
+}: VsMarkerProps) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "sortr-pulse inline-flex shrink-0 items-center justify-center border-2 border-main",
+        className,
+      )}
+      style={{
+        width: size,
+        height: size,
+        background: "var(--background)",
+      }}
+    >
+      <span
+        className="font-heading font-black"
+        style={{
+          transform: "rotate(-45deg)",
+          fontSize: Math.round(size * 0.39),
+          color: glyphColor,
+          lineHeight: 1,
+        }}
+      >
+        {glyph}
+      </span>
     </span>
   );
 }

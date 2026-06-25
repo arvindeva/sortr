@@ -3,24 +3,139 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  --background: #ffffff;
-  --secondary-background: #f7f6f8;
-  --foreground: #1a1625;
-  --main-foreground: #ffffff;
-  --main: #da1b61;
-  --border: #e9e6ee;
-  --ring: #da1b61;
-  --overlay: rgb(0 0 0 / 0.5);
-  --shadow: 0px 1px 2px 0px rgb(0 0 0 / 0.05);
-  --chart-1: #da1b61;
-  --chart-2: #ff6e61;
-  --chart-3: #ffb84d;
-  --chart-4: #6d9dc5;
-  --chart-5: #5e4b8b;
-  --chart-active-dot: #da1b61;
+/*
+ * "VERSUS arcade" palette. Dark is the designed truth (every screen in the
+ * handoff is dark) and is the default theme (set in the ThemeProvider), but it
+ * still lives under `.dark` so the existing `dark:` Tailwind utilities across
+ * the app keep working. `:root` below is the derived light variant.
+ *
+ * Brand accents (magenta primary, cyan, yellow, violet, coral) are mapped onto
+ * the existing shadcn token names so every component inherits the look. The
+ * five accents also drive the cover-tile color cycle.
+ *
+ * NOTE: selector is `:root.dark` (specificity 0-2-0), not bare `.dark`. Tailwind
+ * v4 emits this block *before* the `:root` light block, so a plain `.dark`
+ * (0-1-0, equal to `:root`) would lose on source order and the page would stay
+ * light even with the class applied. The extra `:root` guarantees dark wins.
+ */
+:root.dark {
+  /* Core surfaces */
+  --background: #0b0918; /* midnight indigo-black */
+  --secondary-background: #13102a; /* deep panel / name bars */
+  --foreground: #f3f0ff;
+  --border: rgba(255, 255, 255, 0.08);
+  --overlay: rgb(5 4 12 / 0.7);
+  --shadow: 0px 1px 2px 0px rgb(0 0 0 / 0.5);
 
-  /* Additional shadcn variables */
+  /* Brand accents */
+  --main: #ff2e7e; /* magenta — PRIMARY */
+  --main-foreground: #ffffff;
+  --main-gradient: linear-gradient(180deg, #ff2e7e, #e01e65);
+  --cyan: #19e3df; /* SECONDARY — links, accents */
+  --yellow: #ffd23f; /* gold / accent */
+  --violet: #9b6bff;
+  --coral: #ff7a59;
+  --ring: #ff2e7e;
+
+  /* The elevated "machine" panel (duel / community ranking) */
+  --panel: linear-gradient(
+    180deg,
+    rgba(22, 18, 46, 0.9),
+    rgba(12, 10, 28, 0.95)
+  );
+  --panel-border: rgba(255, 46, 126, 0.4);
+  --panel-glow: 0 0 60px rgba(255, 46, 126, 0.18);
+
+  /* Atmosphere layers painted on the page background */
+  --atmo-glow: radial-gradient(
+      1100px 560px at 82% -4%,
+      rgba(255, 46, 126, 0.18),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 620px at 2% 24%,
+      rgba(25, 227, 223, 0.11),
+      transparent 55%
+    );
+  --atmo-grid-line: rgba(255, 255, 255, 0.03);
+
+  /* Medals */
+  --medal-gold: #ffd23f;
+  --medal-silver: #cdd6e8;
+  --medal-bronze: #d68a4e;
+
+  /* Charts — reuse the brand accents */
+  --chart-1: #ff2e7e;
+  --chart-2: #19e3df;
+  --chart-3: #ffd23f;
+  --chart-4: #9b6bff;
+  --chart-5: #ff7a59;
+  --chart-active-dot: #ff2e7e;
+
+  /* shadcn surfaces */
+  --card: rgba(255, 255, 255, 0.03);
+  --card-foreground: var(--foreground);
+  --popover: #15122c;
+  --popover-foreground: var(--foreground);
+  --primary: var(--main);
+  --primary-foreground: var(--main-foreground);
+  --secondary: var(--secondary-background);
+  --secondary-foreground: var(--foreground);
+  --muted: rgba(255, 255, 255, 0.05);
+  --muted-foreground: #a39ec2; /* body muted */
+  --accent: rgba(255, 46, 126, 0.12);
+  --accent-foreground: #ff6aa0;
+  --destructive: #ff4d4d;
+  --destructive-foreground: #ffffff;
+  --input: rgba(255, 255, 255, 0.05);
+}
+
+/*
+ * Light variant — derived (not in the handoff), and also the no-class default
+ * so any pre-hydration / no-JS paint is a valid theme. Keeps the arcade
+ * identity: magenta/cyan accents and uppercase display on a warm off-white so
+ * the neon reads. This is an interpretation; dark remains the fidelity target.
+ */
+:root {
+  --background: #f7f5fb;
+  --secondary-background: #ffffff;
+  --foreground: #17132b;
+  --border: rgba(20, 12, 40, 0.1);
+  --overlay: rgb(10 6 24 / 0.4);
+  --shadow: 0px 1px 2px 0px rgb(20 12 40 / 0.08);
+
+  --main: #e01e65;
+  --main-foreground: #ffffff;
+  --main-gradient: linear-gradient(180deg, #ff2e7e, #e01e65);
+  --cyan: #0bb3af;
+  --yellow: #e0a500;
+  --violet: #7d4ee0;
+  --coral: #e85c38;
+  --ring: #e01e65;
+
+  --panel: linear-gradient(180deg, #ffffff, #fbf7fd);
+  --panel-border: rgba(224, 30, 101, 0.35);
+  --panel-glow: 0 10px 40px rgba(224, 30, 101, 0.12);
+
+  --atmo-glow: radial-gradient(
+      1100px 560px at 82% -4%,
+      rgba(255, 46, 126, 0.1),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 620px at 2% 24%,
+      rgba(11, 179, 175, 0.08),
+      transparent 55%
+    );
+  --atmo-grid-line: rgba(20, 12, 40, 0.04);
+
+  --chart-1: #e01e65;
+  --chart-2: #0bb3af;
+  --chart-3: #e0a500;
+  --chart-4: #7d4ee0;
+  --chart-5: #e85c38;
+  --chart-active-dot: #e01e65;
+
   --card: #ffffff;
   --card-foreground: var(--foreground);
   --popover: #ffffff;
@@ -29,47 +144,13 @@
   --primary-foreground: var(--main-foreground);
   --secondary: var(--secondary-background);
   --secondary-foreground: var(--foreground);
-  --muted: #f2f0f5;
-  --muted-foreground: #6f6880;
-  --accent: #fdf0f5;
-  --accent-foreground: #da1b61;
+  --muted: rgba(20, 12, 40, 0.04);
+  --muted-foreground: #6b6486;
+  --accent: rgba(224, 30, 101, 0.08);
+  --accent-foreground: #e01e65;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
   --input: #ffffff;
-}
-
-.dark {
-  --background: #000000;
-  --secondary-background: #0e0c11;
-  --foreground: #f4f2f7;
-  --main-foreground: #ffffff;
-  --main: #ec3b7e;
-  --border: #1f1b26;
-  --ring: #ec3b7e;
-  --shadow: 0px 1px 2px 0px rgb(0 0 0 / 0.4);
-  --chart-1: #ec3b7e;
-  --chart-2: #ff6e61;
-  --chart-3: #ffb84d;
-  --chart-4: #6d9dc5;
-  --chart-5: #8a72c4;
-  --chart-active-dot: #ec3b7e;
-
-  /* Additional shadcn variables for dark mode */
-  --card: #0b090e;
-  --card-foreground: var(--foreground);
-  --popover: #0b090e;
-  --popover-foreground: var(--foreground);
-  --primary: var(--main);
-  --primary-foreground: var(--main-foreground);
-  --secondary: var(--secondary-background);
-  --secondary-foreground: var(--foreground);
-  --muted: #16131b;
-  --muted-foreground: #9a92a8;
-  --accent: #2a0f1c;
-  --accent-foreground: #f06a9c;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --input: #0e0c11;
 }
 
 @theme inline {
@@ -86,6 +167,15 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
+  /* Brand accents — usable as bg-cyan, text-yellow, border-violet, etc. */
+  --color-cyan: var(--cyan);
+  --color-yellow: var(--yellow);
+  --color-violet: var(--violet);
+  --color-coral: var(--coral);
+  --color-medal-gold: var(--medal-gold);
+  --color-medal-silver: var(--medal-silver);
+  --color-medal-bronze: var(--medal-bronze);
 
   /* Additional shadcn theme variables */
   --color-card: var(--card);
@@ -107,21 +197,34 @@
   --radius-base: 10px;
   --shadow-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --font-weight-base: 400;
-  --font-weight-heading: 600;
-  --font-base: var(--font-jakarta);
-  --font-heading: var(--font-fraunces);
+  --font-weight-heading: 800;
+  /* font-base = body (Space Grotesk), font-heading = display (Big Shoulders),
+     font-mono = HUD (Space Mono). NOTE: must be the --font-* namespace, not
+     --font-family-*, or the font-* utilities silently no-op in Tailwind v4. */
+  --font-base: var(--font-space-grotesk);
+  --font-heading: var(--font-big-shoulders);
+  --font-mono: var(--font-space-mono);
 }
 
 @layer base {
+  /* html paints the base color so there's never a bare flash; body stays
+     transparent so the fixed atmosphere layer (glows + grid) shows through. */
   html {
     @apply bg-background;
   }
 
   body {
-    @apply text-foreground font-base bg-background;
+    @apply text-foreground font-base;
     font-size: var(--font-size-base);
+    /* Guards full-bleed (w-screen) breakouts from creating a horizontal
+       scrollbar when a vertical scrollbar is present. */
+    overflow-x: hidden;
   }
 
+  /* Display headings: Big Shoulders is a condensed face, so it wants tight
+     leading and a touch of letter-spacing. Uppercasing is opt-in via the
+     `.display` utility below — headings that are user content (sorter titles)
+     get it applied deliberately rather than forcing it on all text. */
   h1,
   h2,
   h3,
@@ -129,6 +232,48 @@
   h5,
   h6 {
     @apply font-heading;
+    line-height: 1;
+    letter-spacing: 0.01em;
+  }
+
+  /* The arcade display treatment: condensed, loud, uppercase. */
+  .display {
+    @apply font-heading;
+    text-transform: uppercase;
+    line-height: 0.9;
+    letter-spacing: 0.01em;
+  }
+
+  /* HUD / scoreboard text: Space Mono, uppercase, wide tracking. */
+  .hud {
+    @apply font-mono;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  /* Page atmosphere: radial neon glows + faint grid, painted behind content.
+     Apply `.arcade-atmosphere` to a fixed/absolute full-bleed layer. */
+  .arcade-atmosphere::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--atmo-glow);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .arcade-atmosphere::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+        var(--atmo-grid-line) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, var(--atmo-grid-line) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
   }
 
   /* Very specific click feedback - only for sorter title links */
@@ -172,6 +317,81 @@
     animation: progress-shimmer 1.5s ease-in-out infinite;
     pointer-events: none;
     z-index: 1;
+  }
+
+  /* ---- VERSUS arcade motion ---- */
+
+  /* VS marker pulse — scale + magenta halo. The 45° rotation lives on the
+     element itself (see VsMarker), so this only animates scale/shadow and the
+     marker stays a diamond even with reduced motion. */
+  @keyframes sortrPulse {
+    0%,
+    100% {
+      transform: rotate(45deg) scale(1);
+      box-shadow: 0 0 0 0 rgba(255, 46, 126, 0.55);
+    }
+    50% {
+      transform: rotate(45deg) scale(1.07);
+      box-shadow: 0 0 46px 6px rgba(255, 46, 126, 0.55);
+    }
+  }
+  .sortr-pulse {
+    transform: rotate(45deg);
+    animation: sortrPulse 2.2s infinite;
+  }
+
+  /* Logo dot opacity pulse. */
+  @keyframes sortrGlow {
+    0%,
+    100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  .sortr-glow {
+    animation: sortrGlow 1.6s infinite;
+  }
+
+  /* Blinking cursor. */
+  @keyframes sortrBlink {
+    0%,
+    48% {
+      opacity: 1;
+    }
+    49%,
+    100% {
+      opacity: 0.18;
+    }
+  }
+  .sortr-blink {
+    animation: sortrBlink 1s infinite;
+  }
+
+  /* Activity ticker — translate the duplicated track left by half its width. */
+  @keyframes sortrMarquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .sortr-marquee {
+    animation: sortrMarquee 26s linear infinite;
+  }
+  .sortr-marquee:hover {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sortr-pulse,
+    .sortr-glow,
+    .sortr-blink,
+    .sortr-marquee {
+      animation: none;
+    }
   }
 
   /* Responsive font sizing overrides - smaller text on mobile for better density */

@@ -6,8 +6,8 @@ import { unstable_cache } from "next/cache";
 import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
 import { HeroDuel } from "@/components/hero-duel";
+import { ActivityTicker } from "@/components/activity-ticker";
 import { PageContainer } from "@/components/ui/page-container";
-import { SectionHeading } from "@/components/ui/section-heading";
 import { EmptyState } from "@/components/ui/empty-state";
 
 // Server-side data fetching for popular sorters
@@ -192,41 +192,71 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <PageContainer className="flex flex-col gap-12">
-        {/* Hero Section - interactive duel */}
+      <PageContainer className="flex flex-col gap-10 md:gap-12">
+        {/* Hero — headline + live featured duel */}
         <HeroDuel />
 
-        {/* Pure server-rendered popular sorters */}
+        {/* Full-bleed activity ticker built from real popular sorters */}
+        {!hadPopularError && popularData.popularSorters.length > 0 && (
+          <ActivityTicker
+            items={popularData.popularSorters.slice(0, 8).map((s) => ({
+              title: s.title,
+              by: s.creatorUsername,
+            }))}
+          />
+        )}
+
+        {/* Popular this week */}
         <section className="w-full">
-          <SectionHeading>Popular Sorters</SectionHeading>
+          <div className="mb-6 flex items-end justify-between gap-3">
+            <h2 className="display text-3xl font-black text-foreground md:text-[42px]">
+              Popular this week <span className="text-main">▸</span>
+            </h2>
+          </div>
           {hadPopularError ? (
             <EmptyState
               variant="error"
-              title="Failed to load popular sorters."
-              description="Please try again."
+              title="Couldn't load these right now."
+              description="Refresh to try again."
             />
           ) : popularData.popularSorters.length === 0 ? (
-            <EmptyState title="No sorters available yet." />
+            <EmptyState
+              title="No sorters yet."
+              description="Be the first — create one."
+            />
           ) : (
             <SorterGrid>
-              {popularData.popularSorters.map((sorter) => (
-                <SorterCard key={sorter.id} sorter={sorter} />
+              {popularData.popularSorters.map((sorter, i) => (
+                <SorterCard
+                  key={sorter.id}
+                  sorter={sorter}
+                  badge={
+                    i < 5 ? { label: `#${i + 1}`, tone: "rank" } : undefined
+                  }
+                />
               ))}
             </SorterGrid>
           )}
         </section>
 
-        {/* Pure server-rendered recent sorters */}
+        {/* Fresh sorters */}
         <section className="w-full">
-          <SectionHeading>Recent Sorters</SectionHeading>
+          <div className="mb-6 flex items-end justify-between gap-3">
+            <h2 className="display text-3xl font-black text-foreground md:text-[42px]">
+              Fresh sorters <span className="text-cyan">▸</span>
+            </h2>
+          </div>
           {hadRecentError ? (
             <EmptyState
               variant="error"
-              title="Failed to load recent sorters."
-              description="Please try again."
+              title="Couldn't load these right now."
+              description="Refresh to try again."
             />
           ) : recentData.recentSorters.length === 0 ? (
-            <EmptyState title="No sorters available yet." />
+            <EmptyState
+              title="No sorters yet."
+              description="Be the first — create one."
+            />
           ) : (
             <SorterGrid>
               {recentData.recentSorters.map((sorter) => (

@@ -3,7 +3,7 @@ import { useSession, signOut, signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LoginButton } from "@/components/login-button";
 import { ModeToggle } from "@/components/mode-toggle";
-import { SortrMark } from "@/components/ui/sortr-mark";
+import { SortrLogo } from "@/components/ui/sortr-mark";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Menu, X, User, Search } from "lucide-react";
@@ -133,19 +133,17 @@ export function Navbar() {
       className={`sticky top-0 z-30 flex w-full items-center justify-between border-b px-4 py-3 transition-colors duration-200 md:px-6 md:py-4 ${
         scrolled
           ? "border-border bg-background/70 backdrop-blur-lg"
-          : "border-transparent bg-background"
+          : "border-transparent bg-transparent"
       }`}
     >
       <Link
         href="/"
         prefetch={false}
-        className="group flex items-center gap-2"
+        className="group flex items-center transition-opacity hover:opacity-90"
+        aria-label="sortr home"
       >
-        {/* Two squares facing off — the duel at the heart of the app */}
-        <SortrMark size={26} animate />
-        <span className="font-heading text-2xl font-bold tracking-tight transition-colors group-hover:text-main">
-          sortr
-        </span>
+        {/* Two squares facing off — the VS panels at the heart of the app */}
+        <SortrLogo />
       </Link>
 
       {/* Desktop Navigation */}
@@ -305,12 +303,10 @@ export function Navbar() {
               <Link
                 href="/"
                 prefetch={false}
-                className="flex items-center gap-2"
+                className="flex items-center"
+                aria-label="sortr home"
               >
-                <SortrMark size={26} />
-                <span className="font-heading text-2xl font-bold tracking-tight">
-                  sortr
-                </span>
+                <SortrLogo />
               </Link>
               <DrawerClose asChild>
                 <Button variant="default" size="icon" aria-label="Close menu">

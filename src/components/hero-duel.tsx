@@ -3,63 +3,64 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, RotateCcw, Trophy } from "lucide-react";
+import { VsMarker } from "@/components/ui/sortr-mark";
+import { Plus } from "lucide-react";
 
 interface Item {
   id: string;
-  emoji: string;
-  label: string;
+  /** Display name shown on the contender tile. */
+  name: string;
+  /** Sub-label (artist), shown under the tile. */
+  sub: string;
+  /** Cover-tile accent. */
+  color: string;
 }
 
-// The demo sorter: a real, finite 4-item ranking everyone has an opinion on.
+// The featured demo: a real, finite 4-item ranking with broad opinions. Named
+// tiles (not emoji) so they read as real sorter covers in the arcade system.
 const ITEMS: Item[] = [
-  { id: "spring", emoji: "🌸", label: "Spring" },
-  { id: "summer", emoji: "☀️", label: "Summer" },
-  { id: "autumn", emoji: "🍂", label: "Autumn" },
-  { id: "winter", emoji: "❄️", label: "Winter" },
+  { id: "blonde", name: "Blonde", sub: "Frank Ocean", color: "#19e3df" },
+  {
+    id: "tpab",
+    name: "To Pimp a Butterfly",
+    sub: "Kendrick Lamar",
+    color: "#ff2e7e",
+  },
+  { id: "melodrama", name: "Melodrama", sub: "Lorde", color: "#9b6bff" },
+  { id: "igor", name: "IGOR", sub: "Tyler, the Creator", color: "#ffd23f" },
 ];
 
-// Total comparisons a 4-item merge sort needs in the worst case.
+const BY_ID = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
+
+// Worst-case comparisons for a 4-item merge sort.
 const TOTAL_STEPS = 5;
 
 /**
- * A tiny merge-sort state machine over the 4 items. It exposes the next
- * pair to compare; recording a winner advances the sort until a single
- * fully-ranked list remains. Pure and deterministic — easy to reason about.
+ * A tiny merge-sort state machine over the 4 items. Exposes the next pair to
+ * compare; recording a winner advances the sort until one fully-ranked list
+ * remains. Pure and deterministic.
  */
 type SortState = {
-  // Lists still being merged, each already internally sorted (best first).
   runs: string[][];
-  // The merge currently in progress (if any): two runs + the output so far.
   merging: { left: string[]; right: string[]; out: string[] } | null;
-  // Comparisons answered so far (drives the progress bar).
   comparisons: number;
 };
 
 function initialState(): SortState {
-  // Start with each item as its own sorted run.
   return { runs: ITEMS.map((i) => [i.id]), merging: null, comparisons: 0 };
 }
 
-// Returns the next pair to compare, or null when fully sorted.
 function nextPair(s: SortState): { a: string; b: string } | null {
-  if (s.merging) {
-    return { a: s.merging.left[0], b: s.merging.right[0] };
-  }
-  if (s.runs.length > 1) {
-    // Begin merging the first two runs.
-    return { a: s.runs[0][0], b: s.runs[1][0] };
-  }
-  return null; // single run left = done
+  if (s.merging) return { a: s.merging.left[0], b: s.merging.right[0] };
+  if (s.runs.length > 1) return { a: s.runs[0][0], b: s.runs[1][0] };
+  return null;
 }
 
-// Record that `winnerId` beat the other item in the current comparison.
 function advance(s: SortState, winnerId: string): SortState {
   let merging = s.merging;
   let runs = s.runs;
   const comparisons = s.comparisons + 1;
 
-  // If not mid-merge, start one with the first two runs.
   if (!merging) {
     const [left, right, ...rest] = runs;
     merging = { left, right, out: [] };
@@ -71,7 +72,6 @@ function advance(s: SortState, winnerId: string): SortState {
   let nRight = right;
   const nOut = [...out];
 
-  // The winner is the higher-ranked head; move it to the output.
   if (winnerId === left[0]) {
     nOut.push(left[0]);
     nLeft = left.slice(1);
@@ -80,23 +80,18 @@ function advance(s: SortState, winnerId: string): SortState {
     nRight = right.slice(1);
   }
 
-  // If either side is exhausted, flush the rest and finish this merge.
   if (nLeft.length === 0 || nRight.length === 0) {
     const merged = [...nOut, ...nLeft, ...nRight];
-    const newRuns = [...runs, merged];
-    return { runs: newRuns, merging: null, comparisons };
+    return { runs: [...runs, merged], merging: null, comparisons };
   }
-
-  return {
-    runs,
-    merging: { left: nLeft, right: nRight, out: nOut },
-    comparisons,
-  };
+  return { runs, merging: { left: nLeft, right: nRight, out: nOut }, comparisons };
 }
 
 function finalRanking(s: SortState): Item[] {
-  return s.runs[0].map((id) => ITEMS.find((i) => i.id === id)!);
+  return s.runs[0].map((id) => BY_ID[id]);
 }
+
+const MEDALS = ["#ffd23f", "#cdd6e8", "#d68a4e"];
 
 export function HeroDuel() {
   const [state, setState] = useState<SortState>(initialState);
@@ -104,162 +99,210 @@ export function HeroDuel() {
   const pair = nextPair(state);
   const done = pair === null;
   const ranking = done ? finalRanking(state) : [];
-  // Some answer paths finish in 4 comparisons; once done, show the bar full.
   const completed = done ? TOTAL_STEPS : state.comparisons;
+  const round = Math.min(state.comparisons + 1, TOTAL_STEPS);
 
-  const left = pair ? ITEMS.find((i) => i.id === pair.a)! : null;
-  const right = pair ? ITEMS.find((i) => i.id === pair.b)! : null;
+  const left = pair ? BY_ID[pair.a] : null;
+  const right = pair ? BY_ID[pair.b] : null;
 
-  function choose(winnerId: string) {
-    if (!pair) return;
-    setState((s) => advance(s, winnerId));
-  }
-
-  function reset() {
-    setState(initialState());
-  }
+  const choose = (winnerId: string) => {
+    if (pair) setState((s) => advance(s, winnerId));
+  };
+  const reset = () => setState(initialState());
 
   return (
-    <section className="relative isolate flex flex-col items-center gap-8 py-6 md:flex-row md:justify-between md:gap-12 md:py-10">
-      {/* Left: wordmark + pitch */}
-      <div className="max-w-lg text-center md:text-left">
-        <h1 className="text-5xl font-bold tracking-tight md:text-7xl">sortr</h1>
-        <p className="mt-4 text-lg text-balance text-muted-foreground md:text-xl">
-          Rank anything by settling it one matchup at a time.
+    <section className="grid items-center gap-10 py-10 md:py-14 lg:grid-cols-[1.02fr_.98fr] lg:gap-12">
+      {/* Left — the entry point */}
+      <div>
+        <h1 className="display text-[clamp(3rem,9vw,5rem)] font-black text-foreground">
+          Everything&apos;s
+          <br />
+          <span className="text-main">a versus.</span>
+        </h1>
+        <p className="mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground md:text-xl">
+          Rank anything by picking a favorite, one matchup at a time. Sortr
+          builds the list for you.
         </p>
 
-        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row md:items-start">
-          <Button asChild size="lg" className="group w-full sm:w-auto">
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Button asChild size="lg" arcade className="group w-full sm:w-auto">
+            <Link href="/browse">Browse sorters</Link>
+          </Button>
+          <Button
+            asChild
+            size="lg"
+            variant="neutral"
+            arcade
+            className="group w-full sm:w-auto"
+          >
             <Link href="/create">
               <Plus
                 className="transition-transform duration-200 group-hover:rotate-90"
                 size={18}
               />
-              Create a Sorter
+              Create a sorter
             </Link>
           </Button>
-          <Button
-            asChild
-            variant="neutral"
-            size="lg"
-            className="w-full sm:w-auto"
-          >
-            <Link href="/browse">Browse Sorters</Link>
-          </Button>
         </div>
+
+        <p className="mt-6 text-sm text-muted-foreground">
+          No account needed.{" "}
+          <Link
+            href="/auth/signin"
+            className="font-semibold text-cyan hover:underline"
+          >
+            Sign up
+          </Link>{" "}
+          to create and save your own.
+        </p>
       </div>
 
-      {/* Right: the interactive demo sorter, in an elevated card.
-          Fixed min-height so swapping duel <-> ranking never shifts the page. */}
-      <div className="flex min-h-[320px] w-full max-w-sm select-none flex-col rounded-2xl border-2 border-main/30 bg-card p-4 shadow-[0_8px_40px_-8px] shadow-main/25 ring-1 ring-main/5 md:min-h-[340px] md:p-5">
-        {/* Header row */}
-        <div className="mb-4 flex items-center justify-between text-sm">
-          <span className="font-medium text-muted-foreground">
-            {done ? "your ranking" : "which season is better?"}
-          </span>
+      {/* Right — the featured-sorter duel machine */}
+      <div
+        className="relative rounded-2xl border p-5 md:p-6"
+        style={{
+          borderColor: "var(--panel-border)",
+          background: "var(--panel)",
+          boxShadow: "var(--panel-glow)",
+        }}
+      >
+        {/* Header */}
+        <div className="mb-1.5 flex items-center justify-between">
+          <span className="hud text-xs text-yellow">▶ Featured sorter</span>
           {done ? (
             <button
               onClick={reset}
-              className="flex items-center gap-1 text-muted-foreground transition-colors hover:text-main"
+              className="font-mono text-[13px] text-cyan transition-opacity hover:opacity-80"
             >
-              <RotateCcw className="h-3.5 w-3.5" />
-              try again
+              ↺ play again
             </button>
           ) : (
-            <span className="font-medium text-muted-foreground">
-              {completed}/{TOTAL_STEPS}
+            <span className="font-mono text-[13px] text-cyan">
+              ROUND {round}/{TOTAL_STEPS}
             </span>
           )}
         </div>
+        <div className="display mb-3.5 text-[26px] font-extrabold text-foreground">
+          Greatest album of the 2010s
+        </div>
 
-        {/* Progress dots */}
-        <div className="mb-4 flex gap-1.5">
+        {/* Pip progress */}
+        <div className="mb-5 flex gap-1.5">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <span
               key={i}
-              className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-                i < completed ? "bg-main" : "bg-muted"
-              }`}
+              className="h-1.5 flex-1 rounded-full transition-colors duration-300"
+              style={{
+                background: i < completed ? "#19e3df" : "rgba(255,255,255,.12)",
+              }}
             />
           ))}
         </div>
 
-        <div className="flex flex-1 flex-col justify-center">
-        {done ? (
-          /* Final ranking reveal */
-          <ol className="space-y-1.5">
-            {ranking.map((item, i) => (
-              <li
-                key={item.id}
-                className={`flex items-center gap-3 rounded-base border p-2.5 transition-all ${
-                  i === 0
-                    ? "border-main/40 bg-accent"
-                    : "border-border bg-secondary-background"
-                }`}
-              >
-                <span
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                    i === 0
-                      ? "bg-main text-main-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {i + 1}
-                </span>
-                <span className="text-2xl">{item.emoji}</span>
-                <span className="font-semibold">{item.label}</span>
-                {i === 0 && <Trophy className="ml-auto h-4 w-4 text-main" />}
-              </li>
-            ))}
-          </ol>
-        ) : (
-          /* The duel */
-          <>
-            <div className="relative flex items-stretch gap-3">
-              <DuelCard contender={left!} onClick={() => choose(left!.id)} />
-
-              {/* VS badge */}
-              <div className="pointer-events-none absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
-                <span className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-sm font-bold tracking-tight text-foreground shadow-md">
-                  VS
-                </span>
+        {/* Fixed height so finishing never shifts the hero */}
+        <div className="flex min-h-[240px] flex-col justify-center">
+          {done ? (
+            <div className="text-center">
+              <div className="hud text-xs text-cyan">★ Your ranking ★</div>
+              <div className="my-4 flex flex-col gap-2">
+                {ranking.map((item, i) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-[10px] border border-border bg-white/[0.04] px-3.5 py-2.5 text-left"
+                  >
+                    <span
+                      className="display w-[34px] text-[28px] font-black"
+                      style={{ color: i < 3 ? MEDALS[i] : "#6f6a86" }}
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="flex-1 font-bold text-foreground">
+                      {item.name}
+                    </span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {item.sub}
+                    </span>
+                  </div>
+                ))}
               </div>
-
-              <DuelCard contender={right!} onClick={() => choose(right!.id)} />
+              <Button onClick={reset} arcade size="sm">
+                ↺ Play again
+              </Button>
             </div>
-
-            <p className="mt-4 text-center text-xs text-muted-foreground">
-              that&apos;s the whole idea. a few taps and you&apos;ve got a
-              ranking.
-            </p>
-          </>
-        )}
+          ) : (
+            <>
+              <div className="grid grid-cols-[1fr_64px_1fr] items-center gap-2">
+                <ContenderTile
+                  item={left!}
+                  side="left"
+                  onClick={() => choose(left!.id)}
+                />
+                <div className="flex justify-center">
+                  <VsMarker size={56} />
+                </div>
+                <ContenderTile
+                  item={right!}
+                  side="right"
+                  onClick={() => choose(right!.id)}
+                />
+              </div>
+              <div className="mt-4 flex items-center justify-center gap-2 font-mono text-xs text-cyan">
+                <span className="sortr-blink">▮</span> tap a side to keep going
+              </div>
+            </>
+          )}
         </div>
       </div>
     </section>
   );
 }
 
-function DuelCard({
-  contender,
+function ContenderTile({
+  item,
+  side,
   onClick,
 }: {
-  contender: Item;
+  item: Item;
+  side: "left" | "right";
   onClick: () => void;
 }) {
+  // Left contender glows cyan on hover, right glows magenta — mirrors the duel.
+  const glow =
+    side === "left"
+      ? "hover:border-cyan hover:shadow-[0_0_28px_rgba(25,227,223,.45)]"
+      : "hover:border-main hover:shadow-[0_0_28px_rgba(255,46,126,.45)]";
+
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={`Pick ${contender.label}`}
-      className="group flex flex-1 flex-col items-center justify-center gap-2 rounded-base border border-border bg-secondary-background p-4 transition-all duration-200 hover:-translate-y-1 hover:border-main/40 hover:shadow-lg md:p-6"
+      aria-label={`Pick ${item.name}`}
+      className={`group overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] text-left transition-all duration-150 hover:-translate-y-1 ${glow}`}
     >
-      <span className="text-4xl transition-transform duration-200 group-hover:scale-110 md:text-5xl">
-        {contender.emoji}
-      </span>
-      <span className="text-sm font-semibold md:text-base">
-        {contender.label}
-      </span>
+      <div
+        className="relative flex h-[148px] items-center justify-center p-3.5 text-center"
+        style={{ background: item.color }}
+      >
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(45deg, rgba(0,0,0,.05) 0 16px, transparent 16px 32px)",
+          }}
+        />
+        <span
+          className="display relative text-[24px] font-extrabold"
+          style={{ color: "rgba(0,0,0,.72)", lineHeight: 0.95 }}
+        >
+          {item.name}
+        </span>
+      </div>
+      <div className="px-3.5 py-2.5">
+        <div className="font-mono text-xs text-muted-foreground">
+          {item.sub}
+        </div>
+      </div>
     </button>
   );
 }

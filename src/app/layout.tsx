@@ -1,26 +1,36 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Fraunces } from "next/font/google";
+import { Big_Shoulders, Space_Mono, Space_Grotesk } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { ArcadeBackground } from "@/components/ui/arcade-background";
 import NextTopLoader from "nextjs-toploader";
 import Script from "next/script";
 
 import "./globals.css";
 
-// Body: sleek geometric-humanist sans with distinctive letterforms
-const jakarta = Plus_Jakarta_Sans({
+// Display / headings / wordmark / numbers — condensed, loud, uppercase.
+const bigShoulders = Big_Shoulders({
   subsets: ["latin"],
-  variable: "--font-jakarta",
+  variable: "--font-big-shoulders",
   display: "swap",
+  weight: ["600", "700", "800", "900"],
+  adjustFontFallback: false,
 });
 
-// Headings: characterful "old-style" serif with optical sizing
-const fraunces = Fraunces({
+// HUD / labels / meta / counters — the scoreboard voice.
+const spaceMono = Space_Mono({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  variable: "--font-space-mono",
   display: "swap",
-  axes: ["SOFT", "WONK", "opsz"],
+  weight: ["400", "700"],
+});
+
+// Body / UI — clean geometric grotesk.
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -63,8 +73,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${jakarta.variable} ${fraunces.variable} flex min-h-screen flex-col antialiased`}
-        style={{ fontFamily: "var(--font-jakarta)" }}
+        className={`${bigShoulders.variable} ${spaceMono.variable} ${spaceGrotesk.variable} flex min-h-screen flex-col antialiased`}
+        style={{ fontFamily: "var(--font-space-grotesk)" }}
       >
         {isProd &&
           process.env.NEXT_PUBLIC_UMAMI_URL &&
@@ -77,9 +87,10 @@ export default function RootLayout({
             />
           )}
         <Providers>
-          <NextTopLoader color="#da1b61" showSpinner={false} height={3} />
+          <ArcadeBackground />
+          <NextTopLoader color="#ff2e7e" showSpinner={false} height={3} />
           <Navbar />
-          <div className="mb-12 flex-1">{children}</div>
+          <div className="relative z-10 mb-12 flex-1">{children}</div>
           <Footer />
         </Providers>
       </body>

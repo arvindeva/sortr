@@ -6,6 +6,42 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * The "VERSUS arcade" cover-tile accent cycle: magenta → cyan → yellow →
+ * violet → coral. Used for sorter/item cover tiles and rank thumbs when there
+ * is no uploaded artwork. Resolved values (not CSS vars) so they can be used in
+ * inline styles, on canvas, or in rasterized share images.
+ */
+export const ARCADE_ACCENTS = [
+  "#ff2e7e", // magenta
+  "#19e3df", // cyan
+  "#ffd23f", // yellow
+  "#9b6bff", // violet
+  "#ff7a59", // coral
+] as const;
+
+/** Cheap, stable string hash → non-negative integer (for deterministic color). */
+function hashString(input: string): number {
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash << 5) - hash + input.charCodeAt(i);
+    hash |= 0; // force 32-bit
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * Pick a stable accent for a tile. Pass a string key (slug/id/title) so the
+ * same entity always gets the same color, or a number to index directly into
+ * the cycle (e.g. position in a list). Falls back to magenta.
+ */
+export function accentFor(key: string | number | undefined | null): string {
+  if (key === undefined || key === null) return ARCADE_ACCENTS[0];
+  const idx =
+    typeof key === "number" ? key : hashString(key);
+  return ARCADE_ACCENTS[idx % ARCADE_ACCENTS.length];
+}
+
+/**
  * Generate a unique 6-character alphanumeric ID
  * @returns A 6-character unique identifier (e.g., "a1b2c3")
  */

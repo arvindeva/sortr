@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
+import { CoverTile } from "@/components/ui/cover-tile";
+import { cn } from "@/lib/utils";
 
 interface SorterCardProps {
   sorter: {
@@ -11,47 +12,62 @@ interface SorterCardProps {
     category?: string;
     coverImageUrl?: string;
   };
+  /** Optional corner badge, e.g. "#1" (popular) or "NEW" (fresh). */
+  badge?: { label: string; tone?: "rank" | "new" };
   className?: string;
 }
 
-export function SorterCard({ sorter, className }: SorterCardProps) {
-  const firstLetter = sorter.title.charAt(0).toUpperCase();
+/**
+ * The canonical sorter card: a colored cover tile (uploaded art, or a name
+ * tile cycling the arcade accents) above a display-font title and a mono meta
+ * row (@author · plays). Lifts and gains an accent glow on hover.
+ */
+export function SorterCard({ sorter, badge, className }: SorterCardProps) {
+  const plays = sorter.completionCount.toLocaleString();
 
   return (
     <Link
       href={`/sorter/${sorter.slug}`}
-      className={`group block w-full ${className || ""}`}
+      className={cn("group block w-full", className)}
     >
-      <div className="relative aspect-[3/4] overflow-hidden rounded-base transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
-        {/* Background Image or Placeholder */}
-        <div className="absolute inset-0">
-          {sorter.coverImageUrl ? (
-            <div
-              className="h-full w-full bg-cover bg-center transition-transform duration-200 group-hover:scale-105"
-              style={{
-                backgroundImage: `url(${sorter.coverImageUrl})`,
-              }}
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-secondary">
-              <span className="text-6xl font-semibold text-muted-foreground/30">
-                {firstLetter}
-              </span>
-            </div>
+      <div className="overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 group-hover:-translate-y-1 group-hover:border-main/50 group-hover:shadow-[0_0_32px_rgba(255,46,126,.28)]">
+        {/* Cover */}
+        <div className="relative">
+          <CoverTile
+            imageUrl={sorter.coverImageUrl}
+            name={sorter.title}
+            colorKey={sorter.slug}
+            nameSize={21}
+            radius={0}
+            className="h-40 w-full"
+          />
+          {badge && (
+            <span
+              className={cn(
+                "absolute top-2 left-2 rounded font-mono text-[11px] font-bold",
+                badge.tone === "new"
+                  ? "bg-cyan/85 px-[7px] py-[3px] text-[#06212a]"
+                  : "bg-black/55 px-[7px] py-[3px] text-white",
+              )}
+            >
+              {badge.label}
+            </span>
           )}
         </div>
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-        {/* Title Overlay */}
-        <div className="absolute inset-x-0 bottom-0 p-4">
-          <h3 className="line-clamp-2 text-base font-semibold leading-tight text-white">
+        {/* Meta */}
+        <div className="px-3 py-3">
+          <h3 className="display line-clamp-2 text-[18px] font-extrabold text-foreground">
             {sorter.title}
           </h3>
-          <p className="mt-1 text-sm text-white/70">
-            by {sorter.creatorUsername}
-          </p>
+          <div className="mt-2 flex items-center justify-between font-mono text-xs">
+            <span className="truncate text-muted-foreground">
+              @{sorter.creatorUsername}
+            </span>
+            {sorter.completionCount > 0 && (
+              <span className="shrink-0 pl-2 text-cyan">{plays} ▸</span>
+            )}
+          </div>
         </div>
       </div>
     </Link>

@@ -7,14 +7,21 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 
 export function ModeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
 
+  // Use resolvedTheme (the actually-applied light/dark) rather than `theme`,
+  // which can be "system" and make the first toggle a no-op.
   const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
 
   return (
-    <Button variant="default" size="icon" onClick={toggleTheme}>
+    <Button
+      variant="neutral"
+      size="icon"
+      onClick={toggleTheme}
+      aria-label="Toggle theme"
+    >
       <SunMoon className="h-[1.2rem] w-[1.2rem]" />
       <span className="sr-only">Toggle theme</span>
     </Button>
