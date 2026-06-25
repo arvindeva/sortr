@@ -74,9 +74,6 @@ function SignInContent() {
     <div className="flex min-h-[70vh] items-center justify-center px-4">
       <div className="w-full max-w-[440px]">
         <div className="mb-6 text-center">
-          <div className="mb-6 flex justify-center">
-            <VsMarker size={56} />
-          </div>
           <h1 className="display text-[clamp(2.25rem,6vw,3rem)] font-black text-foreground">
             Sign in to sortr
           </h1>

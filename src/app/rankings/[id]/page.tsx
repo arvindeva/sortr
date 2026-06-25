@@ -394,9 +394,6 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
             />
 
             <div className="min-w-0 flex-1">
-              <div className="hud mb-2 text-xs text-cyan-ink">
-                ★ Your ranking
-              </div>
               {!sorter.isDeleted && sorter.slug ? (
                 <Link href={`/sorter/${sorter.slug}`}>
                   <h1 className="display text-[clamp(2.25rem,6vw,3.75rem)] font-black text-foreground transition-colors hover:text-main-ink">
@@ -467,9 +464,6 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         <div className="grid gap-8 md:grid-cols-[1fr_320px] md:items-start">
           {/* Final order */}
           <section>
-            <h2 className="display mb-5 text-[34px] font-black text-foreground">
-              Final order <span className="text-main">▸</span>
-            </h2>
             <div className="overflow-hidden">
               <AnimatedRankings rankings={result.rankings} />
             </div>
