@@ -6,20 +6,10 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { SortrLogo } from "@/components/ui/sortr-mark";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Menu, X, User, Search } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { Plus, Menu, X, Search } from "lucide-react";
+import { forwardRef, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import {
-  Drawer,
-  DrawerTrigger,
-  DrawerContent,
-  DrawerClose,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerOverlay,
-  DrawerPortal,
-} from "@/components/ui/drawer";
 
 export function Navbar() {
   const { data: session, status } = useSession();
@@ -31,7 +21,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const desktopSearchInputRef = useRef<HTMLInputElement>(null);
-  const mobileMenuFirstButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuFirstButtonRef = useRef<HTMLElement>(null);
   const drawerContentRef = useRef<HTMLDivElement>(null);
 
   const { data: userData } = useQuery({
@@ -80,6 +70,21 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Close the mobile menu on Escape and lock body scroll while it's open
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMobileMenuOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileMenuOpen]);
 
   // Focus mobile search input when search opens
   useEffect(() => {
@@ -132,7 +137,7 @@ export function Navbar() {
     <nav
       className={`sticky top-0 z-30 flex w-full items-center justify-between border-b px-4 py-3 transition-colors duration-200 md:px-6 md:py-4 ${
         scrolled
-          ? "border-border bg-background/70 backdrop-blur-lg"
+          ? "border-border bg-background/85 backdrop-blur-md"
           : "border-transparent bg-transparent"
       }`}
     >
@@ -230,158 +235,152 @@ export function Navbar() {
         )}
       </div>
 
-      {/* Mobile Menu Button */}
-      <div className="flex items-center gap-4 lg:hidden">
-        {/* Search button - mobile navbar */}
-        <Button
-          variant="default"
-          size="icon"
+      {/* Mobile bar: just two 42px buttons — ghost search + menu toggle */}
+      <div className="flex items-center gap-2.5 lg:hidden">
+        <button
+          type="button"
           onClick={() => {
-            setMobileSearchOpen(!mobileSearchOpen);
+            setMobileSearchOpen((v) => !v);
             setMobileMenuOpen(false);
           }}
           aria-label="Search"
+          className="flex h-[42px] w-[42px] items-center justify-center rounded-[10px] border border-foreground/[0.16] text-foreground transition-colors hover:bg-foreground/5"
         >
-          <Search size={20} />
-        </Button>
-
-        {/* Create button - mobile navbar */}
-        {status === "loading" ? (
-          <Button
-            variant="default"
-            size="icon"
-            disabled
-            aria-label="Create a Sorter"
-          >
-            <Plus size={20} />
-          </Button>
-        ) : session ? (
-          <Button
-            asChild
-            variant="default"
-            size="icon"
-            aria-label="Create a Sorter"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            <Link href="/create">
-              <Plus size={20} />
-            </Link>
-          </Button>
-        ) : (
-          <Button
-            asChild
-            variant="default"
-            size="icon"
-            aria-label="Create a Sorter"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            <Link href="/auth/signin">
-              <Plus size={20} />
-            </Link>
-          </Button>
-        )}
-        <ModeToggle />
-        <Drawer
-          open={mobileMenuOpen}
-          onOpenChange={setMobileMenuOpen}
-          direction="top"
+          <Search size={18} />
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMobileMenuOpen((v) => !v);
+            setMobileSearchOpen(false);
+          }}
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileMenuOpen}
+          className="flex h-[42px] w-[42px] items-center justify-center rounded-[10px] bg-[image:var(--main-gradient)] text-main-foreground shadow-[0_6px_18px_rgba(255,46,126,.35)] transition-[filter] hover:brightness-110"
         >
-          <DrawerTrigger asChild>
-            <Button variant="default" size="icon" aria-label="Toggle menu">
-              <Menu size={20} />
-            </Button>
-          </DrawerTrigger>
-
-          <DrawerContent className="lg:hidden">
-            <DrawerTitle className="sr-only">Navigation Menu</DrawerTitle>
-            <DrawerDescription className="sr-only">
-              Choose a navigation option from the list below
-            </DrawerDescription>
-
-            {/* Simplified navbar inside drawer */}
-            <div className="flex items-center justify-between border-b border-border bg-background px-4 py-3">
-              <Link
-                href="/"
-                prefetch={false}
-                className="flex items-center"
-                aria-label="sortr home"
-              >
-                <SortrLogo />
-              </Link>
-              <DrawerClose asChild>
-                <Button variant="default" size="icon" aria-label="Close menu">
-                  <X size={20} />
-                </Button>
-              </DrawerClose>
-            </div>
-
-            <div
-              ref={drawerContentRef}
-              className="flex flex-col gap-3 p-4"
-              tabIndex={-1}
-            >
-              {/* Browse link */}
-              <DrawerClose asChild>
-                <Button
-                  ref={mobileMenuFirstButtonRef}
-                  asChild
-                  variant="default"
-                  className="w-full"
-                >
-                  <Link href="/browse">Browse</Link>
-                </Button>
-              </DrawerClose>
-
-              {/* Auth buttons */}
-              {status === "loading" ? (
-                <Button variant="default" disabled className="w-full">
-                  Loading...
-                </Button>
-              ) : session ? (
-                <>
-                  {userData?.username ? (
-                    <DrawerClose asChild>
-                      <Button asChild variant="default" className="w-full">
-                        <Link href={`/user/${userData.username}`}>Profile</Link>
-                      </Button>
-                    </DrawerClose>
-                  ) : (
-                    <Button variant="default" disabled className="w-full">
-                      <User size={16} className="mr-2" />
-                      Profile
-                    </Button>
-                  )}
-                  <DrawerClose asChild>
-                    <Button
-                      variant="neutral"
-                      onClick={() => signOut()}
-                      className="w-full"
-                    >
-                      Logout
-                    </Button>
-                  </DrawerClose>
-                </>
-              ) : (
-                <DrawerClose asChild>
-                  <div>
-                    <LoginButton className="w-full" />
-                  </div>
-                </DrawerClose>
-              )}
-            </div>
-          </DrawerContent>
-        </Drawer>
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
       </div>
 
-      {/* Mobile Search Overlay */}
+      {/* Page dim behind the menu sheet */}
+      <div
+        onClick={() => setMobileMenuOpen(false)}
+        aria-hidden
+        className={`fixed inset-0 top-[var(--nav-h,64px)] z-20 bg-black/50 transition-opacity duration-200 lg:hidden ${
+          mobileMenuOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
+        }`}
+      />
+
+      {/* Menu sheet — opens below the bar with fade + slight translateY */}
+      <div
+        ref={drawerContentRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
+        className={`absolute top-full right-0 left-0 z-30 origin-top overflow-hidden border-b border-foreground/[0.08] transition-all duration-[220ms] ease-out lg:hidden ${
+          mobileMenuOpen
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-[10px] opacity-0"
+        }`}
+        style={{
+          background: "linear-gradient(180deg,#120f24,#0b0918)",
+        }}
+      >
+        {/* faint 48px grid on the panel */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+
+        <div className="relative flex flex-col gap-5 p-5">
+          {/* Search */}
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute top-1/2 left-3.5 h-5 w-5 -translate-y-1/2 text-[#6f6a86]" />
+            <input
+              placeholder="Search sorters…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-[50px] w-full rounded-[10px] border border-white/10 bg-white/[0.05] pr-4 pl-11 text-base text-[#f3f0ff] outline-none placeholder:text-[#6f6a86] focus:border-main"
+            />
+          </form>
+
+          {/* Nav as a vertical list */}
+          <nav className="flex flex-col">
+            <MobileNavRow
+              ref={mobileMenuFirstButtonRef}
+              href="/browse"
+              onSelect={() => setMobileMenuOpen(false)}
+            >
+              Browse
+            </MobileNavRow>
+
+            {status === "loading" ? null : session ? (
+              <>
+                {userData?.username && (
+                  <MobileNavRow
+                    href={`/user/${userData.username}`}
+                    onSelect={() => setMobileMenuOpen(false)}
+                  >
+                    Profile
+                  </MobileNavRow>
+                )}
+                <MobileNavRow
+                  muted
+                  onSelect={() => {
+                    setMobileMenuOpen(false);
+                    signOut();
+                  }}
+                >
+                  Log out
+                </MobileNavRow>
+              </>
+            ) : (
+              <MobileNavRow
+                onSelect={() => {
+                  setMobileMenuOpen(false);
+                  signIn();
+                }}
+              >
+                Log in
+              </MobileNavRow>
+            )}
+          </nav>
+
+          {/* Single primary CTA */}
+          <Button
+            asChild
+            arcade
+            size="lg"
+            className="w-full"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <Link href={session ? "/create" : "/auth/signin"}>
+              + Create a sorter
+            </Link>
+          </Button>
+
+          {/* Theme toggle pinned at the bottom */}
+          <div className="flex items-center justify-between border-t border-white/[0.08] pt-4">
+            <span className="hud text-xs text-[#6f6a86]">Theme</span>
+            <ModeToggle />
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Search dropdown (the ghost search button) */}
       {mobileSearchOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/50 lg:hidden"
           onClick={() => setMobileSearchOpen(false)}
         />
       )}
-
-      {/* Mobile Search Input */}
       <div
         className={`absolute top-full right-0 left-0 z-30 border-b border-border bg-background/95 backdrop-blur-lg transition-all duration-300 ease-out lg:hidden ${mobileSearchOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-4 opacity-0"}`}
       >
@@ -412,3 +411,53 @@ export function Navbar() {
     </nav>
   );
 }
+
+/**
+ * A row in the mobile menu sheet: a big Big Shoulders uppercase label with a
+ * trailing ▸ and a bottom hairline. Renders as a Link when `href` is given,
+ * otherwise a button that runs `onSelect` (used for sign in / out). `muted`
+ * dims it (Log out).
+ */
+const MobileNavRow = forwardRef<
+  HTMLElement,
+  {
+    href?: string;
+    onSelect?: () => void;
+    muted?: boolean;
+    children: React.ReactNode;
+  }
+>(function MobileNavRow({ href, onSelect, muted, children }, ref) {
+  const className = `group flex items-center justify-between border-b border-white/[0.08] py-4 text-left font-heading text-[26px] font-extrabold uppercase tracking-[0.01em] transition-colors ${
+    muted ? "text-[#8c87a6]" : "text-[#f3f0ff]"
+  } hover:text-main`;
+  const arrow = (
+    <span className="text-main transition-transform duration-200 group-hover:translate-x-1">
+      ▸
+    </span>
+  );
+
+  if (href) {
+    return (
+      <Link
+        ref={ref as React.Ref<HTMLAnchorElement>}
+        href={href}
+        onClick={onSelect}
+        className={className}
+      >
+        <span>{children}</span>
+        {arrow}
+      </Link>
+    );
+  }
+  return (
+    <button
+      ref={ref as React.Ref<HTMLButtonElement>}
+      type="button"
+      onClick={onSelect}
+      className={className}
+    >
+      <span>{children}</span>
+      {arrow}
+    </button>
+  );
+});
