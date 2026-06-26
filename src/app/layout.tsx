@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || "https://sortr.io"),
   title: {
     template: "%s | sortr",
-    default: "sortr - Create a Sorter for Anything",
+    default: "Sortr - Rank Anything",
   },
   keywords: [
     "ranking",

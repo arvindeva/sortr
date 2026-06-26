@@ -120,9 +120,8 @@ async function getRecentActivity() {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const title = "sortr - Create a Sorter for Anything";
-  const description =
-    "Create and share a sorter for anything to rank items from best to worst.";
+  const title = "Sortr - Rank Anything";
+  const description = "Pick a favorite, one matchup at a time.";
   const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.io";
 
   return {
@@ -209,7 +208,7 @@ export default async function Home() {
     "@type": "WebSite",
     name: "sortr",
     description:
-      "Create and share a sorter for anything to rank items from best to worst",
+      "Rank anything by picking a favorite, one matchup at a time.",
     url: process.env.NEXTAUTH_URL || "https://sortr.dev",
     potentialAction: {
       "@type": "SearchAction",
@@ -240,7 +239,7 @@ export default async function Home() {
         <section className="w-full">
           <div className="mb-6 flex items-end justify-between gap-3">
             <h2 className="display text-3xl font-black text-foreground md:text-[42px]">
-              Popular sorters <span className="text-main">▸</span>
+              Popular sorters
             </h2>
             <Link
               href="/browse?sort=popular"
@@ -279,7 +278,7 @@ export default async function Home() {
         <section className="w-full">
           <div className="mb-6 flex items-end justify-between gap-3">
             <h2 className="display text-3xl font-black text-foreground md:text-[42px]">
-              Fresh sorters <span className="text-cyan-ink">▸</span>
+              Fresh sorters
             </h2>
             <Link
               href="/browse?sort=recent"
