@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { db } from "@/db";
 import { sortingResults } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import {
   computeCommunityRanking,
   type RankingList,
@@ -26,6 +26,33 @@ interface StoredRankedItem {
   id: string;
   title: string;
   imageUrl?: string | null;
+}
+
+// The minimum current-version rankings needed for a community ranking. Must
+// match `minRankings` in computeCommunityRanking.
+const MIN_RANKINGS = 10;
+
+/**
+ * Cheap check: does this sorter have enough rankings to show a community
+ * ranking? A COUNT (milliseconds) — unlike the full aggregate (seconds on big
+ * sorters) — so it's safe to await on the server to decide whether to render
+ * the heading + loading skeleton, while the heavy data still streams in client
+ * side.
+ */
+export async function hasCommunityRanking(
+  sorterId: string,
+  version: number,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ c: sql<number>`count(*)::int` })
+    .from(sortingResults)
+    .where(
+      and(
+        eq(sortingResults.sorterId, sorterId),
+        eq(sortingResults.version, version),
+      ),
+    );
+  return (row?.c ?? 0) >= MIN_RANKINGS;
 }
 
 async function getCommunityRankingUncached(

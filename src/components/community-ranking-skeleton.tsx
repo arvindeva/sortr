@@ -8,9 +8,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function CommunityRankingSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <section>
-      {/* Heading + meta */}
-      <Skeleton className="h-7 w-56" />
-      <div className="mt-2 mb-5">
+      {/* Real heading (instant) so the user knows what's loading; only the meta
+          line and rows are skeletons. Matches CommunityRanking's heading. */}
+      <h2 className="display text-[30px] font-black text-foreground">
+        Community ranking
+      </h2>
+      <div className="mt-1.5 mb-5">
         <Skeleton className="h-3 w-40" />
       </div>
 

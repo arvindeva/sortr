@@ -4,6 +4,7 @@ import { SorterHeaderServer } from "@/components/sorter-header-server";
 import { SorterPageClient } from "@/components/sorter-page-client";
 import { SorterOwnerControls } from "@/components/sorter-owner-controls";
 import { getSorterDataCached } from "@/lib/sorter-data";
+import { hasCommunityRanking } from "@/lib/community-ranking-data";
 import { TrendingSortersSection } from "@/components/trending-sorters-section";
 
 interface SorterPageProps {
@@ -196,12 +197,17 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
         {/* Client-side data fetching for items, recent results, and the
             community ranking (fetched client-side so its heavy aggregate never
-            blocks the page render). */}
+            blocks the page render). `hasCommunityRanking` is a cheap count so
+            the heading + skeleton render instantly only when one will exist. */}
         <SorterPageClient
           slug={slug}
           isOwner={false}
           currentUserEmail={undefined}
           initialData={initialClientData}
+          hasCommunityRanking={await hasCommunityRanking(
+            data.sorter.id,
+            data.sorter.version,
+          )}
         />
 
         {/* Pull viral visitors deeper: what else is hot right now. */}

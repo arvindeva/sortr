@@ -17,6 +17,10 @@ interface SorterPageClientProps {
   isOwner: boolean;
   currentUserEmail?: string;
   initialData?: SorterData;
+  /** Cheap server-side check — true if this sorter has enough rankings for a
+   *  community ranking. Gates the heading + skeleton so they only show when one
+   *  will actually appear (no misleading flash for sparse sorters). */
+  hasCommunityRanking?: boolean;
 }
 
 // Small display-font section title with an optional count.
@@ -40,6 +44,7 @@ function SectionTitle({
 export function SorterPageClient({
   slug,
   initialData,
+  hasCommunityRanking = false,
 }: SorterPageClientProps) {
   const { sorterData, recentResults, isLoading, isError, error } =
     useSorterPage(slug, initialData, Date.now());
@@ -130,7 +135,7 @@ export function SorterPageClient({
     <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-8">
       {/* Left column — community + recent */}
       <div className="contents md:flex md:min-w-0 md:flex-1 md:flex-col md:gap-8">
-        {communityPending ? (
+        {communityPending && hasCommunityRanking ? (
           <div className="order-1 md:order-none">
             <CommunityRankingSkeleton />
           </div>
