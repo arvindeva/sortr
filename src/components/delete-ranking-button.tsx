@@ -63,7 +63,9 @@ export function DeleteRankingButton({
           variant="neutral"
           size="sm"
           className={
-            hideTextOnMobile ? "h-10 w-10 px-0 md:w-auto md:px-4" : ""
+            hideTextOnMobile
+              ? "h-10 w-10 shrink-0 px-0 md:w-auto md:px-4"
+              : ""
           }
         >
           <Trash2 size={16} />

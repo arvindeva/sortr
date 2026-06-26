@@ -92,8 +92,13 @@ export function ShareButton({
   // Mobile (Web Share API present): a single button that opens the OS sheet.
   if (canNativeShare) {
     return (
-      <div className="flex items-center gap-2.5">
-        <Button variant="neutral" size={size} onClick={handleNativeShare}>
+      <div className="flex shrink-0 items-center gap-2.5">
+        <Button
+          variant="neutral"
+          size={size}
+          onClick={handleNativeShare}
+          className="shrink-0"
+        >
           <Share2 size={16} />
           <span className="ml-2">Share</span>
         </Button>
@@ -104,6 +109,7 @@ export function ShareButton({
             onClick={handleDownloadImage}
             disabled={isGenerating}
             aria-label="Download image"
+            className="shrink-0"
           >
             <Download size={16} />
           </Button>
