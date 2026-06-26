@@ -43,39 +43,9 @@ function StatCard({
   );
 }
 
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ debug?: string }>;
-}) {
+export default async function AdminPage() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id;
-
-  // TEMP DEBUG: /admin?debug=1 shows why the gate decides what it does.
-  // Remove after diagnosing the prod 404.
-  const sp = await searchParams;
-  if (sp.debug === "1") {
-    const allow = (process.env.ADMIN_USER_ID ?? "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    return (
-      <pre className="m-8 overflow-auto rounded-xl border border-border bg-card p-5 text-xs text-foreground">
-        {JSON.stringify(
-          {
-            hasSession: !!session,
-            sessionUser: session?.user ?? null,
-            resolvedUserId: userId ?? null,
-            envHasAdminVar: !!process.env.ADMIN_USER_ID,
-            allowList: allow,
-            isAdmin: isAdmin(userId),
-          },
-          null,
-          2,
-        )}
-      </pre>
-    );
-  }
 
   // 404 for anyone who isn't an admin — don't reveal the page exists.
   if (!isAdmin(userId)) {
