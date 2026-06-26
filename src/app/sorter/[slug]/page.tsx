@@ -4,6 +4,7 @@ import { SorterHeaderServer } from "@/components/sorter-header-server";
 import { SorterPageClient } from "@/components/sorter-page-client";
 import { SorterOwnerControls } from "@/components/sorter-owner-controls";
 import { getSorterDataCached } from "@/lib/sorter-data";
+import { getCommunityRanking } from "@/lib/community-ranking-data";
 
 interface SorterPageProps {
   params: Promise<{
@@ -187,6 +188,10 @@ export default async function SorterPage({ params }: SorterPageProps) {
           isOwner={false}
           currentUserEmail={undefined}
           initialData={initialClientData}
+          communityRanking={await getCommunityRanking(
+            data.sorter.id,
+            data.sorter.version,
+          )}
         />
       </main>
     </>

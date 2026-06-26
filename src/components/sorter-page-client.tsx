@@ -5,14 +5,18 @@ import { SorterContentSkeleton } from "@/components/skeletons/sorter-content-ske
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CoverTile } from "@/components/ui/cover-tile";
+import { CommunityRanking } from "@/components/community-ranking";
 import { accentFor } from "@/lib/utils";
 import { getImageUrl } from "@/lib/image-utils";
+import type { CommunityRankingPayload } from "@/lib/community-ranking-data";
 
 interface SorterPageClientProps {
   slug: string;
   isOwner: boolean;
   currentUserEmail?: string;
   initialData?: SorterData;
+  /** Server-computed consensus ranking, or null if too few rankings. */
+  communityRanking?: CommunityRankingPayload | null;
 }
 
 // Small display-font section title with a colored arrow + optional count.
@@ -39,6 +43,7 @@ function SectionTitle({
 export function SorterPageClient({
   slug,
   initialData,
+  communityRanking,
 }: SorterPageClientProps) {
   const { sorterData, recentResults, isLoading, isError, error } =
     useSorterPage(slug, initialData, Date.now());
@@ -105,8 +110,11 @@ export function SorterPageClient({
         )}
       </section>
 
-      {/* Right — Recent rankings */}
-      <section>
+      {/* Right — Community ranking (consensus) + Recent rankings */}
+      <div className="flex flex-col gap-8">
+        {communityRanking && <CommunityRanking data={communityRanking} />}
+
+        <section>
         <SectionTitle count={recentResults.length} arrowClass="text-cyan-ink">
           Recent rankings
         </SectionTitle>
@@ -184,7 +192,8 @@ export function SorterPageClient({
             })}
           </div>
         )}
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
