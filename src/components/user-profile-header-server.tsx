@@ -25,8 +25,10 @@ export function UserProfileHeaderServer({
   return (
     <section className="mb-8">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-7">
-        {/* Avatar */}
-        <div className="relative shrink-0">
+        {/* Avatar — self-start + w-fit so the wrapper hugs the tile (in the
+            mobile flex-column it would otherwise stretch full-width and push
+            the edit button to the far right). */}
+        <div className="relative w-fit shrink-0 self-start">
           <div
             className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl sm:h-[150px] sm:w-[150px]"
             style={{

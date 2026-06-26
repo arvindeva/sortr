@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CoverTile } from "@/components/ui/cover-tile";
-import { cn } from "@/lib/utils";
+import { cn, formatCount } from "@/lib/utils";
 
 interface SorterCardProps {
   sorter: {
@@ -30,7 +30,7 @@ export function SorterCard({
   showCategory,
   className,
 }: SorterCardProps) {
-  const plays = sorter.completionCount.toLocaleString();
+  const plays = formatCount(sorter.completionCount);
 
   return (
     <Link

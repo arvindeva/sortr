@@ -6,6 +6,28 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Compact number formatting for counts (plays, rankings):
+ * < 1,000 stays exact; 1,000+ uses k/M/B with 1 decimal, trimming a trailing
+ * ".0". e.g. 1984 → "1.9k", 1000 → "1k", 2_500_000 → "2.5M".
+ */
+export function formatCount(n: number): string {
+  if (n < 1000) return String(n);
+  const units = [
+    { v: 1_000_000_000, s: "B" },
+    { v: 1_000_000, s: "M" },
+    { v: 1_000, s: "k" },
+  ];
+  for (const { v, s } of units) {
+    if (n >= v) {
+      // Truncate (don't round up) to 1 decimal so 1999 → 1.9k, not 2.0k.
+      const scaled = Math.floor((n / v) * 10) / 10;
+      return `${scaled % 1 === 0 ? scaled.toFixed(0) : scaled.toFixed(1)}${s}`;
+    }
+  }
+  return String(n);
+}
+
+/**
  * The "VERSUS arcade" cover-tile accent cycle: magenta → cyan → yellow →
  * violet → coral. Used for sorter/item cover tiles and rank thumbs when there
  * is no uploaded artwork. Resolved values (not CSS vars) so they can be used in
