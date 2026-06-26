@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { db } from "@/db";
 import { sorters, sortingResults, user } from "@/db/schema";
 import { and, eq, gte, isNotNull, isNull, sql, desc } from "drizzle-orm";
@@ -14,12 +15,27 @@ export interface AdminStats {
   };
   // Per-week sorter creation (oldest → newest), with a running cumulative total.
   sortersOverTime: { week: string; created: number; cumulative: number }[];
+  // Per-week ranking creation (oldest → newest), with a running cumulative total.
+  rankingsOverTime: { week: string; created: number; cumulative: number }[];
   // Per-day ranking activity for the last ~12 weeks.
   rankingsPerDay: { day: string; count: number }[];
   // Anonymous vs. logged-in rankings.
   rankingsByAuth: { anonymous: number; loggedIn: number };
-  // Top sorters by plays.
-  topSorters: { title: string; slug: string; plays: number }[];
+  // Top sorters by plays, per timeframe. "all" uses the cumulative
+  // completionCount; the windowed ones count rankings (sortingResults) created
+  // within the window.
+  topSorters: {
+    all: TopSorter[];
+    day: TopSorter[];
+    week: TopSorter[];
+    month: TopSorter[];
+  };
+}
+
+export interface TopSorter {
+  title: string;
+  slug: string;
+  plays: number;
 }
 
 function daysAgo(n: number): Date {
@@ -28,8 +44,27 @@ function daysAgo(n: number): Date {
   return d;
 }
 
-export async function getAdminStats(): Promise<AdminStats> {
+// Top sorters by play count (ranking submissions) within a time window.
+async function topSortersSince(since: Date): Promise<TopSorter[]> {
+  const rows = await db
+    .select({
+      title: sorters.title,
+      slug: sorters.slug,
+      plays: sql<number>`count(*)::int`,
+    })
+    .from(sortingResults)
+    .innerJoin(sorters, eq(sortingResults.sorterId, sorters.id))
+    .where(and(eq(sorters.deleted, false), gte(sortingResults.createdAt, since)))
+    .groupBy(sorters.id, sorters.title, sorters.slug)
+    .orderBy(desc(sql`count(*)`))
+    .limit(8);
+  return rows;
+}
+
+async function computeAdminStats(): Promise<AdminStats> {
+  const oneDayAgo = daysAgo(1);
   const sevenDaysAgo = daysAgo(7);
+  const thirtyDaysAgo = daysAgo(30);
   const twelveWeeksAgo = daysAgo(84);
 
   const [
@@ -39,10 +74,14 @@ export async function getAdminStats(): Promise<AdminStats> {
     sorters7d,
     rankings7d,
     sortersByWeek,
+    rankingsByWeek,
     rankingsByDay,
     anonRankings,
     authRankings,
-    top,
+    topAll,
+    topDay,
+    topWeek,
+    topMonth,
   ] = await Promise.all([
     db.select({ c: sql<number>`count(*)::int` }).from(user),
     db
@@ -70,6 +109,15 @@ export async function getAdminStats(): Promise<AdminStats> {
       .where(eq(sorters.deleted, false))
       .groupBy(sql`date_trunc('week', ${sorters.createdAt})`)
       .orderBy(sql`date_trunc('week', ${sorters.createdAt})`),
+    // Rankings grouped by week.
+    db
+      .select({
+        week: sql<string>`to_char(date_trunc('week', ${sortingResults.createdAt}), 'YYYY-MM-DD')`,
+        created: sql<number>`count(*)::int`,
+      })
+      .from(sortingResults)
+      .groupBy(sql`date_trunc('week', ${sortingResults.createdAt})`)
+      .orderBy(sql`date_trunc('week', ${sortingResults.createdAt})`),
     // Rankings per day, last 12 weeks.
     db
       .select({
@@ -88,6 +136,7 @@ export async function getAdminStats(): Promise<AdminStats> {
       .select({ c: sql<number>`count(*)::int` })
       .from(sortingResults)
       .where(isNotNull(sortingResults.userId)),
+    // All-time top sorters use the cumulative completionCount.
     db
       .select({
         title: sorters.title,
@@ -98,14 +147,22 @@ export async function getAdminStats(): Promise<AdminStats> {
       .where(eq(sorters.deleted, false))
       .orderBy(desc(sorters.completionCount))
       .limit(8),
+    // Windowed top sorters count rankings within the window.
+    topSortersSince(oneDayAgo),
+    topSortersSince(sevenDaysAgo),
+    topSortersSince(thirtyDaysAgo),
   ]);
 
-  // Running cumulative for sorters-over-time.
-  let runningTotal = 0;
-  const sortersOverTime = sortersByWeek.map((row) => {
-    runningTotal += row.created;
-    return { week: row.week, created: row.created, cumulative: runningTotal };
-  });
+  // Running cumulative totals for the over-time charts.
+  const withCumulative = (rows: { week: string; created: number }[]) => {
+    let total = 0;
+    return rows.map((row) => {
+      total += row.created;
+      return { week: row.week, created: row.created, cumulative: total };
+    });
+  };
+  const sortersOverTime = withCumulative(sortersByWeek);
+  const rankingsOverTime = withCumulative(rankingsByWeek);
 
   return {
     totals: {
@@ -118,11 +175,26 @@ export async function getAdminStats(): Promise<AdminStats> {
       rankings: rankings7d[0]?.c ?? 0,
     },
     sortersOverTime,
+    rankingsOverTime,
     rankingsPerDay: rankingsByDay,
     rankingsByAuth: {
       anonymous: anonRankings[0]?.c ?? 0,
       loggedIn: authRankings[0]?.c ?? 0,
     },
-    topSorters: top,
+    topSorters: {
+      all: topAll,
+      day: topDay,
+      week: topWeek,
+      month: topMonth,
+    },
   };
 }
+
+/**
+ * Cached admin stats. The dashboard doesn't need real-time data, so we recompute
+ * at most every 5 minutes — repeat opens/refreshes within the window serve the
+ * cached result instantly with zero DB hits.
+ */
+export const getAdminStats = unstable_cache(computeAdminStats, ["admin-stats"], {
+  revalidate: 300,
+});

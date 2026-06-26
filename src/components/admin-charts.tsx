@@ -32,14 +32,18 @@ const tooltipStyle = {
 function ChartCard({
   title,
   children,
+  footer,
 }: {
   title: string;
   children: React.ReactNode;
+  /** Rendered below the fixed-height chart area (e.g. a legend). */
+  footer?: React.ReactNode;
 }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
       <div className="hud mb-4 text-xs text-muted-foreground">{title}</div>
       <div className="h-[240px] w-full">{children}</div>
+      {footer}
     </div>
   );
 }
@@ -82,6 +86,41 @@ export function AdminCharts({ stats }: { stats: AdminStats }) {
               stroke={MAIN}
               strokeWidth={2}
               fill="url(#sortersFill)"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      {/* Cumulative rankings over time */}
+      <ChartCard title="Rankings over time (cumulative)">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={stats.rankingsOverTime}>
+            <defs>
+              <linearGradient id="rankingsFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={CYAN} stopOpacity={0.4} />
+                <stop offset="100%" stopColor={CYAN} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke={GRID} vertical={false} />
+            <XAxis
+              dataKey="week"
+              tick={{ fill: AXIS, fontSize: 11 }}
+              tickLine={false}
+              axisLine={{ stroke: GRID }}
+            />
+            <YAxis
+              tick={{ fill: AXIS, fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              width={36}
+            />
+            <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: AXIS }} />
+            <Area
+              type="monotone"
+              dataKey="cumulative"
+              stroke={CYAN}
+              strokeWidth={2}
+              fill="url(#rankingsFill)"
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -144,15 +183,29 @@ export function AdminCharts({ stats }: { stats: AdminStats }) {
       </ChartCard>
 
       {/* Anonymous vs logged-in rankings */}
-      <ChartCard title="Rankings: anonymous vs logged in">
+      <ChartCard
+        title="Rankings: anonymous vs logged in"
+        footer={
+          <div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1.5 font-mono text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-cyan" />
+              Logged in ({stats.rankingsByAuth.loggedIn})
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-main" />
+              Anonymous ({stats.rankingsByAuth.anonymous})
+            </span>
+          </div>
+        }
+      >
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={authData}
               dataKey="value"
               nameKey="name"
-              innerRadius={55}
-              outerRadius={90}
+              innerRadius={52}
+              outerRadius={85}
               paddingAngle={2}
               stroke="none"
             >
@@ -163,16 +216,6 @@ export function AdminCharts({ stats }: { stats: AdminStats }) {
             <Tooltip contentStyle={tooltipStyle} />
           </PieChart>
         </ResponsiveContainer>
-        <div className="mt-2 flex justify-center gap-5 font-mono text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-cyan" />
-            Logged in ({stats.rankingsByAuth.loggedIn})
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-main" />
-            Anonymous ({stats.rankingsByAuth.anonymous})
-          </span>
-        </div>
       </ChartCard>
     </div>
   );

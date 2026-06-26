@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getAdminStats } from "@/lib/admin-stats";
 import { AdminCharts } from "@/components/admin-charts";
+import { TopSortersCard } from "@/components/admin-top-sorters";
 import { formatCount } from "@/lib/utils";
 
 // Private — never index, always render fresh.
@@ -83,33 +84,8 @@ export default async function AdminPage() {
         <AdminCharts stats={stats} />
       </div>
 
-      {/* Top sorters */}
-      <div className="mt-5 rounded-2xl border border-border bg-card p-5">
-        <div className="hud mb-4 text-xs text-muted-foreground">
-          Top sorters by plays
-        </div>
-        <ol className="flex flex-col gap-2">
-          {stats.topSorters.map((s, i) => (
-            <li
-              key={s.slug}
-              className="flex items-center gap-3 rounded-lg border border-border bg-background/40 px-3.5 py-2.5"
-            >
-              <span className="display w-7 shrink-0 text-center text-lg font-black text-muted-foreground">
-                {i + 1}
-              </span>
-              <a
-                href={`/sorter/${s.slug}`}
-                className="min-w-0 flex-1 truncate font-semibold text-foreground hover:text-main-ink"
-              >
-                {s.title}
-              </a>
-              <span className="shrink-0 font-mono text-[13px] text-cyan-ink">
-                {s.plays.toLocaleString()} plays
-              </span>
-            </li>
-          ))}
-        </ol>
-      </div>
+      {/* Top sorters (timeframe-switchable) */}
+      <TopSortersCard topSorters={stats.topSorters} />
     </main>
   );
 }
