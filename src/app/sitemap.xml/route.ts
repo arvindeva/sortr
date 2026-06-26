@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { sorters, sortingResults, user } from "@/db/schema";
+import { sorters, user } from "@/db/schema";
 import { and, eq, desc, isNotNull } from "drizzle-orm";
 
 export async function GET() {
@@ -23,26 +23,27 @@ export async function GET() {
       .where(and(eq(sorters.deleted, false), eq(sorters.status, "active")))
       .orderBy(desc(sorters.createdAt));
 
-    // Get recent results (limit to prevent huge sitemap)
-    const recentResults = await db
-      .select({
-        id: sortingResults.id,
-        createdAt: sortingResults.createdAt,
-      })
-      .from(sortingResults)
-      .orderBy(desc(sortingResults.createdAt))
-      .limit(1000); // Limit to prevent huge sitemap
+    // Individual ranking pages are intentionally NOT listed: they're thin and
+    // near-duplicate ("X's ranking of Y"), nobody searches for them, and listing
+    // thousands wastes crawl budget. They stay crawlable via links from sorters.
 
-    // Get user profiles that actually have a username (the only ones with a
-    // public profile page).
+    // User profiles — only users who actually created a public sorter. An empty
+    // profile is a thin, valueless page; restricting to creators keeps the
+    // sitemap to pages worth indexing.
     const userProfiles = await db
-      .select({
+      .selectDistinct({
         username: user.username,
         createdAt: user.emailVerified,
       })
       .from(user)
-      .where(isNotNull(user.username))
-      .limit(5000); // Cap to keep the sitemap a reasonable size.
+      .innerJoin(sorters, eq(sorters.userId, user.id))
+      .where(
+        and(
+          isNotNull(user.username),
+          eq(sorters.deleted, false),
+          eq(sorters.status, "active"),
+        ),
+      );
 
     // Build sitemap XML
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -66,21 +67,8 @@ export async function GET() {
   </url>`,
     )
     .join("")}
-  
-  <!-- Rankings pages -->
-  ${recentResults
-    .map(
-      (result) => `
-  <url>
-    <loc>${baseUrl}/rankings/${result.id}</loc>
-    <lastmod>${new Date(result.createdAt).toISOString()}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>`,
-    )
-    .join("")}
-  
-  <!-- User profiles -->
+
+  <!-- User profiles (creators only) -->
   ${userProfiles
     .filter((profile) => profile.username) // Extra safety check
     .map(
