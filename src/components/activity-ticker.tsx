@@ -16,8 +16,9 @@ export function ActivityTicker({ items }: { items: TickerItem[] }) {
   const segment = items
     .map((it) => `${it.by ? `@${it.by}` : "Anonymous"} ranked ${it.title}`)
     .join("  ·  ");
-  // Trailing separator so the wrap-around has a gap too.
-  const text = `● ${segment}  ·  `;
+  // Trailing separator so the wrap-around loops seamlessly. No leading
+  // bullet — it repeated once per duplicated track and read as a stray dot.
+  const text = `${segment}  ·  `;
 
   return (
     // Full-bleed: break out of the centered container to span the whole
