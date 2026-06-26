@@ -245,7 +245,7 @@ export function HeroDuel() {
                 />
               </div>
               <div className="text-cyan-ink mt-2.5 flex items-center justify-center gap-2 font-mono text-xs">
-                <span className="sortr-blink">▮</span> tap a side to keep going
+                tap a side to keep going
               </div>
             </>
           )}

@@ -395,21 +395,6 @@
     animation: sortrGlow 1.6s infinite;
   }
 
-  /* Blinking cursor. */
-  @keyframes sortrBlink {
-    0%,
-    48% {
-      opacity: 1;
-    }
-    49%,
-    100% {
-      opacity: 0.18;
-    }
-  }
-  .sortr-blink {
-    animation: sortrBlink 1s infinite;
-  }
-
   /* Activity ticker — translate the duplicated track left by half its width. */
   @keyframes sortrMarquee {
     from {
@@ -429,7 +414,6 @@
   @media (prefers-reduced-motion: reduce) {
     .sortr-pulse,
     .sortr-glow,
-    .sortr-blink,
     .sortr-marquee {
       animation: none;
     }

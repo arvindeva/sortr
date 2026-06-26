@@ -572,9 +572,8 @@ export default function SortPage() {
           <h1 className="display text-3xl font-black text-foreground">
             Ranking locked
           </h1>
-          <p className="flex items-center gap-2 font-mono text-[13px] text-cyan-ink">
-            <span className="sortr-blink">▮</span> tallying your picks — taking
-            you to your results…
+          <p className="font-mono text-[13px] text-cyan-ink">
+            tallying your picks — taking you to your results…
           </p>
         </div>
       </div>
@@ -759,8 +758,8 @@ export default function SortPage() {
 
       {/* Keyboard hint + autosave note */}
       <div className="mt-8 flex flex-col items-center gap-3 text-center">
-        <p className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
-          <span className="sortr-blink text-cyan-ink">▮</span> tap a side to pick
+        <p className="font-mono text-xs text-muted-foreground">
+          tap a side to pick
         </p>
         <p className="font-mono text-xs text-muted-foreground">
           ✓ progress saved in your browser — take a break and come back anytime.
