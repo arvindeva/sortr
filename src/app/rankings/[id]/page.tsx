@@ -279,7 +279,9 @@ async function getCoreRankingDataUncached(resultId: string): Promise<CoreRanking
 }
 
 // Optimized data fetcher - caches immutable snapshot data only
-async function getResultData(resultId: string): Promise<ResultData | null> {
+export async function getResultData(
+  resultId: string,
+): Promise<ResultData | null> {
   // Cache core ranking data (immutable snapshot)
   const coreData = await unstable_cache(
     async () => getCoreRankingDataUncached(resultId),
