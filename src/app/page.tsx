@@ -137,20 +137,13 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       siteName: "sortr",
       url: baseUrl,
-      images: [
-        {
-          url: "/og-home.png",
-          width: 1200,
-          height: 630,
-          alt: "sortr - Create and share a sorter for anything",
-        },
-      ],
+      // OG image comes from the app/opengraph-image.tsx file convention.
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ["/og-home.png"],
+      // Twitter image also comes from the opengraph-image file convention.
     },
   };
 }
