@@ -419,7 +419,9 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                 )}
               </div>
 
-              {/* Action Buttons — one line on mobile (CTA flex-1 + icons) */}
+              {/* Action buttons — one line on mobile. The CTA shortens to
+                  "Sort now" and the share/delete collapse to icons so the
+                  owner's full set fits without wrapping. */}
               <div className="mt-5 flex items-center gap-2.5 sm:flex-wrap sm:gap-3">
                 {!sorter.isDeleted && sorter.slug ? (
                   <Button
@@ -433,7 +435,8 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                         className="transition-transform duration-200 group-hover:translate-x-1"
                         size={18}
                       />
-                      Sort it yourself
+                      <span className="sm:hidden">Sort now</span>
+                      <span className="hidden sm:inline">Sort it yourself</span>
                     </Link>
                   </Button>
                 ) : (

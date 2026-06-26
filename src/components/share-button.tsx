@@ -89,18 +89,20 @@ export function ShareButton({
     await downloadImage(rankingData);
   };
 
-  // Mobile (Web Share API present): a single button that opens the OS sheet.
+  // Mobile (Web Share API present): two icon buttons — share (opens the OS
+  // sheet) and download. Icon-only so the owner's full action row fits one line;
+  // the share glyph is universal.
   if (canNativeShare) {
     return (
       <div className="flex shrink-0 items-center gap-2.5">
         <Button
           variant="neutral"
-          size={size}
+          size="icon"
           onClick={handleNativeShare}
+          aria-label="Share"
           className="shrink-0"
         >
           <Share2 size={16} />
-          <span className="ml-2">Share</span>
         </Button>
         {rankingData && (
           <Button
