@@ -23,9 +23,9 @@ export function SortrMark({ size = 12, className }: SortrMarkProps) {
         className="sortr-glow block bg-main"
         style={{ width: size, height: size, borderRadius: 2 }}
       />
-      {/* Cyan outline */}
+      {/* Cyan outline — pulses out of phase with the magenta square */}
       <span
-        className="block border-2 border-cyan"
+        className="sortr-glow-alt block border-2 border-cyan"
         style={{
           width: size,
           height: size,

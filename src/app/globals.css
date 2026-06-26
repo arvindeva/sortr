@@ -394,6 +394,12 @@
   .sortr-glow {
     animation: sortrGlow 1.6s infinite;
   }
+  /* Same pulse, offset half a cycle — used on the cyan square so the two logo
+     squares alternate (one bright while the other dims), like they're competing. */
+  .sortr-glow-alt {
+    animation: sortrGlow 1.6s infinite;
+    animation-delay: -0.8s;
+  }
 
   /* Hero typewriter block cursor — snaps on/off like a real caret. */
   @keyframes hero-caret {
@@ -438,6 +444,7 @@
   @media (prefers-reduced-motion: reduce) {
     .sortr-pulse,
     .sortr-glow,
+    .sortr-glow-alt,
     .sortr-marquee {
       animation: none;
     }
