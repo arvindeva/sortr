@@ -236,7 +236,7 @@ export default async function UserProfilePage({
     "@context": "https://schema.org",
     "@type": "Person",
     name: profileData.user.username || "Unknown User",
-    url: `${process.env.NEXTAUTH_URL || "https://sortr.dev"}/user/${profileData.user.username}`,
+    url: `${process.env.NEXTAUTH_URL || "https://sortr.io"}/user/${profileData.user.username}`,
     ...(profileData.user.image && { image: profileData.user.image }),
     description: `${profileData.user.username}'s sorters on sortr.`,
     mainEntityOfPage: {

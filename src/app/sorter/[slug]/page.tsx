@@ -68,6 +68,12 @@ export async function generateMetadata({
   };
 }
 
+// ISR: the page's server HTML is identical for all visitors (owner-only
+// controls are gated client-side via useSession), so it can be cached and
+// revalidated rather than re-queried on every request. 1 hour balances
+// freshness (content edits) against load at scale.
+export const revalidate = 3600;
+
 export default async function SorterPage({ params }: SorterPageProps) {
   const { slug } = await params;
 

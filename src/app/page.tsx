@@ -209,12 +209,12 @@ export default async function Home() {
     name: "sortr",
     description:
       "Rank anything by picking a favorite, one matchup at a time.",
-    url: process.env.NEXTAUTH_URL || "https://sortr.dev",
+    url: process.env.NEXTAUTH_URL || "https://sortr.io",
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${process.env.NEXTAUTH_URL || "https://sortr.dev"}/browse?q={search_term_string}`,
+        urlTemplate: `${process.env.NEXTAUTH_URL || "https://sortr.io"}/browse?q={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },

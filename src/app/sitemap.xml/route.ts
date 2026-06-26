@@ -1,19 +1,20 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { sorters, sortingResults, user } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { and, eq, desc, isNotNull } from "drizzle-orm";
 
 export async function GET() {
   try {
-    const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.dev";
+    const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.io";
 
-    // Get all public sorters
+    // Get all public sorters (active, not deleted — matches app visibility).
     const publicSorters = await db
       .select({
         slug: sorters.slug,
         createdAt: sorters.createdAt,
       })
       .from(sorters)
+      .where(and(eq(sorters.deleted, false), eq(sorters.status, "active")))
       .orderBy(desc(sorters.createdAt));
 
     // Get recent results (limit to prevent huge sitemap)
@@ -26,15 +27,16 @@ export async function GET() {
       .orderBy(desc(sortingResults.createdAt))
       .limit(1000); // Limit to prevent huge sitemap
 
-    // Get user profiles (only with usernames)
+    // Get user profiles that actually have a username (the only ones with a
+    // public profile page).
     const userProfiles = await db
       .select({
         username: user.username,
         createdAt: user.emailVerified,
       })
       .from(user)
-      .where(eq(user.username, user.username)) // Only users with usernames
-      .limit(500); // Limit to prevent huge sitemap
+      .where(isNotNull(user.username))
+      .limit(5000); // Cap to keep the sitemap a reasonable size.
 
     // Build sitemap XML
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
