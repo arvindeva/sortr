@@ -14,7 +14,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 
 // Server-side data fetching for popular sorters
 async function getPopularSorters() {
-  const numberOfPopularSorters = 20;
+  const numberOfPopularSorters = 10;
 
   try {
     const popularSorters = await db
@@ -55,7 +55,7 @@ async function getPopularSorters() {
 
 // Server-side data fetching for recent sorters
 async function getRecentSorters() {
-  const numberOfRecentSorters = 20;
+  const numberOfRecentSorters = 10;
 
   try {
     const recentSorters = await db
