@@ -17,7 +17,7 @@ import { CoverTile } from "@/components/ui/cover-tile";
 import { Play } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
-import { RankingImageLayout } from "@/components/ranking-image-layout";
+import { ResultShareImage } from "@/components/result-share-image";
 import { RankingOwnerActions } from "@/components/ranking-owner-actions";
 
 interface RankingsPageProps {
@@ -522,26 +522,31 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
           </aside>
         </div>
 
-        {/* Development Preview: Image Layout */}
+        {/* Development Preview: the downloadable share image */}
         {process.env.NODE_ENV === "development" && (
           <div className="mt-12 border-t border-dashed border-border pt-8">
             <div className="mb-4">
               <h2 className="text-lg font-bold text-muted-foreground">
-                Development Preview: Downloadable Image Layout
+                Development Preview: Downloadable Image
               </h2>
               <p className="text-muted-foreground">
-                This preview shows what the downloaded image will look like.
-                This section is only visible in development.
+                What the downloaded image looks like. Dev-only.
               </p>
             </div>
 
             <div className="overflow-auto bg-muted p-4">
-              <RankingImageLayout
-                sorterTitle={sorter.title}
-                username={result.username}
-                rankings={result.rankings}
-                createdAt={result.createdAt instanceof Date ? result.createdAt : new Date(result.createdAt)}
-                selectedTags={selectedTagSlugs}
+              <ResultShareImage
+                title={sorter.title}
+                subtitle={`Sorted by ${
+                  result.username && result.username !== "Anonymous"
+                    ? `@${result.username}`
+                    : "@anon"
+                }`}
+                items={result.rankings.slice(0, 10).map((r) => ({
+                  id: r.id,
+                  name: r.title,
+                  imageUrl: r.imageUrl,
+                }))}
               />
             </div>
           </div>

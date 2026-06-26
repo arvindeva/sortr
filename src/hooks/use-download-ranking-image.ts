@@ -22,131 +22,91 @@ export function useDownloadRankingImage() {
   const downloadImage = useCallback(
     async (data: RankingImageData) => {
       if (isGenerating) return;
-
       setIsGenerating(true);
 
       try {
-        // Create temporary container for the image layout
+        // Off-screen container to render the share card into.
         const container = document.createElement("div");
         container.style.position = "fixed";
         container.style.top = "-9999px";
         container.style.left = "-9999px";
         container.style.zIndex = "-1";
-        // Copy body's classes to keep font family, but strip any dark-mode class
-        // so the exported image consistently uses light theme colors.
-        const bodyClass = document.body.className || "";
-        container.className = bodyClass
-          .split(/\s+/)
-          .filter((c) => c && c !== "dark")
-          .join(" ");
+        document.body.appendChild(container);
 
-        // Import the RankingImageLayout component dynamically
-        const { RankingImageLayout } = await import(
-          "@/components/ranking-image-layout"
+        const { ResultShareImage } = await import(
+          "@/components/result-share-image"
         );
         const React = await import("react");
         const ReactDOM = await import("react-dom/client");
 
-        // Create React element
-        // Force light theme color for exported item cards (hardcoded)
-        const LIGHT_ITEM_BG = "#ffe0e3";
+        const subtitle = `Sorted by ${
+          data.username && data.username !== "Anonymous"
+            ? `@${data.username}`
+            : "@anon"
+        }`;
 
-        const rankingElement = React.createElement(RankingImageLayout, {
-          sorterTitle: data.sorterTitle,
-          username: data.username,
-          rankings: data.rankings,
-          createdAt: data.createdAt,
-          selectedTags: data.selectedTags,
-          itemBackgroundColor: LIGHT_ITEM_BG,
+        const element = React.createElement(ResultShareImage, {
+          title: data.sorterTitle,
+          subtitle,
+          items: data.rankings.slice(0, 10).map((r) => ({
+            id: r.id,
+            name: r.title,
+            imageUrl: r.imageUrl,
+          })),
         });
 
-        // Append container to body
-        document.body.appendChild(container);
-
-        // Create React root and render
         const root = ReactDOM.createRoot(container);
-        root.render(rankingElement);
+        root.render(element);
 
-        // Wait for the next tick to ensure rendering is complete
+        // Let React commit.
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // Wait for fonts to be ready - specifically check for Poppins
+        // Ensure fonts are loaded before rasterizing, or text falls back to the
+        // wrong family. next/font names families with a hash, so the card uses
+        // the --font-* CSS vars (inherited from <body>); we just wait for all
+        // document fonts to be ready rather than probing specific names.
         await document.fonts.ready;
 
-        // Additional check to ensure Poppins is loaded
-        try {
-          await document.fonts.load('400 16px "Poppins"');
-          await document.fonts.load('500 16px "Poppins"');
-          await document.fonts.load('600 16px "Poppins"');
-          await document.fonts.load('700 16px "Poppins"');
-          await document.fonts.load('800 16px "Poppins"');
-        } catch (error) {
-          console.warn("Failed to load Poppins font weights:", error);
-        }
-
-        // Wait for all images to load
-        const images = container.querySelectorAll("img");
-        if (images.length > 0) {
+        // Wait for any item photos used as tile backgrounds. They're CSS
+        // background-images, so create probe <img>s to know when they're ready.
+        const imgUrls = data.rankings
+          .slice(0, 10)
+          .map((r) => r.imageUrl)
+          .filter((u): u is string => !!u);
+        if (imgUrls.length > 0) {
           await Promise.all(
-            Array.from(images).map(
-              (img) =>
+            imgUrls.map(
+              (url) =>
                 new Promise((resolve) => {
-                  if (img.complete) {
-                    resolve(void 0);
-                  } else {
-                    img.onload = () => resolve(void 0);
-                    img.onerror = () => resolve(void 0); // Continue even if image fails
-                  }
+                  const img = new Image();
+                  img.crossOrigin = "anonymous";
+                  img.onload = () => resolve(void 0);
+                  img.onerror = () => resolve(void 0);
+                  img.src = url;
                 }),
             ),
           );
         }
 
-        // Additional wait to ensure everything is rendered
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        // Settle.
+        await new Promise((resolve) => setTimeout(resolve, 150));
 
-        // Find the actual ranking container inside our React component
-        const rankingContainer = container.querySelector(
-          ".ranking-image-container",
-        );
-        if (!rankingContainer) {
-          throw new Error("Could not find ranking container");
-        }
+        const card = container.querySelector(
+          "#sortr-result-card",
+        ) as HTMLElement | null;
+        if (!card) throw new Error("Could not find result card");
 
-        // Generate PNG at actual rendered width for crisp output
-        const containerEl = rankingContainer as HTMLElement;
-        const rect = containerEl.getBoundingClientRect();
-        const renderedWidth = Math.max(1, Math.ceil(rect.width));
-        const MAX_CANVAS_EDGE = 8192; // guard against oversized canvases causing errors
-        let desiredPixelRatio = 2;
-        if (renderedWidth * desiredPixelRatio > MAX_CANVAS_EDGE) {
-          desiredPixelRatio = Math.max(1, Math.floor(MAX_CANVAS_EDGE / renderedWidth));
-        }
-
-        const dataUrl = await toPng(containerEl, {
-          quality: 1.0,
-          pixelRatio: desiredPixelRatio,
-          backgroundColor: "transparent", // Transparent background so rounded corners show
-          width: renderedWidth,
-          height: undefined, // Auto height based on content
+        const dataUrl = await toPng(card, {
+          pixelRatio: 2, // 1080×1350 → 2160×2700
           cacheBust: true,
-          style: {
-            fontFamily:
-              'var(--font-poppins), "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
-          },
         });
 
-        // Create filename
         const sanitizedTitle = data.sorterTitle
           .replace(/[^a-z0-9]/gi, "-")
           .toLowerCase()
           .substring(0, 50);
-        const sanitizedUsername = data.username
-          .replace(/[^a-z0-9]/gi, "-")
-          .toLowerCase();
-        const filename = `${sanitizedTitle}-rankings-${sanitizedUsername}.png`;
+        const filename = `${sanitizedTitle}-ranking.png`;
 
-        // Download the image
         const link = document.createElement("a");
         link.href = dataUrl;
         link.download = filename;
@@ -154,16 +114,15 @@ export function useDownloadRankingImage() {
         link.click();
         document.body.removeChild(link);
 
-        // Cleanup
         root.unmount();
         document.body.removeChild(container);
 
-        toast.success("Rankings image downloaded!");
-      } catch (error: any) {
-        // Provide more context to help diagnose issues like CORS or canvas size limits
-        const message = error?.message || error?.toString?.() || "Unknown error";
+        toast.success("Ranking image downloaded!");
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : String(error);
         console.error("Error generating ranking image:", message, error);
-        toast.error("Failed to generate image. Try again or reduce columns.");
+        toast.error("Failed to generate image. Please try again.");
       } finally {
         setIsGenerating(false);
       }
@@ -171,8 +130,5 @@ export function useDownloadRankingImage() {
     [isGenerating],
   );
 
-  return {
-    downloadImage,
-    isGenerating,
-  };
+  return { downloadImage, isGenerating };
 }
