@@ -10,6 +10,18 @@ const MEDAL_VARS = [
   "var(--medal-bronze)",
 ];
 
+// Glow + border for the top-3 rows (gold / silver / bronze).
+const MEDAL_GLOW = [
+  "0 0 28px rgba(255,210,63,.32)",
+  "0 0 24px rgba(205,214,232,.28)",
+  "0 0 24px rgba(214,138,78,.3)",
+];
+const MEDAL_ROW_BORDER = [
+  "rgba(255,210,63,.5)",
+  "rgba(205,214,232,.45)",
+  "rgba(214,138,78,.48)",
+];
+
 const TOP_N = 10;
 
 export function CommunityRanking({ data }: { data: CommunityRankingPayload }) {
@@ -20,14 +32,7 @@ export function CommunityRanking({ data }: { data: CommunityRankingPayload }) {
   const hasMore = rows.length > TOP_N;
 
   return (
-    <div
-      className="rounded-2xl border p-6"
-      style={{
-        borderColor: "var(--panel-border)",
-        background: "var(--panel)",
-        boxShadow: "var(--panel-glow)",
-      }}
-    >
+    <section>
       <h2 className="display text-[30px] font-black text-foreground">
         Community ranking
       </h2>
@@ -45,7 +50,11 @@ export function CommunityRanking({ data }: { data: CommunityRankingPayload }) {
           return (
             <li
               key={row.itemId}
-              className="flex items-center gap-3.5 rounded-[11px] border border-border bg-card px-3.5 py-2.5"
+              className="flex items-center gap-3.5 rounded-[11px] border bg-card px-3.5 py-2.5"
+              style={{
+                borderColor: isTop3 ? MEDAL_ROW_BORDER[i] : "var(--border)",
+                boxShadow: isTop3 ? MEDAL_GLOW[i] : undefined,
+              }}
             >
               <span
                 className="display w-7 shrink-0 text-center text-[26px] font-black"
@@ -64,17 +73,6 @@ export function CommunityRanking({ data }: { data: CommunityRankingPayload }) {
               <span className="min-w-0 flex-1 truncate font-bold text-foreground">
                 {row.title}
               </span>
-              {isTop3 && (
-                <span
-                  className="display flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-black"
-                  style={{
-                    background: MEDAL_VARS[i],
-                    color: "rgba(0,0,0,.75)",
-                  }}
-                >
-                  {i + 1}
-                </span>
-              )}
             </li>
           );
         })}
@@ -88,6 +86,6 @@ export function CommunityRanking({ data }: { data: CommunityRankingPayload }) {
           {expanded ? "Show less ▴" : `Show all ${rows.length} ▾`}
         </button>
       )}
-    </div>
+    </section>
   );
 }

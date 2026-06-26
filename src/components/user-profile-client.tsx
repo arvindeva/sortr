@@ -16,24 +16,21 @@ interface UserProfileClientProps {
   initialData?: any; // Will use the same type as useUserProfile returns
 }
 
-// Display-font section title with a colored arrow + count, matching the
-// arcade section headings used across the app.
+// Display-font section title with an optional count, matching the arcade
+// section headings used across the app.
 function SectionTitle({
   children,
   count,
-  arrowClass = "text-main",
 }: {
   children: React.ReactNode;
   count?: number;
-  arrowClass?: string;
 }) {
   return (
     <h2 className="display mb-4 text-[clamp(1.75rem,5vw,2.125rem)] font-black text-foreground">
       {children}
       {count != null && (
         <span className="font-bold text-muted-foreground"> ({count})</span>
-      )}{" "}
-      <span className={arrowClass}>▸</span>
+      )}
     </h2>
   );
 }
@@ -98,7 +95,7 @@ export function UserProfileClient({
 
       {/* Rankings Section */}
       <section>
-        <SectionTitle count={rankings.length} arrowClass="text-cyan-ink">
+        <SectionTitle count={rankings.length}>
           Rankings
         </SectionTitle>
         <div>
@@ -116,17 +113,26 @@ export function UserProfileClient({
                   prefetch={false}
                   className="group block rounded-xl border border-border bg-card p-4 transition-colors hover:border-main/40 md:p-5"
                 >
-                  {/* Title + category chip */}
-                  <div className="mb-3.5 flex items-start justify-between gap-3">
+                  {/* Title + date (top-right, matching the sorter recent cards) */}
+                  <div className="mb-3 flex items-start justify-between gap-3">
                     <h3 className="display text-[22px] leading-tight font-extrabold text-foreground">
                       {result.sorterTitle}
                     </h3>
-                    {result.sorterCategory && (
-                      <span className="shrink-0 rounded-full border border-main/40 bg-accent px-2.5 py-1 font-mono text-[11px] text-main-ink">
-                        {result.sorterCategory}
-                      </span>
-                    )}
+                    <span className="mt-1 shrink-0 font-mono text-[11px] text-muted-foreground">
+                      {new Date(result.createdAt).toLocaleDateString("en-US", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
                   </div>
+
+                  {/* Category chip */}
+                  {result.sorterCategory && (
+                    <span className="mb-3.5 inline-block rounded-full border border-main/40 bg-accent px-2.5 py-1 font-mono text-[11px] text-main-ink">
+                      {result.sorterCategory}
+                    </span>
+                  )}
 
                   {/* Top 3 preview */}
                   <div className="flex flex-col gap-2.5">
@@ -174,15 +180,6 @@ export function UserProfileClient({
                         </span>
                       </div>
                     ))}
-                  </div>
-
-                  {/* Date */}
-                  <div className="mt-3.5 font-mono text-[11px] text-muted-foreground">
-                    {new Date(result.createdAt).toLocaleDateString("en-US", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
                   </div>
                 </Link>
               ))}

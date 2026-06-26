@@ -62,23 +62,23 @@ export function SorterHeaderServer({
   return (
     <section className="mb-8">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-7">
-        {/* Cover */}
+        {/* Cover — desktop only (hidden on mobile to save space) */}
         <CoverTile
           imageUrl={sorter.coverImageUrl}
           name={sorter.title}
           colorKey={sorter.slug}
           nameSize={26}
           radius={14}
-          className="h-28 w-28 shrink-0 sm:h-[170px] sm:w-[170px]"
+          className="hidden shrink-0 sm:flex sm:h-[170px] sm:w-[170px]"
         />
 
         {/* Info */}
         <div className="min-w-0 flex-1">
-          <div className="hud mb-2 text-xs text-cyan-ink">
-            {[sorter.category, sorter.itemCount != null && `${sorter.itemCount} items`]
-              .filter(Boolean)
-              .join(" · ")}
-          </div>
+          {sorter.category && (
+            <div className="hud mb-2 text-xs text-cyan-ink">
+              {sorter.category}
+            </div>
+          )}
           <h1 className="display text-[clamp(2.25rem,6vw,3.875rem)] font-black text-foreground">
             {sorter.title}
           </h1>
@@ -97,9 +97,14 @@ export function SorterHeaderServer({
             </p>
           )}
 
-          {/* Actions */}
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <Button asChild size="lg" arcade className="group">
+          {/* Actions — one line on mobile (Sort now flex-1 + icon buttons) */}
+          <div className="mt-5 flex items-center gap-2.5 sm:flex-wrap sm:gap-3">
+            <Button
+              asChild
+              size="lg"
+              arcade
+              className="group flex-1 sm:flex-none"
+            >
               <Link href={sortHref}>
                 <Play
                   className="transition-transform duration-200 group-hover:translate-x-1"

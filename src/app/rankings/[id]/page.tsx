@@ -376,13 +376,14 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
         {/* Header */}
         <section className="mb-9">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-7">
+            {/* Cover — desktop only (hidden on mobile to save space) */}
             <CoverTile
               imageUrl={sorter.coverImageUrl}
               name={sorter.title}
               colorKey={sorter.slug ?? sorter.title}
               nameSize={26}
               radius={14}
-              className="h-28 w-28 shrink-0 sm:h-40 sm:w-40"
+              className="hidden shrink-0 sm:flex sm:h-40 sm:w-40"
             />
 
             <div className="min-w-0 flex-1">
@@ -416,10 +417,15 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                 )}
               </div>
 
-              {/* Action Buttons */}
-              <div className="mt-5 flex flex-wrap items-center gap-3">
+              {/* Action Buttons — one line on mobile (CTA flex-1 + icons) */}
+              <div className="mt-5 flex items-center gap-2.5 sm:flex-wrap sm:gap-3">
                 {!sorter.isDeleted && sorter.slug ? (
-                  <Button asChild size="lg" arcade className="group">
+                  <Button
+                    asChild
+                    size="lg"
+                    arcade
+                    className="group flex-1 sm:flex-none"
+                  >
                     <Link href={`/sorter/${sorter.slug}/sort`}>
                       <Play
                         className="transition-transform duration-200 group-hover:translate-x-1"
@@ -429,11 +435,18 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                     </Link>
                   </Button>
                 ) : (
-                  <Button variant="neutral" size="lg" arcade disabled>
+                  <Button
+                    variant="neutral"
+                    size="lg"
+                    arcade
+                    disabled
+                    className="flex-1 sm:flex-none"
+                  >
                     Sorter deleted
                   </Button>
                 )}
                 <ShareButton
+                  hideTextOnMobile
                   rankingData={{
                     sorterTitle: sorter.title,
                     username: result.username,
@@ -446,6 +459,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                   ownerUserId={ownerUserId}
                   rankingId={result.id}
                   sorterTitle={sorter.title}
+                  hideTextOnMobile
                 />
               </div>
             </div>

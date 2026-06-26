@@ -24,11 +24,10 @@ export function UserProfileHeaderServer({
 
   return (
     <section className="mb-8">
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-7">
-        {/* Avatar — self-start + w-fit so the wrapper hugs the tile (in the
-            mobile flex-column it would otherwise stretch full-width and push
-            the edit button to the far right). */}
-        <div className="relative w-fit shrink-0 self-start">
+      <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-center sm:gap-7 sm:text-left">
+        {/* Avatar — w-fit so the wrapper hugs the tile (the edit button is
+            absolutely positioned to its corner). */}
+        <div className="relative w-fit shrink-0">
           <div
             className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl sm:h-[150px] sm:w-[150px]"
             style={{
@@ -65,8 +64,7 @@ export function UserProfileHeaderServer({
 
         {/* User Info */}
         <div className="min-w-0 flex-1">
-          <div className="hud mb-2 text-xs text-cyan-ink">● Profile</div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2 sm:justify-start">
             <h1 className="display text-[clamp(2.5rem,8vw,3.625rem)] leading-[0.9] font-black text-foreground">
               {displayedUsername}
             </h1>
@@ -78,7 +76,7 @@ export function UserProfileHeaderServer({
               />
             )}
           </div>
-          <div className="mt-3.5 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[13px] text-muted-foreground">
+          <div className="mt-3.5 flex flex-wrap justify-center gap-x-5 gap-y-1 font-mono text-[13px] text-muted-foreground sm:justify-start">
             <span>
               <span className="font-bold text-main-ink">{sorterCount}</span>{" "}
               {sorterCount === 1 ? "SORTER" : "SORTERS"}

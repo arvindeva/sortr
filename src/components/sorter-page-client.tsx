@@ -19,23 +19,20 @@ interface SorterPageClientProps {
   communityRanking?: CommunityRankingPayload | null;
 }
 
-// Small display-font section title with a colored arrow + optional count.
+// Small display-font section title with an optional count.
 function SectionTitle({
   children,
   count,
-  arrowClass = "text-main",
 }: {
   children: React.ReactNode;
   count?: number;
-  arrowClass?: string;
 }) {
   return (
     <h2 className="display mb-4 text-[30px] font-black text-foreground">
       {children}
       {count != null && (
         <span className="font-bold text-muted-foreground"> ({count})</span>
-      )}{" "}
-      <span className={arrowClass}>▸</span>
+      )}
     </h2>
   );
 }
@@ -69,9 +66,19 @@ export function SorterPageClient({
   const { items } = sorterData;
 
   return (
-    <div className="grid gap-8 md:grid-cols-2 md:items-start">
-      {/* Left — Items to rank */}
-      <section>
+    // Mobile (source order): community → items → recent.
+    // Desktop grid: community + recent stack in the left column, items fill the
+    // right column (spanning both rows).
+    <div className="flex flex-col gap-8 md:grid md:grid-cols-2 md:items-start md:gap-x-8 md:gap-y-8">
+      {/* Community ranking — desktop col 1, row 1 */}
+      {communityRanking && (
+        <div className="md:col-start-1 md:row-start-1">
+          <CommunityRanking data={communityRanking} />
+        </div>
+      )}
+
+      {/* Items to rank — desktop col 2, spanning both rows */}
+      <section className="md:col-start-2 md:row-span-2 md:row-start-1">
         <SectionTitle count={items?.length || 0}>Items to rank</SectionTitle>
         {items?.length === 0 ? (
           <EmptyState title="No items found for this sorter." />
@@ -110,12 +117,12 @@ export function SorterPageClient({
         )}
       </section>
 
-      {/* Right — Community ranking (consensus) + Recent rankings */}
-      <div className="flex flex-col gap-8">
-        {communityRanking && <CommunityRanking data={communityRanking} />}
-
-        <section>
-        <SectionTitle count={recentResults.length} arrowClass="text-cyan-ink">
+      {/* Recent rankings — desktop col 1, under community when it exists,
+          otherwise at row 1 (no ghost gap). */}
+      <section
+        className={`md:col-start-1 ${communityRanking ? "md:row-start-2" : "md:row-start-1"}`}
+      >
+        <SectionTitle count={recentResults.length}>
           Recent rankings
         </SectionTitle>
         {recentResults.length === 0 ? (
@@ -148,11 +155,11 @@ export function SorterPageClient({
                       })}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+                  <div className="flex flex-col gap-2">
                     {result.top3.map((item: any, index: number) => (
                       <div
                         key={item.id || index}
-                        className="flex min-w-0 flex-1 items-center gap-2"
+                        className="flex min-w-0 items-center gap-2"
                       >
                         <span
                           className="display w-[18px] text-lg font-black"
@@ -192,8 +199,7 @@ export function SorterPageClient({
             })}
           </div>
         )}
-        </section>
-      </div>
+      </section>
     </div>
   );
 }

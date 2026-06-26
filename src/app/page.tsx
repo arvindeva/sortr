@@ -230,9 +230,11 @@ export default async function Home() {
         {/* Hero — headline + live featured duel */}
         <HeroDuel />
 
-        {/* Full-bleed ticker of the latest real sorting activity */}
+        {/* Full-bleed ticker — pulled up on mobile to sit closer to the duel */}
         {activityData.activity.length > 0 && (
-          <ActivityTicker items={activityData.activity} />
+          <div className="-mt-6 md:mt-0">
+            <ActivityTicker items={activityData.activity} />
+          </div>
         )}
 
         {/* Popular sorters (by all-time completions) */}

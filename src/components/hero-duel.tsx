@@ -82,7 +82,7 @@ function TypewriterWord() {
         {text}
         <span
           aria-hidden
-          className="bg-main ml-[0.06em] inline-block w-[0.5em] self-stretch shadow-[0_0_18px] shadow-main/70 motion-safe:animate-[hero-caret_1s_steps(1)_infinite]"
+          className="bg-main ml-[0.06em] inline-block w-[0.5em] self-stretch shadow-[0_0_18px] shadow-main/70 motion-safe:animate-[hero-caret_1.1s_linear_infinite]"
         />
       </span>
     </span>
@@ -185,6 +185,18 @@ const MEDALS = [
   "var(--medal-bronze)",
 ];
 
+// Glow + border for the top-3 result rows.
+const MEDAL_GLOW = [
+  "0 0 24px rgba(255,210,63,.3)",
+  "0 0 20px rgba(205,214,232,.26)",
+  "0 0 20px rgba(214,138,78,.28)",
+];
+const MEDAL_ROW_BORDER = [
+  "rgba(255,210,63,.5)",
+  "rgba(205,214,232,.45)",
+  "rgba(214,138,78,.48)",
+];
+
 // Pick-transition timing.
 const PICK_MS = 350;
 
@@ -232,32 +244,42 @@ export function HeroDuel() {
     <section className="grid items-center gap-10 py-10 md:py-14 lg:grid-cols-[1.02fr_.98fr] lg:gap-12">
       {/* Left — the entry point */}
       <div>
-        <h1 className="display text-foreground text-[clamp(3rem,9vw,5rem)] font-black">
+        <h1 className="display text-foreground text-[clamp(3.5rem,11vw,5rem)] font-black">
           Rank
           <br />
           <TypewriterWord />
         </h1>
         <p className="text-muted-foreground mt-4 max-w-lg text-[15px] leading-relaxed md:mt-5 md:text-xl">
-          Pick a favorite, one matchup at a time. Sortr builds the list.
+          Pick a favorite, one matchup at a time.
         </p>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Button asChild size="lg" arcade className="group w-full sm:w-auto">
-            <Link href="/browse">Browse sorters</Link>
+        <div className="mt-8 flex flex-row gap-3">
+          <Button
+            asChild
+            size="lg"
+            arcade
+            className="group flex-1 sm:flex-none sm:w-auto md:h-14 md:px-9 md:text-[1.35em]"
+          >
+            <Link href="/browse">
+              {/* short on mobile, full from sm up */}
+              <span className="sm:hidden">Browse</span>
+              <span className="hidden sm:inline">Browse sorters</span>
+            </Link>
           </Button>
           <Button
             asChild
             size="lg"
             variant="neutral"
             arcade
-            className="group w-full sm:w-auto"
+            className="group flex-1 sm:flex-none sm:w-auto md:h-14 md:px-9 md:text-[1.35em]"
           >
             <Link href="/create">
               <Plus
                 className="transition-transform duration-200 group-hover:rotate-90"
                 size={18}
               />
-              Create a sorter
+              <span className="sm:hidden">Create</span>
+              <span className="hidden sm:inline">Create a sorter</span>
             </Link>
           </Button>
         </div>
@@ -266,7 +288,7 @@ export function HeroDuel() {
 
       {/* Right — the featured-sorter duel machine */}
       <div
-        className="relative rounded-2xl border p-5 md:p-6"
+        className="relative rounded-2xl border p-5 pb-4 md:p-6"
         style={{
           borderColor: "var(--panel-border)",
           background: "var(--panel)",
@@ -274,7 +296,7 @@ export function HeroDuel() {
         }}
       >
         {/* Header */}
-        <div className="mb-1.5 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between">
           <span className="hud text-yellow-ink text-xs">▶ Try it now</span>
           {done && (
             <button
@@ -290,7 +312,7 @@ export function HeroDuel() {
         </div>
 
         {/* One progress track that fills — solid magenta. */}
-        <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-foreground/15">
+        <div className="mb-2.5 h-1.5 w-full overflow-hidden rounded-full bg-foreground/15 sm:mb-4">
           <div
             className="bg-main h-full rounded-full transition-[width] duration-300 ease-out"
             style={{ width: `${(completed / TOTAL_STEPS) * 100}%` }}
@@ -298,17 +320,24 @@ export function HeroDuel() {
         </div>
 
         {/* Fixed height (fits both the duel and the taller result list) so
-            finishing never grows the panel / shifts the hero layout. */}
-        <div className="flex h-[264px] flex-col justify-center">
+            finishing never grows the panel / shifts the hero layout. Tighter on
+            mobile for a more compact card. */}
+        <div className="flex h-[240px] flex-col justify-center sm:h-[264px]">
           {done ? (
             <div className="text-center">
-              <div className="hud text-cyan-ink text-xs">★ Your ranking ★</div>
-              <div className="my-3.5 flex flex-col gap-1.5">
+              <div className="hud text-cyan-ink hidden text-xs sm:block">
+                ★ Your ranking ★
+              </div>
+              <div className="mb-3.5 flex flex-col gap-1.5 sm:mt-3.5">
                 {ranking.map((item, i) => (
                   <div
                     key={item.id}
-                    className="border-border bg-foreground/[0.04] flex items-center gap-3 rounded-[10px] border px-3.5 py-2.5 text-left motion-safe:animate-[hero-row-in_0.4s_ease-out_both]"
-                    style={{ animationDelay: `${i * 90}ms` }}
+                    className="bg-foreground/[0.04] flex items-center gap-3 rounded-[10px] border px-3.5 py-2.5 text-left motion-safe:animate-[hero-row-in_0.4s_ease-out_both]"
+                    style={{
+                      animationDelay: `${i * 90}ms`,
+                      borderColor: i < 3 ? MEDAL_ROW_BORDER[i] : "var(--border)",
+                      boxShadow: i < 3 ? MEDAL_GLOW[i] : undefined,
+                    }}
                   >
                     <span
                       className="display text-muted-foreground w-[34px] text-[28px] font-black"
