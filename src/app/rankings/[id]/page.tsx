@@ -97,7 +97,10 @@ export async function generateMetadata({
       .join(", ");
 
     const description = `See ${result.username}'s ranking of ${sorter.title}. Top 3: ${top3Text}. View the complete personalized ranking.`;
-    const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.io";
+    const baseUrl = (process.env.NEXTAUTH_URL || "https://sortr.io").replace(
+      /\/$/,
+      "",
+    );
     const canonicalUrl = `${baseUrl}/rankings/${id}`;
 
     return {
@@ -319,6 +322,11 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
 
   const { result, sorter, selectedTagSlugs, totalTags, ownerUserId } = data;
 
+  const baseUrl = (process.env.NEXTAUTH_URL || "https://sortr.io").replace(
+    /\/$/,
+    "",
+  );
+
   // JSON-LD structured data for rankings
   const jsonLd = {
     "@context": "https://schema.org",
@@ -328,7 +336,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
       name: sorter.title,
       description: sorter.description || `Sorter for ${sorter.title}`,
       ...(sorter.slug && {
-        url: `${process.env.NEXTAUTH_URL}/sorter/${sorter.slug}`,
+        url: `${baseUrl}/sorter/${sorter.slug}`,
       }),
       about: sorter.category || "Ranking",
       creator: {
@@ -350,7 +358,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
     dateCreated: result.createdAt instanceof Date ? result.createdAt.toISOString() : result.createdAt,
     name: `${sorter.title} Rankings by ${result.username}`,
     description: `Personalized sorter results for ${sorter.title} by ${result.username}. View the complete ranked list of items.`,
-    url: `${process.env.NEXTAUTH_URL}/rankings/${result.id}`,
+    url: `${baseUrl}/rankings/${result.id}`,
     mainEntity: {
       "@type": "ItemList",
       name: `${sorter.title} Rankings`,

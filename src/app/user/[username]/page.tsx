@@ -178,7 +178,10 @@ export async function generateMetadata({
 
     const title = `${username}'s Profile`;
     const description = `View ${username}'s sorters on sortr.`;
-    const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.io";
+    const baseUrl = (process.env.NEXTAUTH_URL || "https://sortr.io").replace(
+      /\/$/,
+      "",
+    );
     const canonicalUrl = `${baseUrl}/user/${username}`;
 
     return {
@@ -231,12 +234,17 @@ export default async function UserProfilePage({
   const currentUserEmail = session?.user?.email;
   const isOwnProfile = currentUserEmail === profileData.user.email;
 
+  const baseUrl = (process.env.NEXTAUTH_URL || "https://sortr.io").replace(
+    /\/$/,
+    "",
+  );
+
   // JSON-LD structured data for user profile (server-side for SEO)
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",
     name: profileData.user.username || "Unknown User",
-    url: `${process.env.NEXTAUTH_URL || "https://sortr.io"}/user/${profileData.user.username}`,
+    url: `${baseUrl}/user/${profileData.user.username}`,
     ...(profileData.user.image && { image: profileData.user.image }),
     description: `${profileData.user.username}'s sorters on sortr.`,
     mainEntityOfPage: {

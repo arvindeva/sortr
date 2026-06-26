@@ -5,7 +5,13 @@ import { and, eq, desc, isNotNull } from "drizzle-orm";
 
 export async function GET() {
   try {
-    const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.io";
+    // Strip any trailing slash so `${baseUrl}/sorter/...` can't produce a
+    // double slash (NEXTAUTH_URL is set with a trailing slash in prod, which
+    // was emitting redirecting `//sorter/...` URLs that hurt indexing).
+    const baseUrl = (process.env.NEXTAUTH_URL || "https://sortr.io").replace(
+      /\/$/,
+      "",
+    );
 
     // Get all public sorters (active, not deleted — matches app visibility).
     const publicSorters = await db

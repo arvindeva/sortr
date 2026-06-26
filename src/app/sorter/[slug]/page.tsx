@@ -44,7 +44,10 @@ export async function generateMetadata({
   const itemCount = items.length;
 
   const fullDescription = `${description}. Sort ${itemCount} items through pairwise comparison and create your personalized results.`;
-  const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.io";
+  const baseUrl = (process.env.NEXTAUTH_URL || "https://sortr.io").replace(
+    /\/$/,
+    "",
+  );
   const canonicalUrl = `${baseUrl}/sorter/${slug}`;
 
   return {
@@ -91,7 +94,10 @@ export default async function SorterPage({ params }: SorterPageProps) {
     data.sorter.createdAt instanceof Date
       ? data.sorter.createdAt.toISOString()
       : data.sorter.createdAt;
-  const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.io";
+  const baseUrl = (process.env.NEXTAUTH_URL || "https://sortr.io").replace(
+    /\/$/,
+    "",
+  );
 
   // Transform data for client components (convert null to undefined for type safety)
   const transformedSorter = {
