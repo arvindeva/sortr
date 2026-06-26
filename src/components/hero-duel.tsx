@@ -123,14 +123,12 @@ export function HeroDuel() {
       {/* Left — the entry point */}
       <div>
         <h1 className="display text-foreground text-[clamp(3rem,9vw,5rem)] font-black">
-          Everything&apos;s
+          Rank
           <br />
-          <span>a </span>
-          <span className="text-main">versus.</span>
+          <span className="text-main">anything.</span>
         </h1>
         <p className="text-muted-foreground mt-4 max-w-lg text-[15px] leading-relaxed md:mt-5 md:text-xl">
-          Rank anything by picking a favorite, one matchup at a time. Sortr
-          builds the list for you.
+          Pick a favorite, one matchup at a time. Sortr builds the list.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
