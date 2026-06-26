@@ -8,6 +8,7 @@ import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
 import { HeroDuel } from "@/components/hero-duel";
 import { ActivityTicker } from "@/components/activity-ticker";
+import { TrendingSortersSection } from "@/components/trending-sorters-section";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -236,6 +237,9 @@ export default async function Home() {
             <ActivityTicker items={activityData.activity} />
           </div>
         )}
+
+        {/* Trending this week — what's hot right now (above all-time Popular) */}
+        <TrendingSortersSection className="w-full" />
 
         {/* Popular sorters (by all-time completions) */}
         <section className="w-full">

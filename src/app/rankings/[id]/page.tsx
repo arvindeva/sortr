@@ -19,6 +19,7 @@ import { ShareButton } from "@/components/share-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
 import { ResultShareImage } from "@/components/result-share-image";
 import { RankingOwnerActions } from "@/components/ranking-owner-actions";
+import { TrendingSortersSection } from "@/components/trending-sorters-section";
 
 interface RankingsPageProps {
   params: Promise<{
@@ -569,6 +570,12 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
             </div>
           </div>
         )}
+
+        {/* Pull viral visitors deeper: what else is hot right now. */}
+        <TrendingSortersSection
+          excludeSorterId={sorter.id}
+          className="mt-16 border-t border-border pt-12"
+        />
       </div>
     </>
   );

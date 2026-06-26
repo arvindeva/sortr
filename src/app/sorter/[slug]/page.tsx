@@ -5,6 +5,7 @@ import { SorterPageClient } from "@/components/sorter-page-client";
 import { SorterOwnerControls } from "@/components/sorter-owner-controls";
 import { getSorterDataCached } from "@/lib/sorter-data";
 import { getCommunityRanking } from "@/lib/community-ranking-data";
+import { TrendingSortersSection } from "@/components/trending-sorters-section";
 
 interface SorterPageProps {
   params: Promise<{
@@ -198,6 +199,12 @@ export default async function SorterPage({ params }: SorterPageProps) {
             data.sorter.id,
             data.sorter.version,
           )}
+        />
+
+        {/* Pull viral visitors deeper: what else is hot right now. */}
+        <TrendingSortersSection
+          excludeSorterId={data.sorter.id}
+          className="mt-16 border-t border-border pt-12"
         />
       </main>
     </>
