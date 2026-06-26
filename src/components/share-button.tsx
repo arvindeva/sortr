@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Share2, Link2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,30 +38,37 @@ export function ShareButton({
   rankingData,
 }: ShareButtonProps) {
   const { downloadImage, isGenerating } = useDownloadRankingImage();
-  const [open, setOpen] = useState(false);
 
-  // On mobile, the OS share sheet is the expected one-tap pattern (and surfaces
-  // Twitter/IG/etc. directly — where our fandom traffic shares). Try it first;
-  // fall back to the dropdown on desktop where navigator.share is absent.
-  const tryNativeShare = async (): Promise<boolean> => {
-    if (typeof navigator === "undefined" || !navigator.share) return false;
-    try {
-      await navigator.share({
-        title: rankingData
-          ? `${rankingData.sorterTitle} — ranked by @${rankingData.username}`
-          : "sortr",
-        url: window.location.href,
+  // Detect Web Share support after mount (avoids SSR/hydration mismatch). When
+  // available (mobile), we render a plain button that opens the OS share sheet
+  // directly on tap — one tap, surfaces Twitter/IG/etc. where our fandom shares.
+  const [canNativeShare, setCanNativeShare] = useState(false);
+  useEffect(() => {
+    setCanNativeShare(
+      typeof navigator !== "undefined" && typeof navigator.share === "function",
+    );
+  }, []);
+
+  // IMPORTANT: navigator.share must be called synchronously within the click's
+  // user gesture (no await before it), or the browser rejects it.
+  const handleNativeShare = () => {
+    const shareData = {
+      title: rankingData
+        ? `${rankingData.sorterTitle} — ranked by @${rankingData.username}`
+        : "sortr",
+      url: window.location.href,
+    };
+    navigator
+      .share(shareData)
+      .then(() =>
+        track("share_clicked", {
+          sorterTitle: rankingData?.sorterTitle,
+          method: "native",
+        }),
+      )
+      .catch(() => {
+        // User cancelled or it failed — no-op.
       });
-      track("share_clicked", {
-        sorterTitle: rankingData?.sorterTitle,
-        method: "native",
-      });
-      return true;
-    } catch {
-      // User cancelled the sheet, or it failed — treat as "handled" so we don't
-      // also pop the dropdown.
-      return true;
-    }
   };
 
   const handleCopyLink = () => {
@@ -82,26 +89,34 @@ export function ShareButton({
     await downloadImage(rankingData);
   };
 
-  const handleTriggerClick = async (e: React.MouseEvent) => {
-    // Try the native share sheet first (mobile). If it fired, prevent the
-    // dropdown from opening; otherwise let the dropdown handle it (desktop).
-    const shared = await tryNativeShare();
-    if (shared) {
-      e.preventDefault();
-      setOpen(false);
-    }
-  };
+  // Mobile (Web Share API present): a single button that opens the OS sheet.
+  if (canNativeShare) {
+    return (
+      <div className="flex items-center gap-2.5">
+        <Button variant="neutral" size={size} onClick={handleNativeShare}>
+          <Share2 size={16} />
+          <span className="ml-2">Share</span>
+        </Button>
+        {rankingData && (
+          <Button
+            variant="neutral"
+            size="icon"
+            onClick={handleDownloadImage}
+            disabled={isGenerating}
+            aria-label="Download image"
+          >
+            <Download size={16} />
+          </Button>
+        )}
+      </div>
+    );
+  }
 
+  // Desktop: the copy-link / download-image dropdown.
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="neutral"
-          size={size}
-          onClick={handleTriggerClick}
-        >
-          {/* Always labeled (no icon-only on mobile) so the share action — the
-              thing that propagates the loop — is obvious on phones. */}
+        <Button variant="neutral" size={size}>
           <Share2 size={16} />
           <span className="ml-2">Share</span>
         </Button>
