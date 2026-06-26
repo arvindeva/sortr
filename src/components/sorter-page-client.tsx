@@ -65,66 +65,70 @@ export function SorterPageClient({
 
   const { items } = sorterData;
 
-  return (
-    // Mobile (source order): community → items → recent.
-    // Desktop grid: community + recent stack in the left column, items fill the
-    // right column (spanning both rows).
-    <div className="flex flex-col gap-8 md:grid md:grid-cols-2 md:items-start md:gap-x-8 md:gap-y-8">
-      {/* Community ranking — desktop col 1, row 1 */}
-      {communityRanking && (
-        <div className="md:col-start-1 md:row-start-1">
-          <CommunityRanking data={communityRanking} />
+  const itemsSection = (
+    <section>
+      <SectionTitle count={items?.length || 0}>Items to rank</SectionTitle>
+      {items?.length === 0 ? (
+        <EmptyState title="No items found for this sorter." />
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {items?.map((item, i) => (
+            <div
+              key={item.id}
+              className="flex items-center gap-3 rounded-[10px] border border-border bg-card px-3.5 py-3"
+            >
+              {item.imageUrl ? (
+                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-[7px] border border-border bg-muted">
+                  <img
+                    src={getImageUrl(item.imageUrl, "thumbnail")}
+                    alt={item.title}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      const t = e.target as HTMLImageElement;
+                      if (t.src.includes("-thumb"))
+                        t.src = getImageUrl(item.imageUrl, "full");
+                    }}
+                  />
+                </div>
+              ) : (
+                <span
+                  className="h-10 w-10 shrink-0 rounded-[7px]"
+                  style={{ background: accentFor(item.id || i) }}
+                />
+              )}
+              <span className="min-w-0 font-semibold break-words text-foreground">
+                {item.title}
+              </span>
+            </div>
+          ))}
         </div>
       )}
+    </section>
+  );
 
-      {/* Items to rank — desktop col 2, spanning both rows */}
-      <section className="md:col-start-2 md:row-span-2 md:row-start-1">
-        <SectionTitle count={items?.length || 0}>Items to rank</SectionTitle>
-        {items?.length === 0 ? (
-          <EmptyState title="No items found for this sorter." />
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            {items?.map((item, i) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-3 rounded-[10px] border border-border bg-card px-3.5 py-3"
-              >
-                {item.imageUrl ? (
-                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-[7px] border border-border bg-muted">
-                    <img
-                      src={getImageUrl(item.imageUrl, "thumbnail")}
-                      alt={item.title}
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        const t = e.target as HTMLImageElement;
-                        if (t.src.includes("-thumb"))
-                          t.src = getImageUrl(item.imageUrl, "full");
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <span
-                    className="h-10 w-10 shrink-0 rounded-[7px]"
-                    style={{ background: accentFor(item.id || i) }}
-                  />
-                )}
-                <span className="min-w-0 font-semibold break-words text-foreground">
-                  {item.title}
-                </span>
-              </div>
-            ))}
+  return (
+    // Two independent columns on desktop so their unequal heights don't drag on
+    // each other (a tall items list no longer pushes recent rankings down).
+    // Left column: community + recent stacked. Right column: items.
+    //
+    // The left wrapper is `display:contents` on mobile, so community & recent
+    // become direct flex children of the outer container alongside items — that
+    // lets `order` interleave them as community → items → recent on mobile.
+    // On desktop the wrapper becomes a real flex column again.
+    <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-8">
+      {/* Left column — community + recent */}
+      <div className="contents md:flex md:min-w-0 md:flex-1 md:flex-col md:gap-8">
+        {communityRanking && (
+          <div className="order-1 md:order-none">
+            <CommunityRanking data={communityRanking} />
           </div>
         )}
-      </section>
 
-      {/* Recent rankings — desktop col 1, under community when it exists,
-          otherwise at row 1 (no ghost gap). */}
-      <section
-        className={`md:col-start-1 ${communityRanking ? "md:row-start-2" : "md:row-start-1"}`}
-      >
-        <SectionTitle count={recentResults.length}>
-          Recent rankings
-        </SectionTitle>
+        {/* Recent rankings */}
+        <section className="order-3 md:order-none">
+          <SectionTitle count={recentResults.length}>
+            Recent rankings
+          </SectionTitle>
         {recentResults.length === 0 ? (
           <EmptyState
             title="No rankings yet."
@@ -199,7 +203,14 @@ export function SorterPageClient({
             })}
           </div>
         )}
-      </section>
+        </section>
+      </div>
+
+      {/* Right column — items to rank. order-2 on mobile (between community and
+          recent); its own independent column on desktop. */}
+      <div className="order-2 min-w-0 md:order-none md:flex-1">
+        {itemsSection}
+      </div>
     </div>
   );
 }
