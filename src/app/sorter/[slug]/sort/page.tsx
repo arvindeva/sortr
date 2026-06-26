@@ -107,6 +107,9 @@ export default function SortPage() {
     null,
   );
   const isRestartingRef = useRef(false);
+  // Ensures sort_started fires once per attempt, not on every effect re-run,
+  // resume, or restart (which would massively inflate the funnel denominator).
+  const sortStartedTrackedRef = useRef(false);
 
   // Image preloader
   const {
@@ -392,11 +395,16 @@ export default function SortPage() {
 
     setSorting(true);
 
-    // A sort session began — denominator for the completion-rate funnel.
-    track("sort_started", {
-      sorterId: sorterData.sorter.id,
-      itemCount: filteredItems.length,
-    });
+    // A sort session began — denominator for the completion-rate funnel. Fire
+    // once per attempt only: effect re-runs, resumes, and restarts all call
+    // startSorting() again, and counting each would inflate the denominator.
+    if (!sortStartedTrackedRef.current) {
+      sortStartedTrackedRef.current = true;
+      track("sort_started", {
+        sorterId: sorterData.sorter.id,
+        itemCount: filteredItems.length,
+      });
+    }
 
     try {
       const onNeedComparison = (
