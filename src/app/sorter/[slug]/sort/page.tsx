@@ -26,6 +26,7 @@ import LZString from "lz-string";
 import { Box } from "@/components/ui/box";
 import { SortPageSkeleton } from "@/components/sort-page-skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { track } from "@/lib/analytics";
 
 interface SorterData {
   sorter: {
@@ -440,6 +441,12 @@ export default function SortPage() {
       });
 
       if (!response.ok) throw new Error("Failed to save results");
+
+      // A sort was completed and saved — the headline funnel metric.
+      track("sort_completed", {
+        sorterId,
+        itemCount: filteredItems.length,
+      });
 
       const { resultId } = await response.json();
 
