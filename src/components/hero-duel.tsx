@@ -1,10 +1,93 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { VsMarker } from "@/components/ui/sortr-mark";
 import { Plus } from "lucide-react";
+
+// Words the hero headline cycles through after "RANK".
+const TYPEWRITER_WORDS = [
+  "anything.",
+  "albums.",
+  "characters.",
+  "movies.",
+  "books.",
+  "ships.",
+  "games.",
+  "bosses.",
+];
+
+/**
+ * The cycling second line of the hero headline: types a word out, pauses,
+ * deletes it, moves to the next — with a glowing block cursor. Width is locked
+ * to the longest word so the line (and the buttons below) never shift.
+ * Respects prefers-reduced-motion by holding a single word, no animation.
+ */
+function TypewriterWord() {
+  const [text, setText] = useState(TYPEWRITER_WORDS[0]);
+  const reduce = useRef(false);
+
+  useEffect(() => {
+    reduce.current =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce.current) return; // hold the first word, no typing loop
+
+    let wordIdx = 0;
+    let charIdx = TYPEWRITER_WORDS[0].length;
+    let deleting = false;
+    let timer: ReturnType<typeof setTimeout>;
+
+    const tick = () => {
+      const word = TYPEWRITER_WORDS[wordIdx];
+      if (!deleting) {
+        charIdx++;
+        setText(word.slice(0, charIdx));
+        if (charIdx >= word.length) {
+          deleting = true;
+          timer = setTimeout(tick, 1400); // pause on the full word
+          return;
+        }
+        timer = setTimeout(tick, 90);
+      } else {
+        charIdx--;
+        setText(word.slice(0, charIdx));
+        if (charIdx <= 0) {
+          deleting = false;
+          wordIdx = (wordIdx + 1) % TYPEWRITER_WORDS.length;
+          timer = setTimeout(tick, 220); // beat before the next word
+          return;
+        }
+        timer = setTimeout(tick, 45);
+      }
+    };
+
+    timer = setTimeout(tick, 1400); // start: pause on the initial full word
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Reserve the width of the longest word so nothing reflows as it types.
+  const longest = TYPEWRITER_WORDS.reduce((a, b) =>
+    a.length >= b.length ? a : b,
+  );
+
+  return (
+    <span className="relative inline-flex">
+      {/* invisible sizer pins the max width */}
+      <span aria-hidden className="invisible">
+        {longest}
+      </span>
+      <span className="text-main absolute inset-0 inline-flex items-baseline whitespace-nowrap">
+        {text}
+        <span
+          aria-hidden
+          className="bg-main ml-[0.06em] inline-block w-[0.5em] self-stretch shadow-[0_0_18px] shadow-main/70 motion-safe:animate-[hero-caret_1s_steps(1)_infinite]"
+        />
+      </span>
+    </span>
+  );
+}
 
 interface Item {
   id: string;
@@ -102,8 +185,19 @@ const MEDALS = [
   "var(--medal-bronze)",
 ];
 
+// Pick-transition timing.
+const PICK_MS = 350;
+
 export function HeroDuel() {
   const [state, setState] = useState<SortState>(initialState);
+  // While a pick is animating, this holds the winning item id and the round is
+  // locked so rapid clicks can't skip ahead. Null = accepting input.
+  const [picking, setPicking] = useState<string | null>(null);
+  const pickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (pickTimer.current) clearTimeout(pickTimer.current);
+  }, []);
 
   const pair = nextPair(state);
   const done = pair === null;
@@ -114,9 +208,25 @@ export function HeroDuel() {
   const right = pair ? BY_ID[pair.b] : null;
 
   const choose = (winnerId: string) => {
-    if (pair) setState((s) => advance(s, winnerId));
+    if (!pair || picking) return; // locked mid-transition
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setState((s) => advance(s, winnerId));
+      return;
+    }
+    setPicking(winnerId);
+    pickTimer.current = setTimeout(() => {
+      setState((s) => advance(s, winnerId));
+      setPicking(null);
+    }, PICK_MS);
   };
-  const reset = () => setState(initialState());
+  const reset = () => {
+    if (pickTimer.current) clearTimeout(pickTimer.current);
+    setPicking(null);
+    setState(initialState());
+  };
 
   return (
     <section className="grid items-center gap-10 py-10 md:py-14 lg:grid-cols-[1.02fr_.98fr] lg:gap-12">
@@ -125,7 +235,7 @@ export function HeroDuel() {
         <h1 className="display text-foreground text-[clamp(3rem,9vw,5rem)] font-black">
           Rank
           <br />
-          <span className="text-main">anything.</span>
+          <TypewriterWord />
         </h1>
         <p className="text-muted-foreground mt-4 max-w-lg text-[15px] leading-relaxed md:mt-5 md:text-xl">
           Pick a favorite, one matchup at a time. Sortr builds the list.
@@ -152,16 +262,6 @@ export function HeroDuel() {
           </Button>
         </div>
 
-        <p className="text-muted-foreground mt-6 text-sm">
-          No account needed.{" "}
-          <Link
-            href="/auth/signin"
-            className="text-cyan-ink font-semibold hover:underline"
-          >
-            Sign up
-          </Link>{" "}
-          to create and save your own.
-        </p>
       </div>
 
       {/* Right — the featured-sorter duel machine */}
@@ -207,7 +307,8 @@ export function HeroDuel() {
                 {ranking.map((item, i) => (
                   <div
                     key={item.id}
-                    className="border-border bg-foreground/[0.04] flex items-center gap-3 rounded-[10px] border px-3.5 py-2.5 text-left"
+                    className="border-border bg-foreground/[0.04] flex items-center gap-3 rounded-[10px] border px-3.5 py-2.5 text-left motion-safe:animate-[hero-row-in_0.4s_ease-out_both]"
+                    style={{ animationDelay: `${i * 90}ms` }}
                   >
                     <span
                       className="display text-muted-foreground w-[34px] text-[28px] font-black"
@@ -232,6 +333,9 @@ export function HeroDuel() {
                   item={left!}
                   side="left"
                   onClick={() => choose(left!.id)}
+                  pickState={
+                    picking ? (picking === left!.id ? "won" : "lost") : null
+                  }
                 />
                 {/* Smaller VS on mobile so the cards get more width */}
                 <div className="flex items-center justify-center">
@@ -242,6 +346,9 @@ export function HeroDuel() {
                   item={right!}
                   side="right"
                   onClick={() => choose(right!.id)}
+                  pickState={
+                    picking ? (picking === right!.id ? "won" : "lost") : null
+                  }
                 />
               </div>
               <div className="text-cyan-ink mt-2.5 flex items-center justify-center gap-2 font-mono text-xs">
@@ -259,10 +366,13 @@ function ContenderTile({
   item,
   side,
   onClick,
+  pickState,
 }: {
   item: Item;
   side: "left" | "right";
   onClick: () => void;
+  /** "won" pulses + glows, "lost" fades back, null = idle. */
+  pickState: "won" | "lost" | null;
 }) {
   // Magenta (primary) on the left for brand consistency, cyan on the right.
   const glow =
@@ -270,12 +380,23 @@ function ContenderTile({
       ? "hover:border-main hover:shadow-[0_0_28px_rgba(255,46,126,.45)]"
       : "hover:border-cyan hover:shadow-[0_0_28px_rgba(25,227,223,.45)]";
 
+  // Winner pulses up with an accent ring; loser fades and recedes.
+  const pickClass =
+    pickState === "won"
+      ? side === "left"
+        ? "scale-[1.04] border-main shadow-[0_0_36px_rgba(255,46,126,.6)]"
+        : "scale-[1.04] border-cyan shadow-[0_0_36px_rgba(25,227,223,.6)]"
+      : pickState === "lost"
+        ? "scale-[0.97] opacity-35"
+        : "";
+
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={pickState !== null}
       aria-label={`Pick ${item.name}`}
-      className={`group border-border bg-card flex h-full flex-col overflow-hidden rounded-xl border text-left transition-all duration-150 hover:-translate-y-1 ${glow}`}
+      className={`group border-border bg-card flex h-full flex-col overflow-hidden rounded-xl border text-left transition-all duration-300 ${pickState ? pickClass : `hover:-translate-y-1 ${glow}`}`}
     >
       <div
         className="relative flex h-[148px] items-center justify-center p-3.5 text-center"

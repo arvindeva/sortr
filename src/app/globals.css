@@ -395,6 +395,30 @@
     animation: sortrGlow 1.6s infinite;
   }
 
+  /* Hero typewriter block cursor — snaps on/off like a real caret. */
+  @keyframes hero-caret {
+    0%,
+    50% {
+      opacity: 1;
+    }
+    50.01%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* Result-reveal row: slide up + fade in (staggered via inline delay). */
+  @keyframes hero-row-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   /* Activity ticker — translate the duplicated track left by half its width. */
   @keyframes sortrMarquee {
     from {
@@ -405,7 +429,7 @@
     }
   }
   .sortr-marquee {
-    animation: sortrMarquee 26s linear infinite;
+    animation: sortrMarquee 40s linear infinite;
   }
   .sortr-marquee:hover {
     animation-play-state: paused;
