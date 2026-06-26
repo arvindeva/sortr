@@ -10,21 +10,13 @@ export const metadata: Metadata = {
       "Explore and discover sorters across all categories. Search by title, creator, or browse by category.",
     type: "website",
     siteName: "sortr",
-    images: [
-      {
-        url: "/og-browse.png",
-        width: 1200,
-        height: 630,
-        alt: "Browse Sorters on sortr",
-      },
-    ],
+    // OG image falls back to the generic app/opengraph-image.tsx for now.
   },
   twitter: {
     card: "summary_large_image",
     title: "Browse Sorters",
     description:
       "Explore and discover sorters across all categories. Search by title, creator, or browse by category.",
-    images: ["/og-browse.png"],
   },
 };
 

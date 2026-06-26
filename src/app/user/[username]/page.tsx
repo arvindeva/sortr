@@ -193,20 +193,12 @@ export async function generateMetadata({
         type: "profile",
         siteName: "sortr",
         url: canonicalUrl,
-        images: [
-          {
-            url: "/og-user.png",
-            width: 1200,
-            height: 630,
-            alt: `${username}'s Profile on sortr`,
-          },
-        ],
+        // OG image falls back to the generic app/opengraph-image.tsx for now.
       },
       twitter: {
         card: "summary_large_image",
         title,
         description,
-        images: ["/og-user.png"],
       },
     };
   } catch (error) {

@@ -57,20 +57,12 @@ export async function generateMetadata({
       type: "website",
       siteName: "sortr",
       url: canonicalUrl,
-      images: [
-        {
-          url: "/og-sorter.png", // We'll create this later
-          width: 1200,
-          height: 630,
-          alt: `${sorter.title} - Ranking sorter`,
-        },
-      ],
+      // OG image falls back to the generic app/opengraph-image.tsx for now.
     },
     twitter: {
       card: "summary_large_image",
       title,
       description: fullDescription,
-      images: ["/og-sorter.png"],
     },
   };
 }
