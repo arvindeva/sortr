@@ -1,11 +1,13 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useSorterPage, type SorterData } from "@/hooks/api/use-sorter";
 import { SorterContentSkeleton } from "@/components/skeletons/sorter-content-skeleton";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CoverTile } from "@/components/ui/cover-tile";
 import { CommunityRanking } from "@/components/community-ranking";
+import { CommunityRankingSkeleton } from "@/components/community-ranking-skeleton";
 import { accentFor } from "@/lib/utils";
 import { getImageUrl } from "@/lib/image-utils";
 import type { CommunityRankingPayload } from "@/lib/community-ranking-data";
@@ -15,8 +17,6 @@ interface SorterPageClientProps {
   isOwner: boolean;
   currentUserEmail?: string;
   initialData?: SorterData;
-  /** Server-computed consensus ranking, or null if too few rankings. */
-  communityRanking?: CommunityRankingPayload | null;
 }
 
 // Small display-font section title with an optional count.
@@ -40,10 +40,22 @@ function SectionTitle({
 export function SorterPageClient({
   slug,
   initialData,
-  communityRanking,
 }: SorterPageClientProps) {
   const { sorterData, recentResults, isLoading, isError, error } =
     useSorterPage(slug, initialData, Date.now());
+
+  // Fetched separately so its heavy aggregate never blocks the page render.
+  const { data: communityRanking, isPending: communityPending } = useQuery<
+    CommunityRankingPayload | null
+  >({
+    queryKey: ["community-ranking", slug],
+    queryFn: async () => {
+      const res = await fetch(`/api/sorters/${slug}/community-ranking`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   if (isLoading || !sorterData) {
     return <SorterContentSkeleton />;
@@ -118,10 +130,16 @@ export function SorterPageClient({
     <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-8">
       {/* Left column — community + recent */}
       <div className="contents md:flex md:min-w-0 md:flex-1 md:flex-col md:gap-8">
-        {communityRanking && (
+        {communityPending ? (
           <div className="order-1 md:order-none">
-            <CommunityRanking data={communityRanking} />
+            <CommunityRankingSkeleton />
           </div>
+        ) : (
+          communityRanking && (
+            <div className="order-1 md:order-none">
+              <CommunityRanking data={communityRanking} />
+            </div>
+          )
         )}
 
         {/* Recent rankings */}

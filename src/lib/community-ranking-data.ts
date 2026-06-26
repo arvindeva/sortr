@@ -91,9 +91,13 @@ async function getCommunityRankingUncached(
 }
 
 /**
- * Cached community ranking for a sorter. Recomputes at most every few minutes;
- * the aggregate changes slowly as new rankings trickle in, so a short stale
- * window is fine and keeps the (O(items × rankings)) pass off the hot path.
+ * Cached community ranking for a sorter. The aggregate barely moves day-to-day
+ * (it's an average over all rankings, so new ones have diminishing effect), so
+ * we cache for 24h — this keeps the O(items × rankings) recompute off the hot
+ * path almost entirely. Combined with client-side fetching (the page never
+ * awaits this), the rare recompute only spins the community section, never the
+ * page. If the app grows to many high-play sorters, the next step is a daily
+ * cron that precomputes these into a table so no request ever recomputes.
  */
 export async function getCommunityRanking(
   sorterId: string,
@@ -103,6 +107,6 @@ export async function getCommunityRanking(
     () => getCommunityRankingUncached(sorterId, version),
     // Keyed by version too, so an edit (new version) gets a fresh aggregate.
     ["community-ranking", sorterId, `v${version}`],
-    { revalidate: 300, tags: [`community-ranking-${sorterId}`] },
+    { revalidate: 86400, tags: [`community-ranking-${sorterId}`] },
   )();
 }

@@ -4,7 +4,6 @@ import { SorterHeaderServer } from "@/components/sorter-header-server";
 import { SorterPageClient } from "@/components/sorter-page-client";
 import { SorterOwnerControls } from "@/components/sorter-owner-controls";
 import { getSorterDataCached } from "@/lib/sorter-data";
-import { getCommunityRanking } from "@/lib/community-ranking-data";
 import { TrendingSortersSection } from "@/components/trending-sorters-section";
 
 interface SorterPageProps {
@@ -195,16 +194,14 @@ export default async function SorterPage({ params }: SorterPageProps) {
           />
         </SorterHeaderServer>
 
-        {/* Client-side data fetching for items and recent results */}
+        {/* Client-side data fetching for items, recent results, and the
+            community ranking (fetched client-side so its heavy aggregate never
+            blocks the page render). */}
         <SorterPageClient
           slug={slug}
           isOwner={false}
           currentUserEmail={undefined}
           initialData={initialClientData}
-          communityRanking={await getCommunityRanking(
-            data.sorter.id,
-            data.sorter.version,
-          )}
         />
 
         {/* Pull viral visitors deeper: what else is hot right now. */}
