@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { toPng } from "html-to-image";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 interface RankedItem {
   id: string;
@@ -117,6 +118,7 @@ export function useDownloadRankingImage() {
         root.unmount();
         document.body.removeChild(container);
 
+        track("image_downloaded", { sorterTitle: data.sorterTitle });
         toast.success("Ranking image downloaded!");
       } catch (error: unknown) {
         const message =

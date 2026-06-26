@@ -392,6 +392,12 @@ export default function SortPage() {
 
     setSorting(true);
 
+    // A sort session began — denominator for the completion-rate funnel.
+    track("sort_started", {
+      sorterId: sorterData.sorter.id,
+      itemCount: filteredItems.length,
+    });
+
     try {
       const onNeedComparison = (
         itemA: SortItem,

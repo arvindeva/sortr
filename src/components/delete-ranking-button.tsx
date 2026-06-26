@@ -59,13 +59,17 @@ export function DeleteRankingButton({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="neutral" 
+        <Button
+          variant="neutral"
           size="sm"
-          className={hideTextOnMobile ? "md:w-auto w-10 h-10 px-0" : ""}
+          className={
+            hideTextOnMobile ? "h-10 w-10 px-0 md:w-auto md:px-4" : ""
+          }
         >
           <Trash2 size={16} />
-          <span className={hideTextOnMobile ? "hidden md:inline md:ml-2" : ""}>Delete</span>
+          <span className={hideTextOnMobile ? "hidden md:inline md:ml-2" : ""}>
+            Delete
+          </span>
         </Button>
       </DialogTrigger>
       <DialogContent>

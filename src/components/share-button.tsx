@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useDownloadRankingImage } from "@/hooks/use-download-ranking-image";
+import { track } from "@/lib/analytics";
 
 interface RankedItem {
   id: string;
@@ -38,6 +39,7 @@ export function ShareButton({
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
+    track("share_clicked", { sorterTitle: rankingData?.sorterTitle });
     toast.success("Link copied!");
   };
 
@@ -53,13 +55,17 @@ export function ShareButton({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="neutral" 
+        <Button
+          variant="neutral"
           size={size}
-          className={hideTextOnMobile ? "md:w-auto w-10 h-10 px-0" : ""}
+          className={
+            hideTextOnMobile ? "h-10 w-10 px-0 md:w-auto md:px-4" : ""
+          }
         >
           <Share2 size={16} />
-          <span className={hideTextOnMobile ? "hidden md:inline md:ml-2" : ""}>Share</span>
+          <span className={hideTextOnMobile ? "hidden md:inline md:ml-2" : ""}>
+            Share
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

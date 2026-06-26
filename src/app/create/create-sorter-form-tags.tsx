@@ -30,6 +30,7 @@ import { accentFor } from "@/lib/utils";
 // Note: Image compression is now handled by the upload hook
 import { Plus, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
+import { track } from "@/lib/analytics";
 import CoverImageUpload from "@/components/cover-image-upload";
 // Direct-to-final upload flow (no temp sessions)
 import { UploadProgressDialog } from "@/components/upload-progress-dialog";
@@ -85,6 +86,14 @@ export default function CreateSorterFormTags() {
     Array<{ file: File; preview: string } | null>
   >([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Fire create_started once, on first real engagement with the form.
+  const createStartedRef = useRef(false);
+  const markCreateStarted = () => {
+    if (!createStartedRef.current) {
+      createStartedRef.current = true;
+      track("create_started");
+    }
+  };
 
   // Upload progress state
   const [showProgressDialog, setShowProgressDialog] = useState(false);
@@ -266,6 +275,7 @@ export default function CreateSorterFormTags() {
 
   // Add new item (traditional mode)
   const addItemHandler = () => {
+    markCreateStarted();
     appendItem({ title: "", tagSlugs: [] });
     // Add null entry to images array to keep indices aligned
     setItemImagesData([...itemImagesData, null]);
@@ -493,6 +503,9 @@ export default function CreateSorterFormTags() {
         throw new Error(err.error || `Finalize failed (${finRes.status})`);
       }
 
+      track("create_completed", {
+        itemCount: (data.items || []).length,
+      });
       toast.success("Sorter created successfully!");
       setProgress({
         phase: "complete",
@@ -579,6 +592,9 @@ export default function CreateSorterFormTags() {
         throw new Error(err.error || `Create failed (${res.status})`);
       }
       const out = await res.json();
+      track("create_completed", {
+        itemCount: (data.items || []).length,
+      });
       toast.success("Sorter created successfully!");
       // Invalidate queries to show new sorter immediately
       await invalidateQueriesAfterCreate();
@@ -642,6 +658,7 @@ export default function CreateSorterFormTags() {
                       <Input
                         placeholder="e.g. Best Studio Ghibli Film"
                         {...field}
+                        onFocus={markCreateStarted}
                       />
                     </FormControl>
                     <FormMessage />

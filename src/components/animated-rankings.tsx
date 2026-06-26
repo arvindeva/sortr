@@ -20,6 +20,18 @@ const MEDAL_VARS = [
   "var(--medal-bronze)",
 ];
 
+// Glow + border for the top-3 rows (gold / silver / bronze).
+const MEDAL_GLOW = [
+  "0 0 28px rgba(255,210,63,.32)",
+  "0 0 24px rgba(205,214,232,.28)",
+  "0 0 24px rgba(214,138,78,.3)",
+];
+const MEDAL_ROW_BORDER = [
+  "rgba(255,210,63,.5)",
+  "rgba(205,214,232,.45)",
+  "rgba(214,138,78,.48)",
+];
+
 export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
   return (
     <div className="flex flex-col gap-2.5">
@@ -38,7 +50,11 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
               delay: index < 10 ? index * 0.08 : 0.8,
               ease: "easeOut",
             }}
-            className="flex items-center gap-3 rounded-xl border border-border bg-card px-3.5 py-3 md:gap-4 md:px-4.5 md:py-3.5"
+            className="flex items-center gap-3 rounded-xl border bg-card px-3.5 py-3 md:gap-4 md:px-4.5 md:py-3.5"
+            style={{
+              borderColor: isTop3 ? MEDAL_ROW_BORDER[index] : "var(--border)",
+              boxShadow: isTop3 ? MEDAL_GLOW[index] : undefined,
+            }}
           >
             {/* Rank numeral */}
             <span
@@ -82,16 +98,6 @@ export function AnimatedRankings({ rankings }: AnimatedRankingsProps) {
             <span className="min-w-0 flex-1 font-bold break-words text-foreground md:text-[17px]">
               {item.title}
             </span>
-
-            {/* Medal badge for the top 3 */}
-            {isTop3 && (
-              <span
-                className="display ml-auto flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full text-[17px] font-black"
-                style={{ background: MEDAL_VARS[index], color: "rgba(0,0,0,.75)" }}
-              >
-                {index + 1}
-              </span>
-            )}
           </motion.div>
         );
       })}

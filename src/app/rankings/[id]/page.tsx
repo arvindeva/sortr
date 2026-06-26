@@ -468,11 +468,10 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
 
         {/* Body: Final order + Sorter info */}
         <div className="grid gap-8 md:grid-cols-[1fr_320px] md:items-start">
-          {/* Final order */}
-          <section>
-            <div className="overflow-hidden">
-              <AnimatedRankings rankings={result.rankings} />
-            </div>
+          {/* Final order. No overflow-hidden wrapper — it clipped the medal
+              glow on the top-3 rows. A little padding gives the glow room. */}
+          <section className="px-1 py-1">
+            <AnimatedRankings rankings={result.rankings} />
           </section>
 
           {/* Sorter info panel */}
