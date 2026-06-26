@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "Browse Sorters",
   description:
     "Explore and discover sorters across all categories. Search by title, creator, or browse by category. Create and share a sorter for anything to rank items from best to worst.",
+  alternates: { canonical: "/browse" },
   openGraph: {
     title: "Browse Sorters",
     description:
