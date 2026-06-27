@@ -394,6 +394,20 @@
   .sortr-glow {
     animation: sortrGlow 1.6s infinite;
   }
+  /* Success-emoji pop on the feedback modal. */
+  @keyframes sortrPop {
+    0% {
+      transform: scale(0.4);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.15);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
   /* Same pulse, offset half a cycle — used on the cyan square so the two logo
      squares alternate (one bright while the other dims), like they're competing. */
   .sortr-glow-alt {

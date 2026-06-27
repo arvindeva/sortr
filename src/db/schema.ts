@@ -195,3 +195,13 @@ export const uploadBatches = pgTable("uploadBatches", {
   expiresAt: timestamp("expiresAt").notNull(),
   metadata: jsonb("metadata"),
 });
+
+// User-submitted feedback (anonymous-friendly). Read in the admin dashboard.
+export const feedback = pgTable("feedback", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  message: text("message").notNull(),
+  email: text("email"), // optional — only if the user wants a reply
+  pageUrl: text("pageUrl"), // where it was submitted from
+  userId: uuid("userId").references(() => user.id, { onDelete: "set null" }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});

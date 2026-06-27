@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getAdminStats } from "@/lib/admin-stats";
+import { getAdminStats, getRecentFeedback } from "@/lib/admin-stats";
 import { AdminCharts } from "@/components/admin-charts";
 import { TopSortersCard } from "@/components/admin-top-sorters";
 import { formatCount } from "@/lib/utils";
@@ -53,6 +53,7 @@ export default async function AdminPage() {
   }
 
   const stats = await getAdminStats();
+  const feedbackRows = await getRecentFeedback();
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-12">
@@ -86,6 +87,40 @@ export default async function AdminPage() {
 
       {/* Top sorters (timeframe-switchable) */}
       <TopSortersCard topSorters={stats.topSorters} />
+
+      {/* Feedback */}
+      <div className="mt-5 rounded-2xl border border-border bg-card p-5">
+        <div className="hud mb-4 text-xs text-muted-foreground">
+          Feedback ({feedbackRows.length})
+        </div>
+        {feedbackRows.length === 0 ? (
+          <p className="py-6 text-center font-mono text-sm text-muted-foreground">
+            No feedback yet.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {feedbackRows.map((f) => (
+              <li
+                key={f.id}
+                className="rounded-lg border border-border bg-background/40 p-3.5"
+              >
+                <p className="text-sm whitespace-pre-wrap text-foreground">
+                  {f.message}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-muted-foreground">
+                  <span>{new Date(f.createdAt).toLocaleString()}</span>
+                  {f.email && (
+                    <span className="text-cyan-ink">{f.email}</span>
+                  )}
+                  {f.pageUrl && (
+                    <span className="truncate opacity-70">{f.pageUrl}</span>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </main>
   );
 }

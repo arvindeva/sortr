@@ -1,7 +1,30 @@
 import { unstable_cache } from "next/cache";
 import { db } from "@/db";
-import { sorters, sortingResults, user } from "@/db/schema";
+import { sorters, sortingResults, user, feedback } from "@/db/schema";
 import { and, eq, gte, isNotNull, isNull, sql, desc } from "drizzle-orm";
+
+export interface FeedbackRow {
+  id: string;
+  message: string;
+  email: string | null;
+  pageUrl: string | null;
+  createdAt: Date;
+}
+
+/** Recent feedback submissions (uncached — you want to see new ones promptly). */
+export async function getRecentFeedback(limit = 50): Promise<FeedbackRow[]> {
+  return db
+    .select({
+      id: feedback.id,
+      message: feedback.message,
+      email: feedback.email,
+      pageUrl: feedback.pageUrl,
+      createdAt: feedback.createdAt,
+    })
+    .from(feedback)
+    .orderBy(desc(feedback.createdAt))
+    .limit(limit);
+}
 
 export interface AdminStats {
   totals: {

@@ -11,6 +11,7 @@ import { forwardRef, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { FeedbackModal } from "@/components/feedback-modal";
 
 export function Navbar() {
   const { data: session, status } = useSession();
@@ -18,6 +19,7 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   // Solid bg at the very top, frosted-glass once the page scrolls
   const [scrolled, setScrolled] = useState(false);
   // Portal target only exists after mount (avoids SSR document access)
@@ -359,6 +361,15 @@ export function Navbar() {
                 Log in
               </MobileNavRow>
             )}
+
+            <MobileNavRow
+              onSelect={() => {
+                setMobileMenuOpen(false);
+                setFeedbackOpen(true);
+              }}
+            >
+              Feedback
+            </MobileNavRow>
           </nav>
 
           {/* Single primary CTA */}
@@ -416,6 +427,9 @@ export function Navbar() {
           </form>
         </div>
       </div>
+
+      {/* Feedback modal — opened from the mobile menu's Feedback row. */}
+      <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </nav>
   );
 }

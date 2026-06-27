@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/ui/sortr-mark";
+import { FeedbackModal } from "@/components/feedback-modal";
 
 export function Footer() {
   return (
@@ -7,6 +8,14 @@ export function Footer() {
       <div className="container mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-7 sm:flex-row md:px-6">
         <Wordmark size={22} withPeriod />
         <div className="flex items-center gap-3 sm:gap-4">
+          <FeedbackModal>
+            <button className="font-mono text-[13px] font-bold text-cyan-ink underline decoration-cyan-ink/40 underline-offset-4 transition-colors hover:text-main-ink hover:decoration-main-ink/50">
+              Feedback
+            </button>
+          </FeedbackModal>
+          <span aria-hidden className="text-muted-foreground/40">
+            |
+          </span>
           <Link
             href="/privacy"
             className="font-mono text-[13px] font-bold text-cyan-ink underline decoration-cyan-ink/40 underline-offset-4 transition-colors hover:text-main-ink hover:decoration-main-ink/50"
