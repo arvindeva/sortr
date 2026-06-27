@@ -524,3 +524,296 @@ export function ResultShareImage({
     </div>
   );
 }
+
+// ============================================================================
+// FULL-RANKING leaderboard card (variable height, 1080 wide). Photos + medal
+// glow for the top 10 (column 1), clean text rows for the rest. 10 rows per
+// column; the last column holds the remainder. Capped at MAX_VISIBLE so a huge
+// sorter can't produce an unreadable 20-column image.
+// ============================================================================
+
+const BIG = "var(--font-big-shoulders), 'Arial Narrow', sans-serif";
+const MEDAL_NUM = ["#ffd23f", "#cdd6e8", "#d68a4e"];
+const MEDAL_ROW_GLOW = [
+  "0 0 20px rgba(255,210,63,.5)",
+  "0 0 16px rgba(205,214,232,.45)",
+  "0 0 16px rgba(214,138,78,.5)",
+];
+const MEDAL_ROW_BORDER = [
+  "1px solid rgba(255,210,63,.4)",
+  "1px solid rgba(205,214,232,.35)",
+  "1px solid rgba(214,138,78,.4)",
+];
+const MEDAL_THUMB_GLOW = [
+  "0 0 18px rgba(255,210,63,.5)",
+  "0 0 14px rgba(205,214,232,.45)",
+  "0 0 14px rgba(214,138,78,.5)",
+];
+
+const PER_COL = 10;
+const MAX_VISIBLE = 100;
+
+export function ResultShareImageFull({
+  title,
+  subtitle,
+  items,
+}: ResultShareImageProps) {
+  const total = items.length;
+  const shown = Math.min(total, MAX_VISIBLE);
+  const visible = items.slice(0, shown);
+  const cols = Math.ceil(shown / PER_COL);
+  const rows = Math.min(PER_COL, shown);
+  const hasMore = total > shown;
+
+  return (
+    <div
+      id="sortr-result-card-full"
+      style={{
+        width: "1080px",
+        position: "relative",
+        overflow: "hidden",
+        background: "#0b0918",
+        fontFamily: "var(--font-space-grotesk), sans-serif",
+        flexShrink: 0,
+      }}
+    >
+      {/* Atmosphere */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(700px 480px at 94% -4%, rgba(255,46,126,.22), transparent 58%)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(680px 520px at -6% 12%, rgba(25,227,223,.11), transparent 55%)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+        }}
+      />
+
+      <div style={{ position: "relative", padding: "56px 60px 46px" }}>
+        {/* Header */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "11px" }}>
+            <div style={{ display: "flex", gap: "6px" }}>
+              <span
+                style={{
+                  width: "17px",
+                  height: "17px",
+                  borderRadius: "3px",
+                  background: "#ff2e7e",
+                }}
+              />
+              <span
+                style={{
+                  width: "17px",
+                  height: "17px",
+                  borderRadius: "3px",
+                  border: "3px solid #19e3df",
+                }}
+              />
+            </div>
+            <span
+              style={{
+                fontFamily: BIG,
+                fontWeight: 900,
+                fontSize: "26px",
+                color: "#f3f0ff",
+                letterSpacing: "0.02em",
+              }}
+            >
+              SORTR
+            </span>
+          </div>
+          <span
+            style={{
+              fontFamily: BIG,
+              fontWeight: 900,
+              fontSize: "62px",
+              lineHeight: 0.88,
+              color: "#f3f0ff",
+              textTransform: "uppercase",
+              marginTop: "16px",
+            }}
+          >
+            {title}
+          </span>
+          <span
+            style={{
+              fontFamily: "var(--font-space-mono), monospace",
+              fontSize: "16px",
+              letterSpacing: "0.14em",
+              color: "#19e3df",
+              textTransform: "uppercase",
+              marginTop: "14px",
+            }}
+          >
+            {subtitle}
+          </span>
+        </div>
+
+        {/* Leaderboard grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${cols}, 1fr)`,
+            gridTemplateRows: `repeat(${rows}, auto)`,
+            gridAutoFlow: "column",
+            columnGap: "14px",
+            rowGap: "10px",
+            marginTop: "36px",
+          }}
+        >
+          {visible.map((item, i) => {
+            const isTop3 = i < 3;
+            const hasPhoto = i < 10 && !!item.imageUrl;
+            return (
+              <div
+                key={item.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "13px",
+                  background: isTop3
+                    ? "rgba(255,255,255,.06)"
+                    : "rgba(255,255,255,.03)",
+                  border: isTop3
+                    ? MEDAL_ROW_BORDER[i]
+                    : "1px solid rgba(255,255,255,.08)",
+                  boxShadow: isTop3 ? MEDAL_ROW_GLOW[i] : "none",
+                  borderRadius: "10px",
+                  padding: "8px 13px 8px 8px",
+                  boxSizing: "border-box",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: BIG,
+                    fontWeight: 900,
+                    fontSize: "29px",
+                    color: isTop3 ? MEDAL_NUM[i] : "#6f6a86",
+                    width: "40px",
+                    textAlign: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {i + 1}
+                </span>
+                {/* Photo thumbnail for the top 10; text-only below. */}
+                {i < 10 && (
+                  <span
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "8px",
+                      position: "relative",
+                      overflow: "hidden",
+                      flexShrink: 0,
+                      boxSizing: "border-box",
+                      boxShadow: isTop3 ? MEDAL_THUMB_GLOW[i] : "none",
+                      border: isTop3
+                        ? MEDAL_BORDER[i]
+                        : "1px solid rgba(255,255,255,.1)",
+                      ...(hasPhoto
+                        ? {
+                            backgroundImage: `url(${item.imageUrl})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                          }
+                        : { background: accentFor(item.id) }),
+                    }}
+                  >
+                    {!hasPhoto && (
+                      <span
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          backgroundImage:
+                            "repeating-linear-gradient(45deg, rgba(0,0,0,.07) 0 7px, transparent 7px 14px)",
+                        }}
+                      />
+                    )}
+                  </span>
+                )}
+                <span
+                  style={{
+                    fontFamily: "var(--font-space-grotesk), sans-serif",
+                    fontWeight: 700,
+                    fontSize: "16px",
+                    lineHeight: 1.06,
+                    color: "#f3f0ff",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  {item.name}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {hasMore && (
+          <div
+            style={{
+              marginTop: "18px",
+              textAlign: "center",
+              fontFamily: "var(--font-space-mono), monospace",
+              fontSize: "15px",
+              letterSpacing: "0.06em",
+              color: "#8c87a6",
+              textTransform: "uppercase",
+            }}
+          >
+            +{total - shown} more · see the full ranking on sortr.io
+          </div>
+        )}
+
+        {/* Footer — single right-aligned tagline, vertically centered between
+            the divider line and the card's bottom edge. */}
+        <div
+          style={{
+            marginTop: "34px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            borderTop: "1px solid rgba(255,255,255,.1)",
+            paddingTop: "46px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              whiteSpace: "nowrap",
+              fontFamily: BIG,
+              fontWeight: 900,
+              fontSize: "30px",
+              textTransform: "uppercase",
+              letterSpacing: "0.03em",
+              lineHeight: 0.92,
+            }}
+          >
+            <span style={{ color: "#f3f0ff" }}>Rank anything at</span>
+            <span style={{ color: "#ff2e7e" }}>SORTR.IO</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -80,18 +80,36 @@ export function ShareButton({
     toast.success("Link copied!");
   };
 
-  const handleDownloadImage = async () => {
+  const handleDownloadImage = async (variant: "top10" | "full") => {
     if (!rankingData) {
       toast.error("Ranking data not available for download");
       return;
     }
-
-    await downloadImage(rankingData);
+    await downloadImage(rankingData, variant);
   };
 
-  // Mobile (Web Share API present): two icon buttons — share (opens the OS
-  // sheet) and download. Icon-only so the owner's full action row fits one line;
-  // the share glyph is universal.
+  // The two download choices, shared by mobile + desktop menus.
+  const downloadItems = (
+    <>
+      <DropdownMenuItem
+        onClick={() => handleDownloadImage("top10")}
+        disabled={isGenerating || !rankingData}
+      >
+        <Download className="mr-2" size={16} />
+        Top 10 — square
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => handleDownloadImage("full")}
+        disabled={isGenerating || !rankingData}
+      >
+        <Download className="mr-2" size={16} />
+        Full ranking
+      </DropdownMenuItem>
+    </>
+  );
+
+  // Mobile (Web Share API present): share opens the OS sheet; download is a
+  // small menu offering the two image formats.
   if (canNativeShare) {
     return (
       <div className="flex shrink-0 items-center gap-2.5">
@@ -105,22 +123,26 @@ export function ShareButton({
           <Share2 size={16} />
         </Button>
         {rankingData && (
-          <Button
-            variant="neutral"
-            size="icon"
-            onClick={handleDownloadImage}
-            disabled={isGenerating}
-            aria-label="Download image"
-            className="shrink-0"
-          >
-            <Download size={16} />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="neutral"
+                size="icon"
+                disabled={isGenerating}
+                aria-label="Download image"
+                className="shrink-0"
+              >
+                <Download size={16} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">{downloadItems}</DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
     );
   }
 
-  // Desktop: the copy-link / download-image dropdown.
+  // Desktop: copy-link + the two download options.
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -134,13 +156,7 @@ export function ShareButton({
           <Link2 className="mr-2" size={16} />
           Copy Link
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={handleDownloadImage}
-          disabled={isGenerating || !rankingData}
-        >
-          <Download className="mr-2" size={16} />
-          {isGenerating ? "Generating..." : "Download Image"}
-        </DropdownMenuItem>
+        {downloadItems}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -17,7 +17,10 @@ import { CoverTile } from "@/components/ui/cover-tile";
 import { Play } from "lucide-react";
 import { ShareButton } from "@/components/share-button";
 import { AnimatedRankings } from "@/components/animated-rankings";
-import { ResultShareImage } from "@/components/result-share-image";
+import {
+  ResultShareImage,
+  ResultShareImageFull,
+} from "@/components/result-share-image";
 import { RankingOwnerActions } from "@/components/ranking-owner-actions";
 import { TrendingSortersSection } from "@/components/trending-sorters-section";
 
@@ -570,6 +573,22 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
                     : "@anon"
                 }`}
                 items={result.rankings.slice(0, 10).map((r) => ({
+                  id: r.id,
+                  name: r.title,
+                  imageUrl: r.imageUrl,
+                }))}
+              />
+            </div>
+
+            <div className="mt-6 overflow-auto bg-muted p-4">
+              <ResultShareImageFull
+                title={sorter.title}
+                subtitle={`Sorted by ${
+                  result.username && result.username !== "Anonymous"
+                    ? `@${result.username}`
+                    : "@anon"
+                }`}
+                items={result.rankings.map((r) => ({
                   id: r.id,
                   name: r.title,
                   imageUrl: r.imageUrl,

@@ -17,13 +17,19 @@ interface RankingImageData {
   selectedTags?: string[];
 }
 
+type Variant = "top10" | "full";
+
 export function useDownloadRankingImage() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const downloadImage = useCallback(
-    async (data: RankingImageData) => {
+    async (data: RankingImageData, variant: Variant = "top10") => {
       if (isGenerating) return;
       setIsGenerating(true);
+
+      // Immediate acknowledgment — rasterizing takes a few seconds, especially
+      // on phones, so reassure the user the tap registered.
+      const toastId = toast.loading("Generating image…");
 
       try {
         // Off-screen container to render the share card into.
@@ -34,27 +40,31 @@ export function useDownloadRankingImage() {
         container.style.zIndex = "-1";
         document.body.appendChild(container);
 
-        const { ResultShareImage } = await import(
+        const { ResultShareImage, ResultShareImageFull } = await import(
           "@/components/result-share-image"
         );
         const React = await import("react");
         const ReactDOM = await import("react-dom/client");
 
-        const subtitle = `Sorted by ${
+        const handle =
           data.username && data.username !== "Anonymous"
             ? `@${data.username}`
-            : "@anon"
-        }`;
+            : "@anon";
+        const subtitle = `Sorted by ${handle}`;
 
-        const element = React.createElement(ResultShareImage, {
-          title: data.sorterTitle,
-          subtitle,
-          items: data.rankings.slice(0, 10).map((r) => ({
-            id: r.id,
-            name: r.title,
-            imageUrl: r.imageUrl,
-          })),
-        });
+        // Top-10 uses 10 items; full uses all of them.
+        const allItems = data.rankings.map((r) => ({
+          id: r.id,
+          name: r.title,
+          imageUrl: r.imageUrl,
+        }));
+        const items =
+          variant === "full" ? allItems : allItems.slice(0, 10);
+
+        const element = React.createElement(
+          variant === "full" ? ResultShareImageFull : ResultShareImage,
+          { title: data.sorterTitle, subtitle, items },
+        );
 
         const root = ReactDOM.createRoot(container);
         root.render(element);
@@ -92,13 +102,13 @@ export function useDownloadRankingImage() {
         // Settle.
         await new Promise((resolve) => setTimeout(resolve, 150));
 
-        const card = container.querySelector(
-          "#sortr-result-card",
-        ) as HTMLElement | null;
+        const cardId =
+          variant === "full" ? "#sortr-result-card-full" : "#sortr-result-card";
+        const card = container.querySelector(cardId) as HTMLElement | null;
         if (!card) throw new Error("Could not find result card");
 
         const dataUrl = await toPng(card, {
-          pixelRatio: 2, // 1080×1350 → 2160×2700
+          pixelRatio: 2,
           cacheBust: true,
         });
 
@@ -106,7 +116,10 @@ export function useDownloadRankingImage() {
           .replace(/[^a-z0-9]/gi, "-")
           .toLowerCase()
           .substring(0, 50);
-        const filename = `${sanitizedTitle}-ranking.png`;
+        const filename =
+          variant === "full"
+            ? `${sanitizedTitle}-full-ranking.png`
+            : `${sanitizedTitle}-top10.png`;
 
         const link = document.createElement("a");
         link.href = dataUrl;
@@ -118,13 +131,18 @@ export function useDownloadRankingImage() {
         root.unmount();
         document.body.removeChild(container);
 
-        track("image_downloaded", { sorterTitle: data.sorterTitle });
-        toast.success("Ranking image downloaded!");
+        track("image_downloaded", {
+          sorterTitle: data.sorterTitle,
+          variant,
+        });
+        toast.success("Image downloaded!", { id: toastId });
       } catch (error: unknown) {
         const message =
           error instanceof Error ? error.message : String(error);
         console.error("Error generating ranking image:", message, error);
-        toast.error("Failed to generate image. Please try again.");
+        toast.error("Failed to generate image. Please try again.", {
+          id: toastId,
+        });
       } finally {
         setIsGenerating(false);
       }
