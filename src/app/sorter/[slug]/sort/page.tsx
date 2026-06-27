@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useImagePreloader } from "@/hooks/use-image-preloader";
@@ -92,6 +92,9 @@ export default function SortPage() {
     useState<ComparisonState | null>(null);
   const [sorting, setSorting] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Progress-save status, shown to the user so a failed save is never silent
+  // (the original "thought it saved, lost 6 hours" bug).
+  const [saveStatus, setSaveStatus] = useState<"saved" | "error">("saved");
   const [completedComparisons, setCompletedComparisons] = useState(0);
   const [totalComparisons, setTotalComparisons] = useState(0);
   const [canUndo, setCanUndo] = useState(false);
@@ -340,7 +343,8 @@ export default function SortPage() {
 
       // Set up save callback
       sorterRef.current.setSaveCallback(() => {
-        if (sorterRef.current) {
+        if (!sorterRef.current) return;
+        try {
           // Use optimized serialization
           const serializedData = serializeChoices(
             filteredItems,
@@ -363,6 +367,13 @@ export default function SortPage() {
           );
           const progressKey = generateProgressKey(sorterId, currentFilterSlugs);
           localStorage.setItem(progressKey, compressed);
+          setSaveStatus("saved");
+        } catch (err) {
+          // setItem can throw on quota exceeded, private-browsing, or iOS
+          // storage limits. Surface it instead of silently losing progress —
+          // this is the root cause of the "thought it saved, lost hours" bug.
+          console.error("Failed to save sort progress:", err);
+          setSaveStatus("error");
         }
       });
 
@@ -704,9 +715,19 @@ export default function SortPage() {
             <h1 className="display text-[clamp(2rem,5.5vw,3.375rem)] font-black text-foreground">
               {sorterData.sorter.title}
             </h1>
-            <div className="mt-2.5 font-mono text-[13px] text-muted-foreground">
-              {completedComparisons} comparison
-              {completedComparisons === 1 ? "" : "s"} · {progress}% complete
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[13px] text-muted-foreground">
+              <span>
+                {completedComparisons} comparison
+                {completedComparisons === 1 ? "" : "s"} · {progress}% complete
+              </span>
+              {completedComparisons > 0 &&
+                (saveStatus === "error" ? (
+                  <span className="text-destructive">
+                    · ⚠ couldn&apos;t save progress
+                  </span>
+                ) : (
+                  <span className="text-cyan-ink">· progress saved ✓</span>
+                ))}
             </div>
           </div>
           {/* Undo / Reset */}
@@ -741,6 +762,22 @@ export default function SortPage() {
             style={{ width: `${progress}%` }}
           />
         </div>
+
+        {/* Guest notice — progress is only on this device/browser. Non-blocking. */}
+        {!session && (
+          <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[12px] text-muted-foreground">
+            <span>
+              Playing as guest — progress is saved only in this browser.
+            </span>
+            <button
+              type="button"
+              onClick={() => signIn()}
+              className="text-cyan-ink underline decoration-cyan-ink/40 underline-offset-2 transition-colors hover:text-main-ink"
+            >
+              Sign in to keep it safe
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Comparison Cards */}
