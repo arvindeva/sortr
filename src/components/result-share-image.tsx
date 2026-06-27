@@ -565,11 +565,25 @@ export function ResultShareImageFull({
   const rows = Math.min(PER_COL, shown);
   const hasMore = total > shown;
 
+  // Fixed-width columns; the card grows wider with more columns (a wide image is
+  // fine for X) rather than squeezing columns narrow. Everything scales down a
+  // step for bigger lists so a 50+ item card stays a sane width.
+  const sz =
+    cols <= 3
+      ? { col: 360, name: 16, thumb: 40, num: 29, rowPadY: 8, rowGap: 10 }
+      : cols <= 5
+        ? { col: 300, name: 15, thumb: 36, num: 26, rowPadY: 7, rowGap: 9 }
+        : { col: 250, name: 13, thumb: 30, num: 22, rowPadY: 6, rowGap: 8 };
+  const COL_W = sz.col;
+  const COL_GAP = 14;
+  const PAD_X = 60;
+  const cardWidth = PAD_X * 2 + cols * COL_W + (cols - 1) * COL_GAP;
+
   return (
     <div
       id="sortr-result-card-full"
       style={{
-        width: "1080px",
+        width: `${cardWidth}px`,
         position: "relative",
         overflow: "hidden",
         background: "#0b0918",
@@ -665,15 +679,15 @@ export function ResultShareImageFull({
           </span>
         </div>
 
-        {/* Leaderboard grid */}
+        {/* Leaderboard grid — fixed-width columns. */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: `repeat(${cols}, 1fr)`,
+            gridTemplateColumns: `repeat(${cols}, ${COL_W}px)`,
             gridTemplateRows: `repeat(${rows}, auto)`,
             gridAutoFlow: "column",
-            columnGap: "14px",
-            rowGap: "10px",
+            columnGap: `${COL_GAP}px`,
+            rowGap: `${sz.rowGap}px`,
             marginTop: "36px",
           }}
         >
@@ -686,7 +700,7 @@ export function ResultShareImageFull({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "13px",
+                  gap: "12px",
                   background: isTop3
                     ? "rgba(255,255,255,.06)"
                     : "rgba(255,255,255,.03)",
@@ -695,7 +709,7 @@ export function ResultShareImageFull({
                     : "1px solid rgba(255,255,255,.08)",
                   boxShadow: isTop3 ? MEDAL_ROW_GLOW[i] : "none",
                   borderRadius: "10px",
-                  padding: "8px 13px 8px 8px",
+                  padding: `${sz.rowPadY}px 13px ${sz.rowPadY}px 8px`,
                   boxSizing: "border-box",
                 }}
               >
@@ -703,9 +717,9 @@ export function ResultShareImageFull({
                   style={{
                     fontFamily: BIG,
                     fontWeight: 900,
-                    fontSize: "29px",
+                    fontSize: `${sz.num}px`,
                     color: isTop3 ? MEDAL_NUM[i] : "#6f6a86",
-                    width: "40px",
+                    width: `${Math.round(sz.thumb * 0.95)}px`,
                     textAlign: "center",
                     flexShrink: 0,
                   }}
@@ -716,8 +730,8 @@ export function ResultShareImageFull({
                 {i < 10 && (
                   <span
                     style={{
-                      width: "40px",
-                      height: "40px",
+                      width: `${sz.thumb}px`,
+                      height: `${sz.thumb}px`,
                       borderRadius: "8px",
                       position: "relative",
                       overflow: "hidden",
@@ -752,7 +766,7 @@ export function ResultShareImageFull({
                   style={{
                     fontFamily: "var(--font-space-grotesk), sans-serif",
                     fontWeight: 700,
-                    fontSize: "16px",
+                    fontSize: `${sz.name}px`,
                     lineHeight: 1.06,
                     color: "#f3f0ff",
                     display: "-webkit-box",
