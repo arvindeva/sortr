@@ -205,3 +205,32 @@ export const feedback = pgTable("feedback", {
   userId: uuid("userId").references(() => user.id, { onDelete: "set null" }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
+
+// In-progress sort state for logged-in users (cloud durability). One active
+// sort per user per sorter (UNIQUE). `state` is the same LZString-compressed
+// blob localStorage uses; deleted when the sort completes. TTL-cleaned when
+// stale (see Phase 3). Anonymous users keep localStorage-only.
+export const sortProgress = pgTable(
+  "sortProgress",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    sorterId: uuid("sorterId")
+      .notNull()
+      .references(() => sorters.id, { onDelete: "cascade" }),
+    // Sorter version this progress was started against (for mismatch detection).
+    version: integer("version").notNull(),
+    // LZString-compressed serialized sort state (same format as localStorage).
+    state: text("state").notNull(),
+    // Number of items being sorted — for display in the "in progress" list.
+    itemCount: integer("itemCount").default(0).notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (t) => ({
+    // One in-progress sort per user per sorter.
+    userSorterUnique: unique().on(t.userId, t.sorterId),
+  }),
+);

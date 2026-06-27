@@ -4,6 +4,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession, signIn } from "next-auth/react";
+import {
+  useCloudSortProgress,
+  fetchServerProgress,
+} from "@/hooks/use-cloud-sort-progress";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useImagePreloader } from "@/hooks/use-image-preloader";
@@ -95,6 +99,11 @@ export default function SortPage() {
   // Progress-save status, shown to the user so a failed save is never silent
   // (the original "thought it saved, lost 6 hours" bug).
   const [saveStatus, setSaveStatus] = useState<"saved" | "error">("saved");
+  // For logged-in users: gate sorter init until we've checked the server for
+  // saved progress (so a cross-device resume isn't clobbered by empty local).
+  const isLoggedIn = !!session?.user?.id;
+  const [serverHydrated, setServerHydrated] = useState(false);
+  const serverHydrateStartedRef = useRef(false);
   const [completedComparisons, setCompletedComparisons] = useState(0);
   const [totalComparisons, setTotalComparisons] = useState(0);
   const [canUndo, setCanUndo] = useState(false);
@@ -257,12 +266,69 @@ export default function SortPage() {
     }
   }, [filteredItems, preloadImages, resetPreloader]);
 
+  // Cloud sync (logged-in only): checkpoints the current localStorage blob to
+  // the server every 30s / on background / on reconnect / on manual save.
+  const cloudSync = useCloudSortProgress({
+    enabled: isLoggedIn,
+    sorterId,
+    getState: useCallback(() => {
+      if (!sorterId) return null;
+      return localStorage.getItem(
+        generateProgressKey(sorterId, currentFilterSlugs),
+      );
+    }, [sorterId, currentFilterSlugs]),
+    getItemCount: useCallback(() => filteredItems.length, [filteredItems]),
+  });
+
+  // Server-hydration: for a logged-in user, before initializing the sorter,
+  // check the server for saved progress. If this device's localStorage is empty
+  // for this sorter (cross-device / cache-cleared), pull the server copy down
+  // into localStorage so the existing resume logic picks it up transparently.
+  useEffect(() => {
+    if (serverHydrated || serverHydrateStartedRef.current) return;
+    if (!sorterData || filteredItems.length === 0 || !sorterId) return;
+
+    if (!isLoggedIn) {
+      // Anonymous — nothing to hydrate; proceed immediately.
+      setServerHydrated(true);
+      return;
+    }
+
+    serverHydrateStartedRef.current = true;
+    (async () => {
+      try {
+        const key = generateProgressKey(sorterId, currentFilterSlugs);
+        const local = localStorage.getItem(key);
+        // Only pull from server when local is empty (the cross-device / cleared
+        // case). If local exists, it's at least as fresh (per-matchup writes).
+        if (!local) {
+          const server = await fetchServerProgress(sorterId);
+          if (server?.state && !server.versionMismatch) {
+            localStorage.setItem(key, server.state);
+          }
+        }
+      } catch {
+        // ignore — fall back to local/empty
+      } finally {
+        setServerHydrated(true);
+      }
+    })();
+  }, [
+    serverHydrated,
+    isLoggedIn,
+    sorterData,
+    filteredItems.length,
+    sorterId,
+    currentFilterSlugs,
+  ]);
+
   // Initialize sorting when data loads and images are preloaded
   useEffect(() => {
     if (
       sorterData &&
       filteredItems.length > 0 &&
       imagesPreloaded &&
+      serverHydrated &&
       !sorting &&
       !sorterRef.current
     ) {
@@ -395,7 +461,13 @@ export default function SortPage() {
 
       startSorting();
     }
-  }, [sorterData, filteredItems, imagesPreloaded, currentFilterSlugs]);
+  }, [
+    sorterData,
+    filteredItems,
+    imagesPreloaded,
+    currentFilterSlugs,
+    serverHydrated,
+  ]);
 
   const startSorting = useCallback(async () => {
     if (!sorterData || !sorterRef.current || filteredItems.length === 0) return;
@@ -475,9 +547,10 @@ export default function SortPage() {
 
       const { resultId } = await response.json();
 
-      // Clear saved progress for this specific filter combination
+      // Clear saved progress (local + cloud) now the sort is complete.
       const progressKey = generateProgressKey(sorterId, currentFilterSlugs);
       localStorage.removeItem(progressKey);
+      void cloudSync.clear();
 
       // Invalidate sorter data cache to show new ranking in recent rankings
       queryClient.invalidateQueries({
@@ -725,6 +798,18 @@ export default function SortPage() {
                   <span className="text-destructive">
                     · ⚠ couldn&apos;t save progress
                   </span>
+                ) : isLoggedIn ? (
+                  cloudSync.status === "syncing" ? (
+                    <span>· saving…</span>
+                  ) : cloudSync.status === "local" ? (
+                    <span className="text-yellow-ink">
+                      · saved on device · syncing when online
+                    </span>
+                  ) : cloudSync.status === "synced" ? (
+                    <span className="text-cyan-ink">· saved to your account ✓</span>
+                  ) : (
+                    <span className="text-cyan-ink">· progress saved ✓</span>
+                  )
                 ) : (
                   <span className="text-cyan-ink">· progress saved ✓</span>
                 ))}
@@ -763,8 +848,9 @@ export default function SortPage() {
           />
         </div>
 
-        {/* Guest notice — progress is only on this device/browser. Non-blocking. */}
-        {!session && (
+        {/* Guest notice — anon progress is device-only. Now that logged-in
+            users get cloud save, the nudge can honestly promise cross-device. */}
+        {!isLoggedIn && (
           <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[12px] text-muted-foreground">
             <span>
               Playing as guest — progress is saved only in this browser.
@@ -774,7 +860,7 @@ export default function SortPage() {
               onClick={() => signIn()}
               className="text-cyan-ink underline decoration-cyan-ink/40 underline-offset-2 transition-colors hover:text-main-ink"
             >
-              Sign in to keep it safe
+              Sign in to save it to your account
             </button>
           </div>
         )}
