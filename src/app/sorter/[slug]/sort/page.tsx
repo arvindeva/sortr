@@ -925,43 +925,44 @@ export default function SortPage() {
   const progress = Math.floor(totalComparisons);
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8 text-foreground md:px-6 md:py-12">
-      {/* Header */}
-      <div className="mb-7">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <div className="hud mb-2 text-xs text-cyan-ink">▶ Now sorting</div>
-            <h1 className="display text-[clamp(2rem,5.5vw,3.375rem)] font-black text-foreground">
-              {sorterData.sorter.title}
-            </h1>
-            <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[13px] text-muted-foreground">
-              <span>
-                {completedComparisons} comparison
-                {completedComparisons === 1 ? "" : "s"} · {progress}% complete
-              </span>
-              {completedComparisons > 0 &&
-                (saveStatus === "error" ? (
-                  <span className="text-destructive">
-                    · ⚠ couldn&apos;t save progress
+    <div className="container mx-auto max-w-5xl px-0 py-8 text-foreground md:px-6 md:py-12">
+      {/* Header — re-add side padding on mobile (the container is edge-to-edge
+          so the duel cards can bleed; text shouldn't touch the screen edge). */}
+      <div className="mb-7 px-4 md:px-0">
+        <h1 className="display text-[clamp(2rem,5.5vw,3.375rem)] font-black text-foreground">
+          {sorterData.sorter.title}
+        </h1>
+
+        {/* Meta + actions row — sits directly above the progress bar. */}
+        <div className="mt-2.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[13px] text-muted-foreground">
+            <span>
+              {completedComparisons} comparison
+              {completedComparisons === 1 ? "" : "s"}
+            </span>
+            {completedComparisons > 0 &&
+              (saveStatus === "error" ? (
+                <span className="text-destructive">
+                  · ⚠ couldn&apos;t save progress
+                </span>
+              ) : isLoggedIn ? (
+                cloudSync.status === "syncing" ? (
+                  <span>· saving to your account…</span>
+                ) : cloudSync.status === "local" ? (
+                  <span className="text-yellow-ink">
+                    · saved in browser · syncing to your account…
                   </span>
-                ) : isLoggedIn ? (
-                  cloudSync.status === "syncing" ? (
-                    <span>· saving to your account…</span>
-                  ) : cloudSync.status === "local" ? (
-                    <span className="text-yellow-ink">
-                      · saved in browser · syncing to your account…
-                    </span>
-                  ) : cloudSync.status === "synced" ? (
-                    <span className="text-cyan-ink">· saved to your account ✓</span>
-                  ) : (
-                    <span className="text-cyan-ink">· saved in browser ✓</span>
-                  )
+                ) : cloudSync.status === "synced" ? (
+                  <span className="text-cyan-ink">· saved to your account ✓</span>
                 ) : (
                   <span className="text-cyan-ink">· saved in browser ✓</span>
-                ))}
-            </div>
+                )
+              ) : (
+                <span className="text-cyan-ink">· saved in browser ✓</span>
+              ))}
           </div>
-          {/* Undo / Reset */}
+          {/* Undo / Reset / Save — shorter on mobile (h-8/tight padding),
+              normal sm size from the sm breakpoint up. */}
           <div className="flex shrink-0 gap-2">
             <Button
               type="button"
@@ -969,6 +970,7 @@ export default function SortPage() {
               size="sm"
               onClick={handleUndo}
               disabled={!canUndo}
+              className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
             >
               <Undo2 size={14} />
               Undo
@@ -979,6 +981,7 @@ export default function SortPage() {
               size="sm"
               onClick={handleReset}
               disabled={completedComparisons === 0}
+              className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
             >
               <RotateCcw size={14} />
               Reset
@@ -989,6 +992,7 @@ export default function SortPage() {
               size="sm"
               onClick={handleSave}
               disabled={completedComparisons === 0}
+              className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
             >
               <Save size={14} />
               Save
@@ -996,12 +1000,17 @@ export default function SortPage() {
           </div>
         </div>
 
-        {/* Progress track — solid magenta fill. */}
-        <div className="mt-6 h-2.5 w-full overflow-hidden rounded-full border border-border bg-foreground/[0.06]">
+        {/* Progress track — magenta fill with the % centered inside the bar
+            (Touhou-style). The label sits on top of both the fill and the track
+            so it stays readable at any progress. */}
+        <div className="relative mt-4 h-7 w-full overflow-hidden rounded-full border border-border bg-foreground/[0.06]">
           <div
             className="bg-main h-full rounded-full transition-[width] duration-300 ease-out"
             style={{ width: `${progress}%` }}
           />
+          <span className="absolute inset-0 flex items-center justify-center font-mono text-xs font-bold tracking-wide text-white">
+            {progress}%
+          </span>
         </div>
 
         {/* Guest notice — anon progress is device-only. Now that logged-in
@@ -1023,7 +1032,11 @@ export default function SortPage() {
       </div>
 
       {/* Comparison Cards */}
-      <div className="relative mt-10 grid grid-cols-[1fr_auto_1fr] items-stretch gap-1.5 md:gap-4">
+      {/* The duel is edge-to-edge on mobile (the container is px-0) for the
+          largest possible cards; contained + padded on desktop. Two columns
+          with a hair of gap; the VS floats over the seam (absolute), straddling
+          both cards instead of taking a column that would push them apart. */}
+      <div className="relative mt-4 grid grid-cols-2 items-stretch gap-0.5 px-0 md:gap-4 md:px-0">
         {/* Item A */}
         <ComparisonCard
           side="left"
@@ -1034,17 +1047,6 @@ export default function SortPage() {
           onRemove={() => handleRemoveItem(currentComparison.itemA.id, currentComparison.itemA.title)}
         />
 
-        {/* VS marker between contenders — static (no pulse) so it doesn't
-            distract from the actual duel. Smaller on mobile for more card width. */}
-        <div className="flex items-center justify-center">
-          <VsMarker size={40} pulse={false} className="sm:hidden" />
-          <VsMarker
-            size={60}
-            pulse={false}
-            className="mx-2 hidden sm:flex"
-          />
-        </div>
-
         {/* Item B */}
         <ComparisonCard
           side="right"
@@ -1054,13 +1056,17 @@ export default function SortPage() {
           canRemove={filteredItems.length > 1}
           onRemove={() => handleRemoveItem(currentComparison.itemB.id, currentComparison.itemB.title)}
         />
+
+        {/* VS marker — absolutely centered over the seam, on top of both cards.
+            Static (no pulse) so it doesn't distract from the duel. */}
+        <div className="pointer-events-none absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
+          <VsMarker size={30} pulse={false} className="sm:hidden" />
+          <VsMarker size={60} pulse={false} className="hidden sm:flex" />
+        </div>
       </div>
 
-      {/* Keyboard hint + autosave note */}
-      <div className="mt-8 flex flex-col items-center gap-3 text-center">
-        <p className="font-mono text-xs text-muted-foreground">
-          tap a side to pick
-        </p>
+      {/* Autosave note */}
+      <div className="mt-8 flex flex-col items-center gap-3 px-4 text-center md:px-0">
         <p className="font-mono text-xs text-muted-foreground">
           {isLoggedIn
             ? "✓ progress saved to your account — take a break and come back anytime, on any device."

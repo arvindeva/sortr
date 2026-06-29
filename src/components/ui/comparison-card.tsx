@@ -101,7 +101,7 @@ function ComparisonCard({
           }}
           className="mt-2.5 self-center font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          ✕ remove from sorter
+          ✕ remove
         </button>
       )}
     </div>
