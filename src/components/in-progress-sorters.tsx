@@ -41,7 +41,12 @@ export function InProgressSorters() {
       if (!res.ok) return { inProgress: [] };
       return res.json();
     },
-    staleTime: 30_000,
+    // Progress is cheap, personal, and must reflect reality the instant the
+    // user starts/finishes/resets a sort (from any tab/device) — so never serve
+    // it stale. Always refetch on view.
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   const items = data?.inProgress ?? [];

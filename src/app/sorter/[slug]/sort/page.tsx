@@ -467,6 +467,23 @@ export default function SortPage() {
       // Set up save callback
       sorterRef.current.setSaveCallback(() => {
         if (!sorterRef.current) return;
+
+        // Don't persist an empty sort (0 comparisons made). A reset-and-leave
+        // would otherwise create a phantom "in progress" entry that sits in the
+        // profile forever. Nothing to resume from, so clear any existing entry
+        // (local + cloud) instead of saving an empty one, and refresh the
+        // in-progress caches so it doesn't linger there.
+        if (sorterRef.current.getComparisonCount() === 0) {
+          const key = generateProgressKey(sorterId, currentFilterSlugs);
+          localStorage.removeItem(key);
+          void cloudSync.clear();
+          queryClient.invalidateQueries({ queryKey: ["in-progress-sorts"] });
+          queryClient.invalidateQueries({
+            queryKey: ["sort-progress", sorterId],
+          });
+          return;
+        }
+
         try {
           // Use optimized serialization
           const serializedData = serializeChoices(
@@ -629,6 +646,16 @@ export default function SortPage() {
       });
       queryClient.invalidateQueries({
         queryKey: ["browse"],
+      });
+
+      // The just-completed sort is no longer "in progress" — refresh the
+      // profile's in-progress list and this sorter's continue-banner check so
+      // neither lingers as stale cache.
+      queryClient.invalidateQueries({
+        queryKey: ["in-progress-sorts"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["sort-progress", sorterId],
       });
 
       // Invalidate user profile cache to show new ranking in user's rankings section
@@ -919,18 +946,18 @@ export default function SortPage() {
                   </span>
                 ) : isLoggedIn ? (
                   cloudSync.status === "syncing" ? (
-                    <span>· saving…</span>
+                    <span>· saving to your account…</span>
                   ) : cloudSync.status === "local" ? (
                     <span className="text-yellow-ink">
-                      · saved on device · syncing when online
+                      · saved in browser · syncing to your account…
                     </span>
                   ) : cloudSync.status === "synced" ? (
                     <span className="text-cyan-ink">· saved to your account ✓</span>
                   ) : (
-                    <span className="text-cyan-ink">· progress saved ✓</span>
+                    <span className="text-cyan-ink">· saved in browser ✓</span>
                   )
                 ) : (
-                  <span className="text-cyan-ink">· progress saved ✓</span>
+                  <span className="text-cyan-ink">· saved in browser ✓</span>
                 ))}
             </div>
           </div>
@@ -1035,7 +1062,9 @@ export default function SortPage() {
           tap a side to pick
         </p>
         <p className="font-mono text-xs text-muted-foreground">
-          ✓ progress saved in your browser — take a break and come back anytime.
+          {isLoggedIn
+            ? "✓ progress saved to your account — take a break and come back anytime, on any device."
+            : "✓ progress saved in this browser — take a break and come back anytime."}
         </p>
       </div>
 

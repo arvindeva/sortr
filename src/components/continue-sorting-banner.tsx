@@ -31,7 +31,10 @@ export function ContinueSortingBanner({
       if (!res.ok) return { progress: null };
       return res.json();
     },
-    staleTime: 30_000,
+    // Always fresh — the banner must reflect whether progress exists right now.
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   const progress = data?.progress;
