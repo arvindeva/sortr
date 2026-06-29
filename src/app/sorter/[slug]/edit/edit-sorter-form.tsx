@@ -713,8 +713,10 @@ export default function EditSorterForm({
 
           {/* Tags Section — only shown for sorters that already have tags.
               The filter-tags feature is deactivated for new sorters, but
-              existing ones keep manageable tags so owners aren't locked out. */}
-          {tags.length > 0 && (
+              existing ones keep manageable tags so owners aren't locked out.
+              Sorters without tags get a short note instead (users keep asking
+              where the filter option went after seeing it on older sorters). */}
+          {tags.length > 0 ? (
             <section className="rounded-2xl border border-border bg-card p-6 md:p-7">
               <div className="hud mb-1.5 text-xs text-muted-foreground">
                 Tags
@@ -724,6 +726,17 @@ export default function EditSorterForm({
                 tags.
               </p>
               <TagManagement tags={managedTags} onTagsChange={setManagedTags} />
+            </section>
+          ) : (
+            <section className="rounded-2xl border border-border bg-card p-6 md:p-7">
+              <div className="hud mb-1.5 text-xs text-muted-foreground">
+                Filter tags
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Filter tags aren&apos;t available for new sorters. Some older
+                sorters still have them, but the feature is currently disabled —
+                all items in your sorter are ranked together.
+              </p>
             </section>
           )}
 

@@ -759,6 +759,12 @@ export default function CreateSorterFormTags() {
                 {itemFields.length >= 2 ? "· ready" : "· min 2"}
               </span>
             </div>
+            {/* Filter-tags are deprecated; everything is ranked together. A
+                short note here since some users go looking for the old option. */}
+            <p className="mb-4 text-xs text-muted-foreground">
+              All items will be ranked together — filter tags aren&apos;t
+              available for new sorters.
+            </p>
             <div className="mb-4">
               {/* Buttons */}
               <div className="flex flex-wrap items-center gap-2">
