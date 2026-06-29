@@ -86,6 +86,26 @@ export default function CoverImageUpload({
     fileInputRef.current?.click();
   };
 
+  // Drag-and-drop handlers. The dropzone already had the `isDragging` state and
+  // styling wired, but the actual drag events were never connected.
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault(); // required to allow a drop
+    if (!disabled) setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragging(false);
+    if (disabled) return;
+    const file = event.dataTransfer.files?.[0];
+    if (file) handleFileSelect(file);
+  };
+
   return (
     <div className="space-y-2.5">
       <label className="block text-[13px] font-semibold text-foreground">
@@ -106,18 +126,23 @@ export default function CoverImageUpload({
       {/* Upload area */}
       {!selectedFile && !previewUrl ? (
         <div
-          className={`flex h-60 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-foreground/20 bg-muted text-center transition-colors ${
-            isDragging ? "bg-muted/70" : ""
+          className={`flex h-60 flex-col items-center justify-center gap-3 rounded-xl border border-dashed text-center transition-colors ${
+            isDragging
+              ? "border-main bg-main/[0.06]"
+              : "border-foreground/20 bg-muted"
           } ${
             disabled
               ? "cursor-not-allowed opacity-50"
               : "cursor-pointer hover:bg-muted/70"
           }`}
           onClick={!disabled ? handleSelectClick : undefined}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
           <ImageIcon size={40} className="text-muted-foreground" />
           <div className="font-heading text-lg font-semibold text-foreground">
-            Click to upload cover image
+            {isDragging ? "Drop to upload" : "Drag & drop or click to upload"}
           </div>
           <div className="font-mono text-xs text-muted-foreground">
             JPG, PNG or WebP up to 10MB
