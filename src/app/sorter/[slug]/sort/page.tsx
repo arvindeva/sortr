@@ -38,6 +38,7 @@ interface SorterData {
     title: string;
     description: string;
     slug: string;
+    version?: number; // Version this sort was loaded against
     useGroups?: boolean; // Optional for backward compatibility
   };
   items: (SortItem & { tagSlugs?: string[] })[];
@@ -113,6 +114,12 @@ export default function SortPage() {
   const [imagesPreloaded, setImagesPreloaded] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  // The sorter's items changed since this saved progress — ask the user whether
+  // to continue (with surviving items) or start fresh. null = not yet asked.
+  const [showVersionDialog, setShowVersionDialog] = useState(false);
+  const [versionChoice, setVersionChoice] = useState<
+    "continue" | "fresh" | null
+  >(null);
   const [itemToRemove, setItemToRemove] = useState<{ id: string; title: string } | null>(null);
   const sorterRef = useRef<InteractiveMergeSort | null>(null);
   const resolveComparisonRef = useRef<((winnerId: string) => void) | null>(
@@ -312,16 +319,12 @@ export default function SortPage() {
         const local = localStorage.getItem(key);
         const server = await fetchServerProgress(sorterId);
 
-        // The sorter was edited after this progress was saved — the saved
-        // choices reference items that may no longer exist. Resuming would be
-        // incoherent, so discard the stale progress and start fresh.
-        if (server?.versionMismatch) {
-          localStorage.removeItem(key);
-          void fetch(`/api/sort-progress/${sorterId}`, { method: "DELETE" });
-          toast("This sorter was updated — starting a fresh ranking.");
-        } else if (!local && server?.state) {
-          // Cross-device / cache-cleared: pull the server copy into localStorage
-          // so the existing resume logic picks it up transparently.
+        // Cross-device / cache-cleared: pull the server copy into localStorage
+        // so the existing resume logic picks it up. We do this even on a version
+        // mismatch — the init effect's item-set check then surfaces the
+        // "sorter updated: continue or start fresh" dialog (the user decides; we
+        // never silently discard their work).
+        if (!local && server?.state) {
           localStorage.setItem(key, server.state);
         }
       } catch {
@@ -378,12 +381,36 @@ export default function SortPage() {
                 sortedNo,
                 staleItems,
               } = deserializeChoices(parsed, filteredItems);
-              if (staleItems) {
-                // The sorter's items changed since this was saved — resuming
-                // would be incoherent. Discard and start fresh.
+
+              // The sorter's items changed since this was saved. Ask the user
+              // (don't decide for them — they may be happy to finish what they
+              // started). Pause init until they choose.
+              if (staleItems && versionChoice === null) {
+                setShowVersionDialog(true);
+                return; // bail out of init; re-runs after the choice
+              }
+
+              if (staleItems && versionChoice === "fresh") {
+                // Start over on the current sorter.
                 localStorage.removeItem(progressKey);
                 savedComparisonCount = 0;
+              } else if (staleItems && versionChoice === "continue") {
+                // Continue with surviving items. deserializeChoices already
+                // drops removed items from the shuffle and choices, so the
+                // restored state is consistent with the current item set.
+                // Restore everything (same as a normal resume) so progress
+                // recalculates correctly — it self-corrects as the replay runs,
+                // like a normal resume does.
+                savedChoices = userChoices;
+                savedStateHistory = stateHistory;
+                savedTotalBattles = totalBattles;
+                savedSortedNo = sortedNo;
+                savedComparisonCount = userChoices.size;
+                if (shuffledOrder.length > 0) {
+                  savedShuffledOrder = shuffledOrder;
+                }
               } else {
+                // No item change — resume exactly as saved.
                 savedChoices = userChoices;
                 savedStateHistory = stateHistory;
                 savedTotalBattles = totalBattles;
@@ -497,6 +524,7 @@ export default function SortPage() {
     imagesPreloaded,
     currentFilterSlugs,
     serverHydrated,
+    versionChoice,
   ]);
 
   const startSorting = useCallback(async () => {
@@ -564,6 +592,11 @@ export default function SortPage() {
           rankings: result,
           selectedGroups: selectedGroupIds, // Legacy support
           selectedTagSlugs: selectedTagSlugs, // New tag support
+          // Pin to the version this sort was STARTED against, not the live one.
+          // If the creator edited mid-sort, the user ranked the old item set —
+          // the result must reflect that (and so be excluded from the current
+          // community ranking) rather than masquerade as the new version.
+          version: sorterData.sorter.version,
         }),
       });
 
@@ -684,6 +717,22 @@ export default function SortPage() {
     }
   }, [isLoggedIn, cloudSync]);
 
+  // Version-changed dialog choices. Setting versionChoice re-runs the init
+  // effect, which then resumes-with-survivors ("continue") or starts fresh.
+  const handleVersionContinue = useCallback(() => {
+    setVersionChoice("continue");
+    setShowVersionDialog(false);
+  }, []);
+
+  const handleVersionFresh = useCallback(() => {
+    setVersionChoice("fresh");
+    setShowVersionDialog(false);
+    // Drop the server copy too — they're starting over on the new version.
+    if (sorterId) {
+      void fetch(`/api/sort-progress/${sorterId}`, { method: "DELETE" });
+    }
+  }, [sorterId]);
+
   const confirmReset = useCallback(() => {
     if (sorterRef.current) {
       sorterRef.current.reset();
@@ -762,6 +811,32 @@ export default function SortPage() {
         : 0;
 
     return (
+      <>
+      {/* Version-changed dialog must render here too — this loading view is
+          shown while init is paused waiting for the user's choice. */}
+      <Dialog open={showVersionDialog}>
+        <DialogContent preventClose>
+          <DialogHeader>
+            <DialogTitle>This sorter was updated</DialogTitle>
+            <DialogDescription>
+              The creator changed the items since you started ranking. You can
+              finish what you started, or rank the updated version.
+              <br />
+              <br />
+              If you continue, any items the creator removed will drop out, and
+              your result won&apos;t count toward the community ranking.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button variant="neutral" onClick={handleVersionFresh}>
+              Start fresh
+            </Button>
+            <Button variant="default" onClick={handleVersionContinue}>
+              Continue my ranking
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="container mx-auto max-w-6xl px-2 py-8 md:px-4">
         <div className="space-y-6 text-center">
           <div>
@@ -815,6 +890,7 @@ export default function SortPage() {
           </Box>
         </div>
       </div>
+      </>
     );
   }
 
@@ -979,6 +1055,31 @@ export default function SortPage() {
             </Button>
             <Button variant="default" onClick={confirmReset}>
               Reset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sorter-updated dialog — items changed since this saved progress. */}
+      <Dialog open={showVersionDialog}>
+        <DialogContent preventClose>
+          <DialogHeader>
+            <DialogTitle>This sorter was updated</DialogTitle>
+            <DialogDescription>
+              The creator changed the items since you started ranking. You can
+              finish what you started, or rank the updated version.
+              <br />
+              <br />
+              If you continue, any items the creator removed will drop out, and
+              your result won&apos;t count toward the community ranking.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button variant="neutral" onClick={handleVersionFresh}>
+              Start fresh
+            </Button>
+            <Button variant="default" onClick={handleVersionContinue}>
+              Continue my ranking
             </Button>
           </DialogFooter>
         </DialogContent>

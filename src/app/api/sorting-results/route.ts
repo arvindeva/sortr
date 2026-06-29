@@ -7,7 +7,7 @@ import { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-  const { sorterId, rankings, selectedGroups, selectedTagSlugs } =
+  const { sorterId, rankings, selectedGroups, selectedTagSlugs, version: clientVersion } =
     await request.json();
 
     if (!sorterId || !rankings) {
@@ -41,8 +41,16 @@ export async function POST(request: NextRequest) {
     title: sorterTitle,
     slug: sorterSlug,
     coverImageUrl: sorterCoverImageUrl,
-    version: sorterVersion,
+    version: currentVersion,
     } = sorterData[0];
+
+    // Pin to the version the client actually ranked (sent from the sort page).
+    // If the creator edited the sorter mid-sort, the user ranked the OLD item
+    // set — the result must reflect that version, so community ranking (which
+    // filters to the current version) correctly excludes it. Fall back to the
+    // current version for older clients that don't send one.
+    const sorterVersion =
+      typeof clientVersion === "number" ? clientVersion : currentVersion;
 
     // Save the sorting result with VERSION
     const result = await db
@@ -55,7 +63,7 @@ export async function POST(request: NextRequest) {
           selectedTagSlugs && selectedTagSlugs.length > 0
             ? selectedTagSlugs
             : null,
-        version: sorterVersion, // Pin to specific version
+        version: sorterVersion, // Pin to the version the user actually ranked
         // Sorter-level snapshots (for quick access)
         sorterTitle,
         sorterCoverImageUrl,
