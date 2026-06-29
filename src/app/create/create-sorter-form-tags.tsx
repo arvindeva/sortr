@@ -432,47 +432,112 @@ export default function CreateSorterFormTags() {
 
       const CONCURRENCY = 5;
       const queue = tasks.map((t, index) => ({ ...t, index }));
-      async function put(url: string, file: File) {
-        const res = await fetch(url, {
-          method: "PUT",
-          body: file,
-          headers: { "Content-Type": "image/jpeg" },
-          signal: abortSignal,
-        });
-        if (!res.ok) throw new Error(`Upload failed ${res.status}`);
-      }
-      let cursor = 0;
-      async function worker() {
-        while (cursor < queue.length) {
-          const my = cursor++;
-          const t = queue[my];
-          try {
-            update(t.index, "uploading");
-            await put(presigned[t.key], t.file);
-            completed++;
-            update(t.index, "complete");
-          } catch (e) {
-            update(t.index, "failed");
-            throw e;
-          }
-        }
-      }
-      const workers = Array(Math.min(CONCURRENCY, queue.length))
-        .fill(0)
-        .map(() => worker());
-      try {
-        await Promise.all(workers);
-      } catch (e: any) {
-        // Swallow user-initiated cancel aborts
-        if (
+
+      // Single PUT with a per-attempt timeout, combined with the user-cancel
+      // abort signal. A stuck upload (no response) must not hang forever — it
+      // was a top cause of orphaned drafts.
+      const PUT_TIMEOUT_MS = 60_000;
+      function isCancel(e: any) {
+        return (
           e === "USER_CANCEL" ||
           e?.name === "AbortError" ||
           e?.message?.includes("aborted") ||
           e?.message?.includes("signal is aborted")
-        ) {
-          return; // gracefully exit upload flow
+        );
+      }
+      async function putOnce(url: string, file: File) {
+        const timeout = new AbortController();
+        const onAbort = () => timeout.abort();
+        abortSignal.addEventListener("abort", onAbort);
+        const timer = setTimeout(() => timeout.abort(), PUT_TIMEOUT_MS);
+        try {
+          const res = await fetch(url, {
+            method: "PUT",
+            body: file,
+            headers: { "Content-Type": "image/jpeg" },
+            signal: timeout.signal,
+          });
+          if (!res.ok) throw new Error(`Upload failed ${res.status}`);
+        } finally {
+          clearTimeout(timer);
+          abortSignal.removeEventListener("abort", onAbort);
         }
-        throw e;
+      }
+      // Retry-with-backoff per file. A transient blip on one of N files should
+      // retry, not kill the whole creation (the previous bare fetch had no
+      // retry, and Promise.all fail-fast aborted everything on the first error
+      // — orphaning the draft and forcing users to retry the entire sorter).
+      const MAX_ATTEMPTS = 4;
+      async function put(url: string, file: File) {
+        let lastErr: any;
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+          if (abortSignal.aborted) throw new Error("aborted");
+          try {
+            await putOnce(url, file);
+            return;
+          } catch (e) {
+            if (isCancel(e)) throw e; // user cancelled — stop immediately
+            lastErr = e;
+            if (attempt < MAX_ATTEMPTS) {
+              const delay = Math.min(500 * 2 ** (attempt - 1), 8000);
+              const jittered = delay * (0.75 + Math.random() * 0.5);
+              await new Promise((r) => setTimeout(r, jittered));
+            }
+          }
+        }
+        throw lastErr;
+      }
+
+      // Upload all files; DON'T fail-fast. Collect per-file failures so one bad
+      // file can't abort the rest — then retry the failures, and only give up
+      // on files that genuinely won't upload after retries.
+      let cancelled = false;
+      const runUploads = async (
+        items: { key: string; file: File; index: number }[],
+      ): Promise<typeof items> => {
+        const failures: typeof items = [];
+        let cursor = 0;
+        async function worker() {
+          while (cursor < items.length) {
+            if (cancelled) return;
+            const t = items[cursor++];
+            try {
+              update(t.index, "uploading");
+              await put(presigned[t.key], t.file);
+              completed++;
+              update(t.index, "complete");
+            } catch (e) {
+              if (isCancel(e)) {
+                cancelled = true;
+                return;
+              }
+              update(t.index, "failed");
+              failures.push(t); // collect, don't throw
+            }
+          }
+        }
+        await Promise.all(
+          Array(Math.min(CONCURRENCY, items.length))
+            .fill(0)
+            .map(() => worker()),
+        );
+        return failures;
+      };
+
+      // First pass over everything, then one more pass over whatever failed.
+      let failed = await runUploads(queue);
+      if (cancelled) return; // user cancelled — leave gracefully
+      if (failed.length > 0) {
+        failed = await runUploads(failed);
+        if (cancelled) return;
+      }
+      // Anything still failing after retries is a genuine upload failure.
+      // finalize will HEAD-check R2 anyway, but surface a clear error now so
+      // the draft isn't silently abandoned.
+      if (failed.length > 0) {
+        throw new Error(
+          `${failed.length} image${failed.length === 1 ? "" : "s"} failed to upload after retries. Please check your connection and try again.`,
+        );
       }
 
       // 4) Finalize
@@ -486,16 +551,41 @@ export default function CreateSorterFormTags() {
           },
       );
 
-      const finRes = await fetch(`/api/sorters/${sorterId}/finalize`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uploadBatchId }),
-        signal: AbortSignal.timeout(300000),
-      });
+      // Finalize, but self-heal a 409 (server's HEAD check found keys missing)
+      // by re-uploading exactly those keys to the SAME draft and retrying —
+      // instead of throwing "please retry", which made users restart the whole
+      // sorter and orphan a fresh draft. Covers R2 read-after-write lag and any
+      // straggler that slipped through the upload retries.
+      const callFinalize = () =>
+        fetch(`/api/sorters/${sorterId}/finalize`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uploadBatchId }),
+          signal: AbortSignal.timeout(300000),
+        });
+
+      let finRes = await callFinalize();
+      const FINALIZE_RETRIES = 2;
+      for (
+        let attempt = 0;
+        finRes.status === 409 && attempt < FINALIZE_RETRIES;
+        attempt++
+      ) {
+        const p = await finRes.json().catch(() => ({ missing: [] }));
+        const missingKeys: string[] = p.missing || [];
+        // Re-upload just the missing keys (match them back to our tasks).
+        const toRetry = queue.filter((t) => missingKeys.includes(t.key));
+        if (toRetry.length === 0) break; // nothing we can re-send; give up to error below
+        const stillFailed = await runUploads(toRetry);
+        if (cancelled) return;
+        if (stillFailed.length > 0) break; // re-upload genuinely failed
+        finRes = await callFinalize();
+      }
+
       if (finRes.status === 409) {
-        const p = await finRes.json();
+        const p = await finRes.json().catch(() => ({ missing: [] }));
         throw new Error(
-          `Missing ${p.missing?.length || 0} files. Please retry.`,
+          `${p.missing?.length || 0} image${(p.missing?.length || 0) === 1 ? "" : "s"} didn't upload. Please check your connection and try again.`,
         );
       }
       if (!finRes.ok) {
