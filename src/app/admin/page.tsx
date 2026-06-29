@@ -87,7 +87,7 @@ export default async function AdminPage() {
       </div>
 
       {/* Top sorters + Feedback — auto-fit (side by side when there's room). */}
-      <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(420px,1fr))] items-start gap-5">
+      <div className="mt-5 grid grid-cols-1 items-start gap-5 sm:grid-cols-[repeat(auto-fit,minmax(420px,1fr))]">
         <TopSortersCard topSorters={stats.topSorters} />
 
         {/* Feedback */}

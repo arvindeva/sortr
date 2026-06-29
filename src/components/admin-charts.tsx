@@ -203,7 +203,7 @@ export function AdminCharts({ stats }: { stats: AdminStats }) {
     // Auto-fit: as many equal-width columns as the viewport allows (each at
     // least ~340px so charts stay readable), growing to fill the row. Big
     // screens show 3–4 across, laptops 2, mobile 1.
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-5">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-[repeat(auto-fit,minmax(400px,1fr))]">
       {/* Cumulative over time: Users → Sorters → Rankings */}
       <CumulativeAreaChart
         title="Users over time (cumulative)"
