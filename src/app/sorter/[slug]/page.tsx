@@ -6,6 +6,7 @@ import { SorterOwnerControls } from "@/components/sorter-owner-controls";
 import { getSorterDataCached } from "@/lib/sorter-data";
 import { hasCommunityRanking } from "@/lib/community-ranking-data";
 import { TrendingSortersSection } from "@/components/trending-sorters-section";
+import { ContinueSortingBanner } from "@/components/continue-sorting-banner";
 
 interface SorterPageProps {
   params: Promise<{
@@ -194,6 +195,10 @@ export default async function SorterPage({ params }: SorterPageProps) {
             sorterTitle={data.sorter.title}
           />
         </SorterHeaderServer>
+
+        {/* "Continue where you left off" — shows only if the signed-in user has
+            an in-progress sort for this sorter. */}
+        <ContinueSortingBanner sorterId={data.sorter.id} slug={data.sorter.slug} />
 
         {/* Client-side data fetching for items, recent results, and the
             community ranking (fetched client-side so its heavy aggregate never

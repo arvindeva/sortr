@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { sortProgress, sorters } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
@@ -8,6 +8,48 @@ import { NextRequest } from "next/server";
 // Cap on the stored blob — a sane upper bound; even a huge sort compresses to
 // well under this. Rejects anything absurd (abuse / corruption).
 const MAX_STATE_LEN = 2_000_000; // ~2MB of compressed text
+
+// GET /api/sort-progress — list the current user's in-progress sorts (for the
+// profile "In progress" section). Private to the user. Excludes the heavy
+// state blob; just enough to render a card + resume link.
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  if (!userId) return Response.json({ inProgress: [] });
+
+  const rows = await db
+    .select({
+      sorterId: sortProgress.sorterId,
+      itemCount: sortProgress.itemCount,
+      updatedAt: sortProgress.updatedAt,
+      version: sortProgress.version,
+      title: sorters.title,
+      slug: sorters.slug,
+      coverImageUrl: sorters.coverImageUrl,
+      category: sorters.category,
+      completionCount: sorters.completionCount,
+      deleted: sorters.deleted,
+      sorterVersion: sorters.version,
+    })
+    .from(sortProgress)
+    .innerJoin(sorters, eq(sortProgress.sorterId, sorters.id))
+    .where(and(eq(sortProgress.userId, userId), eq(sorters.deleted, false)))
+    .orderBy(desc(sortProgress.updatedAt));
+
+  return Response.json({
+    inProgress: rows.map((r) => ({
+      sorterId: r.sorterId,
+      title: r.title,
+      slug: r.slug,
+      coverImageUrl: r.coverImageUrl ?? undefined,
+      category: r.category ?? undefined,
+      completionCount: r.completionCount,
+      itemCount: r.itemCount,
+      updatedAt: r.updatedAt.toISOString(),
+      versionMismatch: r.sorterVersion !== r.version,
+    })),
+  });
+}
 
 // POST /api/sort-progress — upsert the logged-in user's in-progress sort for a
 // sorter. One row per (user, sorter); newest write wins. Anonymous users get a

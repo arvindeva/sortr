@@ -19,7 +19,10 @@ export function LoginButton({ className }: LoginButtonProps) {
 
   if (session) {
     return (
-      <Button onClick={() => signOut()} className={className}>
+      <Button
+        onClick={() => signOut({ callbackUrl: "/" })}
+        className={className}
+      >
         Logout
       </Button>
     );

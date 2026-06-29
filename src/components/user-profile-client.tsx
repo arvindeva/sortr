@@ -3,6 +3,7 @@
 import { useUserProfile } from "@/hooks/api";
 import { UserProfileContentSkeleton } from "@/components/skeletons/user-profile-content-skeleton";
 import { SorterCard } from "@/components/ui/sorter-card";
+import { InProgressSorters } from "@/components/in-progress-sorters";
 import { SorterGrid } from "@/components/ui/sorter-grid";
 import { EmptyState } from "@/components/ui/empty-state";
 import Link from "next/link";
@@ -74,6 +75,9 @@ export function UserProfileClient({
 
   return (
     <>
+      {/* In-progress sorts — private, own profile only */}
+      {isOwnProfile && <InProgressSorters />}
+
       {/* Sorters Section */}
       <section className="mb-10">
         <SectionTitle count={sorters.length}>Sorters</SectionTitle>

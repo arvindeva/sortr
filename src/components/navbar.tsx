@@ -228,7 +228,10 @@ export function Navbar() {
             ) : (
               <span className="font-medium text-muted-foreground">Profile</span>
             )}
-            <Button variant="neutral" onClick={() => signOut()}>
+            <Button
+              variant="neutral"
+              onClick={() => signOut({ callbackUrl: "/" })}
+            >
               Logout
             </Button>
             <ModeToggle />
@@ -345,7 +348,7 @@ export function Navbar() {
                   muted
                   onSelect={() => {
                     setMobileMenuOpen(false);
-                    signOut();
+                    signOut({ callbackUrl: "/" });
                   }}
                 >
                   Log out

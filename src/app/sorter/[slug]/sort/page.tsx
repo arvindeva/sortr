@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Undo2, RotateCcw } from "lucide-react";
+import { Undo2, RotateCcw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { SortItem } from "@/lib/sorting";
 import { InteractiveMergeSort, SortState } from "@/lib/interactive-merge-sort";
@@ -279,6 +279,17 @@ export default function SortPage() {
     }, [sorterId, currentFilterSlugs]),
     getItemCount: useCallback(() => filteredItems.length, [filteredItems]),
   });
+
+  // Anon → login migration: when a guest signs in mid-sort (via the nudge),
+  // immediately push their localStorage progress to the server so the work that
+  // motivated the sign-up isn't left only on-device.
+  const migratedRef = useRef(false);
+  useEffect(() => {
+    if (isLoggedIn && sorterId && !migratedRef.current && sorterRef.current) {
+      migratedRef.current = true;
+      void cloudSync.save({ force: true });
+    }
+  }, [isLoggedIn, sorterId, cloudSync]);
 
   // Server-hydration: for a logged-in user, before initializing the sorter,
   // check the server for saved progress. If this device's localStorage is empty
@@ -641,6 +652,19 @@ export default function SortPage() {
     setShowResetDialog(true);
   }, []);
 
+  // Manual save — reassurance (autosave already runs). Logged-in: force a cloud
+  // checkpoint. Anon: a soft, non-forcing nudge to sign in (don't redirect).
+  const handleSave = useCallback(async () => {
+    if (isLoggedIn) {
+      await cloudSync.save({ force: true });
+      toast.success("Progress saved to your account.");
+    } else {
+      toast("Sign in to save your progress to your account", {
+        action: { label: "Sign in", onClick: () => signIn() },
+      });
+    }
+  }, [isLoggedIn, cloudSync]);
+
   const confirmReset = useCallback(() => {
     if (sorterRef.current) {
       sorterRef.current.reset();
@@ -836,6 +860,16 @@ export default function SortPage() {
             >
               <RotateCcw size={14} />
               Reset
+            </Button>
+            <Button
+              type="button"
+              variant="neutral"
+              size="sm"
+              onClick={handleSave}
+              disabled={completedComparisons === 0}
+            >
+              <Save size={14} />
+              Save
             </Button>
           </div>
         </div>
