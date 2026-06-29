@@ -33,6 +33,7 @@ export interface AdminStats {
     rankings: number;
   };
   last7Days: {
+    users: number;
     sorters: number;
     rankings: number;
   };
@@ -40,10 +41,12 @@ export interface AdminStats {
   sortersOverTime: { week: string; created: number; cumulative: number }[];
   // Per-week ranking creation (oldest → newest), with a running cumulative total.
   rankingsOverTime: { week: string; created: number; cumulative: number }[];
-  // Activity bar charts (new per bucket) for rankings and sorters, across
-  // selectable timeframes (24h hourly, week daily, month daily, 3mo weekly).
+  // Activity bar charts (new per bucket) across selectable timeframes (24h
+  // hourly, week daily, month daily, 3mo weekly). Users are bucketed by
+  // emailVerified (the real signup timestamp; every user has one).
   rankingsActivity: ActivityByTimeframe;
   sortersActivity: ActivityByTimeframe;
+  usersActivity: ActivityByTimeframe;
   // Anonymous vs. logged-in rankings.
   rankingsByAuth: { anonymous: number; loggedIn: number };
   // Top sorters by plays, per timeframe. "all" uses the cumulative
@@ -146,6 +149,34 @@ async function sortersBuckets(
     .orderBy(trunc);
 }
 
+// Users activity: count users by emailVerified (the real signup timestamp —
+// every user has one; user.createdAt is backfilled and useless for history).
+async function usersBuckets(
+  unit: "hour" | "day" | "week",
+  since: Date,
+): Promise<ActivityBucket[]> {
+  const trunc = sql`date_trunc(${truncLiteral(unit)}, ${user.emailVerified})`;
+  return db
+    .select({
+      bucket: sql<string>`to_char(${trunc}, 'YYYY-MM-DD"T"HH24:00')`,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(user)
+    .where(and(isNotNull(user.emailVerified), gte(user.emailVerified, since)))
+    .groupBy(trunc)
+    .orderBy(trunc);
+}
+
+async function usersActivityAll(): Promise<ActivityByTimeframe> {
+  const [day, week, month, quarter] = await Promise.all([
+    usersBuckets("hour", daysAgo(1)),
+    usersBuckets("day", daysAgo(7)),
+    usersBuckets("day", daysAgo(30)),
+    usersBuckets("week", daysAgo(84)),
+  ]);
+  return { day, week, month, quarter };
+}
+
 async function rankingsActivityAll(): Promise<ActivityByTimeframe> {
   const [day, week, month, quarter] = await Promise.all([
     rankingsBuckets("hour", daysAgo(1)),
@@ -175,12 +206,14 @@ async function computeAdminStats(): Promise<AdminStats> {
     usersCount,
     sortersCount,
     rankingsCount,
+    users7d,
     sorters7d,
     rankings7d,
     sortersByWeek,
     rankingsByWeek,
     rankingsActivity,
     sortersActivity,
+    usersActivity,
     anonRankings,
     authRankings,
     topAll,
@@ -194,6 +227,16 @@ async function computeAdminStats(): Promise<AdminStats> {
       .from(sorters)
       .where(eq(sorters.deleted, false)),
     db.select({ c: sql<number>`count(*)::int` }).from(sortingResults),
+    // New users in the last 7 days (by emailVerified — the signup timestamp).
+    db
+      .select({ c: sql<number>`count(*)::int` })
+      .from(user)
+      .where(
+        and(
+          isNotNull(user.emailVerified),
+          gte(user.emailVerified, sevenDaysAgo),
+        ),
+      ),
     db
       .select({ c: sql<number>`count(*)::int` })
       .from(sorters)
@@ -226,6 +269,7 @@ async function computeAdminStats(): Promise<AdminStats> {
     // Activity bar charts (rankings + sorters) across all timeframes.
     rankingsActivityAll(),
     sortersActivityAll(),
+    usersActivityAll(),
     db
       .select({ c: sql<number>`count(*)::int` })
       .from(sortingResults)
@@ -269,6 +313,7 @@ async function computeAdminStats(): Promise<AdminStats> {
       rankings: rankingsCount[0]?.c ?? 0,
     },
     last7Days: {
+      users: users7d[0]?.c ?? 0,
       sorters: sorters7d[0]?.c ?? 0,
       rankings: rankings7d[0]?.c ?? 0,
     },
@@ -276,6 +321,7 @@ async function computeAdminStats(): Promise<AdminStats> {
     rankingsOverTime,
     rankingsActivity,
     sortersActivity,
+    usersActivity,
     rankingsByAuth: {
       anonymous: anonRankings[0]?.c ?? 0,
       loggedIn: authRankings[0]?.c ?? 0,

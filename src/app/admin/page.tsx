@@ -67,6 +67,7 @@ export default async function AdminPage() {
         <StatCard
           label="Total users"
           value={stats.totals.users}
+          delta={`+${formatCount(stats.last7Days.users)} this week`}
         />
         <StatCard
           label="Total sorters"

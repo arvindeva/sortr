@@ -36,6 +36,7 @@ function formatBucket(b: string, tf: Timeframe): string {
 
 const MAIN = "#ff2e7e";
 const CYAN = "#19e3df";
+const VIOLET = "#9b6bff";
 const GRID = "rgba(255,255,255,.08)";
 const AXIS = "#8c87a6";
 
@@ -239,6 +240,15 @@ export function AdminCharts({ stats }: { stats: AdminStats }) {
         data={stats.sortersActivity[timeframe]}
         timeframe={timeframe}
         color={MAIN}
+        selector={timeframeSelector}
+      />
+
+      {/* New users activity (by emailVerified — the real signup time) */}
+      <ActivityBarChart
+        title="New users"
+        data={stats.usersActivity[timeframe]}
+        timeframe={timeframe}
+        color={VIOLET}
         selector={timeframeSelector}
       />
 
