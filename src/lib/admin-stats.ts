@@ -37,9 +37,9 @@ export interface AdminStats {
     sorters: number;
     rankings: number;
   };
-  // Per-week sorter creation (oldest → newest), with a running cumulative total.
+  // Per-week creation (oldest → newest), with a running cumulative total.
+  usersOverTime: { week: string; created: number; cumulative: number }[];
   sortersOverTime: { week: string; created: number; cumulative: number }[];
-  // Per-week ranking creation (oldest → newest), with a running cumulative total.
   rankingsOverTime: { week: string; created: number; cumulative: number }[];
   // Activity bar charts (new per bucket) across selectable timeframes (24h
   // hourly, week daily, month daily, 3mo weekly). Users are bucketed by
@@ -211,6 +211,7 @@ async function computeAdminStats(): Promise<AdminStats> {
     rankings7d,
     sortersByWeek,
     rankingsByWeek,
+    usersByWeek,
     rankingsActivity,
     sortersActivity,
     usersActivity,
@@ -266,7 +267,17 @@ async function computeAdminStats(): Promise<AdminStats> {
       .from(sortingResults)
       .groupBy(sql`date_trunc('week', ${sortingResults.createdAt})`)
       .orderBy(sql`date_trunc('week', ${sortingResults.createdAt})`),
-    // Activity bar charts (rankings + sorters) across all timeframes.
+    // Users grouped by week (by emailVerified — the real signup time).
+    db
+      .select({
+        week: sql<string>`to_char(date_trunc('week', ${user.emailVerified}), 'YYYY-MM-DD')`,
+        created: sql<number>`count(*)::int`,
+      })
+      .from(user)
+      .where(isNotNull(user.emailVerified))
+      .groupBy(sql`date_trunc('week', ${user.emailVerified})`)
+      .orderBy(sql`date_trunc('week', ${user.emailVerified})`),
+    // Activity bar charts (rankings + sorters + users) across all timeframes.
     rankingsActivityAll(),
     sortersActivityAll(),
     usersActivityAll(),
@@ -303,6 +314,7 @@ async function computeAdminStats(): Promise<AdminStats> {
       return { week: row.week, created: row.created, cumulative: total };
     });
   };
+  const usersOverTime = withCumulative(usersByWeek);
   const sortersOverTime = withCumulative(sortersByWeek);
   const rankingsOverTime = withCumulative(rankingsByWeek);
 
@@ -317,6 +329,7 @@ async function computeAdminStats(): Promise<AdminStats> {
       sorters: sorters7d[0]?.c ?? 0,
       rankings: rankings7d[0]?.c ?? 0,
     },
+    usersOverTime,
     sortersOverTime,
     rankingsOverTime,
     rankingsActivity,

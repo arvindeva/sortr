@@ -67,6 +67,55 @@ function ChartCard({
   );
 }
 
+// A cumulative-over-time area chart (users / sorters / rankings).
+function CumulativeAreaChart({
+  title,
+  data,
+  color,
+  gradientId,
+}: {
+  title: string;
+  data: { week: string; cumulative: number }[];
+  color: string;
+  gradientId: string;
+}) {
+  return (
+    <ChartCard title={title}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data}>
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.4} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid stroke={GRID} vertical={false} />
+          <XAxis
+            dataKey="week"
+            tick={{ fill: AXIS, fontSize: 11 }}
+            tickLine={false}
+            axisLine={{ stroke: GRID }}
+          />
+          <YAxis
+            tick={{ fill: AXIS, fontSize: 11 }}
+            tickLine={false}
+            axisLine={false}
+            width={36}
+          />
+          <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: AXIS }} />
+          <Area
+            type="monotone"
+            dataKey="cumulative"
+            stroke={color}
+            strokeWidth={2}
+            fill={`url(#${gradientId})`}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </ChartCard>
+  );
+}
+
 // A timeframe-switchable activity bar chart (used for rankings + sorters). The
 // selector is shared (controlled from the parent), so both update together.
 function ActivityBarChart({
@@ -155,86 +204,34 @@ export function AdminCharts({ stats }: { stats: AdminStats }) {
     // least ~340px so charts stay readable), growing to fill the row. Big
     // screens show 3–4 across, laptops 2, mobile 1.
     <div className="grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-5">
-      {/* Cumulative sorters over time */}
-      <ChartCard title="Sorters over time (cumulative)">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={stats.sortersOverTime}>
-            <defs>
-              <linearGradient id="sortersFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={MAIN} stopOpacity={0.4} />
-                <stop offset="100%" stopColor={MAIN} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke={GRID} vertical={false} />
-            <XAxis
-              dataKey="week"
-              tick={{ fill: AXIS, fontSize: 11 }}
-              tickLine={false}
-              axisLine={{ stroke: GRID }}
-            />
-            <YAxis
-              tick={{ fill: AXIS, fontSize: 11 }}
-              tickLine={false}
-              axisLine={false}
-              width={36}
-            />
-            <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: AXIS }} />
-            <Area
-              type="monotone"
-              dataKey="cumulative"
-              stroke={MAIN}
-              strokeWidth={2}
-              fill="url(#sortersFill)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </ChartCard>
-
-      {/* Cumulative rankings over time */}
-      <ChartCard title="Rankings over time (cumulative)">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={stats.rankingsOverTime}>
-            <defs>
-              <linearGradient id="rankingsFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={CYAN} stopOpacity={0.4} />
-                <stop offset="100%" stopColor={CYAN} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke={GRID} vertical={false} />
-            <XAxis
-              dataKey="week"
-              tick={{ fill: AXIS, fontSize: 11 }}
-              tickLine={false}
-              axisLine={{ stroke: GRID }}
-            />
-            <YAxis
-              tick={{ fill: AXIS, fontSize: 11 }}
-              tickLine={false}
-              axisLine={false}
-              width={36}
-            />
-            <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: AXIS }} />
-            <Area
-              type="monotone"
-              dataKey="cumulative"
-              stroke={CYAN}
-              strokeWidth={2}
-              fill="url(#rankingsFill)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </ChartCard>
-
-      {/* Rankings activity (timeframe-switchable) */}
-      <ActivityBarChart
-        title="Rankings"
-        data={stats.rankingsActivity[timeframe]}
-        timeframe={timeframe}
+      {/* Cumulative over time: Users → Sorters → Rankings */}
+      <CumulativeAreaChart
+        title="Users over time (cumulative)"
+        data={stats.usersOverTime}
+        color={VIOLET}
+        gradientId="usersFill"
+      />
+      <CumulativeAreaChart
+        title="Sorters over time (cumulative)"
+        data={stats.sortersOverTime}
+        color={MAIN}
+        gradientId="sortersFill"
+      />
+      <CumulativeAreaChart
+        title="Rankings over time (cumulative)"
+        data={stats.rankingsOverTime}
         color={CYAN}
-        selector={timeframeSelector}
+        gradientId="rankingsFill"
       />
 
-      {/* New sorters activity (same shared timeframe) */}
+      {/* New per timeframe: Users → Sorters → Rankings */}
+      <ActivityBarChart
+        title="New users"
+        data={stats.usersActivity[timeframe]}
+        timeframe={timeframe}
+        color={VIOLET}
+        selector={timeframeSelector}
+      />
       <ActivityBarChart
         title="New sorters"
         data={stats.sortersActivity[timeframe]}
@@ -242,13 +239,11 @@ export function AdminCharts({ stats }: { stats: AdminStats }) {
         color={MAIN}
         selector={timeframeSelector}
       />
-
-      {/* New users activity (by emailVerified — the real signup time) */}
       <ActivityBarChart
-        title="New users"
-        data={stats.usersActivity[timeframe]}
+        title="New rankings"
+        data={stats.rankingsActivity[timeframe]}
         timeframe={timeframe}
-        color={VIOLET}
+        color={CYAN}
         selector={timeframeSelector}
       />
 
