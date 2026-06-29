@@ -40,8 +40,10 @@ export interface AdminStats {
   sortersOverTime: { week: string; created: number; cumulative: number }[];
   // Per-week ranking creation (oldest → newest), with a running cumulative total.
   rankingsOverTime: { week: string; created: number; cumulative: number }[];
-  // Per-day ranking activity for the last ~12 weeks.
-  rankingsPerDay: { day: string; count: number }[];
+  // Activity bar charts (new per bucket) for rankings and sorters, across
+  // selectable timeframes (24h hourly, week daily, month daily, 3mo weekly).
+  rankingsActivity: ActivityByTimeframe;
+  sortersActivity: ActivityByTimeframe;
   // Anonymous vs. logged-in rankings.
   rankingsByAuth: { anonymous: number; loggedIn: number };
   // Top sorters by plays, per timeframe. "all" uses the cumulative
@@ -59,6 +61,17 @@ export interface TopSorter {
   title: string;
   slug: string;
   plays: number;
+}
+
+export interface ActivityBucket {
+  bucket: string; // ISO label for the x-axis
+  count: number;
+}
+export interface ActivityByTimeframe {
+  day: ActivityBucket[]; // last 24h, hourly
+  week: ActivityBucket[]; // last 7d, daily
+  month: ActivityBucket[]; // last 30d, daily
+  quarter: ActivityBucket[]; // last ~12w, weekly
 }
 
 function daysAgo(n: number): Date {
@@ -84,11 +97,79 @@ async function topSortersSince(since: Date): Promise<TopSorter[]> {
   return rows;
 }
 
+// Postgres requires the date_trunc unit to be an inline literal, not a bound
+// parameter, so we sql.raw it — safe because `unit` is a fixed internal enum
+// (never user input), and we hard-validate it here regardless.
+function truncLiteral(unit: "hour" | "day" | "week") {
+  const safe: Record<string, string> = { hour: "hour", day: "day", week: "week" };
+  return sql.raw(`'${safe[unit]}'`);
+}
+
+// Rankings activity: count sortingResults created since `since`, bucketed by
+// date_trunc(unit, createdAt).
+async function rankingsBuckets(
+  unit: "hour" | "day" | "week",
+  since: Date,
+): Promise<ActivityBucket[]> {
+  const trunc = sql`date_trunc(${truncLiteral(unit)}, ${sortingResults.createdAt})`;
+  return db
+    .select({
+      bucket: sql<string>`to_char(${trunc}, 'YYYY-MM-DD"T"HH24:00')`,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(sortingResults)
+    .where(gte(sortingResults.createdAt, since))
+    .groupBy(trunc)
+    .orderBy(trunc);
+}
+
+// Sorters activity: count active, non-deleted sorters created since `since`.
+async function sortersBuckets(
+  unit: "hour" | "day" | "week",
+  since: Date,
+): Promise<ActivityBucket[]> {
+  const trunc = sql`date_trunc(${truncLiteral(unit)}, ${sorters.createdAt})`;
+  return db
+    .select({
+      bucket: sql<string>`to_char(${trunc}, 'YYYY-MM-DD"T"HH24:00')`,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(sorters)
+    .where(
+      and(
+        gte(sorters.createdAt, since),
+        eq(sorters.deleted, false),
+        eq(sorters.status, "active"),
+      ),
+    )
+    .groupBy(trunc)
+    .orderBy(trunc);
+}
+
+async function rankingsActivityAll(): Promise<ActivityByTimeframe> {
+  const [day, week, month, quarter] = await Promise.all([
+    rankingsBuckets("hour", daysAgo(1)),
+    rankingsBuckets("day", daysAgo(7)),
+    rankingsBuckets("day", daysAgo(30)),
+    rankingsBuckets("week", daysAgo(84)),
+  ]);
+  return { day, week, month, quarter };
+}
+
+async function sortersActivityAll(): Promise<ActivityByTimeframe> {
+  const [day, week, month, quarter] = await Promise.all([
+    sortersBuckets("hour", daysAgo(1)),
+    sortersBuckets("day", daysAgo(7)),
+    sortersBuckets("day", daysAgo(30)),
+    sortersBuckets("week", daysAgo(84)),
+  ]);
+  return { day, week, month, quarter };
+}
+
 async function computeAdminStats(): Promise<AdminStats> {
   const oneDayAgo = daysAgo(1);
   const sevenDaysAgo = daysAgo(7);
   const thirtyDaysAgo = daysAgo(30);
-  const twelveWeeksAgo = daysAgo(84);
 
   const [
     usersCount,
@@ -98,7 +179,8 @@ async function computeAdminStats(): Promise<AdminStats> {
     rankings7d,
     sortersByWeek,
     rankingsByWeek,
-    rankingsByDay,
+    rankingsActivity,
+    sortersActivity,
     anonRankings,
     authRankings,
     topAll,
@@ -141,16 +223,9 @@ async function computeAdminStats(): Promise<AdminStats> {
       .from(sortingResults)
       .groupBy(sql`date_trunc('week', ${sortingResults.createdAt})`)
       .orderBy(sql`date_trunc('week', ${sortingResults.createdAt})`),
-    // Rankings per day, last 12 weeks.
-    db
-      .select({
-        day: sql<string>`to_char(date_trunc('day', ${sortingResults.createdAt}), 'YYYY-MM-DD')`,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(sortingResults)
-      .where(gte(sortingResults.createdAt, twelveWeeksAgo))
-      .groupBy(sql`date_trunc('day', ${sortingResults.createdAt})`)
-      .orderBy(sql`date_trunc('day', ${sortingResults.createdAt})`),
+    // Activity bar charts (rankings + sorters) across all timeframes.
+    rankingsActivityAll(),
+    sortersActivityAll(),
     db
       .select({ c: sql<number>`count(*)::int` })
       .from(sortingResults)
@@ -199,7 +274,8 @@ async function computeAdminStats(): Promise<AdminStats> {
     },
     sortersOverTime,
     rankingsOverTime,
-    rankingsPerDay: rankingsByDay,
+    rankingsActivity,
+    sortersActivity,
     rankingsByAuth: {
       anonymous: anonRankings[0]?.c ?? 0,
       loggedIn: authRankings[0]?.c ?? 0,

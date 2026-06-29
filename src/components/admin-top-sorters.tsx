@@ -21,7 +21,7 @@ export function TopSortersCard({
   const rows = topSorters[timeframe];
 
   return (
-    <div className="mt-5 rounded-2xl border border-border bg-card p-5">
+    <div className="rounded-2xl border border-border bg-card p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="hud text-xs text-muted-foreground">
           Top sorters by plays

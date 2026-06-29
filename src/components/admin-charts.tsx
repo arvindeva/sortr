@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Area,
   AreaChart,
@@ -14,7 +15,24 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { AdminStats } from "@/lib/admin-stats";
+import type { AdminStats, ActivityBucket } from "@/lib/admin-stats";
+
+type Timeframe = "day" | "week" | "month" | "quarter";
+const TIMEFRAMES: { key: Timeframe; label: string }[] = [
+  { key: "day", label: "24h" },
+  { key: "week", label: "Week" },
+  { key: "month", label: "Month" },
+  { key: "quarter", label: "3 months" },
+];
+
+// Format a bucket's ISO-ish label for the x-axis based on the timeframe.
+function formatBucket(b: string, tf: Timeframe): string {
+  // Stored as YYYY-MM-DDTHH:00.
+  const [date, time] = b.split("T");
+  if (tf === "day") return time?.slice(0, 5) ?? b; // hour: "14:00"
+  const [, m, d] = date.split("-"); // month/day
+  return `${m}/${d}`;
+}
 
 const MAIN = "#ff2e7e";
 const CYAN = "#19e3df";
@@ -48,14 +66,94 @@ function ChartCard({
   );
 }
 
+// A timeframe-switchable activity bar chart (used for rankings + sorters). The
+// selector is shared (controlled from the parent), so both update together.
+function ActivityBarChart({
+  title,
+  data,
+  timeframe,
+  color,
+  selector,
+}: {
+  title: string;
+  data: ActivityBucket[];
+  timeframe: Timeframe;
+  color: string;
+  selector: React.ReactNode;
+}) {
+  const formatted = data.map((d) => ({
+    ...d,
+    label: formatBucket(d.bucket, timeframe),
+  }));
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="hud text-xs text-muted-foreground">{title}</div>
+        {selector}
+      </div>
+      <div className="h-[240px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={formatted}>
+            <CartesianGrid stroke={GRID} vertical={false} />
+            <XAxis
+              dataKey="label"
+              tick={{ fill: AXIS, fontSize: 11 }}
+              tickLine={false}
+              axisLine={{ stroke: GRID }}
+              minTickGap={16}
+            />
+            <YAxis
+              tick={{ fill: AXIS, fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              width={36}
+              allowDecimals={false}
+            />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              labelStyle={{ color: AXIS }}
+              cursor={{ fill: "rgba(255,255,255,.04)" }}
+            />
+            <Bar dataKey="count" fill={color} radius={[3, 3, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 export function AdminCharts({ stats }: { stats: AdminStats }) {
+  const [timeframe, setTimeframe] = useState<Timeframe>("day");
+
   const authData = [
     { name: "Logged in", value: stats.rankingsByAuth.loggedIn, color: CYAN },
     { name: "Anonymous", value: stats.rankingsByAuth.anonymous, color: MAIN },
   ];
 
+  // Shared segmented control — both activity charts switch together.
+  const timeframeSelector = (
+    <div className="flex gap-1 rounded-lg border border-border p-1">
+      {TIMEFRAMES.map((tf) => (
+        <button
+          key={tf.key}
+          onClick={() => setTimeframe(tf.key)}
+          className={`rounded-md px-2.5 py-1 font-mono text-xs transition-colors ${
+            timeframe === tf.key
+              ? "bg-main text-main-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {tf.label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
+    // Auto-fit: as many equal-width columns as the viewport allows (each at
+    // least ~340px so charts stay readable), growing to fill the row. Big
+    // screens show 3–4 across, laptops 2, mobile 1.
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-5">
       {/* Cumulative sorters over time */}
       <ChartCard title="Sorters over time (cumulative)">
         <ResponsiveContainer width="100%" height="100%">
@@ -126,61 +224,23 @@ export function AdminCharts({ stats }: { stats: AdminStats }) {
         </ResponsiveContainer>
       </ChartCard>
 
-      {/* Rankings per day */}
-      <ChartCard title="Rankings per day (last 12 weeks)">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={stats.rankingsPerDay}>
-            <CartesianGrid stroke={GRID} vertical={false} />
-            <XAxis
-              dataKey="day"
-              tick={{ fill: AXIS, fontSize: 11 }}
-              tickLine={false}
-              axisLine={{ stroke: GRID }}
-              minTickGap={24}
-            />
-            <YAxis
-              tick={{ fill: AXIS, fontSize: 11 }}
-              tickLine={false}
-              axisLine={false}
-              width={36}
-            />
-            <Tooltip
-              contentStyle={tooltipStyle}
-              labelStyle={{ color: AXIS }}
-              cursor={{ fill: "rgba(255,255,255,.04)" }}
-            />
-            <Bar dataKey="count" fill={CYAN} radius={[3, 3, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
+      {/* Rankings activity (timeframe-switchable) */}
+      <ActivityBarChart
+        title="Rankings"
+        data={stats.rankingsActivity[timeframe]}
+        timeframe={timeframe}
+        color={CYAN}
+        selector={timeframeSelector}
+      />
 
-      {/* New sorters per week */}
-      <ChartCard title="New sorters per week">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={stats.sortersOverTime}>
-            <CartesianGrid stroke={GRID} vertical={false} />
-            <XAxis
-              dataKey="week"
-              tick={{ fill: AXIS, fontSize: 11 }}
-              tickLine={false}
-              axisLine={{ stroke: GRID }}
-              minTickGap={20}
-            />
-            <YAxis
-              tick={{ fill: AXIS, fontSize: 11 }}
-              tickLine={false}
-              axisLine={false}
-              width={36}
-            />
-            <Tooltip
-              contentStyle={tooltipStyle}
-              labelStyle={{ color: AXIS }}
-              cursor={{ fill: "rgba(255,255,255,.04)" }}
-            />
-            <Bar dataKey="created" fill={MAIN} radius={[3, 3, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
+      {/* New sorters activity (same shared timeframe) */}
+      <ActivityBarChart
+        title="New sorters"
+        data={stats.sortersActivity[timeframe]}
+        timeframe={timeframe}
+        color={MAIN}
+        selector={timeframeSelector}
+      />
 
       {/* Anonymous vs logged-in rankings */}
       <ChartCard

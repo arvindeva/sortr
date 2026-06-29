@@ -19,6 +19,9 @@ export const user = pgTable("user", {
   username: text("username").unique(),
   image: text("image"),
   emailVerified: timestamp("emailVerified"),
+  // Recorded going forward so user-growth-over-time can be charted later.
+  // Existing rows backfill to migration time (historical signups unrecoverable).
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
 export const account = pgTable(
