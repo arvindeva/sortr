@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { sortProgress, sorters } from "@/db/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, lt } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
@@ -9,6 +9,10 @@ import { NextRequest } from "next/server";
 // well under this. Rejects anything absurd (abuse / corruption).
 const MAX_STATE_LEN = 2_000_000; // ~2MB of compressed text
 
+// In-progress sorts untouched for this long are considered abandoned and lazily
+// cleaned up (no cron — pruned when the user lists their in-progress sorts).
+const TTL_DAYS = 30;
+
 // GET /api/sort-progress — list the current user's in-progress sorts (for the
 // profile "In progress" section). Private to the user. Excludes the heavy
 // state blob; just enough to render a card + resume link.
@@ -16,6 +20,15 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   if (!userId) return Response.json({ inProgress: [] });
+
+  // Lazy TTL prune of this user's abandoned sorts (keeps the table small
+  // without a scheduled job).
+  const cutoff = new Date(Date.now() - TTL_DAYS * 24 * 60 * 60 * 1000);
+  await db
+    .delete(sortProgress)
+    .where(
+      and(eq(sortProgress.userId, userId), lt(sortProgress.updatedAt, cutoff)),
+    );
 
   const rows = await db
     .select({

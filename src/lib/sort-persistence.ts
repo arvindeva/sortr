@@ -86,9 +86,21 @@ export function deserializeChoices(
   shuffledOrder: SortItem[];
   totalBattles: number;
   sortedNo: number;
+  /** True if the saved item set no longer matches the current items (an item
+   *  was removed/changed) — resuming would be incoherent, so the caller should
+   *  start fresh instead. */
+  staleItems: boolean;
 } {
   const { itemMap, choices, historyChoices, shuffledOrderIndexes, totalBattles = 0, sortedNo = 0 } =
     serializedData;
+
+  // Detect a changed item set: any saved item id that's no longer present, or a
+  // count mismatch, means the sorter was edited under this saved progress.
+  const currentIds = new Set(allItems.map((it) => it.id));
+  const savedIds: string[] = Array.isArray(itemMap) ? itemMap : [];
+  const staleItems =
+    savedIds.length !== allItems.length ||
+    savedIds.some((id) => !currentIds.has(id));
 
   const userChoices = new Map<string, string>();
   for (const [index1, index2, winnerIndex] of choices) {
@@ -131,6 +143,6 @@ export function deserializeChoices(
     }
   }
 
-  return { userChoices, stateHistory, shuffledOrder, totalBattles, sortedNo };
+  return { userChoices, stateHistory, shuffledOrder, totalBattles, sortedNo, staleItems };
 }
 

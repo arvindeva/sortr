@@ -310,13 +310,19 @@ export default function SortPage() {
       try {
         const key = generateProgressKey(sorterId, currentFilterSlugs);
         const local = localStorage.getItem(key);
-        // Only pull from server when local is empty (the cross-device / cleared
-        // case). If local exists, it's at least as fresh (per-matchup writes).
-        if (!local) {
-          const server = await fetchServerProgress(sorterId);
-          if (server?.state && !server.versionMismatch) {
-            localStorage.setItem(key, server.state);
-          }
+        const server = await fetchServerProgress(sorterId);
+
+        // The sorter was edited after this progress was saved — the saved
+        // choices reference items that may no longer exist. Resuming would be
+        // incoherent, so discard the stale progress and start fresh.
+        if (server?.versionMismatch) {
+          localStorage.removeItem(key);
+          void fetch(`/api/sort-progress/${sorterId}`, { method: "DELETE" });
+          toast("This sorter was updated — starting a fresh ranking.");
+        } else if (!local && server?.state) {
+          // Cross-device / cache-cleared: pull the server copy into localStorage
+          // so the existing resume logic picks it up transparently.
+          localStorage.setItem(key, server.state);
         }
       } catch {
         // ignore — fall back to local/empty
@@ -364,14 +370,27 @@ export default function SortPage() {
 
             // Handle new optimized format
             if (parsed.optimized) {
-              const { userChoices, stateHistory, shuffledOrder, totalBattles, sortedNo } =
-                deserializeChoices(parsed, filteredItems);
-              savedChoices = userChoices;
-              savedStateHistory = stateHistory;
-              savedTotalBattles = totalBattles;
-              savedSortedNo = sortedNo;
-              if (shuffledOrder.length > 0) {
-                savedShuffledOrder = shuffledOrder;
+              const {
+                userChoices,
+                stateHistory,
+                shuffledOrder,
+                totalBattles,
+                sortedNo,
+                staleItems,
+              } = deserializeChoices(parsed, filteredItems);
+              if (staleItems) {
+                // The sorter's items changed since this was saved — resuming
+                // would be incoherent. Discard and start fresh.
+                localStorage.removeItem(progressKey);
+                savedComparisonCount = 0;
+              } else {
+                savedChoices = userChoices;
+                savedStateHistory = stateHistory;
+                savedTotalBattles = totalBattles;
+                savedSortedNo = sortedNo;
+                if (shuffledOrder.length > 0) {
+                  savedShuffledOrder = shuffledOrder;
+                }
               }
             } else {
               // Legacy format support
