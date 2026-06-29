@@ -1003,7 +1003,7 @@ export default function SortPage() {
         {/* Progress track — magenta fill with the % centered inside the bar
             (Touhou-style). The label sits on top of both the fill and the track
             so it stays readable at any progress. */}
-        <div className="relative mt-4 h-7 w-full overflow-hidden rounded-full border border-border bg-foreground/[0.06]">
+        <div className="relative mt-4 h-5 w-full overflow-hidden rounded-full border border-border bg-foreground/[0.06] md:h-7">
           <div
             className="bg-main h-full rounded-full transition-[width] duration-300 ease-out"
             style={{ width: `${progress}%` }}
@@ -1033,10 +1033,11 @@ export default function SortPage() {
 
       {/* Comparison Cards */}
       {/* The duel is edge-to-edge on mobile (the container is px-0) for the
-          largest possible cards; contained + padded on desktop. Two columns
-          with a hair of gap; the VS floats over the seam (absolute), straddling
-          both cards instead of taking a column that would push them apart. */}
-      <div className="relative mt-4 grid grid-cols-2 items-stretch gap-0.5 px-0 md:gap-4 md:px-0">
+          largest possible cards. On desktop the grid is capped + centered so
+          each card stays near the item images' native 300px (avoids upscaling
+          a small source into a big card → blurry). The VS floats over the seam
+          (absolute), straddling both cards instead of taking a column. */}
+      <div className="relative mt-4 grid grid-cols-2 items-stretch gap-0.5 px-0 md:mx-auto md:max-w-4xl md:gap-24 md:px-0">
         {/* Item A */}
         <ComparisonCard
           side="left"
