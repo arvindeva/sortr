@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/db";
 
 // Increase function timeout for R2 operations (5 minutes for large sorters)
@@ -244,8 +245,8 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const session = await getServerSession();
+    // Check authentication (authOptions required for the JWT strategy)
+    const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { sorters, sorterItems, sorterTags, user } from "@/db/schema";
@@ -13,8 +14,8 @@ interface EditSorterPageProps {
 export default async function EditSorterPage({ params }: EditSorterPageProps) {
   const { slug } = await params;
 
-  // Check authentication
-  const session = await getServerSession();
+  // Check authentication (authOptions required for the JWT strategy)
+  const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
     redirect("/auth/signin");
   }
