@@ -631,9 +631,8 @@ export default function CreateSorterFormTags() {
 
       <ArcadePageHeader
         className="mb-8"
-        eyebrow="New sorter"
         title="Create a sorter"
-        subtitle="Add a title, a cover, and the things you want to rank. Two items minimum — the more the better the fight."
+        subtitle="Add a title, a cover, and the things you want to rank."
       />
       <Form {...form}>
         <form
