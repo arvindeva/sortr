@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CoverTile } from "@/components/ui/cover-tile";
+import { InfoPopover } from "@/components/ui/info-popover";
 import type { CommunityRankingPayload } from "@/lib/community-ranking-data";
 
 const MEDAL_VARS = [
@@ -33,9 +34,18 @@ export function CommunityRanking({ data }: { data: CommunityRankingPayload }) {
 
   return (
     <section>
-      <h2 className="display text-[30px] font-black text-foreground">
-        Community ranking
-      </h2>
+      <div className="flex items-center gap-2">
+        <h2 className="display text-[30px] font-black text-foreground">
+          Community ranking
+        </h2>
+        <InfoPopover label="How the community ranking works">
+          This ranking only counts results from the{" "}
+          <span className="text-foreground">current version</span> of the
+          sorter. If the creator edits it (adds or removes items), older results
+          from previous versions are no longer included — so a freshly edited
+          sorter may show fewer results until people rank the new version.
+        </InfoPopover>
+      </div>
       <div className="mt-1.5 mb-5 font-mono text-xs tracking-wide text-muted-foreground">
         aggregated from {totalRankings.toLocaleString()} ranking
         {totalRankings === 1 ? "" : "s"}
