@@ -179,6 +179,200 @@ export async function renderGenericOgImage() {
   );
 }
 
+export interface SorterOgItem {
+  id: string;
+  title: string;
+  imageUrl?: string;
+}
+
+/**
+ * Dynamic OG / social-preview card for a sorter page (the pre-completion share
+ * vector — "come rank this with me"). Shows the sorter title, item count, a
+ * "RANK IT" cue, and a preview strip of the items, so a shared sorter link
+ * previews what it is instead of the generic card. Mirrors the ranking card but
+ * framed as an invitation. Falls back to the generic card on any error.
+ */
+export async function renderSorterOgImage({
+  title,
+  itemCount,
+  items,
+}: {
+  title: string;
+  itemCount: number;
+  items: SorterOgItem[];
+}) {
+  const fonts = await ogFonts();
+  const preview = items.filter((i) => i.imageUrl).slice(0, 5);
+  // If too few items have images, pad with the first text items so the strip
+  // isn't empty (a strip of name-tiles still reads as "here are the items").
+  const tiles = preview.length >= 3 ? preview : items.slice(0, 5);
+  const tileW = 200;
+  const tileGap = 18;
+
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: "1200px",
+          height: "630px",
+          position: "relative",
+          overflow: "hidden",
+          background: "#0b0918",
+          display: "flex",
+          flexDirection: "column",
+          fontFamily: "Space Grotesk",
+          padding: "56px",
+        }}
+      >
+        {/* Atmosphere */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: "1200px",
+            height: "630px",
+            background:
+              "radial-gradient(820px 480px at 88% -10%, rgba(255,46,126,.26), transparent 60%)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: "1200px",
+            height: "630px",
+            background:
+              "radial-gradient(720px 520px at -5% 35%, rgba(25,227,223,.16), transparent 55%)",
+          }}
+        />
+
+        {/* Header: logo + invitation cue */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ display: "flex", gap: "6px" }}>
+              <span
+                style={{
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "4px",
+                  background: "#ff2e7e",
+                }}
+              />
+              <span
+                style={{
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "4px",
+                  border: "3px solid #19e3df",
+                }}
+              />
+            </div>
+            <span
+              style={{
+                fontFamily: "Big Shoulders Display",
+                fontWeight: 900,
+                fontSize: "38px",
+                color: "#f3f0ff",
+                letterSpacing: "0.02em",
+              }}
+            >
+              SORTR
+            </span>
+          </div>
+          <span
+            style={{
+              fontFamily: "Space Grotesk",
+              fontSize: "24px",
+              color: "#19e3df",
+              letterSpacing: "0.04em",
+            }}
+          >
+            {itemCount} items · rank them
+          </span>
+        </div>
+
+        {/* Sorter title */}
+        <div
+          style={{
+            display: "flex",
+            fontFamily: "Big Shoulders Display",
+            fontWeight: 900,
+            fontSize: title.length > 36 ? "72px" : "92px",
+            lineHeight: 0.9,
+            color: "#f3f0ff",
+            textTransform: "uppercase",
+            marginTop: "38px",
+            maxHeight: "210px",
+            overflow: "hidden",
+          }}
+        >
+          {title}
+        </div>
+
+        {/* Item preview tiles, pinned to the bottom */}
+        <div
+          style={{
+            display: "flex",
+            gap: `${tileGap}px`,
+            marginTop: "auto",
+          }}
+        >
+          {tiles.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                position: "relative",
+                display: "flex",
+                width: `${tileW}px`,
+                height: `${tileW}px`,
+                borderRadius: "16px",
+                overflow: "hidden",
+                background: item.imageUrl ? "#13102a" : accentFor(item.id),
+                border: "3px solid rgba(255,255,255,.08)",
+              }}
+            >
+              {item.imageUrl ? (
+                <img
+                  src={item.imageUrl}
+                  width={tileW}
+                  height={tileW}
+                  style={{ objectFit: "cover", width: "100%", height: "100%" }}
+                />
+              ) : (
+                <span
+                  style={{
+                    display: "flex",
+                    padding: "14px",
+                    fontFamily: "Big Shoulders Display",
+                    fontWeight: 900,
+                    fontSize: "30px",
+                    lineHeight: 0.92,
+                    color: "rgba(0,0,0,.72)",
+                    textTransform: "uppercase",
+                    alignItems: "flex-end",
+                    height: "100%",
+                  }}
+                >
+                  {item.title}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+    { ...OG_SIZE, fonts },
+  );
+}
+
 export interface RankingOgItem {
   id: string;
   title: string;

@@ -63,7 +63,9 @@ export async function generateMetadata({
       type: "website",
       siteName: "sortr",
       url: canonicalUrl,
-      // OG image falls back to the generic app/opengraph-image.tsx for now.
+      // og:image comes from the route's opengraph-image.tsx (the dynamic sorter
+      // card). Next injects the file-convention image because this openGraph
+      // block doesn't set `images`; twitter:image is auto-filled from it.
     },
     twitter: {
       card: "summary_large_image",
