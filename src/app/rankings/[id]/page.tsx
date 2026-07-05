@@ -70,6 +70,13 @@ interface ResultData {
   ownerUserId: string | null;
 }
 
+// Individual rankings are share surfaces, not search targets: ~464k of them
+// (growing ~100k/week) would drown the ~5k sorter pages in Google's crawl.
+// noindex keeps them out of the index; follow lets link equity from shared
+// links still flow to the sorter page. Share unfurls (OG) are unaffected —
+// link-preview bots ignore robots directives.
+const NOINDEX = { index: false, follow: true } as const;
+
 export async function generateMetadata({
   params,
 }: RankingsPageProps): Promise<Metadata> {
@@ -82,6 +89,7 @@ export async function generateMetadata({
       return {
         title: "Rankings Not Found",
         description: "The requested ranking could not be found.",
+        robots: NOINDEX,
       };
     }
 
@@ -106,6 +114,7 @@ export async function generateMetadata({
     return {
       title,
       description,
+      robots: NOINDEX,
       alternates: {
         canonical: canonicalUrl,
       },
@@ -128,6 +137,7 @@ export async function generateMetadata({
     return {
       title: "Rankings",
       description: "View rankings on sortr.",
+      robots: NOINDEX,
     };
   }
 }
