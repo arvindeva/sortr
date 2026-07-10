@@ -10,7 +10,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { useDownloadRankingImage } from "@/hooks/use-download-ranking-image";
+import {
+  useRankingImage,
+  type GeneratedRankingImage,
+  type RankingImageVariant,
+} from "@/hooks/use-ranking-image";
+import { ShareImageDialog } from "@/components/share-image-dialog";
 import { track } from "@/lib/analytics";
 
 interface RankedItem {
@@ -37,7 +42,15 @@ export function ShareButton({
   // the button is always labeled now so sharing is obvious on mobile.
   rankingData,
 }: ShareButtonProps) {
-  const { downloadImage, isGenerating } = useDownloadRankingImage();
+  const { generateImage, isGenerating } = useRankingImage();
+
+  // The generated card + its preview dialog. `generated` sticks around after
+  // close so reopening the same variant could be instant, but regenerating is
+  // cheap enough that we simply generate per menu click.
+  const [generated, setGenerated] = useState<
+    (GeneratedRankingImage & { variant: RankingImageVariant }) | null
+  >(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   // Detect Web Share support after mount (avoids SSR/hydration mismatch). When
   // available (mobile), we render a plain button that opens the OS share sheet
@@ -80,26 +93,41 @@ export function ShareButton({
     toast.success("Link copied!");
   };
 
-  const handleDownloadImage = async (variant: "top10" | "full") => {
+  const handleGenerateImage = async (variant: RankingImageVariant) => {
     if (!rankingData) {
       toast.error("Ranking data not available for download");
       return;
     }
-    await downloadImage(rankingData, variant);
+    const result = await generateImage(rankingData, variant);
+    if (result) {
+      setGenerated({ ...result, variant });
+      setDialogOpen(true);
+    }
   };
 
-  // The two download choices, shared by mobile + desktop menus.
+  const dialog = (
+    <ShareImageDialog
+      open={dialogOpen}
+      onOpenChange={setDialogOpen}
+      blob={generated?.blob ?? null}
+      filename={generated?.filename ?? "sortr-ranking.png"}
+      title={rankingData?.sorterTitle ?? "sortr"}
+      variant={generated?.variant ?? "top10"}
+    />
+  );
+
+  // The two image choices, shared by mobile + desktop menus.
   const downloadItems = (
     <>
       <DropdownMenuItem
-        onClick={() => handleDownloadImage("top10")}
+        onClick={() => handleGenerateImage("top10")}
         disabled={isGenerating || !rankingData}
       >
         <Download className="mr-2" size={16} />
         Top 10 — square
       </DropdownMenuItem>
       <DropdownMenuItem
-        onClick={() => handleDownloadImage("full")}
+        onClick={() => handleGenerateImage("full")}
         disabled={isGenerating || !rankingData}
       >
         <Download className="mr-2" size={16} />
@@ -109,12 +137,12 @@ export function ShareButton({
   );
 
   // Mobile (Web Share API present): share opens the OS sheet; download is a
-  // small menu offering the two image formats.
+  // small menu offering the two image formats. Share is the magenta primary —
+  // the completion moment is where the viral loop propagates.
   if (canNativeShare) {
     return (
       <div className="flex shrink-0 items-center gap-2.5">
         <Button
-          variant="neutral"
           size="icon"
           onClick={handleNativeShare}
           aria-label="Share"
@@ -138,26 +166,30 @@ export function ShareButton({
             <DropdownMenuContent align="end">{downloadItems}</DropdownMenuContent>
           </DropdownMenu>
         )}
+        {dialog}
       </div>
     );
   }
 
-  // Desktop: copy-link + the two download options.
+  // Desktop: copy-link + the two image options behind one magenta trigger.
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="neutral" size={size}>
-          <Share2 size={16} />
-          <span className="ml-2">Share</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleCopyLink}>
-          <Link2 className="mr-2" size={16} />
-          Copy Link
-        </DropdownMenuItem>
-        {downloadItems}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size={size}>
+            <Share2 size={16} />
+            <span className="ml-2">Share</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={handleCopyLink}>
+            <Link2 className="mr-2" size={16} />
+            Copy Link
+          </DropdownMenuItem>
+          {downloadItems}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {dialog}
+    </>
   );
 }
