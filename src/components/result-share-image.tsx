@@ -3,7 +3,7 @@ import { accentFor } from "@/lib/utils";
 /**
  * The downloadable "brag" image for a finished ranking — a 1080×1350 (portrait,
  * IG-friendly) arcade card. Rendered off-screen and rasterized to PNG by
- * useDownloadRankingImage via html-to-image.
+ * useRankingImage via html-to-image.
  *
  * The adaptive-mosaic layout is ported verbatim from the design handoff's
  * renderVals() (Sortr Result Image.dc.html). Two modes so it never leaves

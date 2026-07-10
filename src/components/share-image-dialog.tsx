@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { track } from "@/lib/analytics";
 
 interface ShareImageDialogProps {
@@ -74,8 +75,11 @@ export function ShareImageDialog({
           method: "share-sheet",
         }),
       )
-      .catch(() => {
-        // User cancelled the sheet — silent no-op.
+      .catch((err: unknown) => {
+        // Cancelling the sheet rejects with AbortError — that's a normal
+        // user action, not a failure.
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        toast.error("Couldn't open the share sheet. Try Download instead.");
       });
   };
 
@@ -96,7 +100,7 @@ export function ShareImageDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Image ready</DialogTitle>
           {/* Long-press hint — only meaningful on touch devices. */}
