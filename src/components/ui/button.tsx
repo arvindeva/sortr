@@ -10,9 +10,9 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Magenta-gradient primary with a magenta glow shadow.
+        // Magenta-gradient primary, flat (no glow shadow).
         default:
-          "bg-[image:var(--main-gradient)] text-main-foreground shadow-[0_6px_18px_rgba(255,46,126,.35)] hover:brightness-110",
+          "bg-[image:var(--main-gradient)] text-main-foreground hover:brightness-110",
         noShadow: "bg-[image:var(--main-gradient)] text-main-foreground",
         // Outlined secondary on the dark surface.
         neutral:

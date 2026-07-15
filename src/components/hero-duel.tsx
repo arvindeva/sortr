@@ -292,7 +292,6 @@ export function HeroDuel() {
         style={{
           borderColor: "var(--panel-border)",
           background: "var(--panel)",
-          boxShadow: "var(--panel-glow)",
         }}
       >
         {/* Header */}
