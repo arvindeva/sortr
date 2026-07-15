@@ -5,8 +5,7 @@ A playful, fandom-native ranking app. Vibe: retro arcade / VS-screen energy, dar
 > Implementation notes (how these tokens/components are wired in this repo) live in `docs/design-system.md`. This file is the canonical brand spec.
 
 ## Color (dark base)
-- Background: `#0b0918` (midnight indigo-black)
-- Atmosphere (on bg): radial magenta glow top-right `rgba(255,46,126,.18)` + cyan glow left `rgba(25,227,223,.11)`
+- Background: `#0b0918` (midnight indigo-black) — flat, no atmosphere layer
 - Surface card: `rgba(255,255,255,.03)`, border `rgba(255,255,255,.08)`
 - Elevated panel (duel machine): `linear-gradient(180deg, rgba(22,18,46,.9), rgba(12,10,28,.95))`, border `rgba(255,46,126,.4)` (flat — no glow)
 - Deep panel / name bars: `#13102a`
@@ -22,7 +21,7 @@ Item/sorter cover tiles cycle through these accents; cover text is `rgba(0,0,0,.
 
 ## Type (self-hosted woff2 via next/font/local — files in src/app/fonts/)
 - Display / headings / wordmark: **League Gothic** (single weight), `text-transform:uppercase`, tight line-height (.88–1). No bold cut exists; `font-synthesis-weight:none` is set globally, so weight utilities on display text are inert by design.
-- HUD / labels / meta / numbers / placeholders: **League Mono** 400/700, uppercase, `letter-spacing:.08–.16em`
+- HUD / labels / meta / numbers / placeholders: **Mona Sans** (the body face — no separate monospace), uppercase, `letter-spacing:.08–.16em` via the `.hud` utility
 - Body / UI: **Mona Sans** (variable 200–900)
 Never use generic Inter/Arial/Roboto — and never the former AI-default trio (Big Shoulders, Space Mono, Space Grotesk).
 
@@ -49,7 +48,6 @@ Same VERSUS-arcade identity, on light. Rule of thumb: keep accent **fills** brig
 
 Token map (dark → light):
 - bg `#0b0918` → `#f4f2fb`
-- atmosphere glows: cut opacity ~⅔ (magenta `.18`→`.07`, cyan `.11`→`.06`)
 - surface card `rgba(255,255,255,.03)` → `#ffffff` + border `rgba(22,16,52,.1)` + soft shadow `0 6px 16px rgba(22,16,52,.06)`
 - any `rgba(255,255,255,α)` border/fill → `rgba(22,16,52, α+.02)`
 - elevated panel gradient → `#ffffff` (flat in both themes)
@@ -63,5 +61,5 @@ Token map (dark → light):
 ## Implementation pointers (this repo)
 - Tokens + `:root`/`:root.dark` blocks + keyframes: `src/app/globals.css`. Accents come in fill (`--main`/`--cyan`/`--yellow`) and ink (`--main-ink`/`--cyan-ink`/`--yellow-ink`) variants — use `bg-*`/`border-*` for fills and `text-*-ink` for accent text.
 - Fonts: self-hosted woff2 in `src/app/fonts/` (see its LICENSES.md), loaded in `src/app/layout.tsx` via `next/font/local`, wired through the `--font-*` namespace.
-- Shared primitives: `SortrLogo`/`Wordmark`/`VsMarker` (`ui/sortr-mark.tsx`), `CoverTile` (`ui/cover-tile.tsx`), `ArcadePageHeader` (`ui/arcade-page-header.tsx`), `ArcadeBackground` (`ui/arcade-background.tsx`), `accentFor()` (`lib/utils.ts`).
+- Shared primitives: `SortrLogo`/`Wordmark`/`VsMarker` (`ui/sortr-mark.tsx`), `CoverTile` (`ui/cover-tile.tsx`), `ArcadePageHeader` (`ui/arcade-page-header.tsx`), `accentFor()` (`lib/utils.ts`). (The page background is flat — no atmosphere component.)
 - Dark is the default theme; light is opt-in via the toggle.

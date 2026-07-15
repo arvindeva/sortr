@@ -45,9 +45,9 @@ visual spec: the handoff prototypes under `~/Sortr Redesign/design_handoff_sortr
 Accents are exposed as utilities: `bg-cyan`, `text-yellow`, `border-violet`,
 `text-main`, etc.
 
-**Atmosphere** (painted behind every page via `<ArcadeBackground />` in the
-layout, using the `.arcade-atmosphere` pseudo-element layers): radial magenta
-glow top-right + cyan glow left.
+**Background** is the flat canvas color (`--background`) — no atmosphere layer.
+The former radial magenta/cyan glows and the `<ArcadeBackground>` component were
+removed; the page reads clean behind the content.
 
 **Cover tiles** cycle magenta → cyan → yellow → violet → coral. Use `accentFor(key)`
 from `src/lib/utils.ts` for a stable per-entity color, or the `<CoverTile>`
@@ -61,11 +61,13 @@ is `rgba(0,0,0,.74)`.
   full loud treatment. No bold cut exists — `font-synthesis-weight: none` on
   `html` keeps browsers from faking one, so weight utilities on display text
   are inert.
-- **HUD / labels / meta / counters:** League Mono 400/700 (`font-mono`). Use
-  the `.hud` utility for uppercase + wide tracking.
+- **HUD / labels / meta / counters:** Mona Sans (`font-mono` maps to the body
+  face — there is no separate monospace). Use the `.hud` utility for uppercase
+  + wide tracking; that's what gives meta rows the scoreboard read now.
 - **Body / UI:** Mona Sans, variable 200–900 (`font-base`, the body default).
-- All three are self-hosted woff2 (SIL OFL) in `src/app/fonts/`, loaded via
-  `next/font/local` in `src/app/layout.tsx`.
+- Both faces are self-hosted woff2 (SIL OFL) in `src/app/fonts/`, loaded via
+  `next/font/local` in `src/app/layout.tsx`. (League Mono was retired; only
+  League Gothic + Mona Sans ship.)
 - Fonts are wired via the `--font-*` namespace in `@theme inline`
   (`--font-heading`, `--font-base`, `--font-mono`). **Do not** rename these to
   `--font-family-*` — Tailwind v4 generates the `font-*` utilities from the
@@ -118,8 +120,8 @@ This is why accents come in two token families:
 arrows) stays the bright `text-main`; small magenta/cyan/yellow text and links
 use the `-ink` utilities. If you add accent-colored *text* anywhere, use ink.
 
-Key light values: bg `#f4f2fb`; surfaces `#fff` + border `rgba(22,16,52,.1)` +
-soft shadow `0 6px 16px rgba(22,16,52,.06)`; panel white (flat); atmosphere
-glows at ~⅓ strength; text primary `#17132e` / muted `#5a5478`. The VS-marker
-pulse swaps to a soft drop shadow via the `--vs-pulse-*` tokens. Medals unchanged.
+Key light values: bg `#f4f2fb` (flat, no atmosphere); surfaces `#fff` + border
+`rgba(22,16,52,.1)` + soft shadow `0 6px 16px rgba(22,16,52,.06)`; panel white
+(flat); text primary `#17132e` / muted `#5a5478`. The VS-marker pulse swaps to a
+soft drop shadow via the `--vs-pulse-*` tokens. Medals unchanged.
 Reference builds: `~/Sortr Redesign - Light Mode/sortr_update/Sortr *Light.dc.html`.

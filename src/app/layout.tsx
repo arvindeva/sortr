@@ -3,7 +3,6 @@ import localFont from "next/font/local";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { ArcadeBackground } from "@/components/ui/arcade-background";
 import NextTopLoader from "nextjs-toploader";
 import Script from "next/script";
 
@@ -22,19 +21,8 @@ const leagueGothic = localFont({
   fallback: ["Arial Narrow", "Helvetica Neue", "Arial", "sans-serif"],
 });
 
-// HUD / labels / meta / counters — the scoreboard voice.
-const leagueMono = localFont({
-  src: [
-    { path: "./fonts/LeagueMono-Regular.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/LeagueMono-Bold.woff2", weight: "700", style: "normal" },
-  ],
-  variable: "--font-league-mono",
-  display: "swap",
-  adjustFontFallback: false,
-  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
-});
-
-// Body / UI — variable 200–900.
+// Body / UI — variable 200–900. Also drives the HUD/meta text (the .hud
+// utility) now that the monospace face is retired from the UI.
 const monaSans = localFont({
   src: "./fonts/MonaSansVF.woff2",
   variable: "--font-mona-sans",
@@ -95,7 +83,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${leagueGothic.variable} ${leagueMono.variable} ${monaSans.variable} flex min-h-screen flex-col antialiased`}
+        className={`${leagueGothic.variable} ${monaSans.variable} flex min-h-screen flex-col antialiased`}
         style={{ fontFamily: "var(--font-mona-sans)" }}
       >
         {isProd &&
@@ -109,7 +97,6 @@ export default function RootLayout({
             />
           )}
         <Providers>
-          <ArcadeBackground />
           <NextTopLoader color="#ff2e7e" showSpinner={false} height={3} />
           <Navbar />
           <div className="relative z-10 mb-12 flex-1">{children}</div>

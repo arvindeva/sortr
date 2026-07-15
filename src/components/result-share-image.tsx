@@ -383,7 +383,7 @@ export function ResultShareImage({
         </span>
         <span
           style={{
-            fontFamily: "var(--font-league-mono), monospace",
+            fontFamily: "var(--font-mona-sans), sans-serif",
             fontSize: "18px",
             letterSpacing: "0.16em",
             color: "#19e3df",
@@ -657,7 +657,7 @@ export function ResultShareImageFull({
           </span>
           <span
             style={{
-              fontFamily: "var(--font-league-mono), monospace",
+              fontFamily: "var(--font-mona-sans), sans-serif",
               fontSize: "16px",
               letterSpacing: "0.14em",
               color: "#19e3df",
@@ -777,7 +777,7 @@ export function ResultShareImageFull({
             style={{
               marginTop: "18px",
               textAlign: "center",
-              fontFamily: "var(--font-league-mono), monospace",
+              fontFamily: "var(--font-mona-sans), sans-serif",
               fontSize: "15px",
               letterSpacing: "0.06em",
               color: "#8c87a6",
