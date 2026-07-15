@@ -358,7 +358,7 @@ export function ResultShareImage({
           </div>
           <span
             style={{
-              fontFamily: "var(--font-league-gothic), 'Arial Narrow', sans-serif",
+              fontFamily: "var(--font-anybody), 'Arial Narrow', sans-serif",
               fontWeight: 900,
               fontSize: "26px",
               color: "#f3f0ff",
@@ -370,7 +370,7 @@ export function ResultShareImage({
         </div>
         <span
           style={{
-            fontFamily: "var(--font-league-gothic), 'Arial Narrow', sans-serif",
+            fontFamily: "var(--font-anybody), 'Arial Narrow', sans-serif",
             fontWeight: 900,
             fontSize: "78px",
             lineHeight: 0.9,
@@ -456,7 +456,7 @@ export function ResultShareImage({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontFamily: "var(--font-league-gothic), 'Arial Narrow', sans-serif",
+                fontFamily: "var(--font-anybody), 'Arial Narrow', sans-serif",
                 fontWeight: 900,
                 fontSize: `${t.badgeFont}px`,
                 color: t.badgeColor,
@@ -471,7 +471,7 @@ export function ResultShareImage({
                 left: `${t.namePad}px`,
                 right: `${t.namePad}px`,
                 bottom: `${t.nameBottom}px`,
-                fontFamily: "var(--font-league-gothic), 'Arial Narrow', sans-serif",
+                fontFamily: "var(--font-anybody), 'Arial Narrow', sans-serif",
                 fontWeight: 800,
                 fontSize: `${t.nameSize}px`,
                 lineHeight: t.nameLine,
@@ -507,7 +507,7 @@ export function ResultShareImage({
               flexWrap: "wrap",
               gap: "11px",
               justifyContent: "center",
-              fontFamily: "var(--font-league-gothic), 'Arial Narrow', sans-serif",
+              fontFamily: "var(--font-anybody), 'Arial Narrow', sans-serif",
               fontWeight: 900,
               fontSize: `${branding.fontSize}px`,
               textTransform: "uppercase",
@@ -532,7 +532,7 @@ export function ResultShareImage({
 // sorter can't produce an unreadable 20-column image.
 // ============================================================================
 
-const BIG = "var(--font-league-gothic), 'Arial Narrow', sans-serif";
+const BIG = "var(--font-anybody), 'Arial Narrow', sans-serif";
 const MEDAL_NUM = ["#ffd23f", "#cdd6e8", "#d68a4e"];
 const MEDAL_ROW_GLOW = [
   "0 0 20px rgba(255,210,63,.5)",

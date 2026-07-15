@@ -19,20 +19,20 @@ A playful, fandom-native ranking app. Vibe: retro arcade / VS-screen energy, dar
 Item/sorter cover tiles cycle through these accents; cover text is `rgba(0,0,0,.72)`.
 
 ## Type (self-hosted woff2 via next/font/local — files in src/app/fonts/)
-- Display / headings / wordmark: **League Gothic** (single weight), `text-transform:uppercase`, tight line-height (.88–1). No bold cut exists; `font-synthesis-weight:none` is set globally, so weight utilities on display text are inert by design.
+- Display / headings / wordmark: **Anybody** (variable: weight 100–900, width 50–150%), squared-geometric, rendered condensed via `font-stretch: 75%` set globally on `html`. Display text runs heavy (800–900 — real weights). UI display copy is uppercase; user-content titles keep their own casing.
 - HUD / labels / meta / numbers / placeholders: **Mona Sans** (the body face — no separate monospace), uppercase, `letter-spacing:.08–.16em` via the `.hud` utility
 - Body / UI: **Mona Sans** (variable 200–900)
 Never use generic Inter/Arial/Roboto — and never the former AI-default trio (Big Shoulders, Space Mono, Space Grotesk).
 
 ## Components
-- **Logo:** two 11px **squares** (`border-radius:2px`) — one filled magenta with `sortrGlow` pulse, one cyan outline — + wordmark `SORTR` (League Gothic, ~30px). Squares evoke the two VS panels. Links to home.
-- **VS marker:** 56px square rotated 45°, bg `#0b0918`, 2px magenta border, "VS" in League Gothic magenta, `sortrPulse` animation.
+- **Logo:** two 11px **squares** (`border-radius:2px`) — one filled magenta with `sortrGlow` pulse, one cyan outline — + wordmark `SORTR` (Anybody, ~30px). Squares evoke the two VS panels. Links to home.
+- **VS marker:** 56px square rotated 45°, bg `#0b0918`, 2px magenta border, "VS" in Anybody magenta, `sortrPulse` animation.
 - **Nav:** top bar, `max-width:1280` centered, padding `22px 32px`, border-bottom `rgba(255,255,255,.08)`. Items: search field, Browse, Create (primary), then Profile/Sign out (logged-in) or Sign in (anon).
-  - **Mobile nav:** transparent at the top; on scroll it frosts (`background:rgba(11,9,24,.85)` + `backdrop-filter:blur(8px)`, border-bottom fades in). Bar shows only two 42px buttons — a ghost search (border `rgba(255,255,255,.16)`, radius 10) and a magenta-gradient menu toggle that swaps ☰↔✕. The menu sheet opens below the bar (fade + translateY −10→0, ~.22s) over a dimmed page; panel `linear-gradient(180deg,#120f24,#0b0918)`; contents top→bottom: a search field, a vertical nav list (Browse / Profile / Sign out as League Gothic 26px uppercase rows with a ▸ and a bottom hairline, Sign out muted; logged-out shows Sign in instead), one magenta "+ Create a sorter" pill, and the theme toggle pinned at the bottom.
+  - **Mobile nav:** transparent at the top; on scroll it frosts (`background:rgba(11,9,24,.85)` + `backdrop-filter:blur(8px)`, border-bottom fades in). Bar shows only two 42px buttons — a ghost search (border `rgba(255,255,255,.16)`, radius 10) and a magenta-gradient menu toggle that swaps ☰↔✕. The menu sheet opens below the bar (fade + translateY −10→0, ~.22s) over a dimmed page; panel `linear-gradient(180deg,#120f24,#0b0918)`; contents top→bottom: a search field, a vertical nav list (Browse / Profile / Sign out as Anybody 26px uppercase rows with a ▸ and a bottom hairline, Sign out muted; logged-out shows Sign in instead), one magenta "+ Create a sorter" pill, and the theme toggle pinned at the bottom.
 - **Search field:** `rgba(255,255,255,.05)`, border `rgba(255,255,255,.1)`, radius 6, mono placeholder, `/` hint chip.
-- **Primary button:** magenta gradient, white, League Gothic uppercase (or Mona Sans 700 for small), radius 6–8, flat (no glow shadow).
+- **Primary button:** magenta gradient, white, Anybody uppercase (or Mona Sans 700 for small), radius 6–8, flat (no glow shadow).
 - **Secondary button:** border `rgba(255,255,255,.18)`, text primary.
-- **Card:** a **square** tile (radius 12–14, `aspect-square`, border `rgba(255,255,255,.08)`). The cover — uploaded art, or the accent color fallback (subtle 45° stripe texture) — fills the whole square. The item TITLE sits **bottom-left in League Gothic over a black bottom scrim** (`linear-gradient(180deg, transparent, rgba(0,0,0,.82))`) so it's legible over any image; clamped to 2 lines. No footer meta (author/plays), no rank/NEW badge, no category chip — this mirrors the item squares in the shareable ranking image. (The cover-less fallback shows the title on the accent tile the same way, never a single letter.)
+- **Card:** a **square** tile (radius 12–14, `aspect-square`, border `rgba(255,255,255,.08)`). The cover — uploaded art, or the accent color fallback (subtle 45° stripe texture) — fills the whole square. The item TITLE sits **bottom-left in Anybody over a black bottom scrim** (`linear-gradient(180deg, transparent, rgba(0,0,0,.82))`) so it's legible over any image; clamped to 2 lines. No footer meta (author/plays), no rank/NEW badge, no category chip — this mirrors the item squares in the shareable ranking image. (The cover-less fallback shows the title on the accent tile the same way, never a single letter.)
 - **Progress:** thin pips (filled = accent, empty `rgba(255,255,255,.12)`) or a continuous track with magenta-gradient fill.
 - **Chips/pills:** mono 13px, surface bg, border, hover → accent border+text.
 

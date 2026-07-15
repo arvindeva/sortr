@@ -197,17 +197,15 @@
   --radius-base: 10px;
   --shadow-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --font-weight-base: 400;
-  /* League Gothic ships one weight — 400 keeps headings from requesting a bold
-     that doesn't exist (font-synthesis-weight:none on html guards the rest). */
-  --font-weight-heading: 400;
-  /* font-base = body (Mona Sans), font-heading = display (League Gothic),
+  /* Anybody is variable 100–900, so display weights are real again. */
+  --font-weight-heading: 800;
+  /* font-base = body (Mona Sans), font-heading = display (Anybody),
      font-mono = HUD. NOTE: must be the --font-* namespace, not --font-family-*,
      or the font-* utilities silently no-op in Tailwind v4.
-     HUD/meta uses Mona Sans too (League Mono retired from the UI) — the .hud
-     utility keeps the uppercase + wide tracking for the scoreboard read. The
-     League Mono woff2 is still vendored but no longer referenced here. */
+     HUD/meta uses Mona Sans too (no separate monospace) — the .hud utility
+     keeps the uppercase + wide tracking for the scoreboard read. */
   --font-base: var(--font-mona-sans);
-  --font-heading: var(--font-league-gothic);
+  --font-heading: var(--font-anybody);
   --font-mono: var(--font-mona-sans);
 }
 
@@ -216,9 +214,13 @@
      transparent so the fixed atmosphere layer (glows) shows through. */
   html {
     @apply bg-background;
-    /* League Gothic has no bold cut — never let the browser smear a fake one.
-       Weight utilities (font-black etc.) on display text are inert by design. */
+    /* Never let the browser fake a weight a font doesn't have (both faces are
+       variable with real weight ranges, so this only guards edge cases). */
     font-synthesis-weight: none;
+    /* Anybody's condensed look: 75% on its variable width axis. Inherited
+       everywhere; Mona Sans has no width axis, so only the display face
+       responds (browsers don't synthesize stretch). */
+    font-stretch: 75%;
   }
 
   body {
@@ -229,7 +231,7 @@
     overflow-x: hidden;
   }
 
-  /* Display headings: League Gothic is a condensed face, so it wants tight
+  /* Display headings: Anybody (condensed via font-stretch) is a display face, so it wants tight
      leading and a touch of letter-spacing. Uppercasing is opt-in via the
      `.display` utility below — headings that are user content (sorter titles)
      get it applied deliberately rather than forcing it on all text. */

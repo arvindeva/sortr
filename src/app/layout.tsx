@@ -8,15 +8,17 @@ import Script from "next/script";
 
 import "./globals.css";
 
-// Display / headings / wordmark / numbers — condensed, loud, uppercase.
-// League Gothic ships a single weight; font-synthesis-weight:none (globals.css)
-// keeps browsers from faking heavier ones. Explicit fallback +
+// Display / headings / wordmark / numbers — squared, loud, condensed.
+// Anybody is variable on BOTH axes: weight 100–900 and width 50–150%. The
+// font-stretch declaration exposes the width axis; the site's condensed look
+// comes from `font-stretch: 75%` on html (globals.css). Explicit fallback +
 // adjustFontFallback:false mirrors the previous setup (no derived metrics).
-const leagueGothic = localFont({
-  src: "./fonts/LeagueGothic-Regular.woff2",
-  variable: "--font-league-gothic",
+const anybody = localFont({
+  src: "./fonts/AnybodyVF.woff2",
+  variable: "--font-anybody",
   display: "swap",
-  weight: "400",
+  weight: "100 900",
+  declarations: [{ prop: "font-stretch", value: "50% 150%" }],
   adjustFontFallback: false,
   fallback: ["Arial Narrow", "Helvetica Neue", "Arial", "sans-serif"],
 });
@@ -83,7 +85,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${leagueGothic.variable} ${monaSans.variable} flex min-h-screen flex-col antialiased`}
+        className={`${anybody.variable} ${monaSans.variable} flex min-h-screen flex-col antialiased`}
         style={{ fontFamily: "var(--font-mona-sans)" }}
       >
         {isProd &&

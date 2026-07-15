@@ -54,18 +54,19 @@ is `rgba(0,0,0,.74)`.
 
 ## Type
 
-- **Display / headings / wordmark / numbers:** League Gothic (`font-heading`),
-  single weight, uppercase, tight leading. Use the `.display` utility for the
-  full loud treatment. No bold cut exists — `font-synthesis-weight: none` on
-  `html` keeps browsers from faking one, so weight utilities on display text
-  are inert.
+- **Display / headings / wordmark / numbers:** Anybody (`font-heading`),
+  variable on weight (100–900) AND width (50–150%). The condensed look comes
+  from `font-stretch: 75%` set on `html` (inherited; Mona Sans has no width
+  axis, so only the display face responds). Display weights are real — heading
+  text runs 800–900. Use the `.display` utility for the loud treatment; UI
+  copy is uppercase, user-content titles keep their own casing.
 - **HUD / labels / meta / counters:** Mona Sans (`font-mono` maps to the body
   face — there is no separate monospace). Use the `.hud` utility for uppercase
   + wide tracking; that's what gives meta rows the scoreboard read now.
 - **Body / UI:** Mona Sans, variable 200–900 (`font-base`, the body default).
 - Both faces are self-hosted woff2 (SIL OFL) in `src/app/fonts/`, loaded via
-  `next/font/local` in `src/app/layout.tsx`. (League Mono was retired; only
-  League Gothic + Mona Sans ship.)
+  `next/font/local` in `src/app/layout.tsx` (Anybody converted from the
+  google/fonts variable TTF; see fonts/LICENSES.md).
 - Fonts are wired via the `--font-*` namespace in `@theme inline`
   (`--font-heading`, `--font-base`, `--font-mono`). **Do not** rename these to
   `--font-family-*` — Tailwind v4 generates the `font-*` utilities from the
