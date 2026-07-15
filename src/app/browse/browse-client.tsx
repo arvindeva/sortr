@@ -160,11 +160,7 @@ function BrowseContent({ initialData }: { initialData?: BrowseResult }) {
   return (
     <PageContainer>
       {/* Page Header */}
-      <ArcadePageHeader
-        className="mb-7"
-        eyebrow="pick your fight"
-        title="Browse sorters"
-      />
+      <ArcadePageHeader className="mb-7" title="Browse sorters" />
 
       {/* Search Bar */}
       <div className="mb-5">
