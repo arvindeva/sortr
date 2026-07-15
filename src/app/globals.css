@@ -45,14 +45,6 @@
   --coral: #ff7a59;
   --ring: #ff2e7e;
 
-  /* The elevated "machine" panel (duel / community ranking) */
-  --panel: linear-gradient(
-    180deg,
-    rgba(22, 18, 46, 0.9),
-    rgba(12, 10, 28, 0.95)
-  );
-  --panel-border: rgba(255, 46, 126, 0.4);
-
   /* VS marker pulse: magenta halo glow. */
   --vs-pulse-from: 0 0 0 0 rgba(255, 46, 126, 0.55);
   --vs-pulse-to: 0 0 46px 6px rgba(255, 46, 126, 0.55);
@@ -121,10 +113,6 @@
   --violet: #9b6bff;
   --coral: #ff7a59;
   --ring: #d81b65;
-
-  /* Elevated panel: white, flat. */
-  --panel: #ffffff;
-  --panel-border: rgba(255, 46, 126, 0.45);
 
   /* VS marker pulse: soft drop shadow, no blur ring. */
   --vs-pulse-from: 0 4px 0 0 rgba(255, 46, 126, 0);
@@ -379,18 +367,6 @@
     50.01%,
     100% {
       opacity: 0;
-    }
-  }
-
-  /* Result-reveal row: slide up + fade in (staggered via inline delay). */
-  @keyframes hero-row-in {
-    from {
-      opacity: 0;
-      transform: translateY(14px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
     }
   }
 

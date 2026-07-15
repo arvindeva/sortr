@@ -38,8 +38,6 @@ visual spec: the handoff prototypes under `~/Sortr Redesign/design_handoff_sortr
 | `--yellow` | `#ffd23f` | gold / accent |
 | `--violet` | `#9b6bff` | accent |
 | `--coral` | `#ff7a59` | extended cover accent (5th item) |
-| `--panel` | gradient | elevated "machine" panel (duel / community ranking) |
-| `--panel-border` | `rgba(255,46,126,.4)` | elevated panel border (flat — no glow) |
 | `--medal-gold/silver/bronze` | `#ffd23f` / `#cdd6e8` / `#d68a4e` | rank 1/2/3 |
 
 Accents are exposed as utilities: `bg-cyan`, `text-yellow`, `border-violet`,
@@ -122,7 +120,7 @@ arrows) stays the bright `text-main`; small magenta/cyan/yellow text and links
 use the `-ink` utilities. If you add accent-colored *text* anywhere, use ink.
 
 Key light values: bg `#f4f2fb` (flat, no atmosphere); surfaces `#fff` + border
-`rgba(22,16,52,.1)` + soft shadow `0 6px 16px rgba(22,16,52,.06)`; panel white
-(flat); text primary `#17132e` / muted `#5a5478`. The VS-marker pulse swaps to a
-soft drop shadow via the `--vs-pulse-*` tokens. Medals unchanged.
+`rgba(22,16,52,.1)` + soft shadow `0 6px 16px rgba(22,16,52,.06)`; text primary
+`#17132e` / muted `#5a5478`. The VS-marker pulse swaps to a soft drop shadow via
+the `--vs-pulse-*` tokens. Medals unchanged.
 Reference builds: `~/Sortr Redesign - Light Mode/sortr_update/Sortr *Light.dc.html`.

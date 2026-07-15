@@ -7,7 +7,6 @@ A playful, fandom-native ranking app. Vibe: retro arcade / VS-screen energy, dar
 ## Color (dark base)
 - Background: `#0b0918` (midnight indigo-black) — flat, no atmosphere layer
 - Surface card: `rgba(255,255,255,.03)`, border `rgba(255,255,255,.08)`
-- Elevated panel (duel machine): `linear-gradient(180deg, rgba(22,18,46,.9), rgba(12,10,28,.95))`, border `rgba(255,46,126,.4)` (flat — no glow)
 - Deep panel / name bars: `#13102a`
 - Text primary `#f3f0ff` · muted `#a39ec2` · secondary `#8c87a6` · faint/HUD `#6f6a86`
 
@@ -50,7 +49,6 @@ Token map (dark → light):
 - bg `#0b0918` → `#f4f2fb`
 - surface card `rgba(255,255,255,.03)` → `#ffffff` + border `rgba(22,16,52,.1)` + soft shadow `0 6px 16px rgba(22,16,52,.06)`
 - any `rgba(255,255,255,α)` border/fill → `rgba(22,16,52, α+.02)`
-- elevated panel gradient → `#ffffff` (flat in both themes)
 - deep name bars `#13102a` → keep dark `#17132e` (label plate) with `#fff` text
 - text: primary `#f3f0ff`→`#17132e` · muted `#a39ec2`→`#5a5478` · secondary `#8c87a6`→`#6e688a` · faint `#6f6a86`→`#938da8`
 - **accent-as-text legibility:** magenta `#ff2e7e` only for large display — links/small labels use `#d81b65`; cyan `#19e3df` is illegible on white as text → use teal `#0a9d9a`; yellow label `#ffd23f` → `#b07d00`

@@ -6,7 +6,7 @@ import { eq, desc, and } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
-import { HeroDuel } from "@/components/hero-duel";
+import { Hero } from "@/components/hero";
 import { TrendingSortersSection } from "@/components/trending-sorters-section";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -191,8 +191,8 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <PageContainer className="flex flex-col gap-10 md:gap-12">
-        {/* Hero — headline + live featured duel */}
-        <HeroDuel />
+        {/* Hero — centered headline + CTAs */}
+        <Hero />
 
         {/* Trending this week — what's hot right now (above all-time Popular) */}
         <TrendingSortersSection className="w-full" />
