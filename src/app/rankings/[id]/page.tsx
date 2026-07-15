@@ -410,12 +410,12 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
             <div className="min-w-0 flex-1">
               {!sorter.isDeleted && sorter.slug ? (
                 <Link href={`/sorter/${sorter.slug}`}>
-                  <h1 className="display text-[clamp(2.25rem,6vw,3.75rem)] font-black text-foreground transition-colors hover:text-main-ink">
+                  <h1 className="display normal-case text-[clamp(2.25rem,6vw,3.75rem)] font-black text-foreground transition-colors hover:text-main-ink">
                     {sorter.title}
                   </h1>
                 </Link>
               ) : (
-                <h1 className="display text-[clamp(2.25rem,6vw,3.75rem)] font-black text-foreground">
+                <h1 className="display normal-case text-[clamp(2.25rem,6vw,3.75rem)] font-black text-foreground">
                   {sorter.title}
                   {sorter.isDeleted && (
                     <span className="ml-2 align-middle font-mono text-sm text-destructive">
@@ -505,12 +505,12 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
             </div>
             {!sorter.isDeleted && sorter.slug ? (
               <Link href={`/sorter/${sorter.slug}`}>
-                <h3 className="display text-2xl font-extrabold text-foreground transition-colors hover:text-main-ink">
+                <h3 className="display normal-case text-2xl font-extrabold text-foreground transition-colors hover:text-main-ink">
                   {sorter.title}
                 </h3>
               </Link>
             ) : (
-              <h3 className="display text-2xl font-extrabold text-foreground">
+              <h3 className="display normal-case text-2xl font-extrabold text-foreground">
                 {sorter.title}
               </h3>
             )}

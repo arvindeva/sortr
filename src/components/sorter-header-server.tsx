@@ -79,7 +79,7 @@ export function SorterHeaderServer({
               {sorter.category}
             </div>
           )}
-          <h1 className="display text-[clamp(2.25rem,6vw,3.875rem)] font-black text-foreground">
+          <h1 className="display normal-case text-[clamp(2.25rem,6vw,3.875rem)] font-black text-foreground">
             {sorter.title}
           </h1>
           <div className="mt-2.5 flex flex-wrap items-center gap-x-1.5 font-mono text-[13px] text-muted-foreground">

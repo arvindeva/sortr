@@ -74,7 +74,7 @@ export function CoverTile({
       />
       {!hideName && (
         <span
-          className="display relative px-3 font-extrabold"
+          className="display normal-case relative px-3 font-extrabold"
           style={{
             fontSize: nameSize,
             color: "rgba(0,0,0,.74)",

@@ -49,7 +49,7 @@ export function SorterCard({ sorter, className }: SorterCardProps) {
 
         {/* Title — pinned bottom-left, clamped to 2 lines. */}
         <h3
-          className="display absolute inset-x-0 bottom-0 line-clamp-2 px-3 pb-2.5 text-[19px] font-extrabold leading-[1.05] text-white"
+          className="display normal-case absolute inset-x-0 bottom-0 line-clamp-2 px-3 pb-2.5 text-[19px] font-extrabold leading-[1.05] text-white"
           title={sorter.title}
         >
           {sorter.title}

@@ -375,7 +375,6 @@ export function ResultShareImage({
             fontSize: "78px",
             lineHeight: 0.9,
             color: "#f3f0ff",
-            textTransform: "uppercase",
             marginTop: "18px",
           }}
         >
@@ -476,7 +475,6 @@ export function ResultShareImage({
                 fontSize: `${t.nameSize}px`,
                 lineHeight: t.nameLine,
                 color: "#fff",
-                textTransform: "uppercase",
                 textShadow: "0 2px 8px rgba(0,0,0,.4)",
               }}
             >
@@ -649,7 +647,6 @@ export function ResultShareImageFull({
               fontSize: "62px",
               lineHeight: 0.88,
               color: "#f3f0ff",
-              textTransform: "uppercase",
               marginTop: "16px",
             }}
           >

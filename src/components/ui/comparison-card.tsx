@@ -61,7 +61,7 @@ function ComparisonCard({
               }}
             />
             <span
-              className="display relative text-2xl font-extrabold sm:text-4xl"
+              className="display normal-case relative text-2xl font-extrabold sm:text-4xl"
               style={{ color: "rgba(0,0,0,.74)" }}
             >
               {title}
@@ -85,7 +85,7 @@ function ComparisonCard({
           className="flex flex-1 items-center justify-center px-3 py-3.5 text-center md:py-4"
           style={{ background: "var(--name-plate)" }}
         >
-          <h3 className="display line-clamp-2 flex min-h-[2.1em] items-center text-base font-extrabold leading-[1.05] text-white sm:text-[25px]">
+          <h3 className="display normal-case line-clamp-2 flex min-h-[2.1em] items-center text-base font-extrabold leading-[1.05] text-white sm:text-[25px]">
             {title}
           </h3>
         </div>

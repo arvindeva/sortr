@@ -119,7 +119,7 @@ export function UserProfileClient({
                 >
                   {/* Title + date (top-right, matching the sorter recent cards) */}
                   <div className="mb-3 flex items-start justify-between gap-3">
-                    <h3 className="display text-[22px] leading-tight font-extrabold text-foreground">
+                    <h3 className="display normal-case text-[22px] leading-tight font-extrabold text-foreground">
                       {result.sorterTitle}
                     </h3>
                     <span className="mt-1 shrink-0 font-mono text-[11px] text-muted-foreground">

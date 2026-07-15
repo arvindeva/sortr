@@ -929,7 +929,7 @@ export default function SortPage() {
       {/* Header — re-add side padding on mobile (the container is edge-to-edge
           so the duel cards can bleed; text shouldn't touch the screen edge). */}
       <div className="mb-7 px-4 md:px-0">
-        <h1 className="display text-[clamp(2rem,5.5vw,3.375rem)] font-black text-foreground">
+        <h1 className="display normal-case text-[clamp(2rem,5.5vw,3.375rem)] font-black text-foreground">
           {sorterData.sorter.title}
         </h1>
 
