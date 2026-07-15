@@ -237,13 +237,15 @@
   --radius-base: 10px;
   --shadow-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --font-weight-base: 400;
-  --font-weight-heading: 800;
-  /* font-base = body (Space Grotesk), font-heading = display (Big Shoulders),
-     font-mono = HUD (Space Mono). NOTE: must be the --font-* namespace, not
+  /* League Gothic ships one weight — 400 keeps headings from requesting a bold
+     that doesn't exist (font-synthesis-weight:none on html guards the rest). */
+  --font-weight-heading: 400;
+  /* font-base = body (Mona Sans), font-heading = display (League Gothic),
+     font-mono = HUD (League Mono). NOTE: must be the --font-* namespace, not
      --font-family-*, or the font-* utilities silently no-op in Tailwind v4. */
-  --font-base: var(--font-space-grotesk);
-  --font-heading: var(--font-big-shoulders);
-  --font-mono: var(--font-space-mono);
+  --font-base: var(--font-mona-sans);
+  --font-heading: var(--font-league-gothic);
+  --font-mono: var(--font-league-mono);
 }
 
 @layer base {
@@ -251,6 +253,9 @@
      transparent so the fixed atmosphere layer (glows + grid) shows through. */
   html {
     @apply bg-background;
+    /* League Gothic has no bold cut — never let the browser smear a fake one.
+       Weight utilities (font-black etc.) on display text are inert by design. */
+    font-synthesis-weight: none;
   }
 
   body {
@@ -261,7 +266,7 @@
     overflow-x: hidden;
   }
 
-  /* Display headings: Big Shoulders is a condensed face, so it wants tight
+  /* Display headings: League Gothic is a condensed face, so it wants tight
      leading and a touch of letter-spacing. Uppercasing is opt-in via the
      `.display` utility below — headings that are user content (sorter titles)
      get it applied deliberately rather than forcing it on all text. */
@@ -284,7 +289,7 @@
     letter-spacing: 0.01em;
   }
 
-  /* HUD / scoreboard text: Space Mono, uppercase, wide tracking. */
+  /* HUD / scoreboard text: League Mono, uppercase, wide tracking. */
   .hud {
     @apply font-mono;
     text-transform: uppercase;

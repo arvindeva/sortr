@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Big_Shoulders, Space_Mono, Space_Grotesk } from "next/font/google";
+import localFont from "next/font/local";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -10,30 +10,38 @@ import Script from "next/script";
 import "./globals.css";
 
 // Display / headings / wordmark / numbers — condensed, loud, uppercase.
-// Explicit fallback + adjustFontFallback:false stops next/font from trying to
-// derive fallback metrics for this family (which it can't, and warns about).
-const bigShoulders = Big_Shoulders({
-  subsets: ["latin"],
-  variable: "--font-big-shoulders",
+// League Gothic ships a single weight; font-synthesis-weight:none (globals.css)
+// keeps browsers from faking heavier ones. Explicit fallback +
+// adjustFontFallback:false mirrors the previous setup (no derived metrics).
+const leagueGothic = localFont({
+  src: "./fonts/LeagueGothic-Regular.woff2",
+  variable: "--font-league-gothic",
   display: "swap",
-  weight: ["600", "700", "800", "900"],
+  weight: "400",
   adjustFontFallback: false,
   fallback: ["Arial Narrow", "Helvetica Neue", "Arial", "sans-serif"],
 });
 
 // HUD / labels / meta / counters — the scoreboard voice.
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
-  variable: "--font-space-mono",
+const leagueMono = localFont({
+  src: [
+    { path: "./fonts/LeagueMono-Regular.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/LeagueMono-Bold.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-league-mono",
   display: "swap",
-  weight: ["400", "700"],
+  adjustFontFallback: false,
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
 });
 
-// Body / UI — clean geometric grotesk.
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space-grotesk",
+// Body / UI — variable 200–900.
+const monaSans = localFont({
+  src: "./fonts/MonaSansVF.woff2",
+  variable: "--font-mona-sans",
   display: "swap",
+  weight: "200 900",
+  adjustFontFallback: false,
+  fallback: ["system-ui", "Segoe UI", "Arial", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -87,8 +95,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${bigShoulders.variable} ${spaceMono.variable} ${spaceGrotesk.variable} flex min-h-screen flex-col antialiased`}
-        style={{ fontFamily: "var(--font-space-grotesk)" }}
+        className={`${leagueGothic.variable} ${leagueMono.variable} ${monaSans.variable} flex min-h-screen flex-col antialiased`}
+        style={{ fontFamily: "var(--font-mona-sans)" }}
       >
         {isProd &&
           process.env.NEXT_PUBLIC_UMAMI_URL &&
