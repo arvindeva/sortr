@@ -5,7 +5,7 @@ A playful, fandom-native ranking app. Vibe: retro arcade / VS-screen energy, dar
 > Implementation notes (how these tokens/components are wired in this repo) live in `docs/design-system.md`. This file is the canonical brand spec.
 
 ## Color (dark base)
-- Background: `#0b0918` (midnight indigo-black) — flat, no atmosphere layer
+- Background: `#0b0918` (midnight indigo-black) — flat. Homepage only: `<HomeBackdrop>` adds huge, barely-there rounded-square outlines (magenta/cyan/neutral — the logo squares at room scale). No glows, no grid.
 - Surface card: `rgba(255,255,255,.03)`, border `rgba(255,255,255,.08)`
 - Deep panel / name bars: `#13102a`
 - Text primary `#f3f0ff` · muted `#a39ec2` · secondary `#8c87a6` · faint/HUD `#6f6a86`
