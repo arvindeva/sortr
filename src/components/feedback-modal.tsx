@@ -144,7 +144,7 @@ export function FeedbackModal({
               onClick={submit}
               disabled={submitting}
               style={{ background: "var(--main-gradient)" }}
-              className="mt-[22px] w-full rounded-[10px] py-3.5 shadow-[0_10px_30px_rgba(255,46,126,.35)] transition-shadow hover:shadow-[0_12px_36px_rgba(255,46,126,.5)] disabled:opacity-60"
+              className="mt-[22px] w-full rounded-[10px] py-3.5 disabled:opacity-60"
             >
               <span className="display text-[21px] font-extrabold tracking-wide uppercase text-white">
                 {submitting ? "Sending…" : "Send it →"}

@@ -246,7 +246,7 @@
 
 @layer base {
   /* html paints the base color so there's never a bare flash; body stays
-     transparent so the fixed atmosphere layer (glows + grid) shows through. */
+     transparent so the fixed atmosphere layer (glows) shows through. */
   html {
     @apply bg-background;
     /* League Gothic has no bold cut — never let the browser smear a fake one.
