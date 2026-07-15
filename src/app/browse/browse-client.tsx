@@ -298,7 +298,7 @@ function BrowseContent({ initialData }: { initialData?: BrowseResult }) {
                 {/* Results Grid */}
                 <SorterGrid>
                   {data.sorters.map((sorter) => (
-                    <SorterCard key={sorter.id} sorter={sorter} showCategory />
+                    <SorterCard key={sorter.id} sorter={sorter} />
                   ))}
                 </SorterGrid>
 

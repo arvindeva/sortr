@@ -1,96 +1,59 @@
 import Link from "next/link";
 import { CoverTile } from "@/components/ui/cover-tile";
-import { cn, formatCount } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface SorterCardProps {
   sorter: {
     id: string;
     title: string;
     slug: string;
-    creatorUsername: string;
-    completionCount: number;
-    category?: string;
     coverImageUrl?: string;
   };
-  /** Optional corner badge, e.g. "#1" (popular) or "NEW" (fresh). */
-  badge?: { label: string; tone?: "rank" | "new" };
-  /** Show the sorter's category as a chip in the cover's bottom-right (browse). */
-  showCategory?: boolean;
   className?: string;
 }
 
 /**
- * The canonical sorter card: a colored cover tile (uploaded art, or a name
- * tile cycling the arcade accents) above a display-font title and a mono meta
- * row (@author · plays). Lifts and gains an accent glow on hover.
+ * The canonical sorter card: a square cover (uploaded art, or a name tile
+ * cycling the arcade accents) with the title pinned to the bottom over a black
+ * scrim — the same treatment as the items in the shareable ranking image.
+ * Lifts and gains an accent glow on hover. No meta row (author/plays) or badges.
  */
-export function SorterCard({
-  sorter,
-  badge,
-  showCategory,
-  className,
-}: SorterCardProps) {
-  const plays = formatCount(sorter.completionCount);
-
+export function SorterCard({ sorter, className }: SorterCardProps) {
   return (
     <Link
       href={`/sorter/${sorter.slug}`}
       className={cn("group block h-full w-full", className)}
     >
-      {/* Full-height flex column so every card in a grid row matches height. */}
-      <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 group-hover:-translate-y-1 group-hover:border-main/50 group-hover:shadow-[0_0_32px_rgba(255,46,126,.28)]">
-        {/* Cover */}
-        <div className="relative">
-          <CoverTile
-            imageUrl={sorter.coverImageUrl}
-            name={sorter.title}
-            colorKey={sorter.slug}
-            nameSize={21}
-            radius={0}
-            className="h-40 w-full"
-          />
-          {badge && (
-            <span
-              className={cn(
-                "absolute top-2 left-2 rounded font-mono text-[11px] font-bold",
-                badge.tone === "new"
-                  ? "bg-cyan/85 px-[7px] py-[3px] text-[#06212a]"
-                  : "bg-black/55 px-[7px] py-[3px] text-white",
-              )}
-            >
-              {badge.label}
-            </span>
-          )}
-          {showCategory && sorter.category && (
-            <span className="absolute right-2 bottom-2 rounded bg-black/40 px-[7px] py-[3px] font-mono text-[10px] tracking-wide text-white">
-              {sorter.category}
-            </span>
-          )}
-        </div>
+      <div className="relative aspect-square overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 group-hover:-translate-y-1 group-hover:border-main/50 group-hover:shadow-[0_0_32px_rgba(255,46,126,.28)]">
+        {/* Cover fills the whole square. When there's no artwork, CoverTile
+            paints the accent color tile with its centered name suppressed
+            (hideName); we draw our own bottom-aligned title over the scrim so
+            image and image-less cards share one layout. */}
+        <CoverTile
+          imageUrl={sorter.coverImageUrl}
+          name={sorter.title}
+          colorKey={sorter.slug}
+          hideName
+          radius={0}
+          className="absolute inset-0 h-full w-full"
+        />
 
-        {/* Meta — fills remaining height; the author/plays row pins to bottom. */}
-        <div className="flex flex-1 flex-col px-3 py-3">
-          {/* Title: clamped to 2 lines, with 2 lines of space always reserved
-              (18px @ line-height 1.1 → 40px) so 1-line titles don't shrink the
-              card. title attr shows the full name on hover when truncated. */}
-          <h3
-            className="display line-clamp-2 min-h-[40px] text-[18px] font-extrabold leading-[1.1] text-foreground"
-            title={sorter.title}
-          >
-            {sorter.title}
-          </h3>
-          <div className="mt-auto flex items-center justify-between pt-2 font-mono text-xs">
-            <span className="truncate text-muted-foreground">
-              @{sorter.creatorUsername}
-            </span>
-            {sorter.completionCount > 0 && (
-              <span className="flex shrink-0 items-center gap-1 pl-2 text-cyan-ink">
-                {plays}
-                <span className="text-base leading-none">▸</span>
-              </span>
-            )}
-          </div>
-        </div>
+        {/* Bottom scrim keeps the title legible over any image. */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 h-[55%]"
+          style={{
+            background: "linear-gradient(180deg, transparent, rgba(0,0,0,.62))",
+          }}
+        />
+
+        {/* Title — pinned bottom-left, clamped to 2 lines. */}
+        <h3
+          className="display absolute inset-x-0 bottom-0 line-clamp-2 px-3 pb-2.5 text-[19px] font-extrabold leading-[1.05] text-white"
+          title={sorter.title}
+        >
+          {sorter.title}
+        </h3>
       </div>
     </Link>
   );

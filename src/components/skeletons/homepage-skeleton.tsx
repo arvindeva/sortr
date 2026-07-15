@@ -3,7 +3,7 @@ import { SorterGrid } from "@/components/ui/sorter-grid";
 
 function SorterCardSkeleton() {
   return (
-    <div className="aspect-[3/4] w-full overflow-hidden rounded-base bg-muted animate-pulse" />
+    <div className="aspect-square w-full overflow-hidden rounded-base bg-muted animate-pulse" />
   );
 }
 

@@ -223,14 +223,8 @@ export default async function Home() {
             />
           ) : (
             <SorterGrid>
-              {popularData.popularSorters.map((sorter, i) => (
-                <SorterCard
-                  key={sorter.id}
-                  sorter={sorter}
-                  badge={
-                    i < 5 ? { label: `#${i + 1}`, tone: "rank" } : undefined
-                  }
-                />
+              {popularData.popularSorters.map((sorter) => (
+                <SorterCard key={sorter.id} sorter={sorter} />
               ))}
             </SorterGrid>
           )}

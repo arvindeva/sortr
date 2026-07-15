@@ -13,6 +13,12 @@ interface CoverTileProps {
   colorKey?: string | number;
   /** Font size of the name on the tile, in px. Tune per usage. */
   nameSize?: number;
+  /**
+   * Suppress the centered name on the fallback tile — for callers that draw
+   * their own title over the cover (e.g. the bottom-aligned SorterCard). The
+   * accent color + stripe texture still render.
+   */
+  hideName?: boolean;
   /** Rounded corners. Defaults to 12px (the card radius). */
   radius?: number;
   className?: string;
@@ -29,6 +35,7 @@ export function CoverTile({
   name,
   colorKey,
   nameSize = 21,
+  hideName = false,
   radius = 12,
   className,
 }: CoverTileProps) {
@@ -65,16 +72,18 @@ export function CoverTile({
             "repeating-linear-gradient(45deg, rgba(0,0,0,.06) 0 14px, transparent 14px 28px)",
         }}
       />
-      <span
-        className="display relative px-3 font-extrabold"
-        style={{
-          fontSize: nameSize,
-          color: "rgba(0,0,0,.74)",
-          lineHeight: 0.95,
-        }}
-      >
-        {name}
-      </span>
+      {!hideName && (
+        <span
+          className="display relative px-3 font-extrabold"
+          style={{
+            fontSize: nameSize,
+            color: "rgba(0,0,0,.74)",
+            lineHeight: 0.95,
+          }}
+        >
+          {name}
+        </span>
+      )}
     </div>
   );
 }

@@ -9,11 +9,9 @@ export function SorterCardSkeleton() {
         {/* Background skeleton - remove border since Card already has one */}
         <Skeleton className="absolute inset-0 h-full w-full border-0" />
 
-        {/* Title overlay skeleton - match actual SorterCard overlay */}
-        <div className="bg-main absolute right-0 bottom-0 left-0 p-1.5 sm:p-3">
-          <div className="flex h-6 items-center justify-center sm:h-8">
-            <Skeleton className="h-3 w-24 border-0 sm:h-4 sm:w-32" />
-          </div>
+        {/* Title placeholder — bottom-left, matching the real card's title. */}
+        <div className="absolute inset-x-0 bottom-0 px-3 pb-2.5">
+          <Skeleton className="h-4 w-2/3 border-0" />
         </div>
       </Card>
     </div>

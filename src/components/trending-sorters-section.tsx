@@ -37,12 +37,8 @@ export async function TrendingSortersSection({
         </h2>
       </div>
       <SorterGrid>
-        {trending.map((sorter, i) => (
-          <SorterCard
-            key={sorter.id}
-            sorter={sorter}
-            badge={i < 3 ? { label: `#${i + 1}`, tone: "rank" } : undefined}
-          />
+        {trending.map((sorter) => (
+          <SorterCard key={sorter.id} sorter={sorter} />
         ))}
       </SorterGrid>
     </section>

@@ -83,8 +83,10 @@ is `rgba(0,0,0,.74)`.
 - **Cover tile:** `<CoverTile imageUrl name colorKey>` — art-or-name-tile.
 - **Button:** magenta-gradient primary (flat — no glow shadow); `variant="neutral"` outlined secondary;
   add the `arcade` prop for the loud display-uppercase label (big CTAs only).
-- **Sorter card:** `<SorterCard sorter badge>` — cover tile + display title +
-  mono meta row (@author · plays). `badge={{label,tone}}` for #rank / NEW chips.
+- **Sorter card:** `<SorterCard sorter>` — a square cover (uploaded art, or the
+  accent name-tile fallback) filling the whole tile, with the display-font title
+  pinned bottom-left over a black scrim (same treatment as the shareable ranking
+  image's item squares). No meta row, badges, or category chip.
 
 ## Motion (utility classes, all respect `prefers-reduced-motion`)
 
