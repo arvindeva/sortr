@@ -10,7 +10,7 @@ const boxVariants = cva(
         primary: "bg-main text-main-foreground border-transparent",
         secondary: "bg-secondary-background text-foreground",
         accent: "bg-accent text-accent-foreground",
-        warning: "bg-orange-50 text-orange-900 border-orange-200 dark:bg-orange-950 dark:text-orange-100 dark:border-orange-800",
+        warning: "bg-card text-muted-foreground border-border",
         success: "bg-green-50 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-100 dark:border-green-800",
         purple: "bg-purple-50 text-purple-900 border-purple-200 dark:bg-purple-950 dark:text-purple-100 dark:border-purple-800",
         neutral: "bg-muted text-foreground",

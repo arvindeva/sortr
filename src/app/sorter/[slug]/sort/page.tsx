@@ -898,7 +898,7 @@ export default function SortPage() {
 
           <Box variant="warning" size="md" className="mx-auto max-w-md">
             <div className="space-y-3 text-center">
-              <p className="font-medium">
+              <p className="font-medium text-foreground">
                 If this screen persists, you may have a browser storage issue.
               </p>
               <p className="text-xs">
