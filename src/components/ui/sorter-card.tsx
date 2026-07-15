@@ -53,7 +53,7 @@ export function SorterCard({ sorter, className }: SorterCardProps) {
             into it (the "sliver below the 2nd line" bug). */}
         <div className="absolute inset-x-0 bottom-0 px-3 pb-2.5">
           <h3
-            className="display normal-case line-clamp-2 text-[19px] font-extrabold leading-[1.05] text-white"
+            className="display normal-case line-clamp-2 text-[15px] font-extrabold leading-[1.05] text-white sm:text-[19px]"
             title={sorter.title}
           >
             {sorter.title}
