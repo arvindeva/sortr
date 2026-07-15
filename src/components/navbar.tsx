@@ -232,7 +232,7 @@ export function Navbar() {
               variant="neutral"
               onClick={() => signOut({ callbackUrl: "/" })}
             >
-              Logout
+              Sign out
             </Button>
             <ModeToggle />
           </div>
@@ -340,7 +340,7 @@ export function Navbar() {
                     signOut({ callbackUrl: "/" });
                   }}
                 >
-                  Log out
+                  Sign out
                 </MobileNavRow>
               </>
             ) : (
@@ -350,7 +350,7 @@ export function Navbar() {
                   signIn();
                 }}
               >
-                Log in
+                Sign in
               </MobileNavRow>
             )}
 
@@ -430,7 +430,7 @@ export function Navbar() {
  * A row in the mobile menu sheet: a big Big Shoulders uppercase label with a
  * trailing ▸ and a bottom hairline. Renders as a Link when `href` is given,
  * otherwise a button that runs `onSelect` (used for sign in / out). `muted`
- * dims it (Log out).
+ * dims it (Sign out).
  */
 const MobileNavRow = forwardRef<
   HTMLElement,

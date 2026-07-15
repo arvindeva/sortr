@@ -23,14 +23,14 @@ export function LoginButton({ className }: LoginButtonProps) {
         onClick={() => signOut({ callbackUrl: "/" })}
         className={className}
       >
-        Logout
+        Sign out
       </Button>
     );
   }
 
   return (
     <Button onClick={() => signIn()} className={className}>
-      Log in
+      Sign in
     </Button>
   );
 }
