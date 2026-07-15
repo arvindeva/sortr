@@ -336,6 +336,17 @@
       opacity: 1;
     }
   }
+  /* Homepage backdrop squares: wider breath than the logo pulse — deep trough,
+     bright peak (the peak brightness lives in the squares' border alphas). */
+  @keyframes sortrBackdropPulse {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
   .sortr-glow {
     animation: sortrGlow 1.6s infinite;
   }
