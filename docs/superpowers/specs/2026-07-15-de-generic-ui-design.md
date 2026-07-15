@@ -20,7 +20,7 @@
 - Files ship in the repo as woff2 (convert from OTF/TTF if the foundry doesn't provide woff2), wired via `next/font/local` in `src/app/layout.tsx`, keeping the current explicit-fallback + no-adjustFontFallback approach.
 - The `next/font/google` import is deleted — zero Google Fonts touchpoints remain.
 - Font CSS variables renamed to match the new faces (`--font-league-gothic`, `--font-league-mono`, `--font-mona-sans`); the three `--font-base/heading/mono` mappings in `globals.css` and the inline `fontFamily` in `layout.tsx` updated.
-- **Single-weight display handling (the one sharp edge):** League Gothic has no 800/900. `--font-weight-heading` drops 800 → 400; explicit `font-black`/`font-extrabold`/`font-bold` on heading-font text is removed; `font-synthesis-weight: none` is set globally so browsers can never fake-bold it. The face is inherently bold-condensed.
+- **Single-weight display handling (the one sharp edge):** League Gothic has no 800/900. `--font-weight-heading` drops 800 → 400 and `font-synthesis-weight: none` is set globally on `html`, so a request for 800/900 resolves to the single real cut un-synthesized. Existing `font-black`/`font-extrabold` classes on display text therefore become inert and are deliberately left in place (~25 files of churn avoided). The face is inherently bold-condensed.
 - Expected visual drift: wordmark and cover-tile names render slightly narrower/sharper. Size nudges during visual QA are allowed; no component or layout changes.
 
 ## 2. Grid removal — all four sites
