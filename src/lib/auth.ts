@@ -47,16 +47,25 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async createUser({ user: newUser }: { user: any }) {
-      if (!newUser.username) {
-        try {
+      // next-auth v4 fires this event even when an OAuth sign-in was LINKED to
+      // an existing user (allowDangerousEmailAccountLinking), and the event's
+      // user object is the bare AdapterUser — it never carries our custom
+      // `username` column. Trusting it would regenerate (= clobber) the
+      // username of every existing user who links Google. Check the real row.
+      try {
+        const [row] = await db
+          .select({ username: user.username })
+          .from(user)
+          .where(eq(user.id, newUser.id));
+        if (row && !row.username) {
           const username = await generateUniqueUsername();
           await db
             .update(user)
             .set({ username })
             .where(eq(user.id, newUser.id));
-        } catch (error) {
-          console.error("Failed to generate username:", error);
         }
+      } catch (error) {
+        console.error("Failed to generate username:", error);
       }
     },
   },
