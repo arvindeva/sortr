@@ -275,17 +275,20 @@ git commit -m "Swap font stack to self-hosted League Gothic / League Mono / Mona
 
 ---
 
-### Task 3: Remove the 48px grid everywhere
+### Task 3: Remove the 48px grid + repoint orphaned font vars
 
 **Files:**
 - Modify: `src/app/globals.css` (dark token :78, light comment+token :154-165, atmosphere comment ~:294, delete `::after` block :305-317)
 - Modify: `src/components/ui/arcade-background.tsx:1-5` (docstring)
 - Modify: `src/components/navbar.tsx:304-313` (menu-sheet grid overlay)
-- Modify: `src/components/result-share-image.tsx:611-619` (share-card grid layer)
+- Modify: `src/components/result-share-image.tsx` (share-card grid layer ~:611-619; AND 12 old `--font-*` var refs)
+- Modify: `src/components/admin-charts.tsx:48` (one old `--font-*` var ref)
 
 **Interfaces:**
-- Consumes: nothing from other tasks (independent of Tasks 1-2).
-- Produces: `--atmo-grid-line` no longer exists — nothing may reference it afterward.
+- Consumes: the new font CSS variables defined in Task 2 (`--font-league-gothic`, `--font-league-mono`, `--font-mona-sans`).
+- Produces: `--atmo-grid-line` no longer exists — nothing may reference it afterward. No `--font-big-shoulders`/`--font-space-mono`/`--font-space-grotesk` references remain in any component.
+
+**Why the font-var steps are here:** Task 2 repointed the `@theme` tokens, but two components (`result-share-image.tsx`, `admin-charts.tsx`) hardcode the *old* CSS variable names in inline `fontFamily` styles, so they now resolve to nothing and fall back to system fonts. Task 3 already edits `result-share-image.tsx`, so the repointing rides along here. The mapping is a pure 1:1 rename: `--font-big-shoulders`→`--font-league-gothic`, `--font-space-mono`→`--font-league-mono`, `--font-space-grotesk`→`--font-mona-sans`.
 
 - [ ] **Step 1: `src/app/globals.css` — delete the grid tokens**
 
@@ -356,25 +359,52 @@ Delete exactly:
 
 (Keep the two radial-gradient divs directly above it — those are the card's magenta/cyan glows.)
 
-- [ ] **Step 6: Verify and build**
+- [ ] **Step 6: `src/components/result-share-image.tsx` — repoint the old font vars**
+
+This file references the OLD font CSS variables in ~12 inline `fontFamily` styles (it predates the `@theme` tokens). Repoint each to the Task 2 replacement — a pure find/replace across the whole file, no other text changes:
+
+```bash
+sed -i \
+  -e 's/--font-big-shoulders/--font-league-gothic/g' \
+  -e 's/--font-space-mono/--font-league-mono/g' \
+  -e 's/--font-space-grotesk/--font-mona-sans/g' \
+  src/components/result-share-image.tsx
+```
+
+Then confirm the count changed and nothing old remains in this file:
+
+```bash
+grep -c "font-league-gothic\|font-league-mono\|font-mona-sans" src/components/result-share-image.tsx
+grep -n "font-big-shoulders\|font-space-mono\|font-space-grotesk" src/components/result-share-image.tsx
+```
+
+Expected: first command prints `12`; second prints nothing (exit 1).
+
+- [ ] **Step 7: `src/components/admin-charts.tsx` — repoint the one font var (line ~48)**
+
+Old: `  fontFamily: "var(--font-space-mono)",`
+New: `  fontFamily: "var(--font-league-mono)",`
+
+- [ ] **Step 8: Verify and build**
 
 ```bash
 grep -rn "atmo-grid-line\|48px 48px" src/
+grep -rn "font-big-shoulders\|font-space-mono\|font-space-grotesk" src/
 ```
 
-Expected: no matches (exit 1).
+Expected: both return no matches (exit 1). (Note: `src/lib/og-generic.tsx` + `src/app/_og-fonts/*.ttf` use a SEPARATE Satori disk-font pipeline with its own `.ttf` files and face-name strings — NOT the `--font-*` CSS vars — and is intentionally out of scope per the spec's "Not changing: OG images". Do not touch it; the grep above won't match it.)
 
 ```bash
 npm run build
 ```
 
-Expected: "Compiled successfully".
+Expected: "Compiled successfully" (sitemap DB flake ignorable).
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add src/app/globals.css src/components/ui/arcade-background.tsx src/components/navbar.tsx src/components/result-share-image.tsx
-git commit -m "Remove the 48px grid: page atmosphere, mobile menu, share card"
+git add src/app/globals.css src/components/ui/arcade-background.tsx src/components/navbar.tsx src/components/result-share-image.tsx src/components/admin-charts.tsx
+git commit -m "Remove the 48px grid + repoint orphaned font vars to the new stack"
 ```
 
 ---
