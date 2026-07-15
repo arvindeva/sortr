@@ -43,7 +43,7 @@ export function SorterCard({ sorter, className }: SorterCardProps) {
           aria-hidden
           className="absolute inset-x-0 bottom-0 h-[55%]"
           style={{
-            background: "linear-gradient(180deg, transparent, rgba(0,0,0,.62))",
+            background: "linear-gradient(180deg, transparent, rgba(0,0,0,.82))",
           }}
         />
 
