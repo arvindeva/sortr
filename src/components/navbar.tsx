@@ -265,7 +265,7 @@ export function Navbar() {
           }}
           aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileMenuOpen}
-          className="flex h-[42px] w-[42px] items-center justify-center rounded-[10px] bg-[image:var(--main-gradient)] text-main-foreground shadow-[0_6px_18px_rgba(255,46,126,.35)] transition-[filter] hover:brightness-110"
+          className="flex h-[42px] w-[42px] items-center justify-center rounded-[10px] bg-[image:var(--main-gradient)] text-main-foreground transition-[filter] hover:brightness-110"
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
