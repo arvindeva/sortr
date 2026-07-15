@@ -39,7 +39,7 @@ visual spec: the handoff prototypes under `~/Sortr Redesign/design_handoff_sortr
 | `--violet` | `#9b6bff` | accent |
 | `--coral` | `#ff7a59` | extended cover accent (5th item) |
 | `--panel` | gradient | elevated "machine" panel (duel / community ranking) |
-| `--panel-border` | `rgba(255,46,126,.4)` | + `--panel-glow` `0 0 60px rgba(255,46,126,.18)` |
+| `--panel-border` | `rgba(255,46,126,.4)` | elevated panel border (flat — no glow) |
 | `--medal-gold/silver/bronze` | `#ffd23f` / `#cdd6e8` / `#d68a4e` | rank 1/2/3 |
 
 Accents are exposed as utilities: `bg-cyan`, `text-yellow`, `border-violet`,
@@ -47,7 +47,7 @@ Accents are exposed as utilities: `bg-cyan`, `text-yellow`, `border-violet`,
 
 **Atmosphere** (painted behind every page via `<ArcadeBackground />` in the
 layout, using the `.arcade-atmosphere` pseudo-element layers): radial magenta
-glow top-right + cyan glow left + a faint 48px grid.
+glow top-right + cyan glow left.
 
 **Cover tiles** cycle magenta → cyan → yellow → violet → coral. Use `accentFor(key)`
 from `src/lib/utils.ts` for a stable per-entity color, or the `<CoverTile>`
@@ -56,12 +56,16 @@ is `rgba(0,0,0,.74)`.
 
 ## Type
 
-- **Display / headings / wordmark / numbers:** Big Shoulders (`font-heading`),
-  weights 600–900, uppercase, tight leading. Use the `.display` utility for the
-  full loud treatment (font + uppercase + tight line-height).
-- **HUD / labels / meta / counters:** Space Mono (`font-mono`). Use the `.hud`
-  utility for uppercase + wide tracking.
-- **Body / UI:** Space Grotesk (`font-base`, the body default).
+- **Display / headings / wordmark / numbers:** League Gothic (`font-heading`),
+  single weight, uppercase, tight leading. Use the `.display` utility for the
+  full loud treatment. No bold cut exists — `font-synthesis-weight: none` on
+  `html` keeps browsers from faking one, so weight utilities on display text
+  are inert.
+- **HUD / labels / meta / counters:** League Mono 400/700 (`font-mono`). Use
+  the `.hud` utility for uppercase + wide tracking.
+- **Body / UI:** Mona Sans, variable 200–900 (`font-base`, the body default).
+- All three are self-hosted woff2 (SIL OFL) in `src/app/fonts/`, loaded via
+  `next/font/local` in `src/app/layout.tsx`.
 - Fonts are wired via the `--font-*` namespace in `@theme inline`
   (`--font-heading`, `--font-base`, `--font-mono`). **Do not** rename these to
   `--font-family-*` — Tailwind v4 generates the `font-*` utilities from the
@@ -70,12 +74,12 @@ is `rgba(0,0,0,.74)`.
 ## Components (in `src/components/ui/`)
 
 - **Logo:** `<SortrLogo>` = `<SortrMark>` (two squares: magenta filled + glow,
-  cyan outline) + `<Wordmark>` ("SORTR", display 900). `<Wordmark withPeriod>`
+  cyan outline) + `<Wordmark>` ("SORTR", display). `<Wordmark withPeriod>`
   for the footer lockup.
 - **VS marker:** `<VsMarker>` — square rotated 45°, 2px magenta border, "VS"
   upright in the display face, `sortr-pulse`. `glyph="★"` for the results hand-off.
 - **Cover tile:** `<CoverTile imageUrl name colorKey>` — art-or-name-tile.
-- **Button:** magenta-gradient primary; `variant="neutral"` outlined secondary;
+- **Button:** magenta-gradient primary (flat — no glow shadow); `variant="neutral"` outlined secondary;
   add the `arcade` prop for the loud display-uppercase label (big CTAs only).
 - **Sorter card:** `<SorterCard sorter badge>` — cover tile + display title +
   mono meta row (@author · plays). `badge={{label,tone}}` for #rank / NEW chips.
@@ -98,7 +102,7 @@ only to create & save.
 
 Same VERSUS-arcade identity on light (spec from the design lead). Three rules:
 **keep accent fills bright** (covers, button gradient, pips, badges pop on white),
-**turn every glow into a crisp colored shadow** (no blur rings), and **deepen
+**swap the VS-pulse glow for a crisp colored shadow** (no blur rings), and **deepen
 accents used as text** so they pass contrast.
 
 This is why accents come in two token families:
@@ -115,8 +119,7 @@ arrows) stays the bright `text-main`; small magenta/cyan/yellow text and links
 use the `-ink` utilities. If you add accent-colored *text* anywhere, use ink.
 
 Key light values: bg `#f4f2fb`; surfaces `#fff` + border `rgba(22,16,52,.1)` +
-soft shadow `0 6px 16px rgba(22,16,52,.06)`; panel white + magenta shadow (no
-glow); atmosphere glows at ~⅓ strength; grid `rgba(22,16,52,.045)`; text primary
-`#17132e` / muted `#5a5478`. The VS-marker pulse and panel glow swap to soft
-drop shadows via the `--vs-pulse-*` and `--panel-glow` tokens. Medals unchanged.
+soft shadow `0 6px 16px rgba(22,16,52,.06)`; panel white (flat); atmosphere
+glows at ~⅓ strength; text primary `#17132e` / muted `#5a5478`. The VS-marker
+pulse swaps to a soft drop shadow via the `--vs-pulse-*` tokens. Medals unchanged.
 Reference builds: `~/Sortr Redesign - Light Mode/sortr_update/Sortr *Light.dc.html`.
