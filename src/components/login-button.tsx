@@ -30,7 +30,7 @@ export function LoginButton({ className }: LoginButtonProps) {
 
   return (
     <Button onClick={() => signIn()} className={className}>
-      Login with Email
+      Log in
     </Button>
   );
 }

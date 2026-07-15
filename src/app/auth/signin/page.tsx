@@ -125,7 +125,6 @@ function SignInContent() {
               />
               <Button
                 type="submit"
-                arcade
                 size="lg"
                 disabled={isLoading}
                 className="w-full"
