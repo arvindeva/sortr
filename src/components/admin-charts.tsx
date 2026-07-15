@@ -45,7 +45,7 @@ const tooltipStyle = {
   border: "1px solid rgba(255,255,255,.12)",
   borderRadius: 10,
   fontSize: 12,
-  fontFamily: "var(--font-space-mono)",
+  fontFamily: "var(--font-league-mono)",
 };
 
 function ChartCard({

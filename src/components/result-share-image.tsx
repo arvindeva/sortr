@@ -287,7 +287,7 @@ export function ResultShareImage({
         position: "relative",
         overflow: "hidden",
         background: "#0b0918",
-        fontFamily: "var(--font-space-grotesk), sans-serif",
+        fontFamily: "var(--font-mona-sans), sans-serif",
         flexShrink: 0,
       }}
     >
@@ -358,7 +358,7 @@ export function ResultShareImage({
           </div>
           <span
             style={{
-              fontFamily: "var(--font-big-shoulders), 'Arial Narrow', sans-serif",
+              fontFamily: "var(--font-league-gothic), 'Arial Narrow', sans-serif",
               fontWeight: 900,
               fontSize: "26px",
               color: "#f3f0ff",
@@ -370,7 +370,7 @@ export function ResultShareImage({
         </div>
         <span
           style={{
-            fontFamily: "var(--font-big-shoulders), 'Arial Narrow', sans-serif",
+            fontFamily: "var(--font-league-gothic), 'Arial Narrow', sans-serif",
             fontWeight: 900,
             fontSize: "78px",
             lineHeight: 0.9,
@@ -383,7 +383,7 @@ export function ResultShareImage({
         </span>
         <span
           style={{
-            fontFamily: "var(--font-space-mono), monospace",
+            fontFamily: "var(--font-league-mono), monospace",
             fontSize: "18px",
             letterSpacing: "0.16em",
             color: "#19e3df",
@@ -456,7 +456,7 @@ export function ResultShareImage({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontFamily: "var(--font-big-shoulders), 'Arial Narrow', sans-serif",
+                fontFamily: "var(--font-league-gothic), 'Arial Narrow', sans-serif",
                 fontWeight: 900,
                 fontSize: `${t.badgeFont}px`,
                 color: t.badgeColor,
@@ -471,7 +471,7 @@ export function ResultShareImage({
                 left: `${t.namePad}px`,
                 right: `${t.namePad}px`,
                 bottom: `${t.nameBottom}px`,
-                fontFamily: "var(--font-big-shoulders), 'Arial Narrow', sans-serif",
+                fontFamily: "var(--font-league-gothic), 'Arial Narrow', sans-serif",
                 fontWeight: 800,
                 fontSize: `${t.nameSize}px`,
                 lineHeight: t.nameLine,
@@ -507,7 +507,7 @@ export function ResultShareImage({
               flexWrap: "wrap",
               gap: "11px",
               justifyContent: "center",
-              fontFamily: "var(--font-big-shoulders), 'Arial Narrow', sans-serif",
+              fontFamily: "var(--font-league-gothic), 'Arial Narrow', sans-serif",
               fontWeight: 900,
               fontSize: `${branding.fontSize}px`,
               textTransform: "uppercase",
@@ -532,7 +532,7 @@ export function ResultShareImage({
 // sorter can't produce an unreadable 20-column image.
 // ============================================================================
 
-const BIG = "var(--font-big-shoulders), 'Arial Narrow', sans-serif";
+const BIG = "var(--font-league-gothic), 'Arial Narrow', sans-serif";
 const MEDAL_NUM = ["#ffd23f", "#cdd6e8", "#d68a4e"];
 const MEDAL_ROW_GLOW = [
   "0 0 20px rgba(255,210,63,.5)",
@@ -587,7 +587,7 @@ export function ResultShareImageFull({
         position: "relative",
         overflow: "hidden",
         background: "#0b0918",
-        fontFamily: "var(--font-space-grotesk), sans-serif",
+        fontFamily: "var(--font-mona-sans), sans-serif",
         flexShrink: 0,
       }}
     >
@@ -608,16 +608,6 @@ export function ResultShareImageFull({
             "radial-gradient(680px 520px at -6% 12%, rgba(25,227,223,.11), transparent 55%)",
         }}
       />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-        }}
-      />
-
       <div style={{ position: "relative", padding: "56px 60px 46px" }}>
         {/* Header */}
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -667,7 +657,7 @@ export function ResultShareImageFull({
           </span>
           <span
             style={{
-              fontFamily: "var(--font-space-mono), monospace",
+              fontFamily: "var(--font-league-mono), monospace",
               fontSize: "16px",
               letterSpacing: "0.14em",
               color: "#19e3df",
@@ -764,7 +754,7 @@ export function ResultShareImageFull({
                 )}
                 <span
                   style={{
-                    fontFamily: "var(--font-space-grotesk), sans-serif",
+                    fontFamily: "var(--font-mona-sans), sans-serif",
                     fontWeight: 700,
                     fontSize: `${sz.name}px`,
                     lineHeight: 1.06,
@@ -787,7 +777,7 @@ export function ResultShareImageFull({
             style={{
               marginTop: "18px",
               textAlign: "center",
-              fontFamily: "var(--font-space-mono), monospace",
+              fontFamily: "var(--font-league-mono), monospace",
               fontSize: "15px",
               letterSpacing: "0.06em",
               color: "#8c87a6",

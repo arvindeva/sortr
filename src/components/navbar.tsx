@@ -301,17 +301,6 @@ export function Navbar() {
             : "pointer-events-none -translate-y-[10px] opacity-0"
         }`}
       >
-        {/* faint 48px grid on the panel — tracks the active theme */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(var(--atmo-grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--atmo-grid-line) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        />
-
         <div className="relative flex flex-col gap-5 p-5">
           {/* Search */}
           <form onSubmit={handleSearch} className="relative">
