@@ -7,14 +7,14 @@ import { Plus } from "lucide-react";
 
 // Words the hero headline cycles through after "RANK".
 const TYPEWRITER_WORDS = [
-  "anything.",
-  "albums.",
-  "characters.",
-  "movies.",
-  "books.",
-  "ships.",
-  "games.",
-  "bosses.",
+  "anything",
+  "albums",
+  "characters",
+  "movies",
+  "books",
+  "ships",
+  "games",
+  "bosses",
 ];
 
 /**
