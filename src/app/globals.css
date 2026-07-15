@@ -394,27 +394,10 @@
     }
   }
 
-  /* Activity ticker — translate the duplicated track left by half its width. */
-  @keyframes sortrMarquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
-  }
-  .sortr-marquee {
-    animation: sortrMarquee 40s linear infinite;
-  }
-  .sortr-marquee:hover {
-    animation-play-state: paused;
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .sortr-pulse,
     .sortr-glow,
-    .sortr-glow-alt,
-    .sortr-marquee {
+    .sortr-glow-alt {
       animation: none;
     }
   }

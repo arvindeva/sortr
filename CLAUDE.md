@@ -38,7 +38,7 @@ Never use generic Inter/Arial/Roboto — and never the former AI-default trio (B
 - **Chips/pills:** mono 13px, surface bg, border, hover → accent border+text.
 
 ## Motion
-Keyframes: `sortrPulse` (VS), `sortrGlow` (logo dot), `sortrBlink` (cursor), `sortrMarquee` (ticker). Card hover: `translateY(-4/-5px)` + accent glow + accent border.
+Keyframes: `sortrPulse` (VS), `sortrGlow` (logo dot), `sortrBlink` (cursor). Card hover: `translateY(-4/-5px)` + accent glow + accent border.
 
 ## Voice
 Product-first, not marketing. State what it does plainly; lean into game/VS language ("pick a side", "round 2/5", "ranking locked"). Tagline: **"Everything's a versus."** Honest about auth: free to play anonymously; account only to create & save.

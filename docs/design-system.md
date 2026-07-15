@@ -91,7 +91,6 @@ is `rgba(0,0,0,.74)`.
 - `.sortr-pulse` — VS marker (scale + magenta halo; element holds the 45° rotation).
 - `.sortr-glow` — logo dot opacity pulse.
 - `.sortr-blink` — blinking cursor `▮`.
-- `.sortr-marquee` — activity ticker (translateX 0 → -50%; pauses on hover).
 
 ## Voice
 

@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/db";
-import { sorters, user, sortingResults } from "@/db/schema";
-import { eq, desc, and, isNotNull } from "drizzle-orm";
+import { sorters, user } from "@/db/schema";
+import { eq, desc, and } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
 import { HeroDuel } from "@/components/hero-duel";
-import { ActivityTicker } from "@/components/activity-ticker";
 import { TrendingSortersSection } from "@/components/trending-sorters-section";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -93,33 +92,6 @@ async function getRecentSorters() {
   }
 }
 
-// Latest sorting activity for the ticker — the most recent completed rankings.
-async function getRecentActivity() {
-  try {
-    const rows = await db
-      .select({
-        title: sortingResults.sorterTitle,
-        username: user.username,
-        createdAt: sortingResults.createdAt,
-      })
-      .from(sortingResults)
-      .leftJoin(user, eq(sortingResults.userId, user.id))
-      .where(isNotNull(sortingResults.sorterTitle))
-      .orderBy(desc(sortingResults.createdAt))
-      .limit(12);
-
-    const activity = rows.map((r) => ({
-      title: r.title ?? "a sorter",
-      by: r.username ?? null, // null = anonymous
-    }));
-
-    return { activity, timestamp: new Date().toISOString() };
-  } catch (error) {
-    console.error("❌ SSR: Error fetching recent activity:", error);
-    throw error;
-  }
-}
-
 export async function generateMetadata(): Promise<Metadata> {
   const title = "Sortr - Rank Anything";
   const description = "Pick a favorite, one matchup at a time.";
@@ -161,14 +133,6 @@ const getRecentSortersCached = unstable_cache(
   { revalidate: 300 },
 );
 
-// Activity changes often; cache briefly so the ticker feels live without
-// hammering the DB on every request.
-const getRecentActivityCached = unstable_cache(
-  getRecentActivity,
-  ["homepage-recent-activity"],
-  { revalidate: 60 },
-);
-
 // Avoid build-time prerender failures when the DB host isn't reachable in the build container
 export const dynamic = "force-dynamic";
 
@@ -196,12 +160,6 @@ export default async function Home() {
     __error: true,
   };
   const hadRecentError = (recentData as any).__error === true;
-
-  // Fetch latest sorting activity for the ticker (non-critical)
-  const activityData = (await getRecentActivityCached().catch((error) => {
-    console.error("❌ Runtime: Error fetching recent activity:", error);
-    return null;
-  })) ?? { activity: [] };
 
   const baseUrl = (process.env.NEXTAUTH_URL || "https://sortr.io").replace(
     /\/$/,
@@ -235,13 +193,6 @@ export default async function Home() {
       <PageContainer className="flex flex-col gap-10 md:gap-12">
         {/* Hero — headline + live featured duel */}
         <HeroDuel />
-
-        {/* Full-bleed ticker — pulled up on mobile to sit closer to the duel */}
-        {activityData.activity.length > 0 && (
-          <div className="-mt-6 md:mt-0">
-            <ActivityTicker items={activityData.activity} />
-          </div>
-        )}
 
         {/* Trending this week — what's hot right now (above all-time Popular) */}
         <TrendingSortersSection className="w-full" />
