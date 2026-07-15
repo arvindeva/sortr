@@ -162,11 +162,7 @@ function BrowseContent({ initialData }: { initialData?: BrowseResult }) {
       {/* Page Header */}
       <ArcadePageHeader
         className="mb-7"
-        eyebrow={
-          data
-            ? `${data.totalCount.toLocaleString()} sorters live — pick your fight`
-            : "pick your fight"
-        }
+        eyebrow="pick your fight"
         title="Browse sorters"
       />
 
