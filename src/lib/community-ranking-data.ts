@@ -1,14 +1,14 @@
 import { unstable_cache } from "next/cache";
 import { db } from "@/db";
-import { sortingResults } from "@/db/schema";
+import { sorterItems, sortingResults } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import {
   computeCommunityRanking,
   type RankingList,
 } from "@/lib/community-ranking";
 
-// A consensus row, ready to render (carries the snapshot title/image so it's
-// robust to later item edits/deletes).
+// A consensus row, ready to render. Title/image come from the CURRENT items
+// (not ranking-time snapshots), so the list always shows up-to-date names.
 export interface CommunityRankingRow {
   itemId: string;
   title: string;
@@ -28,56 +28,126 @@ interface StoredRankedItem {
   imageUrl?: string | null;
 }
 
-// The minimum current-version rankings needed for a community ranking. Must
-// match `minRankings` in computeCommunityRanking.
-const MIN_RANKINGS = 10;
+// The minimum included rankings needed for a community ranking. Must match
+// `minRankings` in computeCommunityRanking.
+const MIN_RANKINGS = 3;
+
+// A past-version ranking is included only if at least this fraction of its
+// stored items maps onto the sorter's CURRENT items (by id, or by normalized
+// title — edits re-create items with new ids, but titles usually survive).
+// This is also the drift guard: if a creator replaced the sorter's contents
+// wholesale, old rankings fall below the threshold and stay excluded.
+const OVERLAP_THRESHOLD = 0.6;
+
+const normTitle = (t: string) => t.trim().toLowerCase();
 
 /**
- * Cheap check: does this sorter have enough rankings to show a community
- * ranking? A COUNT (milliseconds) — unlike the full aggregate (seconds on big
- * sorters) — so it's safe to await on the server to decide whether to render
- * the heading + loading skeleton, while the heavy data still streams in client
- * side.
+ * Cheap check: does this sorter have enough rankings (any version) to plausibly
+ * show a community ranking? A COUNT (milliseconds) — unlike the full aggregate
+ * — so it's safe to await server-side to decide whether to render the section
+ * heading + skeleton while the heavy data streams in client side. Optimistic:
+ * the full compute can still return null if too few rankings survive the
+ * overlap filter.
  */
 export async function hasCommunityRanking(
   sorterId: string,
-  version: number,
+  _version: number,
 ): Promise<boolean> {
   const [row] = await db
     .select({ c: sql<number>`count(*)::int` })
     .from(sortingResults)
-    .where(
-      and(
-        eq(sortingResults.sorterId, sorterId),
-        eq(sortingResults.version, version),
-      ),
-    );
+    .where(eq(sortingResults.sorterId, sorterId));
   return (row?.c ?? 0) >= MIN_RANKINGS;
+}
+
+/**
+ * Map one stored ranking onto the current item set. Returns the mapped ordered
+ * id list and the overlap fraction (mapped unique items / stored items).
+ */
+function mapRanking(
+  parsed: StoredRankedItem[],
+  currentIds: Set<string>,
+  titleToId: Map<string, string>,
+): { list: RankingList; overlap: number } {
+  const mapped: string[] = [];
+  const seen = new Set<string>();
+  let considered = 0;
+
+  for (const item of parsed) {
+    if (!item?.id) continue;
+    considered++;
+    // Same-version rankings match by id; past-version rankings (ids re-created
+    // by edits) fall back to the title snapshot.
+    const id = currentIds.has(item.id)
+      ? item.id
+      : item.title != null
+        ? titleToId.get(normTitle(item.title))
+        : undefined;
+    // Dedupe within one ranking (two old items can map to one current item
+    // via title) — keep the better (earlier) position.
+    if (id && !seen.has(id)) {
+      seen.add(id);
+      mapped.push(id);
+    }
+  }
+
+  return {
+    list: mapped,
+    overlap: considered > 0 ? mapped.length / considered : 0,
+  };
 }
 
 async function getCommunityRankingUncached(
   sorterId: string,
   version: number,
 ): Promise<CommunityRankingPayload | null> {
-  // Only aggregate rankings made against the sorter's CURRENT version. Editing
-  // a sorter re-creates its items with new ids (and may change the item set),
-  // so older rankings ranked a different thing — mixing them in produces an
-  // incoherent result (duplicate items, stale entries). The community ranking
-  // reflects the sorter as it is now.
-  const rows = await db
-    .select({ rankings: sortingResults.rankings })
-    .from(sortingResults)
-    .where(
-      and(
-        eq(sortingResults.sorterId, sorterId),
-        eq(sortingResults.version, version),
+  // Aggregate rankings from ALL versions, mapped onto the current item set.
+  // Editing a sorter re-creates its items with new ids, so past-version
+  // rankings are joined by title snapshot; rankings that no longer overlap
+  // enough with the current sorter (OVERLAP_THRESHOLD) are excluded, so a
+  // wholesale-replaced sorter doesn't inherit a stale consensus.
+  const [rows, items] = await Promise.all([
+    db
+      .select({ rankings: sortingResults.rankings })
+      .from(sortingResults)
+      .where(eq(sortingResults.sorterId, sorterId)),
+    db
+      .select({
+        id: sorterItems.id,
+        title: sorterItems.title,
+        imageUrl: sorterItems.imageUrl,
+      })
+      .from(sorterItems)
+      .where(
+        and(eq(sorterItems.sorterId, sorterId), eq(sorterItems.version, version)),
       ),
-    );
+  ]);
+
+  if (items.length < 2) return null;
+
+  const currentIds = new Set(items.map((i) => i.id));
+  const meta = new Map(
+    items.map((i) => [
+      i.id,
+      { title: i.title, imageUrl: i.imageUrl ?? undefined },
+    ]),
+  );
+  // Title → current id, dropping ambiguous titles (two current items with the
+  // same name): those can't be matched safely, so they only join by id.
+  const titleToId = new Map<string, string>();
+  const dupTitles = new Set<string>();
+  for (const i of items) {
+    const key = normTitle(i.title);
+    if (dupTitles.has(key)) continue;
+    if (titleToId.has(key)) {
+      titleToId.delete(key);
+      dupTitles.add(key);
+    } else {
+      titleToId.set(key, i.id);
+    }
+  }
 
   const lists: RankingList[] = [];
-  // Keep the most recent snapshot title/image per item id for display.
-  const meta = new Map<string, { title: string; imageUrl?: string }>();
-
   for (const row of rows) {
     let parsed: StoredRankedItem[];
     try {
@@ -87,22 +157,12 @@ async function getCommunityRankingUncached(
     }
     if (!Array.isArray(parsed) || parsed.length < 2) continue;
 
-    const ids: string[] = [];
-    for (const item of parsed) {
-      if (!item?.id) continue;
-      ids.push(item.id);
-      if (!meta.has(item.id)) {
-        meta.set(item.id, {
-          title: item.title ?? "Untitled",
-          imageUrl: item.imageUrl ?? undefined,
-        });
-      }
-    }
-    if (ids.length >= 2) lists.push(ids);
+    const { list, overlap } = mapRanking(parsed, currentIds, titleToId);
+    if (list.length >= 2 && overlap >= OVERLAP_THRESHOLD) lists.push(list);
   }
 
   const result = computeCommunityRanking(lists);
-  if (!result) return null; // not enough rankings yet
+  if (!result) return null; // not enough included rankings yet
 
   const consensusRows: CommunityRankingRow[] = result.items.map((it) => {
     const m = meta.get(it.itemId);
@@ -118,10 +178,10 @@ async function getCommunityRankingUncached(
 }
 
 /**
- * Cached community ranking for a sorter. The aggregate barely moves day-to-day
- * (it's an average over all rankings, so new ones have diminishing effect), so
- * we cache for 24h — this keeps the O(items × rankings) recompute off the hot
- * path almost entirely. Combined with client-side fetching (the page never
+ * Cached community ranking for a sorter. The aggregate barely moves ranking to
+ * ranking (it's an average), so we cache for an hour — keeps the
+ * O(items × rankings) recompute off the hot path while unlocks and updates
+ * show up the same day. Combined with client-side fetching (the page never
  * awaits this), the rare recompute only spins the community section, never the
  * page. If the app grows to many high-play sorters, the next step is a daily
  * cron that precomputes these into a table so no request ever recomputes.
@@ -132,8 +192,9 @@ export async function getCommunityRanking(
 ): Promise<CommunityRankingPayload | null> {
   return unstable_cache(
     () => getCommunityRankingUncached(sorterId, version),
-    // Keyed by version too, so an edit (new version) gets a fresh aggregate.
+    // Keyed by version too: an edit changes the current item set, so it gets a
+    // fresh aggregate — but past-version rankings still count toward it.
     ["community-ranking", sorterId, `v${version}`],
-    { revalidate: 86400, tags: [`community-ranking-${sorterId}`] },
+    { revalidate: 3600, tags: [`community-ranking-${sorterId}`] },
   )();
 }

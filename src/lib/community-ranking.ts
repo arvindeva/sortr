@@ -33,7 +33,7 @@ export interface CommunityRankingItem {
 export interface CommunityRankingOptions {
   /**
    * Minimum total rankings before a community ranking is produced at all.
-   * Below this, computeCommunityRanking returns null. Default 10.
+   * Below this, computeCommunityRanking returns null. Default 3.
    */
   minRankings?: number;
   /**
@@ -60,7 +60,7 @@ export function computeCommunityRanking(
   rankings: RankingList[],
   options: CommunityRankingOptions = {},
 ): CommunityRankingResult | null {
-  const minRankings = options.minRankings ?? 10;
+  const minRankings = options.minRankings ?? 3;
   const appearanceFloor = options.appearanceFloor ?? 0.2;
 
   // Only consider rankings with at least 2 items (a 1-item list has no order).
