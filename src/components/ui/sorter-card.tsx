@@ -47,13 +47,13 @@ export function SorterCard({ sorter, className }: SorterCardProps) {
           }}
         />
 
-        {/* Title — pinned bottom-left, clamped to 2 lines. Padding lives on
+        {/* Title — pinned bottom-left, clamped to 3 lines. Padding lives on
             the wrapper: line-clamp only hides overflow past the CONTENT box,
-            so padding on the clamped element lets a clipped 3rd line paint
-            into it (the "sliver below the 2nd line" bug). */}
+            so padding on the clamped element lets a clipped extra line paint
+            into it (the "sliver below the last line" bug). */}
         <div className="absolute inset-x-0 bottom-0 px-3 pb-2.5">
           <h3
-            className="display normal-case line-clamp-2 text-[15px] font-extrabold leading-[1.05] text-white sm:text-[19px]"
+            className="display normal-case line-clamp-3 text-[15px] font-extrabold leading-[1.05] text-white sm:text-[19px]"
             title={sorter.title}
           >
             {sorter.title}
