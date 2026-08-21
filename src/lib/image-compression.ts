@@ -262,7 +262,14 @@ export async function generateImageSizes(
 }
 
 /**
- * Generate sorter item images preserving aspect ratio (max 300px dimension)
+ * Generate sorter item images preserving aspect ratio.
+ *
+ * Full size is 800px max (was 300 until Aug 2026): the share card's hero tile
+ * renders at ~470 CSS px × pixelRatio 2 ≈ 940 source px, and retina duel cards
+ * want ~2× their CSS size too — 300px sources were being upscaled ~3× and
+ * looked soft ("image compression makes the charts look ugly" feedback).
+ * Only affects NEW uploads; originals are never uploaded, so existing images
+ * can't be regenerated.
  */
 export async function generateSorterItemSizes(
   file: File,
@@ -273,7 +280,7 @@ export async function generateSorterItemSizes(
 ): Promise<{ thumbnail: MultiSizeResult; full: MultiSizeResult }> {
   const { quality = 0.75, format = "jpeg" } = options;
 
-  // Create thumbnail (max 128px) and full (max 300px) with preserved aspect ratio
+  // Thumbnail (max 128px) and full (max 800px), aspect ratio preserved
   const thumbnailResult = await compressImage(file, {
     quality,
     format,
@@ -284,8 +291,8 @@ export async function generateSorterItemSizes(
   const fullResult = await compressImage(file, {
     quality,
     format,
-    maxWidth: 300,
-    maxHeight: 300,
+    maxWidth: 800,
+    maxHeight: 800,
   });
 
   return {
@@ -297,7 +304,7 @@ export async function generateSorterItemSizes(
     full: {
       ...fullResult,
       suffix: "",
-      size: { width: 300, height: 300 }, // Max dimensions, actual may be smaller
+      size: { width: 800, height: 800 }, // Max dimensions, actual may be smaller
     },
   };
 }
