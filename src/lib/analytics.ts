@@ -16,7 +16,10 @@ type EventName =
   | "create_started"
   | "create_completed"
   | "image_downloaded"
-  | "share_clicked";
+  | "share_clicked"
+  // Fired from the global error boundary — a client-side crash that would
+  // otherwise be invisible ("Application error" reports with no detail).
+  | "client_error";
 
 type EventData = Record<string, string | number | boolean | undefined>;
 
