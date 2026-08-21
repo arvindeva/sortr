@@ -685,7 +685,30 @@ export default function SortPage() {
     currentFilterSlugs,
   ]);
 
+  // First-run hint ("pick your favorite") under the duel — a feedback report
+  // showed first-timers don't know what clicking means ("is it for or
+  // against?"). Shown only for a player's first 3 lifetime comparisons
+  // (localStorage-counted), then never again — deliberately not permanent UI.
+  const [duelHintCount, setDuelHintCount] = useState<number | null>(null);
+  useEffect(() => {
+    try {
+      setDuelHintCount(
+        parseInt(localStorage.getItem("duel-hint-count") ?? "0", 10) || 0,
+      );
+    } catch {
+      setDuelHintCount(3); // storage unavailable — just never show it
+    }
+  }, []);
+
   const handleChoice = useCallback((winnerId: string) => {
+    setDuelHintCount((prev) => {
+      if (prev == null || prev >= 3) return prev;
+      const next = prev + 1;
+      try {
+        localStorage.setItem("duel-hint-count", String(next));
+      } catch {}
+      return next;
+    });
     if (resolveComparisonRef.current) {
       setCurrentComparison(null);
       resolveComparisonRef.current(winnerId);
@@ -1065,6 +1088,13 @@ export default function SortPage() {
           <VsMarker size={60} pulse={false} className="hidden sm:flex" />
         </div>
       </div>
+
+      {/* First-run hint — see duelHintCount above; gone after 3 comparisons. */}
+      {duelHintCount != null && duelHintCount < 3 && (
+        <p className="hud mt-3 text-center text-xs text-muted-foreground">
+          pick your favorite
+        </p>
+      )}
 
       {/* Autosave note */}
       <div className="mt-8 flex flex-col items-center gap-3 px-4 text-center md:px-0">
