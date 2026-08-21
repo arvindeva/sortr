@@ -21,6 +21,12 @@ interface ShareImageDialogProps {
   /** Sorter title — used for the share-sheet payload and analytics. */
   title: string;
   variant: "top10" | "full";
+  /**
+   * Total items in the ranking. The full-variant image caps at 100 items
+   * (MAX_VISIBLE in result-share-image); past that we say so up front — a
+   * user reported the cutoff as a bug.
+   */
+  itemCount?: number;
 }
 
 /**
@@ -37,6 +43,7 @@ export function ShareImageDialog({
   filename,
   title,
   variant,
+  itemCount,
 }: ShareImageDialogProps) {
   // Object URL lives exactly as long as the blob is on screen.
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
@@ -107,6 +114,12 @@ export function ShareImageDialog({
           <DialogDescription className="hidden font-mono text-xs text-muted-foreground [@media(pointer:coarse)]:block">
             press and hold the image to save it to your photos
           </DialogDescription>
+          {variant === "full" && itemCount != null && itemCount > 100 && (
+            <p className="font-mono text-xs text-muted-foreground">
+              the image shows your top 100 of {itemCount} — the full list lives
+              on this page
+            </p>
+          )}
         </DialogHeader>
 
         {objectUrl && (

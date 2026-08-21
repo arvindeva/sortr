@@ -113,6 +113,7 @@ export function ShareButton({
       filename={generated?.filename ?? "sortr-ranking.png"}
       title={rankingData?.sorterTitle ?? "sortr"}
       variant={generated?.variant ?? "top10"}
+      itemCount={rankingData?.rankings.length}
     />
   );
 
