@@ -305,7 +305,70 @@ export default function CreateSorterFormTags() {
     setShowProgressDialog(true); // Show dialog immediately when starting upload
 
     try {
-      // 1) Build init payload
+      // 1) Compress ALL images first — before any server-side state exists.
+      //    An undecodable file (typically a HEIC photo renamed to .jpg, or a
+      //    corrupted download) used to abort the whole submit mid-flight with
+      //    an unnamed "Failed to load image" AND leave an orphaned draft row
+      //    from init. Per-file catch instead: collect every bad file, abort
+      //    with the full named list, form state intact, nothing created.
+      setProgress({
+        phase: "requesting-tokens",
+        files: [],
+        overallProgress: 0,
+        statusMessage: "Preparing images...",
+        determinate: false,
+      });
+
+      const unreadable: string[] = [];
+
+      let compressedCover: File | null = null;
+      if (coverImageFile) {
+        try {
+          const c = await compressImage(coverImageFile, {
+            quality: 0.9,
+            maxWidth: 600,
+            maxHeight: 600,
+            format: "jpeg",
+          });
+          compressedCover = c.file;
+        } catch {
+          unreadable.push(coverImageFile.name);
+        }
+      }
+
+      const compressedItems: ({ thumb: File; full: File } | null)[] = [];
+      for (let i = 0; i < itemImagesData.length; i++) {
+        const img = itemImagesData[i];
+        if (!img) {
+          compressedItems.push(null); // text-only item
+          continue;
+        }
+        try {
+          const { thumbnail, full } = await generateSorterItemSizes(img.file, {
+            quality: 0.9,
+            format: "jpeg",
+          });
+          compressedItems.push({ thumb: thumbnail.file, full: full.file });
+        } catch {
+          unreadable.push(img.file.name);
+          compressedItems.push(null);
+        }
+      }
+
+      if (unreadable.length > 0) {
+        const shown = unreadable.slice(0, 5).join(", ");
+        const more =
+          unreadable.length > 5 ? ` and ${unreadable.length - 5} more` : "";
+        throw new Error(
+          `Couldn't read ${
+            unreadable.length === 1 ? "this image" : `${unreadable.length} images`
+          }: ${shown}${more}. Usually the file is corrupted or in a format the browser can't open (often a HEIC photo renamed to .jpg). Replace or remove ${
+            unreadable.length === 1 ? "it" : "them"
+          } and hit create again — everything you entered is still here.`,
+        );
+      }
+
+      // 2) Build init payload
       const validItems =
         data.items
           ?.map((item, idx) => ({
@@ -342,32 +405,28 @@ export default function CreateSorterFormTags() {
         presigned: Record<string, string>;
       };
 
-      // 2) Prepare files for upload
+      // 3) Build upload tasks from the precompressed files (index mapping
+      //    unchanged: keys use the same indices as itemImagesData)
       type Task = { name: string; key: string; file: File };
       const tasks: Task[] = [];
 
       // Cover
-      if (coverImageFile) {
+      if (compressedCover && coverImageFile) {
         const coverKey = keys.find((k) => k.type === "cover")?.key;
         if (coverKey) {
-          const c = await compressImage(coverImageFile, {
-            quality: 0.9,
-            maxWidth: 600,
-            maxHeight: 600,
-            format: "jpeg",
-          });
           tasks.push({
             name: coverImageFile.name,
             key: coverKey,
-            file: c.file,
+            file: compressedCover,
           });
         }
       }
 
-      // Items (use index mapping and image-compression to make thumb + full)
+      // Items
       for (let i = 0; i < itemImagesData.length; i++) {
         const img = itemImagesData[i];
-        if (!img) continue; // text-only item
+        const pre = compressedItems[i];
+        if (!img || !pre) continue; // text-only item
         const mainKey = keys.find(
           (k: any) => k.type === "item" && k.itemIndex === i,
         )?.key;
@@ -376,19 +435,15 @@ export default function CreateSorterFormTags() {
         )?.key;
         if (!mainKey || !thumbKey) continue; // should not happen
 
-        const { thumbnail, full } = await generateSorterItemSizes(img.file, {
-          quality: 0.9,
-          format: "jpeg",
-        });
         tasks.push({
           name: `${img.file.name} (thumb)`,
           key: thumbKey,
-          file: thumbnail.file,
+          file: pre.thumb,
         });
         tasks.push({
           name: `${img.file.name} (full)`,
           key: mainKey,
-          file: full.file,
+          file: pre.full,
         });
       }
 

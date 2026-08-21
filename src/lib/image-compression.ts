@@ -52,7 +52,12 @@ export async function compressImage(
       return;
     }
 
+    const objectUrl = URL.createObjectURL(file);
+
     img.onload = () => {
+      // Decoded — safe to release (and required: batches of hundreds of
+      // images would otherwise leak an object URL each).
+      URL.revokeObjectURL(objectUrl);
       let { width, height } = img;
       let sourceX = 0,
         sourceY = 0,
@@ -152,11 +157,15 @@ export async function compressImage(
     };
 
     img.onerror = () => {
-      reject(new Error("Failed to load image"));
+      URL.revokeObjectURL(objectUrl);
+      // Name the file: this surfaces to users ("which of my 170 images is
+      // bad?") and the usual culprit is a file whose extension lies about its
+      // contents (e.g. HEIC renamed to .jpg) — the browser can't decode it.
+      reject(new Error(`Failed to load image: ${file.name}`));
     };
 
     // Load the image
-    img.src = URL.createObjectURL(file);
+    img.src = objectUrl;
   });
 }
 
