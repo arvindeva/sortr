@@ -345,7 +345,7 @@ export default function CreateSorterFormTags() {
         }
         try {
           const { thumbnail, full } = await generateSorterItemSizes(img.file, {
-            quality: 0.9,
+            quality: 0.85,
             format: "jpeg",
           });
           compressedItems.push({ thumb: thumbnail.file, full: full.file });

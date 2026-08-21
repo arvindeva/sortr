@@ -264,12 +264,13 @@ export async function generateImageSizes(
 /**
  * Generate sorter item images preserving aspect ratio.
  *
- * Full size is 800px max (was 300 until Aug 2026): the share card's hero tile
- * renders at ~470 CSS px × pixelRatio 2 ≈ 940 source px, and retina duel cards
- * want ~2× their CSS size too — 300px sources were being upscaled ~3× and
- * looked soft ("image compression makes the charts look ugly" feedback).
- * Only affects NEW uploads; originals are never uploaded, so existing images
- * can't be regenerated.
+ * Full size is 600px max (was 300 until Aug 2026): 300px sources were being
+ * upscaled ~3× on the share card's hero tile (~940 source px wanted) and on
+ * retina duel cards (~550px wanted) and looked soft — user feedback. 600
+ * covers the duel exactly and cuts the share-hero upscale to a barely-visible
+ * 1.6×, while keeping the sort page's preload-all-images payload roughly half
+ * of what 800px would cost (80%-mobile audience). Only affects NEW uploads;
+ * originals never leave the browser, so existing images can't be regenerated.
  */
 export async function generateSorterItemSizes(
   file: File,
@@ -280,7 +281,7 @@ export async function generateSorterItemSizes(
 ): Promise<{ thumbnail: MultiSizeResult; full: MultiSizeResult }> {
   const { quality = 0.75, format = "jpeg" } = options;
 
-  // Thumbnail (max 128px) and full (max 800px), aspect ratio preserved
+  // Thumbnail (max 128px) and full (max 600px), aspect ratio preserved
   const thumbnailResult = await compressImage(file, {
     quality,
     format,
@@ -291,8 +292,8 @@ export async function generateSorterItemSizes(
   const fullResult = await compressImage(file, {
     quality,
     format,
-    maxWidth: 800,
-    maxHeight: 800,
+    maxWidth: 600,
+    maxHeight: 600,
   });
 
   return {
@@ -304,7 +305,7 @@ export async function generateSorterItemSizes(
     full: {
       ...fullResult,
       suffix: "",
-      size: { width: 800, height: 800 }, // Max dimensions, actual may be smaller
+      size: { width: 600, height: 600 }, // Max dimensions, actual may be smaller
     },
   };
 }
