@@ -15,7 +15,11 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   max: 10, // Maximum connections in pool
   idleTimeoutMillis: 30000, // Close idle connections after 30s
-  connectionTimeoutMillis: 2000, // Fail fast if no connection available
+  // Connection-acquire budget. 2s was a coin flip against the cold-handshake
+  // time to Railway's public proxy (~2-4s from outside), which made any page
+  // 500 whenever the pool was cold; it also insta-failed requests queued
+  // behind a briefly-full pool during spikes. Queuing beats erroring here.
+  connectionTimeoutMillis: 10000,
 });
 
 export const db = drizzle(pool, { schema });
