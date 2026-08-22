@@ -71,6 +71,8 @@ export const sorters = pgTable("sorters", {
   coverImageUrl: text("cover_image_url"),
   // draft | active | archived (default active for backward compatibility)
   status: varchar("status", { length: 16 }).default("active").notNull(),
+  // public | unlisted | private — audience, orthogonal to lifecycle `status`
+  visibility: varchar("visibility", { length: 16 }).default("public").notNull(),
   userId: uuid("userId")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
