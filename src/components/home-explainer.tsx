@@ -64,14 +64,24 @@ export function HomeExplainer() {
         your own.
       </p>
 
-      <div className="mt-8 grid gap-x-10 gap-y-6 md:grid-cols-2">
+      {/* Collapsed by default — crawlers index <details> content regardless,
+          and the JSON-LD above carries the full answers either way. */}
+      <div className="mt-6 grid gap-x-10 md:grid-cols-2">
         {FAQ.map(({ q, a }) => (
-          <div key={q}>
-            <h3 className="text-foreground text-[13px] font-semibold">{q}</h3>
-            <p className="text-muted-foreground mt-1 text-[13px] leading-relaxed">
+          <details key={q} className="group border-border border-b">
+            <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-[13px] font-semibold [&::-webkit-details-marker]:hidden">
+              {q}
+              <span
+                aria-hidden
+                className="text-muted-foreground shrink-0 transition-transform duration-150 group-open:rotate-90"
+              >
+                ▸
+              </span>
+            </summary>
+            <p className="text-muted-foreground pb-4 text-[13px] leading-relaxed">
               {a}
             </p>
-          </div>
+          </details>
         ))}
       </div>
     </section>
