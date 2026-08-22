@@ -4,7 +4,7 @@ import { SorterHeaderServer } from "@/components/sorter-header-server";
 import { SorterPageClient } from "@/components/sorter-page-client";
 import { SorterOwnerControls } from "@/components/sorter-owner-controls";
 import { getSorterDataCached } from "@/lib/sorter-data";
-import { hasCommunityRanking } from "@/lib/community-ranking-data";
+import { getCommunityRankingPoolCount } from "@/lib/community-ranking-data";
 import { TrendingSortersSection } from "@/components/trending-sorters-section";
 import { ContinueSortingBanner } from "@/components/continue-sorting-banner";
 
@@ -204,16 +204,16 @@ export default async function SorterPage({ params }: SorterPageProps) {
 
         {/* Client-side data fetching for items, recent results, and the
             community ranking (fetched client-side so its heavy aggregate never
-            blocks the page render). `hasCommunityRanking` is a cheap count so
-            the heading + skeleton render instantly only when one will exist. */}
+            blocks the page render). `communityRankingPool` is a cheap
+            dedup-aware count: >= MIN renders the section + skeleton, below MIN
+            renders the "X of 3 to unlock" locked state. */}
         <SorterPageClient
           slug={slug}
           isOwner={false}
           currentUserEmail={undefined}
           initialData={initialClientData}
-          hasCommunityRanking={await hasCommunityRanking(
+          communityRankingPool={await getCommunityRankingPoolCount(
             data.sorter.id,
-            data.sorter.version,
           )}
         />
 

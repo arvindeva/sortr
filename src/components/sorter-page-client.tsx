@@ -11,16 +11,19 @@ import { CommunityRankingSkeleton } from "@/components/community-ranking-skeleto
 import { accentFor } from "@/lib/utils";
 import { getImageUrl } from "@/lib/image-utils";
 import type { CommunityRankingPayload } from "@/lib/community-ranking-data";
+import { MIN_RANKINGS } from "@/lib/community-ranking";
 
 interface SorterPageClientProps {
   slug: string;
   isOwner: boolean;
   currentUserEmail?: string;
   initialData?: SorterData;
-  /** Cheap server-side check — true if this sorter has enough rankings for a
-   *  community ranking. Gates the heading + skeleton so they only show when one
-   *  will actually appear (no misleading flash for sparse sorters). */
-  hasCommunityRanking?: boolean;
+  /** Cheap server-side dedup-aware count of the ranking pool. >= MIN_RANKINGS
+   *  gates the heading + skeleton (so they only show when a community ranking
+   *  will actually appear); below it, the locked "X of MIN" state renders —
+   *  three separate users wrote in confused about where their community
+   *  ranking was. */
+  communityRankingPool?: number;
 }
 
 // Small display-font section title with an optional count.
@@ -44,7 +47,7 @@ function SectionTitle({
 export function SorterPageClient({
   slug,
   initialData,
-  hasCommunityRanking = false,
+  communityRankingPool = 0,
 }: SorterPageClientProps) {
   const { sorterData, recentResults, isLoading, isError, error } =
     useSorterPage(slug, initialData, Date.now());
@@ -135,7 +138,15 @@ export function SorterPageClient({
     <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-8">
       {/* Left column — community + recent */}
       <div className="contents md:flex md:min-w-0 md:flex-1 md:flex-col md:gap-8">
-        {communityPending && hasCommunityRanking ? (
+        {communityRankingPool < MIN_RANKINGS ? (
+          <section className="order-1 md:order-none">
+            <SectionTitle>Community ranking</SectionTitle>
+            <EmptyState
+              title={`Unlocks at ${MIN_RANKINGS} rankings`}
+              description={`${communityRankingPool} of ${MIN_RANKINGS} so far — share this sorter to get there.`}
+            />
+          </section>
+        ) : communityPending ? (
           <div className="order-1 md:order-none">
             <CommunityRankingSkeleton />
           </div>

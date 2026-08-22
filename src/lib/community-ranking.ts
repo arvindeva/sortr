@@ -22,6 +22,14 @@
 /** One submitted ranking: an ordered list of item ids, best first. */
 export type RankingList = string[];
 
+/**
+ * Minimum rankings in the (deduplicated) pool before a community ranking
+ * unlocks. Shared by the aggregator, the unlock gate, and the locked-state
+ * copy on the sorter page. This module is pure (no db import), so client
+ * components may import it.
+ */
+export const MIN_RANKINGS = 3;
+
 export interface CommunityRankingItem {
   itemId: string;
   /** Mean percentile (0 best … 1 worst) over rankings this item appeared in. */
@@ -60,7 +68,7 @@ export function computeCommunityRanking(
   rankings: RankingList[],
   options: CommunityRankingOptions = {},
 ): CommunityRankingResult | null {
-  const minRankings = options.minRankings ?? 3;
+  const minRankings = options.minRankings ?? MIN_RANKINGS;
   const appearanceFloor = options.appearanceFloor ?? 0.2;
 
   // Only consider rankings with at least 2 items (a 1-item list has no order).

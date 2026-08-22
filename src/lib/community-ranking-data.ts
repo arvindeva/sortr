@@ -4,6 +4,7 @@ import { sorterItems, sortingResults } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import {
   computeCommunityRanking,
+  MIN_RANKINGS,
   type RankingList,
 } from "@/lib/community-ranking";
 
@@ -28,10 +29,6 @@ interface StoredRankedItem {
   imageUrl?: string | null;
 }
 
-// The minimum included rankings needed for a community ranking. Must match
-// `minRankings` in computeCommunityRanking.
-const MIN_RANKINGS = 3;
-
 // A past-version ranking is included only if at least this fraction of its
 // stored items maps onto the sorter's CURRENT items (by id, or by normalized
 // title — edits re-create items with new ids, but titles usually survive).
@@ -42,22 +39,24 @@ const OVERLAP_THRESHOLD = 0.6;
 const normTitle = (t: string) => t.trim().toLowerCase();
 
 /**
- * Cheap check: does this sorter have enough rankings (any version) to plausibly
- * show a community ranking? A COUNT (milliseconds) — unlike the full aggregate
- * — so it's safe to await server-side to decide whether to render the section
- * heading + skeleton while the heavy data streams in client side. Optimistic:
- * the full compute can still return null if too few rankings survive the
- * overlap filter.
+ * Cheap dedup-aware size of a sorter's ranking pool: each logged-in user
+ * counts ONCE (their replays aggregate as a single voice — see the dedup in
+ * the aggregate below), anonymous rankings count individually. A COUNT
+ * (milliseconds) — unlike the full aggregate — so it's safe to await
+ * server-side; drives the unlock gate and the "X of 3" locked-state copy.
+ * Optimistic: the full compute can still return null if too few rankings
+ * survive the overlap filter.
  */
-export async function hasCommunityRanking(
+export async function getCommunityRankingPoolCount(
   sorterId: string,
-  _version: number,
-): Promise<boolean> {
+): Promise<number> {
   const [row] = await db
-    .select({ c: sql<number>`count(*)::int` })
+    .select({
+      c: sql<number>`(count(distinct "userId") + count(*) filter (where "userId" is null))::int`,
+    })
     .from(sortingResults)
     .where(eq(sortingResults.sorterId, sorterId));
-  return (row?.c ?? 0) >= MIN_RANKINGS;
+  return row?.c ?? 0;
 }
 
 /**
@@ -108,7 +107,11 @@ async function getCommunityRankingUncached(
   // wholesale-replaced sorter doesn't inherit a stale consensus.
   const [rows, items] = await Promise.all([
     db
-      .select({ rankings: sortingResults.rankings })
+      .select({
+        rankings: sortingResults.rankings,
+        userId: sortingResults.userId,
+        createdAt: sortingResults.createdAt,
+      })
       .from(sortingResults)
       .where(eq(sortingResults.sorterId, sorterId)),
     db
@@ -147,8 +150,26 @@ async function getCommunityRankingUncached(
     }
   }
 
-  const lists: RankingList[] = [];
+  // One voice per logged-in user: keep only their LATEST ranking (a user
+  // reported people replaying a sorter repeatedly to sway the community
+  // ranking — and at an unlock minimum of 3, replays weigh heavily).
+  // Anonymous rankings can't be attributed, so they all count as before.
+  const latestByUser = new Map<string, (typeof rows)[number]>();
+  const pool: (typeof rows)[number][] = [];
   for (const row of rows) {
+    if (!row.userId) {
+      pool.push(row);
+      continue;
+    }
+    const prev = latestByUser.get(row.userId);
+    if (!prev || row.createdAt > prev.createdAt) {
+      latestByUser.set(row.userId, row);
+    }
+  }
+  pool.push(...latestByUser.values());
+
+  const lists: RankingList[] = [];
+  for (const row of pool) {
     let parsed: StoredRankedItem[];
     try {
       parsed = JSON.parse(row.rankings);
