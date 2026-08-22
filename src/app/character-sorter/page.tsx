@@ -105,7 +105,6 @@ export default async function CharacterSorterPage() {
       <PageContainer className="flex flex-col gap-10 md:gap-12">
         <div>
           <ArcadePageHeader
-            eyebrow="the fandom classic"
             title="Character sorter"
             subtitle="Rank every character in your fandom — one matchup at a time."
           />
