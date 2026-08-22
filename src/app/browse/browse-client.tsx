@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
@@ -69,8 +69,17 @@ function BrowseContent({ initialData }: { initialData?: BrowseResult }) {
   // Category chips are collapsed by default on mobile (they take a lot of space)
   const [showFilters, setShowFilters] = useState(false);
 
-  // Update search input when URL changes
+  // q values our debounced pushes sent whose navigations haven't committed
+  // yet. router.push resolves asynchronously (a full RSC round-trip), so a
+  // slow commit can land after the user has typed further — without this,
+  // the URL→input sync below stomps those keystrokes back to the older value.
+  const pendingPushedQ = useRef<Set<string>>(new Set());
+
+  // Update search input when the URL changes EXTERNALLY (back/forward, links).
+  // Commits of our own pushes are skipped so they can't revert the input.
   useEffect(() => {
+    if (pendingPushedQ.current.delete(query)) return;
+    pendingPushedQ.current.clear();
     setSearchInput(query);
   }, [query]);
 
@@ -78,6 +87,7 @@ function BrowseContent({ initialData }: { initialData?: BrowseResult }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchInput !== query) {
+        pendingPushedQ.current.add(searchInput);
         updateFilters({ q: searchInput, page: 1 });
       }
     }, 300);
