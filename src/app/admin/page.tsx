@@ -2,7 +2,9 @@ import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getAdminStats, getRecentFeedback } from "@/lib/admin-stats";
+import { getTrafficStats } from "@/lib/umami-stats";
 import { AdminCharts } from "@/components/admin-charts";
+import { AdminTraffic } from "@/components/admin-traffic";
 import { TopSortersCard } from "@/components/admin-top-sorters";
 import { formatCount } from "@/lib/utils";
 
@@ -52,8 +54,11 @@ export default async function AdminPage() {
     notFound();
   }
 
-  const stats = await getAdminStats();
-  const feedbackRows = await getRecentFeedback();
+  const [stats, feedbackRows, traffic] = await Promise.all([
+    getAdminStats(),
+    getRecentFeedback(),
+    getTrafficStats(),
+  ]);
 
   return (
     <main className="w-full px-4 py-8 md:px-8 md:py-12">
@@ -85,6 +90,10 @@ export default async function AdminPage() {
       <div className="mt-5">
         <AdminCharts stats={stats} />
       </div>
+
+      {/* Traffic (Umami) — omitted entirely if the analytics DB is
+          unreachable or UMAMI_DATABASE_URL is unset. */}
+      {traffic && <AdminTraffic traffic={traffic} />}
 
       {/* Top sorters + Feedback — auto-fit (side by side when there's room). */}
       <div className="mt-5 grid grid-cols-1 items-start gap-5 sm:grid-cols-[repeat(auto-fit,minmax(420px,1fr))]">
