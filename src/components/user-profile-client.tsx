@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useUserProfile } from "@/hooks/api";
 import { UserProfileContentSkeleton } from "@/components/skeletons/user-profile-content-skeleton";
 import { SorterCard } from "@/components/ui/sorter-card";
@@ -10,10 +11,18 @@ import Link from "next/link";
 import { accentFor } from "@/lib/utils";
 import { getImageUrl } from "@/lib/image-utils";
 import { computeCompetitionRanks, medalForRank } from "@/lib/ranking-utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface UserProfileClientProps {
   username: string;
   isOwnProfile: boolean;
+  isOwner?: boolean;
   currentUserEmail?: string;
   initialData?: any; // Will use the same type as useUserProfile returns
 }
@@ -28,7 +37,7 @@ function SectionTitle({
   count?: number;
 }) {
   return (
-    <h2 className="display mb-4 text-[clamp(1.75rem,5vw,2.125rem)] font-black text-foreground">
+    <h2 className="display text-[clamp(1.75rem,5vw,2.125rem)] font-black text-foreground">
       {children}
       {count != null && (
         <span className="font-bold text-muted-foreground"> ({count})</span>
@@ -40,10 +49,12 @@ function SectionTitle({
 export function UserProfileClient({
   username,
   isOwnProfile,
+  isOwner,
   currentUserEmail,
   initialData,
 }: UserProfileClientProps) {
   const { data, isLoading, error } = useUserProfile(username, initialData);
+  const [visibilityFilter, setVisibilityFilter] = useState<string>("all");
 
   if (isLoading) {
     return <UserProfileContentSkeleton />;
@@ -74,6 +85,16 @@ export function UserProfileClient({
 
   const { user, stats, sorters, rankings, userSince } = data;
 
+  const hasNonPublic =
+    isOwner &&
+    sorters.some((s: any) => s.visibility && s.visibility !== "public");
+  const visibleSorters =
+    visibilityFilter === "all"
+      ? sorters
+      : sorters.filter(
+          (s: any) => (s.visibility ?? "public") === visibilityFilter,
+        );
+
   return (
     <>
       {/* In-progress sorts — private, own profile only */}
@@ -81,7 +102,22 @@ export function UserProfileClient({
 
       {/* Sorters Section */}
       <section className="mb-10">
-        <SectionTitle count={sorters.length}>Sorters</SectionTitle>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <SectionTitle count={sorters.length}>Sorters</SectionTitle>
+          {hasNonPublic && (
+            <Select value={visibilityFilter} onValueChange={setVisibilityFilter}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="public">Public</SelectItem>
+                <SelectItem value="unlisted">Unlisted</SelectItem>
+                <SelectItem value="private">Private</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
         <div>
           {sorters.length === 0 ? (
             <EmptyState
@@ -90,7 +126,7 @@ export function UserProfileClient({
             />
           ) : (
             <SorterGrid>
-              {sorters.map((sorter) => (
+              {visibleSorters.map((sorter: any) => (
                 <SorterCard key={sorter.id} sorter={sorter} />
               ))}
             </SorterGrid>
@@ -100,9 +136,9 @@ export function UserProfileClient({
 
       {/* Rankings Section */}
       <section>
-        <SectionTitle count={rankings.length}>
-          Rankings
-        </SectionTitle>
+        <div className="mb-4">
+          <SectionTitle count={rankings.length}>Rankings</SectionTitle>
+        </div>
         <div>
           {rankings.length === 0 ? (
             <EmptyState

@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import { user, sorters, sortingResults } from "@/db/schema";
 import { previewItemsSql } from "@/lib/sorter-preview";
+import { listableSorter } from "@/lib/sorter-visibility";
 import { eq, and, desc, count } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { UserProfileHeaderServer } from "@/components/user-profile-header-server";
@@ -28,7 +29,7 @@ async function getUserByUsername(username: string) {
 }
 
 // Server-side complete user profile data fetching
-async function getUserProfileData(username: string) {
+async function getUserProfileData(username: string, viewerUserId?: string) {
   // Handle anonymous user case
   if (username === "Anonymous" || username === "Unknown User") {
     return null;
@@ -46,6 +47,8 @@ async function getUserProfileData(username: string) {
     return null;
   }
 
+  const isOwner = !!viewerUserId && viewerUserId === userData.id;
+
   // Get user stats in parallel
   const [sorterCountResult, rankingCountResult] = await Promise.all([
     db
@@ -54,8 +57,9 @@ async function getUserProfileData(username: string) {
       .where(
         and(
           eq(sorters.userId, userData.id),
-          eq(sorters.deleted, false),
-          eq(sorters.status, "active"),
+          ...(isOwner
+            ? [eq(sorters.deleted, false), eq(sorters.status, "active")]
+            : [listableSorter()]),
         ),
       ),
     db
@@ -78,14 +82,16 @@ async function getUserProfileData(username: string) {
       createdAt: sorters.createdAt,
       completionCount: sorters.completionCount,
       coverImageUrl: sorters.coverImageUrl,
+      visibility: sorters.visibility,
       previewItems: previewItemsSql,
     })
     .from(sorters)
     .where(
       and(
         eq(sorters.userId, userData.id),
-        eq(sorters.deleted, false),
-        eq(sorters.status, "active"),
+        ...(isOwner
+          ? [eq(sorters.deleted, false), eq(sorters.status, "active")]
+          : [listableSorter()]),
       ),
     )
     .orderBy(desc(sorters.createdAt));
@@ -225,14 +231,15 @@ export default async function UserProfilePage({
     notFound();
   }
 
+  // Get current session to check ownership
+  const session = await getServerSession(authOptions);
+
   // Get complete user profile data server-side
-  const profileData = await getUserProfileData(username);
+  const profileData = await getUserProfileData(username, session?.user?.id);
   if (!profileData) {
     notFound();
   }
 
-  // Get current session to check ownership
-  const session = await getServerSession(authOptions);
   const currentUserEmail = session?.user?.email;
   const isOwnProfile = currentUserEmail === profileData.user.email;
 
@@ -276,6 +283,7 @@ export default async function UserProfilePage({
         <UserProfileClient
           username={username}
           isOwnProfile={isOwnProfile}
+          isOwner={isOwnProfile}
           currentUserEmail={currentUserEmail || undefined}
           initialData={profileData}
         />

@@ -13,6 +13,9 @@ interface SorterCardProps {
     /** First items of a cover-less sorter (title + imageUrl) — drives the
      *  mosaic / collage fallbacks. Absent or empty → plain accent tile. */
     previewItems?: SorterPreviewItem[] | null;
+    /** Present for the owner's own profile view; non-owners never receive
+     *  non-public sorters, so a non-"public" value only ever renders there. */
+    visibility?: string;
   };
   className?: string;
 }
@@ -139,6 +142,12 @@ export function SorterCard({ sorter, className }: SorterCardProps) {
             {sorter.title}
           </h3>
         </div>
+
+        {sorter.visibility && sorter.visibility !== "public" && (
+          <span className="hud absolute top-2 right-2 z-10 rounded-md border border-border bg-background/80 px-1.5 py-0.5 text-[10px] text-muted-foreground backdrop-blur-sm">
+            {sorter.visibility}
+          </span>
+        )}
       </div>
     </Link>
   );

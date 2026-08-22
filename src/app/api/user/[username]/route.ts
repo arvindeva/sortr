@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import { user, sorters, sortingResults } from "@/db/schema";
 import { previewItemsSql } from "@/lib/sorter-preview";
+import { listableSorter } from "@/lib/sorter-visibility";
+import { authOptions } from "@/lib/auth";
 import { eq, and, desc, count } from "drizzle-orm";
 
 interface RouteParams {
@@ -29,6 +32,9 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    const session = await getServerSession(authOptions);
+    const isOwner = !!session?.user?.id && session.user.id === userData.id;
+
     // Get user stats in parallel
     const [sorterCountResult, rankingCountResult] = await Promise.all([
       db
@@ -37,8 +43,9 @@ export async function GET(request: Request, { params }: RouteParams) {
         .where(
           and(
             eq(sorters.userId, userData.id),
-            eq(sorters.deleted, false),
-            eq(sorters.status, "active"),
+            ...(isOwner
+              ? [eq(sorters.deleted, false), eq(sorters.status, "active")]
+              : [listableSorter()]),
           ),
         ),
       db
@@ -61,14 +68,16 @@ export async function GET(request: Request, { params }: RouteParams) {
         createdAt: sorters.createdAt,
         completionCount: sorters.completionCount,
         coverImageUrl: sorters.coverImageUrl,
+        visibility: sorters.visibility,
         previewItems: previewItemsSql,
       })
       .from(sorters)
       .where(
         and(
           eq(sorters.userId, userData.id),
-          eq(sorters.deleted, false),
-          eq(sorters.status, "active"),
+          ...(isOwner
+            ? [eq(sorters.deleted, false), eq(sorters.status, "active")]
+            : [listableSorter()]),
         ),
       )
       .orderBy(desc(sorters.createdAt));
@@ -143,6 +152,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       sorters: transformedSorters,
       rankings: transformedResults,
       userSince,
+      isOwner,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

@@ -25,6 +25,7 @@ interface SorterPreview {
   completionCount: number;
   coverImageUrl?: string;
   creatorUsername: string;
+  visibility?: string;
 }
 
 interface RankingPreview {
@@ -49,6 +50,7 @@ interface UserProfileData {
   sorters: SorterPreview[];
   rankings: RankingPreview[];
   userSince: string;
+  isOwner?: boolean;
   timestamp: string;
 }
 
