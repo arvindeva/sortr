@@ -6,7 +6,6 @@ import { SorterPageClient } from "@/components/sorter-page-client";
 import { SorterOwnerControls } from "@/components/sorter-owner-controls";
 import { ContinueSortingBanner } from "@/components/continue-sorting-banner";
 import { SorterContentSkeleton } from "@/components/skeletons/sorter-content-skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
 import { PageContainer } from "@/components/ui/page-container";
 import type { SorterData } from "@/hooks/api/use-sorter";
 
@@ -35,10 +34,14 @@ export function PrivateSorterView({ slug }: { slug: string }) {
   if (isError || !data) {
     return (
       <PageContainer>
-        <EmptyState
-          title="This sorter is private"
-          description="Only its creator can view or play it."
-        />
+        <div className="py-24 text-center">
+          <p className="display text-2xl font-black text-foreground">
+            This sorter is private
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Only its creator can view or play it.
+          </p>
+        </div>
       </PageContainer>
     );
   }
