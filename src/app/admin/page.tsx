@@ -27,10 +27,12 @@ function StatCard({
   label,
   value,
   delta,
+  subline,
 }: {
   label: string;
   value: number;
   delta?: string;
+  subline?: string;
 }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
@@ -41,8 +43,26 @@ function StatCard({
       {delta && (
         <div className="mt-2 font-mono text-xs text-cyan-ink">{delta}</div>
       )}
+      {subline && (
+        <div className="mt-1 font-mono text-xs text-muted-foreground">
+          {subline}
+        </div>
+      )}
     </div>
   );
+}
+
+// e.g. [{visibility:"public",count:12340},{visibility:"unlisted",count:210}]
+// → "12,340 public · 210 unlisted" (zero buckets omitted).
+function visibilitySubline(
+  breakdown: { visibility: string; count: number }[],
+): string | undefined {
+  const order = ["public", "unlisted", "private"];
+  const parts = breakdown
+    .filter((row) => row.count > 0)
+    .sort((a, b) => order.indexOf(a.visibility) - order.indexOf(b.visibility))
+    .map((row) => `${row.count.toLocaleString()} ${row.visibility}`);
+  return parts.length > 0 ? parts.join(" · ") : undefined;
 }
 
 export default async function AdminPage() {
@@ -78,6 +98,7 @@ export default async function AdminPage() {
           label="Total sorters"
           value={stats.totals.sorters}
           delta={`+${formatCount(stats.last7Days.sorters)} this week`}
+          subline={visibilitySubline(stats.visibilityBreakdown)}
         />
         <StatCard
           label="Total rankings"

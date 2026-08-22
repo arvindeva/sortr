@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { db } from "@/db";
 import { sorters, sortingResults, user, feedback } from "@/db/schema";
-import { and, eq, gte, isNotNull, isNull, sql, desc } from "drizzle-orm";
+import { and, count, eq, gte, isNotNull, isNull, sql, desc } from "drizzle-orm";
 
 export interface FeedbackRow {
   id: string;
@@ -58,6 +58,9 @@ export interface AdminStats {
     week: TopSorter[];
     month: TopSorter[];
   };
+  // Adoption of the visibility picker: active, non-deleted sorters grouped by
+  // visibility (public/unlisted/private).
+  visibilityBreakdown: { visibility: string; count: number }[];
 }
 
 export interface TopSorter {
@@ -221,6 +224,7 @@ async function computeAdminStats(): Promise<AdminStats> {
     topDay,
     topWeek,
     topMonth,
+    visibilityBreakdown,
   ] = await Promise.all([
     db.select({ c: sql<number>`count(*)::int` }).from(user),
     db
@@ -306,6 +310,12 @@ async function computeAdminStats(): Promise<AdminStats> {
     topSortersSince(oneDayAgo),
     topSortersSince(sevenDaysAgo),
     topSortersSince(thirtyDaysAgo),
+    // Adoption of the visibility picker, active sorters only.
+    db
+      .select({ visibility: sorters.visibility, count: count() })
+      .from(sorters)
+      .where(and(eq(sorters.deleted, false), eq(sorters.status, "active")))
+      .groupBy(sorters.visibility),
   ]);
 
   // Running cumulative totals for the over-time charts.
@@ -347,6 +357,7 @@ async function computeAdminStats(): Promise<AdminStats> {
       week: topWeek,
       month: topMonth,
     },
+    visibilityBreakdown,
   };
 }
 
