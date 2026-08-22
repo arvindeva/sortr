@@ -318,6 +318,47 @@ export async function cleanupSorterVersion(
 }
 
 /**
+ * Best-effort deletion of every object under a prefix (e.g. a whole
+ * `sorters/<id>/` folder on account deletion). Never throws — callers treat
+ * R2 cleanup as best-effort (the privacy-critical deletion is the DB row);
+ * failures are logged and the count of deleted objects returned. Paginates,
+ * so prefixes with >1000 objects are fully cleared.
+ */
+export async function deleteR2Prefix(prefix: string): Promise<number> {
+  let deleted = 0;
+  try {
+    let continuationToken: string | undefined;
+    do {
+      const response = await r2Client.send(
+        new ListObjectsV2Command({
+          Bucket: BUCKET_NAME,
+          Prefix: prefix,
+          ContinuationToken: continuationToken,
+        }),
+      );
+      const keys =
+        response.Contents?.map((obj) => obj.Key).filter(
+          (key): key is string => Boolean(key),
+        ) || [];
+      for (const key of keys) {
+        try {
+          await deleteFromR2(key);
+          deleted++;
+        } catch (error) {
+          console.error(`deleteR2Prefix: failed to delete ${key}:`, error);
+        }
+      }
+      continuationToken = response.IsTruncated
+        ? response.NextContinuationToken
+        : undefined;
+    } while (continuationToken);
+  } catch (error) {
+    console.error(`deleteR2Prefix: listing failed for ${prefix}:`, error);
+  }
+  return deleted;
+}
+
+/**
  * Utility function to chunk an array into smaller batches
  */
 function chunkArray<T>(array: T[], size: number): T[][] {

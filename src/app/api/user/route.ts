@@ -5,6 +5,7 @@ import { user, sorters } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { updateUsernameSchema } from "@/lib/validations";
+import { deleteFromR2, deleteR2Prefix, getAvatarKey } from "@/lib/r2";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -107,6 +108,65 @@ export async function PATCH(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error updating username:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
+/**
+ * Self-serve account deletion. Deletes the SESSION user (never a
+ * client-supplied id). The single user-row delete does the heavy lifting via
+ * verified FK behavior: sorters (+ their items/tags via their own cascades),
+ * account links, and sessions cascade-delete; sortingResults.userId is
+ * set-null, so completed rankings survive anonymized. R2 cleanup (avatar +
+ * each sorter's image folder) runs AFTER the DB delete and is best-effort —
+ * the privacy-critical data is the DB row; an orphaned image folder is
+ * cleanup, not a leak of the account.
+ */
+export async function DELETE() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const userId = session.user.id;
+
+    // Gather R2 locations BEFORE the delete — unrecoverable after cascades.
+    const [userRow] = await db
+      .select({ image: user.image })
+      .from(user)
+      .where(eq(user.id, userId));
+    if (!userRow) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    const ownedSorters = await db
+      .select({ id: sorters.id })
+      .from(sorters)
+      .where(eq(sorters.userId, userId));
+
+    await db.delete(user).where(eq(user.id, userId));
+
+    // Best-effort R2 cleanup; failures log but never fail the request —
+    // the account is already gone.
+    if (userRow.image) {
+      try {
+        await deleteFromR2(getAvatarKey(userId));
+      } catch (error) {
+        console.error(`Account deletion: avatar cleanup failed for ${userId}:`, error);
+      }
+    }
+    for (const s of ownedSorters) {
+      await deleteR2Prefix(`sorters/${s.id}/`);
+    }
+
+    console.log(
+      `Account deleted: ${userId} (${ownedSorters.length} sorters, images cleaned best-effort)`,
+    );
+    return NextResponse.json({ message: "Account deleted" });
+  } catch (error) {
+    console.error("Error deleting account:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

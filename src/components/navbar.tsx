@@ -228,6 +228,13 @@ export function Navbar() {
             ) : (
               <span className="font-medium text-muted-foreground">Profile</span>
             )}
+            <Link
+              href="/settings"
+              className="group relative font-medium text-foreground transition-colors hover:text-main-ink"
+            >
+              Settings
+              <span className="absolute -bottom-1 left-0 h-0.5 w-full origin-left scale-x-0 bg-main transition-transform duration-200 ease-out group-hover:scale-x-100" />
+            </Link>
             <Button
               variant="neutral"
               onClick={() => signOut({ callbackUrl: "/" })}
@@ -333,6 +340,12 @@ export function Navbar() {
                     Profile
                   </MobileNavRow>
                 )}
+                <MobileNavRow
+                  href="/settings"
+                  onSelect={() => setMobileMenuOpen(false)}
+                >
+                  Settings
+                </MobileNavRow>
                 <MobileNavRow
                   muted
                   onSelect={() => {

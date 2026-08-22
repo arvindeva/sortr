@@ -126,8 +126,9 @@ const SECTIONS: Section[] = [
         "Use anonymously: you can use most of sortr without an account and without giving us any personal information.",
         <>
           Access or delete your data: you can delete sorters and rankings you’ve
-          created. If you’d like your account and associated personal data
-          deleted, contact us at {mail} and we’ll take care of it.
+          created, and delete your account and associated personal data
+          yourself from your Settings page. You can also contact us at {mail}
+          and we’ll take care of it.
         </>,
         "Clear local data: you can clear your in-progress rankings and preferences at any time by clearing your browser’s storage for this site.",
       ]),
