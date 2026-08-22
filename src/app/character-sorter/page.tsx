@@ -58,7 +58,12 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 1800;
+// force-dynamic, NOT ISR: a static route prerenders at build time, and
+// Railway's build environment can't resolve postgres.railway.internal
+// (private networking is runtime-only — this exact combination failed the
+// first deploy). Freshness comes from getTrendingSorters' 5-min
+// unstable_cache, so per-request cost is a cache hit.
+export const dynamic = "force-dynamic";
 
 const STEPS: { title: string; body: string }[] = [
   {
