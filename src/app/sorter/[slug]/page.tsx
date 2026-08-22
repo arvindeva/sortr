@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SorterHeaderServer } from "@/components/sorter-header-server";
 import { SorterPageClient } from "@/components/sorter-page-client";
 import { SorterOwnerControls } from "@/components/sorter-owner-controls";
+import { PrivateSorterView } from "@/components/private-sorter-view";
 import { getSorterDataCached } from "@/lib/sorter-data";
 import { getCommunityRankingPoolCount } from "@/lib/community-ranking-data";
 import { TrendingSortersSection } from "@/components/trending-sorters-section";
@@ -24,6 +25,14 @@ export async function generateMetadata({
     return {
       title: "Sorter Not Found | sortr",
       description: "The requested sorter could not be found.",
+    };
+  }
+
+  if (data.sorter.visibility === "private") {
+    return {
+      title: "Private sorter | sortr",
+      description: "This sorter is private.",
+      robots: { index: false, follow: false },
     };
   }
 
@@ -72,6 +81,9 @@ export async function generateMetadata({
       title,
       description: fullDescription,
     },
+    ...(data.sorter.visibility === "unlisted"
+      ? { robots: { index: false, follow: true } }
+      : {}),
   };
 }
 
@@ -88,6 +100,12 @@ export default async function SorterPage({ params }: SorterPageProps) {
   const data = await getSorterDataCached(slug);
   if (!data) {
     notFound();
+  }
+
+  if (data.sorter.visibility === "private") {
+    // ISR page has no session — render a leak-free shell; the client
+    // component fetches through the session-gated API.
+    return <PrivateSorterView slug={slug} />;
   }
 
   // Check if sorter has filters/tags

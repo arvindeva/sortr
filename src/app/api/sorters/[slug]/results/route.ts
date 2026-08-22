@@ -2,11 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { sortingResults, user, sorters } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 async function getRecentResultsUncached(slug: string) {
   // First get the sorter ID from slug
   const sorterData = await db
-    .select({ id: sorters.id })
+    .select({
+      id: sorters.id,
+      visibility: sorters.visibility,
+      ownerUserId: sorters.userId,
+    })
     .from(sorters)
     .where(eq(sorters.slug, slug))
     .limit(1);
@@ -15,7 +21,16 @@ async function getRecentResultsUncached(slug: string) {
     return null;
   }
 
-  const sorterId = sorterData[0].id;
+  const sorterRow = sorterData[0];
+
+  if (sorterRow.visibility === "private") {
+    const session = await getServerSession(authOptions);
+    if (session?.user?.id !== sorterRow.ownerUserId) {
+      return null;
+    }
+  }
+
+  const sorterId = sorterRow.id;
 
   // Get recent results for this sorter
   const recentResults = await db

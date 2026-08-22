@@ -23,6 +23,7 @@ export interface SorterPayload {
     userId: string;
     creatorUsername: string | null;
     creatorId: string | null;
+    visibility: string;
     user: {
       username: string | null;
       id: string | null;
@@ -85,6 +86,7 @@ interface DynamicSorterMetadata {
   ownerUserId: string | null;
   deleted: boolean;
   status: string;
+  visibility: string;
 }
 
 // Fetch core immutable data (uncached version)
@@ -174,6 +176,7 @@ async function getDynamicSorterMetadata(
       version: sorters.version,
       deleted: sorters.deleted,
       status: sorters.status,
+      visibility: sorters.visibility,
       ownerUserId: sorters.userId,
       username: user.username,
       userIdFromJoin: user.id,
@@ -198,6 +201,7 @@ async function getDynamicSorterMetadata(
     ownerUserId: metadata.ownerUserId,
     deleted: metadata.deleted,
     status: metadata.status,
+    visibility: metadata.visibility,
   };
 }
 
@@ -241,6 +245,7 @@ export const getSorterDataCached = cache(async function getSorterDataCachedImpl(
       userId: coreData.userId,
       creatorUsername: metadata.username,
       creatorId: metadata.ownerUserId,
+      visibility: metadata.visibility,
       user: {
         username: metadata.username,
         id: metadata.ownerUserId,

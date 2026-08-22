@@ -19,6 +19,7 @@ export default async function Image({
   try {
     const data = await getSorterDataCached(params.slug);
     if (!data) return renderGenericOgImage();
+    if (data.sorter.visibility === "private") return renderGenericOgImage();
 
     return renderSorterOgImage({
       title: data.sorter.title,

@@ -39,6 +39,14 @@ export async function GET(
       return Response.json({ error: "Sorter not found" }, { status: 404 });
     }
 
+    if (data.sorter.visibility === "private") {
+      const session = await getServerSession(authOptions);
+      if (!session?.user?.id || session.user.id !== data.sorter.user.id) {
+        // Same body as a missing sorter — the API confirms nothing.
+        return Response.json({ error: "Sorter not found" }, { status: 404 });
+      }
+    }
+
     return Response.json(data);
   } catch (error) {
     console.error("Error fetching sorter:", error);

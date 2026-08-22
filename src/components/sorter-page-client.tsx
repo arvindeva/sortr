@@ -25,6 +25,10 @@ interface SorterPageClientProps {
    *  three separate users wrote in confused about where their community
    *  ranking was. */
   communityRankingPool?: number;
+  /** Hide the community ranking section entirely (and skip its fetch) —
+   *  used for the owner-only private sorter view, where a ranking pool
+   *  would be misleading (visitors who could contribute can't see it). */
+  hideCommunity?: boolean;
 }
 
 // Small display-font section title with an optional count.
@@ -49,6 +53,7 @@ export function SorterPageClient({
   slug,
   initialData,
   communityRankingPool = 0,
+  hideCommunity = false,
 }: SorterPageClientProps) {
   const { sorterData, recentResults, isLoading, isError, error } =
     useSorterPage(slug, initialData, Date.now());
@@ -64,6 +69,7 @@ export function SorterPageClient({
       return res.json();
     },
     staleTime: 5 * 60 * 1000,
+    enabled: !hideCommunity,
   });
 
   if (isLoading || !sorterData) {
@@ -139,23 +145,25 @@ export function SorterPageClient({
     <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-8">
       {/* Left column — community + recent */}
       <div className="contents md:flex md:min-w-0 md:flex-1 md:flex-col md:gap-8">
-        {communityRankingPool < MIN_RANKINGS ? (
-          <section className="order-1 md:order-none">
-            <SectionTitle>Community ranking</SectionTitle>
-            <EmptyState
-              title={`Unlocks at ${MIN_RANKINGS} rankings`}
-              description={`${communityRankingPool} of ${MIN_RANKINGS} so far — share this sorter to get there.`}
-            />
-          </section>
-        ) : communityPending ? (
-          <div className="order-1 md:order-none">
-            <CommunityRankingSkeleton />
-          </div>
-        ) : (
-          communityRanking && (
+        {!hideCommunity && (
+          communityRankingPool < MIN_RANKINGS ? (
+            <section className="order-1 md:order-none">
+              <SectionTitle>Community ranking</SectionTitle>
+              <EmptyState
+                title={`Unlocks at ${MIN_RANKINGS} rankings`}
+                description={`${communityRankingPool} of ${MIN_RANKINGS} so far — share this sorter to get there.`}
+              />
+            </section>
+          ) : communityPending ? (
             <div className="order-1 md:order-none">
-              <CommunityRanking data={communityRanking} />
+              <CommunityRankingSkeleton />
             </div>
+          ) : (
+            communityRanking && (
+              <div className="order-1 md:order-none">
+                <CommunityRanking data={communityRanking} />
+              </div>
+            )
           )
         )}
 

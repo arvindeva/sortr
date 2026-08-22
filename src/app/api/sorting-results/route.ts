@@ -28,6 +28,8 @@ export async function POST(request: NextRequest) {
         slug: sorters.slug, // NEW: For revalidation path
         coverImageUrl: sorters.coverImageUrl,
         version: sorters.version, // NEW: Capture current version
+        visibility: sorters.visibility,
+        userId: sorters.userId,
       })
       .from(sorters)
       .where(eq(sorters.id, sorterId))
@@ -42,7 +44,13 @@ export async function POST(request: NextRequest) {
     slug: sorterSlug,
     coverImageUrl: sorterCoverImageUrl,
     version: currentVersion,
+    visibility: sorterVisibility,
+    userId: sorterOwnerId,
     } = sorterData[0];
+
+    if (sorterVisibility === "private" && userId !== sorterOwnerId) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     // Pin to the version the client actually ranked (sent from the sort page).
     // If the creator edited the sorter mid-sort, the user ranked the OLD item
