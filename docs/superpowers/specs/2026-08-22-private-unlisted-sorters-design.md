@@ -19,9 +19,15 @@ draft → unlisted → public path or they flood browse.
 - **Three levels: `public` / `unlisted` / `private`.** Public = today.
   Unlisted = hidden from every listing, link works for everyone. Private =
   owner-only.
-- **Existing rankings stay viewable** when a sorter leaves public. A ranking
-  is the ranker's artifact (matches the deleted-sorter precedent). No
-  redaction, no hiding.
+- **Existing ranking PAGES stay viewable** when a sorter leaves public. A
+  ranking is the ranker's artifact (matches the deleted-sorter precedent).
+  No redaction.
+  - **Refined post-walkthrough (user decision):** profile ranking-history
+    LISTS are discovery surfaces, not artifacts — visitors see only rankings
+    of currently-public sorters (list and count; deleted-sorter rows keep
+    legacy behavior; owners see all their own). Enforced via
+    `rankedSorterVisibleToVisitors()` in the gate module, in BOTH profile
+    data paths.
 - **Free and unlimited.** No caps, no Pro gating. Admin dashboard tracks
   adoption so a future gating decision would be data-driven.
 - **Picker at create + edit, default public.** Three-option control in both
