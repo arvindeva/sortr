@@ -30,7 +30,7 @@ export function Footer() {
             <span className="inline-block text-[1.25em] leading-none align-[-0.18em]">
               ©
             </span>{" "}
-            2026
+            {new Date().getFullYear()}
           </p>
         </div>
       </div>

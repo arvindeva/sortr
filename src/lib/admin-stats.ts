@@ -226,7 +226,9 @@ async function computeAdminStats(): Promise<AdminStats> {
     db
       .select({ c: sql<number>`count(*)::int` })
       .from(sorters)
-      .where(eq(sorters.deleted, false)),
+      // Active-only, matching browse: drafts (incl. thousands of orphaned
+      // ones from old create-flow failures) inflated this badly.
+      .where(and(eq(sorters.deleted, false), eq(sorters.status, "active"))),
     db.select({ c: sql<number>`count(*)::int` }).from(sortingResults),
     // New users in the last 7 days (by emailVerified — the signup timestamp).
     db
