@@ -105,6 +105,13 @@ export async function PUT(
           })
           .returning();
         tagNameToSlug.set(t.name, tag.slug);
+        // The edit form's item payload carries tag SLUGS (derived client-side
+        // with this same lowercase/hyphen scheme), not names — the field is
+        // just misleadingly called tagNames. Key the map by slug too, or every
+        // capitalized/multi-word tag assignment misses the name-keyed lookup
+        // and vanishes in the .filter(Boolean) below (the "filters don't save"
+        // bug: 23 tags, 94 items, zero assignments surviving).
+        tagNameToSlug.set(tag.slug, tag.slug);
       }
 
       // Compute cover image URL
