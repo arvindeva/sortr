@@ -1119,7 +1119,7 @@ export default function CreateSorterFormTags() {
                 {(isLoading || isUploading) && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {isLoading || isUploading ? "Creating…" : "▶ Create sorter"}
+                {isLoading || isUploading ? "Creating…" : "Create sorter"}
               </Button>
             </div>
           </div>

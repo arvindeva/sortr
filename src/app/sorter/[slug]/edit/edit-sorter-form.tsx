@@ -1115,7 +1115,7 @@ export default function EditSorterForm({
               {isLoading || isUploading
                 ? "Updating…"
                 : hasChanged
-                  ? "▶ Save changes"
+                  ? "Save changes"
                   : "No changes"}
             </Button>
           </div>
