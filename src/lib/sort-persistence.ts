@@ -1,4 +1,7 @@
 import { SortItem } from "@/lib/sorting";
+// TIE encodes as winnerIndex -1 in the serialized triplets (no item has that
+// index; old code reading a tie-bearing save drops the pair and re-asks it).
+import { TIE } from "@/lib/interactive-merge-sort";
 
 // Generate localStorage key based on sorter ID and selected groups/tags
 export function generateProgressKey(sorterId: string, filterSlugs: string[]): string {
@@ -26,7 +29,7 @@ export function serializeChoices(
     const [id1, id2] = key.split(",");
     const index1 = itemToIndex.get(id1);
     const index2 = itemToIndex.get(id2);
-    const winnerIndex = itemToIndex.get(winnerId);
+    const winnerIndex = winnerId === TIE ? -1 : itemToIndex.get(winnerId);
     if (
       index1 !== undefined &&
       index2 !== undefined &&
@@ -42,7 +45,7 @@ export function serializeChoices(
       const [id1, id2] = key.split(",");
       const index1 = itemToIndex.get(id1);
       const index2 = itemToIndex.get(id2);
-      const winnerIndex = itemToIndex.get(winnerId);
+      const winnerIndex = winnerId === TIE ? -1 : itemToIndex.get(winnerId);
       if (
         index1 !== undefined &&
         index2 !== undefined &&
@@ -106,7 +109,7 @@ export function deserializeChoices(
   for (const [index1, index2, winnerIndex] of choices) {
     const id1 = itemMap[index1];
     const id2 = itemMap[index2];
-    const winnerId = itemMap[winnerIndex];
+    const winnerId = winnerIndex === -1 ? TIE : itemMap[winnerIndex];
     if (id1 && id2 && winnerId) {
       const key = id1 < id2 ? `${id1},${id2}` : `${id2},${id1}`;
       userChoices.set(key, winnerId);
@@ -118,7 +121,7 @@ export function deserializeChoices(
     for (const [index1, index2, winnerIndex] of historyState.choices) {
       const id1 = itemMap[index1];
       const id2 = itemMap[index2];
-      const winnerId = itemMap[winnerIndex];
+      const winnerId = winnerIndex === -1 ? TIE : itemMap[winnerIndex];
       if (id1 && id2 && winnerId) {
         const key = id1 < id2 ? `${id1},${id2}` : `${id2},${id1}`;
         stateChoices.set(key, winnerId);
