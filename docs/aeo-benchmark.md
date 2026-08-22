@@ -76,6 +76,22 @@ llms.txt.
 49. make a sorter for my discord server
 50. fandom ranking website like the character sorters on tumblr
 
+## Case study: the Saiki K decoupling (baseline, 2026-08-22)
+
+Google, query "Saiki K character sorter": sortr's page is the **#1 organic
+result**, yet the AI Overview claims "no official or widely hosted
+interactive preference sorter" exists and recommends Quotev/Fandom instead.
+Ranking and AI recognition are decoupled — the Overview doesn't map an
+unknown UGC domain to "an interactive sorter exists". Indexed snippet at the
+time was the OLD meta ("Sorter for …"), pre-vocabulary-deploy.
+
+Rerun after deploy + recrawl, with variants (record AI Overview mention):
+"Saiki K character sorter" / "Saiki K sorter" / "Saiki K character ranking" /
+"interactive Saiki K character sorter" / "best Saiki K character sorter".
+The tell: if the Overview still denies existence once the page says
+"head-to-head / character sorter" explicitly, the gap is entity trust, not
+keywords.
+
 ## Results
 
 | Date | Engine | A /10 | B /10 | C /10 | D /10 | E /10 | Total /50 | Notes |
