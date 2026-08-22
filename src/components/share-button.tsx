@@ -21,7 +21,7 @@ import { track } from "@/lib/analytics";
 interface RankedItem {
   id: string;
   title: string;
-  imageUrl?: string;
+  imageUrl?: string;  tiedWithPrev?: boolean;
 }
 
 interface ShareButtonProps {

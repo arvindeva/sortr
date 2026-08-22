@@ -5,7 +5,7 @@ import { toast } from "sonner";
 interface RankedItem {
   id: string;
   title: string;
-  imageUrl?: string;
+  imageUrl?: string;  tiedWithPrev?: boolean;
 }
 
 export interface RankingImageData {
@@ -69,6 +69,7 @@ export function useRankingImage() {
           id: r.id,
           name: r.title,
           imageUrl: r.imageUrl,
+          tiedWithPrev: r.tiedWithPrev,
         }));
         const items = variant === "full" ? allItems : allItems.slice(0, 10);
 

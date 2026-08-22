@@ -1,4 +1,5 @@
 import { accentFor } from "@/lib/utils";
+import { computeCompetitionRanks } from "@/lib/ranking-utils";
 
 /**
  * The downloadable "brag" image for a finished ranking — a 1080×1350 (portrait,
@@ -18,6 +19,8 @@ export interface ShareImageItem {
   id: string;
   /** Uploaded artwork; shown as the tile background when present. */
   imageUrl?: string;
+  /** Tied with the previous item — shares its competition rank. */
+  tiedWithPrev?: boolean;
 }
 
 interface ResultShareImageProps {
@@ -82,8 +85,12 @@ interface Layout {
 // cell, and grid container style for N (1..10) items.
 function computeLayout(items: ShareImageItem[]): Layout {
   const N = Math.max(1, Math.min(10, items.length));
+  // Competition ranks (1,2,2,4) — the #1 feature tile stays positional, but
+  // badges and medal styling follow the rank number (Olympic rule).
+  const ranks = computeCompetitionRanks(items);
 
   const mk = (i: number): Tile => {
+    const rank = ranks[i] ?? i + 1;
     const t: Tile = {
       name: items[i].name,
       color: accentFor(items[i].id),
@@ -98,7 +105,7 @@ function computeLayout(items: ShareImageItem[]): Layout {
       badgeFont: 22,
       badgeBg: "rgba(0,0,0,.55)",
       badgeColor: "#fff",
-      badgeText: String(i + 1),
+      badgeText: String(rank),
       nameSize: 27,
       nameLine: "0.92",
       namePad: 14,
@@ -106,11 +113,11 @@ function computeLayout(items: ShareImageItem[]): Layout {
       gridColumn: "auto",
       gridRow: "auto",
     };
-    if (i < 3) {
-      t.glow = MEDAL_GLOW[i];
-      t.border = MEDAL_BORDER[i];
-      t.badgeBg = MEDAL_BADGE[i];
-      t.badgeColor = MEDAL_BADGE_TEXT[i];
+    if (rank <= 3) {
+      t.glow = MEDAL_GLOW[rank - 1];
+      t.border = MEDAL_BORDER[rank - 1];
+      t.badgeBg = MEDAL_BADGE[rank - 1];
+      t.badgeColor = MEDAL_BADGE_TEXT[rank - 1];
     }
     return t;
   };
@@ -559,6 +566,9 @@ export function ResultShareImageFull({
   const total = items.length;
   const shown = Math.min(total, MAX_VISIBLE);
   const visible = items.slice(0, shown);
+  // Rank of index i only depends on flags at or before i, so ranking the
+  // visible prefix matches ranking the full list.
+  const ranks = computeCompetitionRanks(visible);
   const cols = Math.ceil(shown / PER_COL);
   const rows = Math.min(PER_COL, shown);
   const hasMore = total > shown;
@@ -679,7 +689,8 @@ export function ResultShareImageFull({
           }}
         >
           {visible.map((item, i) => {
-            const isTop3 = i < 3;
+            const rank = ranks[i] ?? i + 1;
+            const isTop3 = rank <= 3;
             const hasPhoto = i < 10 && !!item.imageUrl;
             return (
               <div
@@ -692,9 +703,9 @@ export function ResultShareImageFull({
                     ? "rgba(255,255,255,.06)"
                     : "rgba(255,255,255,.03)",
                   border: isTop3
-                    ? MEDAL_ROW_BORDER[i]
+                    ? MEDAL_ROW_BORDER[rank - 1]
                     : "1px solid rgba(255,255,255,.08)",
-                  boxShadow: isTop3 ? MEDAL_ROW_GLOW[i] : "none",
+                  boxShadow: isTop3 ? MEDAL_ROW_GLOW[rank - 1] : "none",
                   borderRadius: "10px",
                   padding: `${sz.rowPadY}px 13px ${sz.rowPadY}px 8px`,
                   boxSizing: "border-box",
@@ -705,13 +716,13 @@ export function ResultShareImageFull({
                     fontFamily: BIG,
                     fontWeight: 900,
                     fontSize: `${sz.num}px`,
-                    color: isTop3 ? MEDAL_NUM[i] : "#6f6a86",
+                    color: isTop3 ? MEDAL_NUM[rank - 1] : "#6f6a86",
                     width: `${Math.round(sz.thumb * 0.95)}px`,
                     textAlign: "center",
                     flexShrink: 0,
                   }}
                 >
-                  {i + 1}
+                  {rank}
                 </span>
                 {/* Photo thumbnail for the top 10; text-only below. */}
                 {i < 10 && (
@@ -724,9 +735,9 @@ export function ResultShareImageFull({
                       overflow: "hidden",
                       flexShrink: 0,
                       boxSizing: "border-box",
-                      boxShadow: isTop3 ? MEDAL_THUMB_GLOW[i] : "none",
+                      boxShadow: isTop3 ? MEDAL_THUMB_GLOW[rank - 1] : "none",
                       border: isTop3
-                        ? MEDAL_BORDER[i]
+                        ? MEDAL_BORDER[rank - 1]
                         : "1px solid rgba(255,255,255,.1)",
                       ...(hasPhoto
                         ? {
