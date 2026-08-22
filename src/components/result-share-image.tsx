@@ -10,7 +10,8 @@ import { computeCompetitionRanks } from "@/lib/ranking-utils";
  * renderVals() (Sortr Result Image.dc.html). Two modes so it never leaves
  * holes: N≥5 is a 4-col mosaic with a 2×2 #1 feature and branding filling the
  * trailing gap; N≤4 is an equal centered row with a branding strip below. The
- * grid's top is computed to vertically center the block in the 246→1304 region.
+ * card is a flex column: the grid centers in the space the header leaves, so a
+ * wrapped 2-line title pushes the tiles down instead of colliding with them.
  */
 
 export interface ShareImageItem {
@@ -125,18 +126,16 @@ function computeLayout(items: ShareImageItem[]): Layout {
   const gap = 14;
   const rowH = 230;
   const cardW = 960;
-  const regionTop = 246;
-  const regionBottom = 1304;
   const tiles: Tile[] = [];
   const branding: Branding = { gridColumn: "", gridRow: "", fontSize: 40 };
   let gridStyleStr = "";
-  let gridHeight = 0;
 
   if (N >= 5) {
     // mode A: #1 = 2×2 feature, singles flow, branding fills the trailing gap
     const occ = new Set<string>();
     const key = (r: number, c: number) => r + "_" + c;
-    for (let r = 1; r <= 2; r++) for (let c = 1; c <= 2; c++) occ.add(key(r, c));
+    for (let r = 1; r <= 2; r++)
+      for (let c = 1; c <= 2; c++) occ.add(key(r, c));
 
     const f = mk(0);
     f.radius = 22;
@@ -199,15 +198,8 @@ function computeLayout(items: ShareImageItem[]): Layout {
       bRows = Math.max(2, lastR) + 1;
     }
 
-    gridHeight = bRows * rowH + (bRows - 1) * gap;
-    const top = Math.max(
-      246,
-      Math.round(regionTop + (regionBottom - regionTop - gridHeight) / 2),
-    );
     gridStyleStr =
-      "position:absolute; top:" +
-      top +
-      "px; left:60px; right:60px; display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:" +
+      "width:100%; display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:" +
       rowH +
       "px; gap:" +
       gap +
@@ -215,10 +207,7 @@ function computeLayout(items: ShareImageItem[]): Layout {
   } else {
     // mode B: equal row of N covers, branding strip below
     const C = N;
-    const tileSize = Math.min(
-      Math.round((cardW - (C - 1) * gap) / C),
-      474,
-    );
+    const tileSize = Math.min(Math.round((cardW - (C - 1) * gap) / C), 474);
     for (let i = 0; i < N; i++) {
       const t = mk(i);
       t.gridColumn = String(i + 1);
@@ -239,15 +228,8 @@ function computeLayout(items: ShareImageItem[]): Layout {
     branding.gridColumn = "1 / -1";
     branding.gridRow = "2";
     branding.fontSize = 40;
-    gridHeight = tileSize + gap + brandH;
-    const top = Math.max(
-      260,
-      Math.round(regionTop + (regionBottom - regionTop - gridHeight) / 2),
-    );
     gridStyleStr =
-      "position:absolute; top:" +
-      top +
-      "px; left:60px; right:60px; display:grid; grid-template-columns:repeat(" +
+      "width:100%; display:grid; grid-template-columns:repeat(" +
       C +
       "," +
       tileSize +
@@ -296,6 +278,13 @@ export function ResultShareImage({
         background: "#0b0918",
         fontFamily: "var(--font-mona-sans), sans-serif",
         flexShrink: 0,
+        // Flex column: the grid centers in the space the header actually
+        // leaves, so a 2-line title pushes the tiles down instead of
+        // colliding with them.
+        display: "flex",
+        flexDirection: "column",
+        padding: "58px 60px 46px",
+        boxSizing: "border-box",
       }}
     >
       {/* Atmosphere — three single-gradient glow layers */}
@@ -336,10 +325,7 @@ export function ResultShareImage({
       {/* Header */}
       <div
         style={{
-          position: "absolute",
-          top: "58px",
-          left: "60px",
-          right: "60px",
+          position: "relative",
           display: "flex",
           flexDirection: "column",
         }}
@@ -383,6 +369,10 @@ export function ResultShareImage({
             lineHeight: 0.9,
             color: "#f3f0ff",
             marginTop: "18px",
+            display: "-webkit-box",
+            WebkitBoxOrient: "vertical",
+            WebkitLineClamp: 2,
+            overflow: "hidden",
           }}
         >
           {title}
@@ -401,128 +391,138 @@ export function ResultShareImage({
         </span>
       </div>
 
-      {/* Adaptive mosaic */}
-      <div style={gridStyle}>
-        {tiles.map((t, i) => (
-          <div
-            key={i}
-            style={{
-              position: "relative",
-              borderRadius: `${t.radius}px`,
-              overflow: "hidden",
-              background: t.color,
-              ...(t.imageUrl
-                ? {
-                    backgroundImage: `url(${t.imageUrl})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }
-                : {}),
-              gridColumn: t.gridColumn,
-              gridRow: t.gridRow,
-              boxShadow: t.glow,
-              border: t.border,
-            }}
-          >
-            {/* stripe texture only on the colored fallback (not over a photo) */}
-            {!t.imageUrl && (
+      {/* Adaptive mosaic — centered in the space left under the header */}
+      <div
+        style={{
+          position: "relative",
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <div style={gridStyle}>
+          {tiles.map((t, i) => (
+            <div
+              key={i}
+              style={{
+                position: "relative",
+                borderRadius: `${t.radius}px`,
+                overflow: "hidden",
+                background: t.color,
+                ...(t.imageUrl
+                  ? {
+                      backgroundImage: `url(${t.imageUrl})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }
+                  : {}),
+                gridColumn: t.gridColumn,
+                gridRow: t.gridRow,
+                boxShadow: t.glow,
+                border: t.border,
+              }}
+            >
+              {/* stripe texture only on the colored fallback (not over a photo) */}
+              {!t.imageUrl && (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    backgroundImage:
+                      "repeating-linear-gradient(45deg, rgba(0,0,0,.05) 0 18px, transparent 18px 36px)",
+                  }}
+                />
+              )}
+              {/* bottom scrim */}
               <div
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  backgroundImage:
-                    "repeating-linear-gradient(45deg, rgba(0,0,0,.05) 0 18px, transparent 18px 36px)",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: "55%",
+                  background:
+                    "linear-gradient(180deg, transparent, rgba(0,0,0,.5))",
                 }}
               />
-            )}
-            {/* bottom scrim */}
+              {/* rank badge */}
+              <span
+                style={{
+                  position: "absolute",
+                  top: "12px",
+                  left: "12px",
+                  minWidth: `${t.badgeMinW}px`,
+                  height: `${t.badgeH}px`,
+                  padding: t.badgePad,
+                  boxSizing: "border-box",
+                  borderRadius: `${t.badgeRadius}px`,
+                  background: t.badgeBg,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: "var(--font-anybody), 'Arial Narrow', sans-serif",
+                  fontWeight: 900,
+                  fontSize: `${t.badgeFont}px`,
+                  color: t.badgeColor,
+                }}
+              >
+                {t.badgeText}
+              </span>
+              {/* name */}
+              <span
+                style={{
+                  position: "absolute",
+                  left: `${t.namePad}px`,
+                  right: `${t.namePad}px`,
+                  bottom: `${t.nameBottom}px`,
+                  fontFamily: "var(--font-anybody), 'Arial Narrow', sans-serif",
+                  fontWeight: 800,
+                  fontSize: `${t.nameSize}px`,
+                  lineHeight: t.nameLine,
+                  color: "#fff",
+                  textShadow: "0 2px 8px rgba(0,0,0,.4)",
+                }}
+              >
+                {t.name}
+              </span>
+            </div>
+          ))}
+
+          {/* Branding cell */}
+          <div
+            style={{
+              gridColumn: branding.gridColumn,
+              gridRow: branding.gridRow,
+              position: "relative",
+              borderRadius: "16px",
+              background: "rgba(255,46,126,.08)",
+              border: "1px solid rgba(255,46,126,.35)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "16px",
+              boxSizing: "border-box",
+            }}
+          >
             <div
               style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: "55%",
-                background:
-                  "linear-gradient(180deg, transparent, rgba(0,0,0,.5))",
-              }}
-            />
-            {/* rank badge */}
-            <span
-              style={{
-                position: "absolute",
-                top: "12px",
-                left: "12px",
-                minWidth: `${t.badgeMinW}px`,
-                height: `${t.badgeH}px`,
-                padding: t.badgePad,
-                boxSizing: "border-box",
-                borderRadius: `${t.badgeRadius}px`,
-                background: t.badgeBg,
                 display: "flex",
-                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "11px",
                 justifyContent: "center",
                 fontFamily: "var(--font-anybody), 'Arial Narrow', sans-serif",
                 fontWeight: 900,
-                fontSize: `${t.badgeFont}px`,
-                color: t.badgeColor,
+                fontSize: `${branding.fontSize}px`,
+                textTransform: "uppercase",
+                letterSpacing: "0.03em",
+                textAlign: "center",
+                lineHeight: 0.92,
               }}
             >
-              {t.badgeText}
-            </span>
-            {/* name */}
-            <span
-              style={{
-                position: "absolute",
-                left: `${t.namePad}px`,
-                right: `${t.namePad}px`,
-                bottom: `${t.nameBottom}px`,
-                fontFamily: "var(--font-anybody), 'Arial Narrow', sans-serif",
-                fontWeight: 800,
-                fontSize: `${t.nameSize}px`,
-                lineHeight: t.nameLine,
-                color: "#fff",
-                textShadow: "0 2px 8px rgba(0,0,0,.4)",
-              }}
-            >
-              {t.name}
-            </span>
-          </div>
-        ))}
-
-        {/* Branding cell */}
-        <div
-          style={{
-            gridColumn: branding.gridColumn,
-            gridRow: branding.gridRow,
-            position: "relative",
-            borderRadius: "16px",
-            background: "rgba(255,46,126,.08)",
-            border: "1px solid rgba(255,46,126,.35)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "16px",
-            boxSizing: "border-box",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "11px",
-              justifyContent: "center",
-              fontFamily: "var(--font-anybody), 'Arial Narrow', sans-serif",
-              fontWeight: 900,
-              fontSize: `${branding.fontSize}px`,
-              textTransform: "uppercase",
-              letterSpacing: "0.03em",
-              textAlign: "center",
-              lineHeight: 0.92,
-            }}
-          >
-            <span style={{ color: "#f3f0ff" }}>Rank anything at</span>
-            <span style={{ color: "#ff2e7e" }}>SORTR.IO</span>
+              <span style={{ color: "#f3f0ff" }}>Rank anything at</span>
+              <span style={{ color: "#ff2e7e" }}>SORTR.IO</span>
+            </div>
           </div>
         </div>
       </div>
