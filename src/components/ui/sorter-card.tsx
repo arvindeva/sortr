@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { CoverTile } from "@/components/ui/cover-tile";
-import { cn } from "@/lib/utils";
+import { cn, accentFor } from "@/lib/utils";
+import { getImageUrl } from "@/lib/image-utils";
+import type { SorterPreviewItem } from "@/lib/sorter-preview";
 
 interface SorterCardProps {
   sorter: {
@@ -8,37 +10,115 @@ interface SorterCardProps {
     title: string;
     slug: string;
     coverImageUrl?: string;
+    /** First items of a cover-less sorter (title + imageUrl) — drives the
+     *  mosaic / collage fallbacks. Absent or empty → plain accent tile. */
+    previewItems?: SorterPreviewItem[] | null;
   };
   className?: string;
 }
 
+// Alternating row sizes for the title collage (px) — texture, not content.
+const COLLAGE_SIZES = [30, 19, 26, 18, 24, 19];
+
 /**
- * The canonical sorter card: a square cover (uploaded art, or a name tile
- * cycling the arcade accents) with the title pinned to the bottom over a black
- * scrim — the same treatment as the items in the shareable ranking image.
- * Lifts and gains an accent glow on hover. No meta row (author/plays) or badges.
+ * The canonical sorter card: a square cover with the title pinned to the
+ * bottom over a black scrim (mirrors the shareable ranking image's squares).
+ * Cover-less sorters fall back, in order: 2×2 mosaic of item thumbnails
+ * (4+ item images) → first item image full-bleed (1–3) → a collage of the
+ * item titles on the accent color (text-only sorters) → bare accent tile.
  */
 export function SorterCard({ sorter, className }: SorterCardProps) {
+  const preview = sorter.previewItems ?? [];
+  const previewImages = preview.filter(
+    (p): p is SorterPreviewItem & { imageUrl: string } => !!p.imageUrl,
+  );
+
+  let cover: React.ReactNode;
+  if (sorter.coverImageUrl) {
+    cover = (
+      <CoverTile
+        imageUrl={sorter.coverImageUrl}
+        name={sorter.title}
+        colorKey={sorter.slug}
+        hideName
+        radius={0}
+        className="absolute inset-0 h-full w-full"
+      />
+    );
+  } else if (previewImages.length >= 4) {
+    // Auto-cover: the first four item thumbnails. Accent behind each cell so
+    // a missing thumbnail degrades to a color block instead of a hole.
+    cover = (
+      <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-0.5">
+        {previewImages.slice(0, 4).map((p, i) => (
+          <div
+            key={i}
+            className="bg-cover bg-center"
+            style={{
+              backgroundColor: accentFor(sorter.slug),
+              backgroundImage: `url(${getImageUrl(p.imageUrl, "thumbnail")})`,
+            }}
+          />
+        ))}
+      </div>
+    );
+  } else if (previewImages.length >= 1) {
+    cover = (
+      <CoverTile
+        imageUrl={previewImages[0].imageUrl}
+        name={sorter.title}
+        colorKey={sorter.slug}
+        hideName
+        radius={0}
+        className="absolute inset-0 h-full w-full"
+      />
+    );
+  } else if (preview.length > 0) {
+    // Text-only sorter: its item titles as texture ("busy rows").
+    cover = (
+      <div
+        className="absolute inset-0 flex flex-col justify-center gap-0.5 overflow-hidden px-3 pb-14"
+        style={{ background: accentFor(sorter.slug) }}
+      >
+        {preview.slice(0, 6).map((p, i) => (
+          <span
+            key={i}
+            aria-hidden
+            className="display max-w-full overflow-hidden uppercase text-ellipsis whitespace-nowrap"
+            style={{
+              fontSize: COLLAGE_SIZES[i % COLLAGE_SIZES.length],
+              color: "rgba(0,0,0,.22)",
+              lineHeight: 0.95,
+            }}
+          >
+            {p.title}
+          </span>
+        ))}
+      </div>
+    );
+  } else {
+    // No preview data supplied (or none exists) — plain accent tile.
+    cover = (
+      <CoverTile
+        imageUrl={undefined}
+        name={sorter.title}
+        colorKey={sorter.slug}
+        hideName
+        radius={0}
+        className="absolute inset-0 h-full w-full"
+      />
+    );
+  }
+
   return (
     <Link
       href={`/sorter/${sorter.slug}`}
       className={cn("group block h-full w-full", className)}
     >
       <div className="relative aspect-square overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 group-hover:-translate-y-1 group-hover:border-main/50 group-hover:shadow-[0_0_32px_rgba(255,46,126,.28)]">
-        {/* Cover fills the whole square. When there's no artwork, CoverTile
-            paints the accent color tile with its centered name suppressed
-            (hideName); we draw our own bottom-aligned title over the scrim so
-            image and image-less cards share one layout. */}
-        <CoverTile
-          imageUrl={sorter.coverImageUrl}
-          name={sorter.title}
-          colorKey={sorter.slug}
-          hideName
-          radius={0}
-          className="absolute inset-0 h-full w-full"
-        />
+        {cover}
 
-        {/* Bottom scrim keeps the title legible over any image. */}
+        {/* Bottom scrim keeps the title legible over any cover. */}
         <div
           aria-hidden
           className="absolute inset-x-0 bottom-0 h-[55%]"

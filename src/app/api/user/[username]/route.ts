@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { user, sorters, sortingResults } from "@/db/schema";
+import { previewItemsSql } from "@/lib/sorter-preview";
 import { eq, and, desc, count } from "drizzle-orm";
 
 interface RouteParams {
@@ -60,6 +61,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         createdAt: sorters.createdAt,
         completionCount: sorters.completionCount,
         coverImageUrl: sorters.coverImageUrl,
+        previewItems: previewItemsSql,
       })
       .from(sorters)
       .where(

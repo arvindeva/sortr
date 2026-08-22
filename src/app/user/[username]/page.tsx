@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import { user, sorters, sortingResults } from "@/db/schema";
+import { previewItemsSql } from "@/lib/sorter-preview";
 import { eq, and, desc, count } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { UserProfileHeaderServer } from "@/components/user-profile-header-server";
@@ -77,6 +78,7 @@ async function getUserProfileData(username: string) {
       createdAt: sorters.createdAt,
       completionCount: sorters.completionCount,
       coverImageUrl: sorters.coverImageUrl,
+      previewItems: previewItemsSql,
     })
     .from(sorters)
     .where(

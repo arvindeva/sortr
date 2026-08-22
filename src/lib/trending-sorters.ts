@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { db } from "@/db";
 import { sorters, sortingResults, user } from "@/db/schema";
+import { previewItemsSql } from "@/lib/sorter-preview";
 import { and, desc, eq, gte, ne, sql } from "drizzle-orm";
 
 export interface TrendingSorter {
@@ -32,6 +33,7 @@ async function computeTrendingSorters(
       category: sorters.category,
       completionCount: sorters.completionCount,
       coverImageUrl: sorters.coverImageUrl,
+        previewItems: previewItemsSql,
       creatorUsername: user.username,
       recentPlays: sql<number>`count(${sortingResults.id})::int`,
     })

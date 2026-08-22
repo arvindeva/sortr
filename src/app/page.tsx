@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
+import { previewItemsSql } from "@/lib/sorter-preview";
 import { eq, desc, and } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { SorterCard } from "@/components/ui/sorter-card";
@@ -25,6 +26,7 @@ async function getPopularSorters() {
         category: sorters.category,
         completionCount: sorters.completionCount,
         coverImageUrl: sorters.coverImageUrl,
+        previewItems: previewItemsSql,
         creatorUsername: user.username,
       })
       .from(sorters)
@@ -66,6 +68,7 @@ async function getRecentSorters() {
         category: sorters.category,
         completionCount: sorters.completionCount,
         coverImageUrl: sorters.coverImageUrl,
+        previewItems: previewItemsSql,
         creatorUsername: user.username,
       })
       .from(sorters)

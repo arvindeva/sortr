@@ -1,5 +1,6 @@
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
+import { previewItemsSql } from "@/lib/sorter-preview";
 import { eq, desc, sql, ilike, or, and, inArray } from "drizzle-orm";
 
 export interface BrowseParams {
@@ -75,6 +76,7 @@ export async function getBrowseSorters(
       completionCount: sorters.completionCount,
       createdAt: sorters.createdAt,
       coverImageUrl: sorters.coverImageUrl,
+        previewItems: previewItemsSql,
       creatorUsername: user.username,
     })
     .from(sorters)
