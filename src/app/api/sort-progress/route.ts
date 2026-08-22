@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { sortProgress, sorters } from "@/db/schema";
-import { and, desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, lt, ne, or } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
@@ -46,7 +46,18 @@ export async function GET() {
     })
     .from(sortProgress)
     .innerJoin(sorters, eq(sortProgress.sorterId, sorters.id))
-    .where(and(eq(sortProgress.userId, userId), eq(sorters.deleted, false)))
+    .where(
+      and(
+        eq(sortProgress.userId, userId),
+        eq(sorters.deleted, false),
+        // Don't leak a since-privatized sorter's title/slug/cover/category
+        // into the caller's "in progress" list unless they own it. Composed
+        // inline (not viewableSorter()) because that helper also requires
+        // status='active', which this route has never filtered on — status
+        // semantics here are preserved as-is.
+        or(ne(sorters.visibility, "private"), eq(sorters.userId, userId)),
+      ),
+    )
     .orderBy(desc(sortProgress.updatedAt));
 
   return Response.json({
