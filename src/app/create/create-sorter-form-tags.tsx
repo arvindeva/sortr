@@ -815,6 +815,14 @@ export default function CreateSorterFormTags() {
                 )}
               />
 
+              {/* Visibility */}
+              <div className="space-y-2">
+                <p className="text-[13px] font-semibold text-foreground">
+                  Visibility
+                </p>
+                <VisibilityPicker value={visibility} onChange={setVisibility} />
+              </div>
+
               <FormField
                 control={form.control}
                 name="description"
@@ -882,28 +890,26 @@ export default function CreateSorterFormTags() {
                 )}
               />
 
-              {/* Cover Image */}
-              <CoverImageUpload
-                selectedFile={coverImageFile}
-                previewUrl={coverImagePreview}
-                onImageSelect={handleCoverImageSelect}
-              />
-
-              {/* Visibility */}
-              <div>
-                <div className="hud mb-2 text-xs text-muted-foreground">
-                  Visibility
-                </div>
-                <VisibilityPicker value={visibility} onChange={setVisibility} />
-              </div>
             </div>
+          </section>
+
+          {/* Cover Image Section */}
+          <section className="rounded-2xl border border-border bg-card p-6 md:p-7">
+            <div className="hud mb-5 text-xs text-muted-foreground">
+              02 — Cover image
+            </div>
+            <CoverImageUpload
+              selectedFile={coverImageFile}
+              previewUrl={coverImagePreview}
+              onImageSelect={handleCoverImageSelect}
+            />
           </section>
 
           {/* Items Section */}
           <section className="rounded-2xl border border-border bg-card p-6 md:p-7">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div className="hud text-xs text-muted-foreground">
-                02 — Items to rank
+                03 — Items to rank
               </div>
               <span
                 className={`font-mono text-xs ${
