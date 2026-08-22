@@ -7,8 +7,8 @@
 
 const FAQ: { q: string; a: string }[] = [
   {
-    q: "How is a sorter different from a tier list?",
-    a: "A tier list makes you drag items into tiers by hand. In a sorter you only answer head-to-head matchups — the full ranking is computed from your picks, and every item gets an exact place instead of sharing a tier.",
+    q: "How is a sorter different from a tier list maker like TierMaker?",
+    a: "A tier list maker has you drag items into tiers by hand. In a sorter you only answer head-to-head matchups — the full ranking is computed from your picks, and every item gets an exact place instead of sharing a tier. If you like TierMaker but want a first-to-last order, that's what a sorter gives you.",
   },
   {
     q: "What is a bias sorter?",
@@ -54,8 +54,9 @@ export function HomeExplainer() {
       </h2>
       <p className="text-muted-foreground mt-3 max-w-3xl text-[14px] leading-relaxed md:text-[15px]">
         A sorter is a head-to-head ranking tool: two items face off, you pick a
-        side, and after enough matchups your full ranking emerges — pairwise
-        comparison doing the work a tier list makes you do by hand. Fandoms
+        side, and after enough matchups your full ranking emerges. It&apos;s
+        pairwise comparison doing the work a tier list makes you do by hand —
+        the head-to-head alternative to tier list makers like TierMaker. Fandoms
         know the format as a bias sorter or character sorter; it works just as
         well for albums, movies, games, or food. When enough people play the
         same sorter, their results combine into a community ranking. Free to

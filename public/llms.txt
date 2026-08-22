@@ -17,7 +17,8 @@
 ## Facts
 
 - Free to play, no account needed; sign in only to create and save rankings
-- Alternative to tier list makers: the ranking is computed from your choices
+- A TierMaker alternative: head-to-head matchups instead of dragging into
+  tiers — the ranking is computed from your choices
 - Ties are supported — tied items share a rank (1, 1, 3…)
 - Sorters can be public, unlisted (link-only), or private
 - Community rankings aggregate all players' results per sorter

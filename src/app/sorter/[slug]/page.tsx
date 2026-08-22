@@ -38,8 +38,11 @@ export async function generateMetadata({
 
   const { sorter, items, tags } = data;
 
-  // Create dynamic title
-  const title = sorter.title;
+  // Title carries the word "Sorter" for search ("<fandom> sorter" queries)
+  // unless the creator's own title already says sorter/ranking.
+  const title = /sorter|ranking|tier/i.test(sorter.title)
+    ? sorter.title
+    : `${sorter.title} Sorter`;
 
   // Create description
   let description = `Rank "${sorter.title}" head-to-head — pick a favorite, one matchup at a time`;
