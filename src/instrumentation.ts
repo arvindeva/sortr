@@ -19,25 +19,30 @@ export async function onRequestError(
   request: { path: string; method: string },
   context: { routeType: string },
 ) {
-  // pg isn't available on the edge runtime; middleware errors go to logs only.
-  if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  try {
-    const e = err as {
-      message?: unknown;
-      stack?: unknown;
-      digest?: unknown;
-    } | null;
-    const { logServerError } = await import("./lib/log-server-error");
-    await logServerError({
-      digest: typeof e?.digest === "string" ? e.digest : null,
-      message: String(e?.message ?? err).slice(0, 500),
-      stack: typeof e?.stack === "string" ? e.stack.slice(0, 4000) : null,
-      method: request?.method?.slice(0, 10) ?? null,
-      path: request?.path?.slice(0, 300) ?? null,
-      routeType: context?.routeType?.slice(0, 30) ?? null,
-    });
-  } catch (error) {
-    // The error logger must never become an error source.
-    console.error("onRequestError handler failed (swallowed):", error);
+  // The import MUST live inside the positive NEXT_RUNTIME check (not behind
+  // an early return): webpack collects dynamic imports at parse time, and
+  // only a statically-eliminable `if` branch keeps pg (Node builtins) out of
+  // the EDGE instrumentation bundle — the early-return shape broke `next
+  // build` for every runtime that isn't nodejs. Same pattern as register().
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    try {
+      const e = err as {
+        message?: unknown;
+        stack?: unknown;
+        digest?: unknown;
+      } | null;
+      const { logServerError } = await import("./lib/log-server-error");
+      await logServerError({
+        digest: typeof e?.digest === "string" ? e.digest : null,
+        message: String(e?.message ?? err).slice(0, 500),
+        stack: typeof e?.stack === "string" ? e.stack.slice(0, 4000) : null,
+        method: request?.method?.slice(0, 10) ?? null,
+        path: request?.path?.slice(0, 300) ?? null,
+        routeType: context?.routeType?.slice(0, 30) ?? null,
+      });
+    } catch (error) {
+      // The error logger must never become an error source.
+      console.error("onRequestError handler failed (swallowed):", error);
+    }
   }
 }
