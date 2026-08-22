@@ -112,16 +112,12 @@ export function SorterPageClient({
               }
             >
               {item.imageUrl ? (
+                // "full" (300-600px), not "thumbnail" (64px — mush at tile size)
                 <img
-                  src={getImageUrl(item.imageUrl, "thumbnail")}
+                  src={getImageUrl(item.imageUrl, "full")}
                   alt={item.title}
                   loading="lazy"
                   className="absolute inset-0 h-full w-full object-cover"
-                  onError={(e) => {
-                    const t = e.target as HTMLImageElement;
-                    if (t.src.includes("-thumb"))
-                      t.src = getImageUrl(item.imageUrl, "full");
-                  }}
                 />
               ) : (
                 <span
