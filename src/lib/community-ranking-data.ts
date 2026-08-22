@@ -4,8 +4,11 @@ import { sorterItems, sortingResults } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import {
   computeCommunityRanking,
+  mapRanking,
+  normTitle,
   MIN_RANKINGS,
   type RankingList,
+  type StoredRankedItem,
 } from "@/lib/community-ranking";
 
 // A consensus row, ready to render. Title/image come from the CURRENT items
@@ -22,21 +25,12 @@ export interface CommunityRankingPayload {
   totalRankings: number;
 }
 
-// Each element of a stored `rankings` JSON array.
-interface StoredRankedItem {
-  id: string;
-  title: string;
-  imageUrl?: string | null;
-}
-
 // A past-version ranking is included only if at least this fraction of its
 // stored items maps onto the sorter's CURRENT items (by id, or by normalized
 // title — edits re-create items with new ids, but titles usually survive).
 // This is also the drift guard: if a creator replaced the sorter's contents
 // wholesale, old rankings fall below the threshold and stay excluded.
 const OVERLAP_THRESHOLD = 0.6;
-
-const normTitle = (t: string) => t.trim().toLowerCase();
 
 /**
  * Cheap dedup-aware size of a sorter's ranking pool: each logged-in user
@@ -57,43 +51,6 @@ export async function getCommunityRankingPoolCount(
     .from(sortingResults)
     .where(eq(sortingResults.sorterId, sorterId));
   return row?.c ?? 0;
-}
-
-/**
- * Map one stored ranking onto the current item set. Returns the mapped ordered
- * id list and the overlap fraction (mapped unique items / stored items).
- */
-function mapRanking(
-  parsed: StoredRankedItem[],
-  currentIds: Set<string>,
-  titleToId: Map<string, string>,
-): { list: RankingList; overlap: number } {
-  const mapped: string[] = [];
-  const seen = new Set<string>();
-  let considered = 0;
-
-  for (const item of parsed) {
-    if (!item?.id) continue;
-    considered++;
-    // Same-version rankings match by id; past-version rankings (ids re-created
-    // by edits) fall back to the title snapshot.
-    const id = currentIds.has(item.id)
-      ? item.id
-      : item.title != null
-        ? titleToId.get(normTitle(item.title))
-        : undefined;
-    // Dedupe within one ranking (two old items can map to one current item
-    // via title) — keep the better (earlier) position.
-    if (id && !seen.has(id)) {
-      seen.add(id);
-      mapped.push(id);
-    }
-  }
-
-  return {
-    list: mapped,
-    overlap: considered > 0 ? mapped.length / considered : 0,
-  };
 }
 
 async function getCommunityRankingUncached(

@@ -6,8 +6,10 @@
  *  - Each ranking is a full ordered list (best → worst) of the item ids the
  *    user kept. Items they removed mid-sort simply aren't in their list.
  *  - For each ranking, an item's position is normalized to a percentile
- *    `(index) / (listLength - 1)` so 0 = best, 1 = worst — comparable across
- *    rankings of different lengths (filters, removals).
+ *    `pos / (listLength - 1)` so 0 = best, 1 = worst — comparable across
+ *    rankings of different lengths (filters, removals). `pos` is the item's
+ *    0-based index, except tied items (a tie block) share their block's
+ *    average index — a 2-way tie for first gives both items pos 0.5.
  *  - An item's score is the mean of its percentiles over the rankings it
  *    APPEARED in (removals are ignored, not counted as "last").
  *  - To avoid niche items (kept by very few) floating to the top, an item is
@@ -19,8 +21,15 @@
  * + an appearance floor handles partial lists cleanly.
  */
 
-/** One submitted ranking: an ordered list of item ids, best first. */
-export type RankingList = string[];
+/** One entry of a submitted ranking. */
+export interface RankingEntry {
+  id: string;
+  /** 0-based position; tied items share their tie block's average index. */
+  pos: number;
+}
+
+/** One submitted ranking: an ordered list of entries, best first. */
+export type RankingList = RankingEntry[];
 
 /**
  * Minimum rankings in the (deduplicated) pool before a community ranking
@@ -83,9 +92,8 @@ export function computeCommunityRanking(
 
   for (const list of valid) {
     const denom = list.length - 1; // guaranteed ≥ 1 (length ≥ 2)
-    for (let i = 0; i < list.length; i++) {
-      const id = list[i];
-      const percentile = i / denom; // 0 (best) … 1 (worst)
+    for (const { id, pos } of list) {
+      const percentile = pos / denom; // 0 (best) … 1 (worst)
       sum.set(id, (sum.get(id) ?? 0) + percentile);
       count.set(id, (count.get(id) ?? 0) + 1);
     }
@@ -109,4 +117,70 @@ export function computeCommunityRanking(
   );
 
   return { items, totalRankings };
+}
+
+/** Each element of a stored `rankings` JSON array. */
+export interface StoredRankedItem {
+  id: string;
+  title: string;
+  imageUrl?: string | null;
+  /** Tied with the previous stored item (shared rank). */
+  tiedWithPrev?: boolean;
+}
+
+export const normTitle = (t: string) => t.trim().toLowerCase();
+
+/**
+ * Map one stored ranking onto the current item set. Returns the mapped ordered
+ * id list and the overlap fraction (mapped unique items / stored items).
+ */
+export function mapRanking(
+  parsed: StoredRankedItem[],
+  currentIds: Set<string>,
+  titleToId: Map<string, string>,
+): { list: RankingList; overlap: number } {
+  const mapped: { id: string; group: number }[] = [];
+  const seen = new Set<string>();
+  let considered = 0;
+  // Tie group per stored item: consecutive tiedWithPrev items share a group.
+  // Tracked over ALL parsed elements (even unmappable ones) so a dropped
+  // middle item doesn't split its tie block.
+  let group = 0;
+
+  for (let i = 0; i < parsed.length; i++) {
+    const item = parsed[i];
+    if (i > 0 && !item?.tiedWithPrev) group++;
+    if (!item?.id) continue;
+    considered++;
+    // Same-version rankings match by id; past-version rankings (ids re-created
+    // by edits) fall back to the title snapshot.
+    const id = currentIds.has(item.id)
+      ? item.id
+      : item.title != null
+        ? titleToId.get(normTitle(item.title))
+        : undefined;
+    // Dedupe within one ranking (two old items can map to one current item
+    // via title) — keep the better (earlier) position.
+    if (id && !seen.has(id)) {
+      seen.add(id);
+      mapped.push({ id, group });
+    }
+  }
+
+  // Positions: 0-based index, except tie blocks (consecutive same-group runs —
+  // groups are contiguous in stored order, so they stay contiguous here) share
+  // their block's average index.
+  const list: RankingList = [];
+  for (let i = 0; i < mapped.length; ) {
+    let j = i;
+    while (j + 1 < mapped.length && mapped[j + 1].group === mapped[i].group) j++;
+    const pos = (i + j) / 2;
+    for (let k = i; k <= j; k++) list.push({ id: mapped[k].id, pos });
+    i = j + 1;
+  }
+
+  return {
+    list,
+    overlap: considered > 0 ? list.length / considered : 0,
+  };
 }
