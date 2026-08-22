@@ -50,11 +50,20 @@ export default function GlobalError({
       });
 
     // The Umami script loads independently of React, so it usually survives
-    // the crash — but if the crash happened before it finished loading, retry
-    // once after it's had time to arrive.
+    // the crash. Retry ONLY if it wasn't loaded yet on the first attempt — an
+    // unconditional retry double-counted every crash (~2x inflation in the
+    // first day's client_error data).
+    const umamiLoaded = () =>
+      typeof window !== "undefined" &&
+      !!(window as unknown as { umami?: unknown }).umami;
     report();
-    const retry = setTimeout(report, 2500);
-    return () => clearTimeout(retry);
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    if (!umamiLoaded()) {
+      retry = setTimeout(report, 2500);
+    }
+    return () => {
+      if (retry) clearTimeout(retry);
+    };
   }, [error]);
 
   const clearSavedAndReload = () => {
