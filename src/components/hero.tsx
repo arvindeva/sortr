@@ -66,7 +66,13 @@ function TypewriterWord() {
   }, []);
 
   return (
-    <span className="text-main inline-flex items-baseline whitespace-nowrap">
+    // translate="no": in-page translators wrapping this constantly-mutating
+    // text was the site's single biggest crash surface (see the DOM patch in
+    // layout.tsx) — and a half-translated typewriter looked broken anyway.
+    <span
+      translate="no"
+      className="text-main inline-flex items-baseline whitespace-nowrap"
+    >
       {/* Zero-width space keeps full text metrics on the line even when the
           word is fully deleted — otherwise the line collapses to the .display
           line-height strut and everything below the hero jumps up ~0.3em

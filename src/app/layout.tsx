@@ -75,6 +75,35 @@ export const viewport: Viewport = {
   ],
 };
 
+// In-page translators (Google Translate & co.) wrap the page's text nodes in
+// <font> tags. When React later updates text it rendered, removeChild /
+// insertBefore throw because the nodes moved — a full page crash. Telemetry
+// (client_error, Aug 2026): ~900 visitors/day hitting this, mostly BR/LatAm/
+// SEA fandoms browsing translated. The canonical mitigation (React issue
+// #11538) makes the two DOM calls degrade gracefully instead of throwing.
+// Must run before hydration → parser-executed inline script at the top of
+// <body>, deliberately not a module.
+const TRANSLATOR_DOM_PATCH = `(function(){
+  if (typeof Node !== "function" || !Node.prototype) return;
+  var warned = false;
+  var warn = function () {
+    if (!warned && typeof console !== "undefined") {
+      warned = true;
+      console.warn("sortr: patched a DOM call disrupted by an in-page translator");
+    }
+  };
+  var origRemoveChild = Node.prototype.removeChild;
+  Node.prototype.removeChild = function (child) {
+    if (child && child.parentNode !== this) { warn(); return child; }
+    return origRemoveChild.apply(this, arguments);
+  };
+  var origInsertBefore = Node.prototype.insertBefore;
+  Node.prototype.insertBefore = function (newNode, ref) {
+    if (ref && ref.parentNode !== this) { warn(); return newNode; }
+    return origInsertBefore.apply(this, arguments);
+  };
+})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -88,6 +117,7 @@ export default function RootLayout({
         className={`${anybody.variable} ${monaSans.variable} flex min-h-screen flex-col antialiased`}
         style={{ fontFamily: "var(--font-mona-sans)" }}
       >
+        <script dangerouslySetInnerHTML={{ __html: TRANSLATOR_DOM_PATCH }} />
         {isProd &&
           process.env.NEXT_PUBLIC_UMAMI_URL &&
           process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && (
