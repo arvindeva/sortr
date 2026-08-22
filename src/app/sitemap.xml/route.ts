@@ -50,6 +50,13 @@ export async function GET() {
     <priority>1.0</priority>
   </url>
   
+  <!-- Character sorter landing page -->
+  <url>
+    <loc>${baseUrl}/character-sorter</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
   <!-- Sorter pages -->
   ${publicSorters
     .map(

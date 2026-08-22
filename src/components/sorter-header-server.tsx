@@ -104,6 +104,12 @@ export function SorterHeaderServer({
             </p>
           )}
 
+          {/* The mechanic, stated in the page body — the one line a cover-less,
+              description-less sorter page still says about itself. */}
+          <p className="mt-3 text-[13px] text-muted-foreground/80">
+            Rank {sorter.itemCount != null ? `${sorter.itemCount} items` : "the items"} head-to-head — pick a favorite, one matchup at a time.
+          </p>
+
           {/* Actions — one line on mobile (Sort now flex-1 + icon buttons) */}
           <div className="mt-5 flex items-center gap-2.5 sm:flex-wrap sm:gap-3">
             <Button
