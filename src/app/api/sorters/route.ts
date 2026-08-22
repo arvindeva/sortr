@@ -104,6 +104,7 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
           coverImageUrl: finalCoverImageUrl || null,
           userId: userData.id,
           version: 1,
+          visibility: validatedData.visibility ?? "public",
           // Note: useGroups field removed from schema
         })
         .returning();

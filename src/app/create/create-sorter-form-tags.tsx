@@ -30,6 +30,8 @@ import { accentFor } from "@/lib/utils";
 // Note: Image compression is now handled by the upload hook
 import { Plus, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
+import { VisibilityPicker } from "@/components/ui/visibility-picker";
+import type { SorterVisibility } from "@/lib/sorter-visibility";
 import { track } from "@/lib/analytics";
 import CoverImageUpload from "@/components/cover-image-upload";
 // Direct-to-final upload flow (no temp sessions)
@@ -78,6 +80,7 @@ export default function CreateSorterFormTags() {
       });
     }
   };
+  const [visibility, setVisibility] = useState<SorterVisibility>("public");
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
     null,
@@ -388,6 +391,7 @@ export default function CreateSorterFormTags() {
           tags: data.tags || [],
           items: validItems,
           includeCover: !!coverImageFile,
+          visibility,
         }),
       });
 
@@ -725,6 +729,7 @@ export default function CreateSorterFormTags() {
         items: (data.items || [])
           .filter((i) => i.title.trim())
           .map((i) => ({ title: i.title.trim(), tagSlugs: i.tagSlugs || [] })),
+        visibility,
       };
 
       const res = await fetch("/api/sorters", {
@@ -883,6 +888,14 @@ export default function CreateSorterFormTags() {
                 previewUrl={coverImagePreview}
                 onImageSelect={handleCoverImageSelect}
               />
+
+              {/* Visibility */}
+              <div>
+                <div className="hud mb-2 text-xs text-muted-foreground">
+                  Visibility
+                </div>
+                <VisibilityPicker value={visibility} onChange={setVisibility} />
+              </div>
             </div>
           </section>
 

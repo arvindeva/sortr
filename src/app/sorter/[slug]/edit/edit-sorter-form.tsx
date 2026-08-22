@@ -28,6 +28,8 @@ import { ArcadePageHeader } from "@/components/ui/arcade-page-header";
 import { accentFor } from "@/lib/utils";
 import { Plus, X, Image as ImageIcon, ArrowLeft, Pencil, Loader2 } from "lucide-react";
 import { createSorterSchema, type CreateSorterInput } from "@/lib/validations";
+import { VisibilityPicker } from "@/components/ui/visibility-picker";
+import type { SorterVisibility } from "@/lib/sorter-visibility";
 import CoverImageUpload from "@/components/cover-image-upload";
 import { UploadProgressDialog } from "@/components/upload-progress-dialog";
 import type { UploadProgress } from "@/types/upload";
@@ -47,6 +49,7 @@ interface EditSorterFormProps {
     category: string | null;
     slug: string;
     coverImageUrl: string | null;
+    visibility?: string | null;
   };
   tags: Array<{
     id: string;
@@ -128,6 +131,9 @@ export default function EditSorterForm({
       });
     }
   };
+  const [visibility, setVisibility] = useState<SorterVisibility>(
+    (sorter.visibility as SorterVisibility) ?? "public",
+  );
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
     sorter.coverImageUrl,
@@ -411,6 +417,7 @@ export default function EditSorterForm({
           tags: managedTags,
           items: itemsPayload,
           includeCover: !!coverImageFile,
+          visibility,
         }),
       });
       if (!initRes.ok) {
@@ -761,6 +768,20 @@ export default function EditSorterForm({
                 selectedFile={coverImageFile}
                 previewUrl={coverImagePreview}
               />
+
+              {/* Visibility */}
+              <div>
+                <div className="hud mb-2 text-xs text-muted-foreground">
+                  Visibility
+                </div>
+                <VisibilityPicker
+                  value={visibility}
+                  onChange={(v) => {
+                    setVisibility(v);
+                    setHasChanged(true);
+                  }}
+                />
+              </div>
             </div>
           </section>
 

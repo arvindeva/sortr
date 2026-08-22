@@ -17,6 +17,7 @@ export const createSorterSchema = z
       .max(50, "Category must be 50 characters or less")
       .optional(),
     coverImageUrl: z.string().url("Invalid cover image URL").optional(),
+    visibility: z.enum(["public", "unlisted", "private"]).optional(),
     // Optional tags for filtering
     tags: z
       .array(

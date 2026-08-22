@@ -13,6 +13,7 @@ import {
 } from "@/lib/r2";
 import { and, eq } from "drizzle-orm";
 import { generateSorterItemSlug } from "@/lib/utils";
+import { VISIBILITIES, type SorterVisibility } from "@/lib/sorter-visibility";
 
 type InitBody = {
   title: string;
@@ -21,6 +22,7 @@ type InitBody = {
   tags?: { id?: string; name: string; sortOrder?: number }[];
   items: { title: string; tagNames?: string[]; hasImage?: boolean; itemId?: string }[];
   includeCover?: boolean;
+  visibility?: SorterVisibility;
 };
 
 export async function POST(
@@ -38,6 +40,12 @@ export async function POST(
 
     if (!body?.title || !Array.isArray(body.items) || body.items.length === 0) {
       return Response.json({ error: "Invalid payload" }, { status: 400 });
+    }
+    if (
+      body.visibility !== undefined &&
+      !VISIBILITIES.includes(body.visibility)
+    ) {
+      return Response.json({ error: "Invalid visibility" }, { status: 400 });
     }
 
     // Find existing sorter by slug and verify ownership
@@ -106,6 +114,7 @@ export async function POST(
           includeCover: !!body.includeCover,
           coverKey,
           expectedKeys,
+          visibility: body.visibility,
         },
       })
       .returning();

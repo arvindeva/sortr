@@ -12,6 +12,7 @@ import {
 } from "@/lib/r2";
 import { generateSorterItemSlug, generateSorterSlug } from "@/lib/utils";
 import { eq } from "drizzle-orm";
+import { VISIBILITIES, type SorterVisibility } from "@/lib/sorter-visibility";
 
 type InitBody = {
   title: string;
@@ -20,6 +21,7 @@ type InitBody = {
   tags?: { name: string; sortOrder?: number }[];
   items: { title: string; tagNames?: string[]; hasImage?: boolean }[];
   includeCover?: boolean;
+  visibility?: SorterVisibility;
 };
 
 export async function POST(req: NextRequest) {
@@ -32,6 +34,12 @@ export async function POST(req: NextRequest) {
     const body: InitBody = await req.json();
     if (!body?.title || !Array.isArray(body.items) || body.items.length === 0) {
       return Response.json({ error: "Invalid payload" }, { status: 400 });
+    }
+    if (
+      body.visibility !== undefined &&
+      !VISIBILITIES.includes(body.visibility)
+    ) {
+      return Response.json({ error: "Invalid visibility" }, { status: 400 });
     }
 
     // Resolve current user id from session (set by auth callbacks)
@@ -111,6 +119,7 @@ export async function POST(req: NextRequest) {
           includeCover: !!body.includeCover,
           coverKey,
           expectedKeys,
+          visibility: body.visibility,
         },
       })
       .returning();

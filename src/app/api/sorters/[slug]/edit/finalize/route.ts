@@ -7,6 +7,7 @@ import { and, eq } from "drizzle-orm";
 import { r2Client, getR2PublicUrl } from "@/lib/r2";
 import { HeadObjectCommand } from "@aws-sdk/client-s3";
 import { generateSorterItemSlug } from "@/lib/utils";
+import { revalidatePath } from "next/cache";
 
 export async function PUT(
   req: NextRequest,
@@ -128,6 +129,7 @@ export async function PUT(
           coverImageUrl,
           status: "active",
           version: newVersion,
+          visibility: meta.visibility ?? sorterRow.visibility,
         })
         .where(eq(sorters.id, sorterRow.id));
 
@@ -178,6 +180,8 @@ export async function PUT(
       .update(uploadBatches)
       .set({ status: "active" })
       .where(eq(uploadBatches.id, uploadBatchId));
+
+    revalidatePath(`/sorter/${sorterRow.slug}`);
 
     return Response.json({ status: "active", missing: [] });
   } catch (error) {
