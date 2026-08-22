@@ -66,7 +66,7 @@ export function HomeExplainer() {
 
       {/* Collapsed by default — crawlers index <details> content regardless,
           and the JSON-LD above carries the full answers either way. */}
-      <div className="mt-6 grid gap-x-10 md:grid-cols-2">
+      <div className="mt-6 max-w-3xl">
         {FAQ.map(({ q, a }) => (
           <details key={q} className="group border-border border-b">
             <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-[13px] font-semibold [&::-webkit-details-marker]:hidden">
