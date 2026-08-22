@@ -12,14 +12,21 @@ interface SorterOwnerControlsProps {
   sorterTitle: string;
 }
 
+/** Shared ownership check: is the signed-in visitor this sorter's owner?
+ *  The ISR sorter page has no session, so this only ever resolves true
+ *  client-side, after hydration. */
+export function useIsSorterOwner(ownerUserId: string): boolean {
+  const { data: session } = useSession();
+  const currentUserId = (session?.user as any)?.id as string | undefined;
+  return Boolean(currentUserId && currentUserId === ownerUserId);
+}
+
 export function SorterOwnerControls({
   ownerUserId,
   sorterSlug,
   sorterTitle,
 }: SorterOwnerControlsProps) {
-  const { data: session } = useSession();
-  const currentUserId = (session?.user as any)?.id as string | undefined;
-  const isOwner = Boolean(currentUserId && currentUserId === ownerUserId);
+  const isOwner = useIsSorterOwner(ownerUserId);
 
   if (!isOwner) return null;
 

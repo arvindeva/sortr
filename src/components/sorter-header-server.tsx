@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CoverTile } from "@/components/ui/cover-tile";
 import { Play } from "lucide-react";
+import { SorterVisibilityBadge } from "@/components/sorter-visibility-badge";
 
 interface SorterHeaderServerProps {
   sorter: {
@@ -14,6 +15,7 @@ interface SorterHeaderServerProps {
     completionCount: number;
     itemCount?: number;
     rankingCount?: number;
+    visibility?: string;
     user: {
       username: string;
       id: string;
@@ -81,6 +83,10 @@ export function SorterHeaderServer({
           )}
           <h1 className="display normal-case text-[clamp(2.25rem,6vw,3.875rem)] font-black text-foreground">
             {sorter.title}
+            <SorterVisibilityBadge
+              ownerUserId={sorter.user.id}
+              visibility={sorter.visibility}
+            />
           </h1>
           <div className="mt-2.5 flex flex-wrap items-center gap-x-1.5 font-mono text-[13px] text-muted-foreground">
             {meta.map((m, i) => (

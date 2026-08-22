@@ -19,6 +19,7 @@ interface Sorter {
   createdAt: string;
   completionCount: number;
   version?: number;
+  visibility?: string;
   user: {
     username: string;
     id: string;

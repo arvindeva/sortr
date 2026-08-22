@@ -136,6 +136,7 @@ export default async function SorterPage({ params }: SorterPageProps) {
     coverImageUrl: data.sorter.coverImageUrl ?? undefined,
     itemCount: data.items.length,
     version: data.sorter.version,
+    visibility: data.sorter.visibility,
     user: {
       username: data.sorter.user.username || "Anonymous",
       id: data.sorter.user.id || "",
