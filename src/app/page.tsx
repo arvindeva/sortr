@@ -3,8 +3,9 @@ import Link from "next/link";
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
 import { previewItemsSql } from "@/lib/sorter-preview";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
+import { listableSorter } from "@/lib/sorter-visibility";
 import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
 import { Hero } from "@/components/hero";
@@ -31,7 +32,7 @@ async function getPopularSorters() {
       })
       .from(sorters)
       .leftJoin(user, eq(sorters.userId, user.id))
-      .where(and(eq(sorters.deleted, false), eq(sorters.status, "active")))
+      .where(listableSorter())
       .orderBy(desc(sorters.completionCount))
       .limit(numberOfPopularSorters);
 
@@ -73,7 +74,7 @@ async function getRecentSorters() {
       })
       .from(sorters)
       .leftJoin(user, eq(sorters.userId, user.id))
-      .where(and(eq(sorters.deleted, false), eq(sorters.status, "active")))
+      .where(listableSorter())
       .orderBy(desc(sorters.createdAt))
       .limit(numberOfRecentSorters);
 

@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { sorters, sortingResults, user } from "@/db/schema";
 import { previewItemsSql } from "@/lib/sorter-preview";
 import { and, desc, eq, gte, ne, sql } from "drizzle-orm";
+import { listableSorter } from "@/lib/sorter-visibility";
 
 export interface TrendingSorter {
   id: string;
@@ -42,8 +43,7 @@ async function computeTrendingSorters(
     .leftJoin(user, eq(sorters.userId, user.id))
     .where(
       and(
-        eq(sorters.deleted, false),
-        eq(sorters.status, "active"),
+        listableSorter(),
         gte(sortingResults.createdAt, since),
         excludeSorterId ? ne(sorters.id, excludeSorterId) : undefined,
       ),

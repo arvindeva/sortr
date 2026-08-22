@@ -1,7 +1,8 @@
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
 import { previewItemsSql } from "@/lib/sorter-preview";
-import { eq, desc, sql, ilike, or, and, inArray } from "drizzle-orm";
+import { eq, desc, sql, ilike, or, and, inArray, type SQL } from "drizzle-orm";
+import { listableSorter } from "@/lib/sorter-visibility";
 
 export interface BrowseParams {
   query?: string;
@@ -46,10 +47,7 @@ export async function getBrowseSorters(
   const limit = Math.min(50, Math.max(1, params.limit || 20));
   const offset = (page - 1) * limit;
 
-  const conditions = [
-    eq(sorters.deleted, false),
-    eq(sorters.status, "active"),
-  ];
+  const conditions: SQL[] = [listableSorter()];
 
   if (query) {
     const term = `%${query}%`;

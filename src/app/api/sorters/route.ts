@@ -13,6 +13,7 @@ import {
   sorterHistory,
 } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { listableSorter } from "@/lib/sorter-visibility";
 import { z } from "zod";
 import { createSorterSchema } from "@/lib/validations";
 import {
@@ -620,7 +621,7 @@ export async function GET() {
       })
       .from(sorters)
       .leftJoin(user, eq(sorters.userId, user.id))
-      .where(eq(sorters.deleted, false))
+      .where(listableSorter())
       .orderBy(desc(sorters.completionCount))
       .limit(10);
 

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
-import { and, eq, desc, isNotNull } from "drizzle-orm";
+import { and, eq, isNotNull, desc } from "drizzle-orm";
+import { listableSorter } from "@/lib/sorter-visibility";
 
 export async function GET() {
   try {
@@ -20,7 +21,7 @@ export async function GET() {
         createdAt: sorters.createdAt,
       })
       .from(sorters)
-      .where(and(eq(sorters.deleted, false), eq(sorters.status, "active")))
+      .where(listableSorter())
       .orderBy(desc(sorters.createdAt));
 
     // Individual ranking pages are intentionally NOT listed: they're thin and
@@ -37,13 +38,7 @@ export async function GET() {
       })
       .from(user)
       .innerJoin(sorters, eq(sorters.userId, user.id))
-      .where(
-        and(
-          isNotNull(user.username),
-          eq(sorters.deleted, false),
-          eq(sorters.status, "active"),
-        ),
-      );
+      .where(and(isNotNull(user.username), listableSorter()));
 
     // Build sitemap XML
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
