@@ -408,6 +408,7 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
               colorKey={sorter.slug ?? sorter.title}
               nameSize={26}
               radius={14}
+              stripes={false}
               className="hidden shrink-0 sm:flex sm:h-40 sm:w-40"
             />
 

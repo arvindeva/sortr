@@ -21,6 +21,12 @@ interface CoverTileProps {
   hideName?: boolean;
   /** Rounded corners. Defaults to 12px (the card radius). */
   radius?: number;
+  /**
+   * Suppress the 45° stripe texture on the fallback tile — used by the big
+   * hero covers (sorter page, ranking page) where the flat accent reads
+   * cleaner at size. Cards keep the texture.
+   */
+  stripes?: boolean;
   className?: string;
 }
 
@@ -37,6 +43,7 @@ export function CoverTile({
   nameSize = 21,
   hideName = false,
   radius = 12,
+  stripes = true,
   className,
 }: CoverTileProps) {
   if (imageUrl) {
@@ -63,15 +70,16 @@ export function CoverTile({
       )}
       style={{ background: color, borderRadius: radius }}
     >
-      {/* 45° stripe texture */}
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(45deg, rgba(0,0,0,.06) 0 14px, transparent 14px 28px)",
-        }}
-      />
+      {stripes && (
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(45deg, rgba(0,0,0,.06) 0 14px, transparent 14px 28px)",
+          }}
+        />
+      )}
       {!hideName && (
         <span
           className="display normal-case relative px-3 font-extrabold"
