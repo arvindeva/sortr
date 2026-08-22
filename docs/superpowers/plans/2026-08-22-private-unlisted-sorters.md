@@ -212,10 +212,15 @@ git commit -m "Listings: gate through listableSorter() (public only)"
 **Files:**
 - Modify: `src/lib/validations.ts` (`createSorterSchema`)
 - Modify: `src/app/api/sorters/route.ts` (POST insert, ~line 99)
-- Modify: `src/app/api/sorters/[slug]/finalize/route.ts` (metadata update, ~lines 123 and 134)
+- Modify: `src/app/api/sorters/init/route.ts` (create init — forward `visibility` into stored session metadata)
+- Modify: `src/app/api/sorters/[slug]/finalize/route.ts` (create finalize, ~lines 123 and 134)
+- Modify: `src/app/api/sorters/[slug]/edit/init/route.ts` (edit init — forward `visibility`)
+- Modify: `src/app/api/sorters/[slug]/edit/finalize/route.ts` (edit finalize — apply with no-clobber; add `revalidatePath(`/sorter/${slug}`)` here, it was missing)
 - Create: `src/components/ui/visibility-picker.tsx`
 - Modify: `src/app/create/create-sorter-form-tags.tsx` (the live create form)
 - Modify: `src/app/sorter/[slug]/edit/edit-sorter-form.tsx`
+
+> **Amended during execution:** the original plan assumed one finalize route served both flows; in reality create and edit each have their own init→finalize pair, and neither init forwarded extra metadata fields. The no-clobber rule (`meta.visibility ?? sorterRow.visibility`) applies in BOTH finalize routes.
 
 **Interfaces:**
 - Consumes: `VISIBILITIES`, `SorterVisibility` from Task 1.
