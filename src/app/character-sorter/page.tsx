@@ -76,14 +76,15 @@ const STEPS: { title: string; body: string }[] = [
 ];
 
 export default async function CharacterSorterPage() {
-  // Live content: trending sorters, preferring character-heavy categories.
+  // Live content: trending sorters, preferring the character-flavored ones —
+  // by category, or by title (many uncategorized sorters literally say
+  // "characters"/"bias" in their name).
   const trending = await getTrendingSorters(30);
-  const preferred = trending.filter(
-    (s) => s.category && CHARACTER_CATEGORIES.has(s.category),
-  );
-  const rest = trending.filter(
-    (s) => !s.category || !CHARACTER_CATEGORIES.has(s.category),
-  );
+  const isCharacterFlavored = (s: { category?: string; title: string }) =>
+    (s.category != null && CHARACTER_CATEGORIES.has(s.category)) ||
+    /character|bias/i.test(s.title);
+  const preferred = trending.filter(isCharacterFlavored);
+  const rest = trending.filter((s) => !isCharacterFlavored(s));
   const live = [...preferred, ...rest].slice(0, 10);
 
   const faqJsonLd = {
