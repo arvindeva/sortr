@@ -114,15 +114,15 @@ export default async function CharacterSorterPage() {
             appear, you pick the one you like more, and after enough matchups
             your full list emerges — #1 to the very bottom, decided by your own
             choices instead of dragging cards into tiers. Fandoms have passed
-            hand-made sorters around for years (the charasort tradition sortr
-            is openly inspired by); sortr is that format with images, ties,
-            share cards, and community rankings built in.
+            hand-made sorters around for years (the charasort tradition sortr is
+            openly inspired by); sortr is that format with images, ties, share
+            cards, and community rankings built in.
           </p>
         </div>
 
         {live.length > 0 ? (
           <section className="w-full">
-            <h2 className="display mb-6 text-3xl font-black text-foreground md:text-[42px]">
+            <h2 className="display text-foreground mb-6 text-3xl font-black md:text-[42px]">
               Play one now
             </h2>
             <SorterGrid>
@@ -142,17 +142,17 @@ export default async function CharacterSorterPage() {
 
         {/* How it works */}
         <section className="w-full">
-          <h2 className="display mb-6 text-3xl font-black text-foreground md:text-[42px]">
+          <h2 className="display text-foreground mb-6 text-3xl font-black md:text-[42px]">
             How it works
           </h2>
           <div className="grid gap-4 md:grid-cols-3">
             {STEPS.map((step, i) => (
               <div
                 key={step.title}
-                className="rounded-xl border border-border bg-card p-5"
+                className="border-border bg-card rounded-xl border p-5"
               >
                 <div className="hud text-main-ink text-xs">0{i + 1}</div>
-                <h3 className="display mt-2 text-xl font-black text-foreground">
+                <h3 className="display text-foreground mt-2 text-xl font-black">
                   {step.title}
                 </h3>
                 <p className="text-muted-foreground mt-2 text-[13px] leading-relaxed">
@@ -164,8 +164,8 @@ export default async function CharacterSorterPage() {
         </section>
 
         {/* Create CTA */}
-        <section className="rounded-2xl border border-main/35 bg-main/5 p-6 md:p-8">
-          <h2 className="display text-2xl font-black text-foreground md:text-3xl">
+        <section className="border-main/35 bg-main/5 rounded-2xl border p-6 md:p-8">
+          <h2 className="display text-foreground text-2xl font-black md:text-3xl">
             Make one for your fandom
           </h2>
           <p className="text-muted-foreground mt-2 max-w-2xl text-[14px] leading-relaxed">
@@ -188,28 +188,30 @@ export default async function CharacterSorterPage() {
           </div>
         </section>
 
-        {/* FAQ */}
+        {/* FAQ — centered container, left-aligned text (matches the homepage) */}
         <section className="w-full">
-          <h2 className="display text-2xl font-black text-foreground md:text-3xl">
-            Questions
-          </h2>
-          <div className="mt-4 max-w-3xl">
-            {FAQ.map(({ q, a }) => (
-              <details key={q} className="group border-border border-b">
-                <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-[13px] font-semibold [&::-webkit-details-marker]:hidden">
-                  {q}
-                  <span
-                    aria-hidden
-                    className="text-muted-foreground shrink-0 transition-transform duration-150 group-open:rotate-90"
-                  >
-                    ▸
-                  </span>
-                </summary>
-                <p className="text-muted-foreground pb-4 text-[13px] leading-relaxed">
-                  {a}
-                </p>
-              </details>
-            ))}
+          <div className="mx-auto max-w-3xl">
+            <h2 className="display text-foreground text-2xl font-black md:text-3xl">
+              Questions
+            </h2>
+            <div className="mt-4">
+              {FAQ.map(({ q, a }) => (
+                <details key={q} className="group border-border border-b">
+                  <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-[13px] font-semibold [&::-webkit-details-marker]:hidden">
+                    {q}
+                    <span
+                      aria-hidden
+                      className="text-muted-foreground shrink-0 transition-transform duration-150 group-open:rotate-90"
+                    >
+                      ▸
+                    </span>
+                  </summary>
+                  <p className="text-muted-foreground pb-4 text-[13px] leading-relaxed">
+                    {a}
+                  </p>
+                </details>
+              ))}
+            </div>
           </div>
         </section>
       </PageContainer>
