@@ -49,40 +49,42 @@ export function HomeExplainer() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-      <h2 className="display text-foreground text-2xl font-black md:text-3xl">
-        What&apos;s a sorter?
-      </h2>
-      <p className="text-muted-foreground mt-3 max-w-3xl text-[14px] leading-relaxed md:text-[15px]">
-        A sorter is a head-to-head ranking tool: two items face off, you pick a
-        side, and after enough matchups your full ranking emerges. It&apos;s
-        pairwise comparison doing the work a tier list makes you do by hand —
-        the head-to-head alternative to tier list makers like TierMaker. Fandoms
-        know the format as a bias sorter or character sorter; it works just as
-        well for albums, movies, games, or food. When enough people play the
-        same sorter, their results combine into a community ranking. Free to
-        play, no account needed — sign in when you want to create and save
-        your own.
-      </p>
+      <div className="mx-auto max-w-3xl">
+        <h2 className="display text-foreground text-2xl font-black md:text-3xl">
+          What&apos;s a sorter?
+        </h2>
+        <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed md:text-[15px]">
+          A sorter is a head-to-head ranking tool: two items face off, you pick
+          a side, and after enough matchups your full ranking emerges. It&apos;s
+          pairwise comparison doing the work a tier list makes you do by hand —
+          the head-to-head alternative to tier list makers like TierMaker.
+          Fandoms know the format as a bias sorter or character sorter; it works
+          just as well for albums, movies, games, or food. When enough people
+          play the same sorter, their results combine into a community ranking.
+          Free to play, no account needed — sign in when you want to create and
+          save your own.
+        </p>
 
-      {/* Collapsed by default — crawlers index <details> content regardless,
+        {/* Collapsed by default — crawlers index <details> content regardless,
           and the JSON-LD above carries the full answers either way. */}
-      <div className="mt-6 max-w-3xl">
-        {FAQ.map(({ q, a }) => (
-          <details key={q} className="group border-border border-b">
-            <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-[13px] font-semibold [&::-webkit-details-marker]:hidden">
-              {q}
-              <span
-                aria-hidden
-                className="text-muted-foreground shrink-0 transition-transform duration-150 group-open:rotate-90"
-              >
-                ▸
-              </span>
-            </summary>
-            <p className="text-muted-foreground pb-4 text-[13px] leading-relaxed">
-              {a}
-            </p>
-          </details>
-        ))}
+        <div className="mt-6">
+          {FAQ.map(({ q, a }) => (
+            <details key={q} className="group border-border border-b">
+              <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-[13px] font-semibold [&::-webkit-details-marker]:hidden">
+                {q}
+                <span
+                  aria-hidden
+                  className="text-muted-foreground shrink-0 transition-transform duration-150 group-open:rotate-90"
+                >
+                  ▸
+                </span>
+              </summary>
+              <p className="text-muted-foreground pb-4 text-[13px] leading-relaxed">
+                {a}
+              </p>
+            </details>
+          ))}
+        </div>
       </div>
     </section>
   );
