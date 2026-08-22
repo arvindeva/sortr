@@ -4,7 +4,10 @@ import { getServerSession } from "next-auth";
 import { db } from "@/db";
 import { user, sorters, sortingResults } from "@/db/schema";
 import { previewItemsSql } from "@/lib/sorter-preview";
-import { listableSorter } from "@/lib/sorter-visibility";
+import {
+  listableSorter,
+  rankedSorterVisibleToVisitors,
+} from "@/lib/sorter-visibility";
 import { eq, and, desc, count } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
 import { UserProfileHeaderServer } from "@/components/user-profile-header-server";
@@ -65,7 +68,13 @@ async function getUserProfileData(username: string, viewerUserId?: string) {
     db
       .select({ count: count() })
       .from(sortingResults)
-      .where(eq(sortingResults.userId, userData.id)),
+      .leftJoin(sorters, eq(sortingResults.sorterId, sorters.id))
+      .where(
+        and(
+          eq(sortingResults.userId, userData.id),
+          ...(isOwner ? [] : [rankedSorterVisibleToVisitors()]),
+        ),
+      ),
   ]);
 
   const sorterCount = sorterCountResult[0].count;
@@ -109,7 +118,12 @@ async function getUserProfileData(username: string, viewerUserId?: string) {
     })
     .from(sortingResults)
     .leftJoin(sorters, eq(sortingResults.sorterId, sorters.id))
-    .where(eq(sortingResults.userId, userData.id))
+    .where(
+      and(
+        eq(sortingResults.userId, userData.id),
+        ...(isOwner ? [] : [rankedSorterVisibleToVisitors()]),
+      ),
+    )
     .orderBy(desc(sortingResults.createdAt));
 
   // Transform sorters data

@@ -810,7 +810,7 @@ export default function SortPage() {
     return (
       <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="space-y-4 text-center">
-          <p className="text-foreground">Failed to load sorter</p>
+          <p className="text-foreground">This sorter isn&apos;t available — it may be private or deleted.</p>
           <Button onClick={() => router.push(`/sorter/${sorterSlug}`)}>
             Go Back
           </Button>

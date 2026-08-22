@@ -1,4 +1,4 @@
-import { and, eq, ne, or, type SQL } from "drizzle-orm";
+import { and, eq, isNull, ne, or, type SQL } from "drizzle-orm";
 import { sorters } from "@/db/schema";
 
 /**
@@ -30,5 +30,17 @@ export function viewableSorter(viewerUserId?: string | null): SQL {
     viewerUserId
       ? or(notPrivate, eq(sorters.userId, viewerUserId))!
       : notPrivate,
+  )!;
+}
+
+/** Visitor-facing ranking history (someone browsing another user's profile):
+ *  keep rows whose sorter is gone (hard- or soft-deleted — old rankings keep
+ *  their legacy "(Deleted)" behavior), but a LIVE sorter must be public to
+ *  appear in someone else's history. Owners always see their own rows. */
+export function rankedSorterVisibleToVisitors(): SQL {
+  return or(
+    isNull(sorters.id),
+    eq(sorters.deleted, true),
+    eq(sorters.visibility, "public"),
   )!;
 }
