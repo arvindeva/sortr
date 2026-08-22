@@ -91,12 +91,12 @@ function TypewriterWord() {
  * The homepage hero, compact-masthead edition: the content rows below are the
  * heart of the page, so this is a single-line typewriter headline, one-line
  * tagline, and the two CTAs — Create (magenta primary) and Browse (neutral).
- * Stacked full-width buttons on mobile, side by side from sm up. The headline
- * re-centers as the word types, same motion the old two-line version had.
+ * Stacked full-width buttons on mobile, side by side from sm up. Left-aligned:
+ * the word types rightward from a fixed edge, so "Rank" never shifts.
  */
 export function Hero() {
   return (
-    <section className="flex flex-col items-center py-8 text-center md:py-10">
+    <section className="flex flex-col items-start py-8 text-left md:py-10">
       <h1 className="display text-foreground text-[clamp(2.25rem,6.5vw,3.5rem)] font-black whitespace-nowrap">
         Rank <TypewriterWord />
       </h1>
@@ -104,7 +104,7 @@ export function Hero() {
         Pick a favorite, one matchup at a time.
       </p>
 
-      <div className="mt-5 flex w-full max-w-md flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:justify-center">
+      <div className="mt-5 flex w-full max-w-md flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:justify-start">
         <Button asChild size="lg" arcade className="group">
           <Link href="/create">
             <Plus
