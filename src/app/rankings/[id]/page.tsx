@@ -599,6 +599,11 @@ export default async function RankingsPage({ params }: RankingsPageProps) {
           excludeSorterId={sorter.id}
           className="mt-16 border-t border-border pt-12"
         />
+        <TrendingSortersSection
+          window="day"
+          excludeSorterId={sorter.id}
+          className="mt-12"
+        />
       </div>
     </>
   );

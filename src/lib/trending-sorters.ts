@@ -17,14 +17,15 @@ export interface TrendingSorter {
   recentPlays: number;
 }
 
-const WINDOW_DAYS = 7;
+const WEEK_HOURS = 7 * 24;
+const DAY_HOURS = 24;
 
 async function computeTrendingSorters(
+  windowHours: number,
   limit: number,
   excludeSorterId?: string,
 ): Promise<TrendingSorter[]> {
-  const since = new Date();
-  since.setDate(since.getDate() - WINDOW_DAYS);
+  const since = new Date(Date.now() - windowHours * 60 * 60 * 1000);
 
   const rows = await db
     .select({
@@ -69,14 +70,27 @@ async function computeTrendingSorters(
 }
 
 /**
- * Sorters with the most plays in the last {@link WINDOW_DAYS} days — "trending
- * this week". Surfaces what's hot *right now* (including newer sorters riding a
- * viral wave), which all-time Popular can't. Cached 5 min like the homepage.
+ * Sorters with the most plays in the last 7 days — "trending this week".
+ * Surfaces what's hot *right now* (including newer sorters riding a viral
+ * wave), which all-time Popular can't. Cached 5 min like the homepage.
  *
  * `excludeSorterId` omits the current sorter when shown on its own page.
  */
 export const getTrendingSorters = unstable_cache(
-  computeTrendingSorters,
+  (limit: number, excludeSorterId?: string) =>
+    computeTrendingSorters(WEEK_HOURS, limit, excludeSorterId),
   ["trending-sorters"],
+  { revalidate: 300 },
+);
+
+/**
+ * Sorters with the most plays in the last 24 hours — "hot sorters". The
+ * tighter window makes the list move visit to visit (prod check: only ~2 of
+ * the top 10 overlap the weekly list). Same 5 min cache.
+ */
+export const getHotSorters = unstable_cache(
+  (limit: number, excludeSorterId?: string) =>
+    computeTrendingSorters(DAY_HOURS, limit, excludeSorterId),
+  ["hot-sorters"],
   { revalidate: 300 },
 );

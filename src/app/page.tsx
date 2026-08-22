@@ -200,41 +200,11 @@ export default async function Home() {
         {/* Hero — centered headline + CTAs */}
         <Hero />
 
-        {/* Trending this week — what's hot right now (above all-time Popular) */}
-        <TrendingSortersSection className="w-full" />
+        {/* Hot sorters — most played in the last 24 hours */}
+        <TrendingSortersSection window="day" className="w-full" />
 
-        {/* Popular sorters (by all-time completions) */}
-        <section className="w-full">
-          <div className="mb-6 flex items-end justify-between gap-3">
-            <h2 className="display text-3xl font-black text-foreground md:text-[42px]">
-              Popular sorters
-            </h2>
-            <Link
-              href="/browse?sort=popular"
-              className="shrink-0 font-mono text-[13px] text-muted-foreground transition-colors hover:text-main-ink"
-            >
-              view all →
-            </Link>
-          </div>
-          {hadPopularError ? (
-            <EmptyState
-              variant="error"
-              title="Couldn't load these right now."
-              description="Refresh to try again."
-            />
-          ) : popularData.popularSorters.length === 0 ? (
-            <EmptyState
-              title="No sorters yet."
-              description="Be the first — create one."
-            />
-          ) : (
-            <SorterGrid>
-              {popularData.popularSorters.map((sorter) => (
-                <SorterCard key={sorter.id} sorter={sorter} />
-              ))}
-            </SorterGrid>
-          )}
-        </section>
+        {/* Trending this week — the 7-day view */}
+        <TrendingSortersSection className="w-full" />
 
         {/* Fresh sorters */}
         <section className="w-full">
@@ -263,6 +233,39 @@ export default async function Home() {
           ) : (
             <SorterGrid>
               {recentData.recentSorters.map((sorter) => (
+                <SorterCard key={sorter.id} sorter={sorter} />
+              ))}
+            </SorterGrid>
+          )}
+        </section>
+
+        {/* Popular sorters (by all-time completions) */}
+        <section className="w-full">
+          <div className="mb-6 flex items-end justify-between gap-3">
+            <h2 className="display text-3xl font-black text-foreground md:text-[42px]">
+              Popular sorters
+            </h2>
+            <Link
+              href="/browse?sort=popular"
+              className="shrink-0 font-mono text-[13px] text-muted-foreground transition-colors hover:text-main-ink"
+            >
+              view all →
+            </Link>
+          </div>
+          {hadPopularError ? (
+            <EmptyState
+              variant="error"
+              title="Couldn't load these right now."
+              description="Refresh to try again."
+            />
+          ) : popularData.popularSorters.length === 0 ? (
+            <EmptyState
+              title="No sorters yet."
+              description="Be the first — create one."
+            />
+          ) : (
+            <SorterGrid>
+              {popularData.popularSorters.map((sorter) => (
                 <SorterCard key={sorter.id} sorter={sorter} />
               ))}
             </SorterGrid>
