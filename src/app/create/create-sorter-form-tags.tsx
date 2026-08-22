@@ -952,7 +952,7 @@ export default function CreateSorterFormTags() {
                   no items yet — add at least two to start a sorter.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                <div className="space-y-2.5">
                   {itemFields.map((itemField, index) => (
                     <FormField
                       key={itemField.id}
