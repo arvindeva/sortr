@@ -24,7 +24,7 @@ import {
 import { Undo2, RotateCcw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { SortItem } from "@/lib/sorting";
-import { InteractiveMergeSort, SortState } from "@/lib/interactive-merge-sort";
+import { InteractiveMergeSort, SortState, TIE } from "@/lib/interactive-merge-sort";
 import { generateProgressKey, serializeChoices, deserializeChoices } from "@/lib/sort-persistence";
 import LZString from "lz-string";
 import { Box } from "@/components/ui/box";
@@ -580,6 +580,14 @@ export default function SortPage() {
         onNeedComparison,
       );
 
+      // Tied items carry tiedWithPrev into the stored ranking (additive:
+      // no-tie rankings keep the exact old shape). Competition ranks
+      // (1-2-2-4) derive from these flags at display time.
+      const tieFlags = sorterRef.current.getTieFlags(result);
+      const rankingsPayload = result.map((item, i) =>
+        tieFlags[i] ? { ...item, tiedWithPrev: true } : item,
+      );
+
       // Save results
       setSaving(true);
 
@@ -606,7 +614,7 @@ export default function SortPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sorterId,
-          rankings: result,
+          rankings: rankingsPayload,
           selectedGroups: selectedGroupIds, // Legacy support
           selectedTagSlugs: selectedTagSlugs, // New tag support
           // Pin to the version this sort was STARTED against, not the live one.
@@ -1082,17 +1090,28 @@ export default function SortPage() {
         />
 
         {/* VS marker — absolutely centered over the seam, on top of both cards.
-            Static (no pulse) so it doesn't distract from the duel. */}
-        <div className="pointer-events-none absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
+            Static (no pulse) so it doesn't distract from the duel. The TIE
+            button sits just below it: the only interactive element in the
+            wrapper (pointer-events-auto on itself), deliberately quiet so the
+            two main choices stay dominant. */}
+        <div className="pointer-events-none absolute top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
           <VsMarker size={30} pulse={false} className="sm:hidden" />
           <VsMarker size={60} pulse={false} className="hidden sm:flex" />
+          <button
+            type="button"
+            onClick={() => handleChoice(TIE)}
+            className="hud pointer-events-auto rounded-md border border-border bg-background/85 px-2.5 py-1 text-[11px] text-muted-foreground backdrop-blur-sm transition-colors hover:border-cyan hover:text-cyan-ink sm:px-3 sm:text-xs"
+            aria-label="Call this matchup a tie"
+          >
+            tie
+          </button>
         </div>
       </div>
 
       {/* First-run hint — see duelHintCount above; gone after 3 comparisons. */}
       {duelHintCount != null && duelHintCount < 3 && (
         <p className="hud mt-3 text-center text-xs text-muted-foreground">
-          pick your favorite
+          pick your favorite — or call a tie
         </p>
       )}
 
