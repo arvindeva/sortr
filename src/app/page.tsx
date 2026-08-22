@@ -11,6 +11,7 @@ import { SorterGrid } from "@/components/ui/sorter-grid";
 import { Hero } from "@/components/hero";
 import { HomeBackdrop } from "@/components/home-backdrop";
 import { TrendingSortersSection } from "@/components/trending-sorters-section";
+import { HomeExplainer } from "@/components/home-explainer";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -99,7 +100,8 @@ async function getRecentSorters() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const title = "Sortr - Rank Anything";
-  const description = "Pick a favorite, one matchup at a time.";
+  const description =
+    "Pick a favorite, one matchup at a time — sortr turns head-to-head choices into your full ranking. Create bias sorters, character sorters, and pairwise rankings for any fandom. Free to play, no account needed.";
   const baseUrl = process.env.NEXTAUTH_URL || "https://sortr.io";
 
   return {
@@ -271,6 +273,9 @@ export default async function Home() {
             </SorterGrid>
           )}
         </section>
+
+        {/* What's a sorter? — indexable explainer + FAQ (SEO/AEO surface) */}
+        <HomeExplainer />
       </PageContainer>
     </>
   );

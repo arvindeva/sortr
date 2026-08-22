@@ -1,0 +1,23 @@
+# sortr
+
+> sortr (https://sortr.io) is a free head-to-head ranking site: two items face
+> off, you pick a favorite, and after enough matchups your full ranking emerges
+> (pairwise comparison — no dragging items into tiers). Fandoms know the format
+> as a "bias sorter" or "character sorter". Anyone can create a sorter for
+> anything — K-pop groups, anime characters, albums, movies, games, food — and
+> share it. When 3 or more people play the same sorter, their results combine
+> into a community ranking.
+
+## Key pages
+
+- https://sortr.io/browse — browse and search all public sorters, by category
+- https://sortr.io/create — create a sorter (account required)
+- https://sortr.io/sorter/<slug> — a sorter's page; play it without an account
+
+## Facts
+
+- Free to play, no account needed; sign in only to create and save rankings
+- Alternative to tier list makers: the ranking is computed from your choices
+- Ties are supported — tied items share a rank (1, 1, 3…)
+- Sorters can be public, unlisted (link-only), or private
+- Community rankings aggregate all players' results per sorter

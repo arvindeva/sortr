@@ -42,18 +42,18 @@ export async function generateMetadata({
   const title = sorter.title;
 
   // Create description
-  let description = `Sorter for "${sorter.title}"`;
+  let description = `Rank "${sorter.title}" head-to-head — pick a favorite, one matchup at a time`;
   if (sorter.description) {
     description = sorter.description;
   }
   if (sorter.category) {
-    description += ` - ${sorter.category} sorter on sortr`;
+    description += ` — ${sorter.category} sorter on sortr`;
   }
 
   // Count total items
   const itemCount = items.length;
 
-  const fullDescription = `${description}. Sort ${itemCount} items through pairwise comparison and create your personalized results.`;
+  const fullDescription = `${description}. Sort ${itemCount} items through pairwise comparison and get your personalized ranking.`;
   const baseUrl = (process.env.NEXTAUTH_URL || "https://sortr.io").replace(
     /\/$/,
     "",
