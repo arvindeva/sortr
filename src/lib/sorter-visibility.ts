@@ -23,6 +23,9 @@ export function listableSorter(): SQL {
 /** Direct access (sorter API, results, community, sort submit): active, and
  *  not private unless the viewer owns it. */
 export function viewableSorter(viewerUserId?: string | null): SQL {
+  // Falsy viewerUserId (undefined/null/"") deliberately takes the anonymous
+  // branch: userId is a NOT NULL uuid column, so "" could never match an
+  // owner anyway — treat any non-id as "not signed in".
   const notPrivate = ne(sorters.visibility, "private");
   return and(
     eq(sorters.deleted, false),

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { VISIBILITIES } from "@/lib/sorter-visibility";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getAdminStats, getRecentFeedback } from "@/lib/admin-stats";
@@ -57,7 +58,7 @@ function StatCard({
 function visibilitySubline(
   breakdown: { visibility: string; count: number }[],
 ): string | undefined {
-  const order = ["public", "unlisted", "private"];
+  const order: readonly string[] = VISIBILITIES;
   const parts = breakdown
     .filter((row) => row.count > 0)
     .sort((a, b) => order.indexOf(a.visibility) - order.indexOf(b.visibility))

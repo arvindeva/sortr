@@ -183,7 +183,7 @@ export async function generateMetadata({
   // Handle anonymous user case
   if (username === "Anonymous" || username === "Unknown User") {
     return {
-      title: "User Not Found | sortr",
+      title: "User Not Found",
       description: "The requested user profile could not be found.",
     };
   }
@@ -193,7 +193,7 @@ export async function generateMetadata({
 
     if (!userData) {
       return {
-        title: "User Not Found | sortr",
+        title: "User Not Found",
         description: "The requested user profile could not be found.",
       };
     }

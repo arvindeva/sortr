@@ -23,14 +23,14 @@ export async function generateMetadata({
   const data = await getSorterDataCached(slug);
   if (!data) {
     return {
-      title: "Sorter Not Found | sortr",
+      title: "Sorter Not Found",
       description: "The requested sorter could not be found.",
     };
   }
 
   if (data.sorter.visibility === "private") {
     return {
-      title: "Private sorter | sortr",
+      title: "Private sorter",
       description: "This sorter is private.",
       robots: { index: false, follow: false },
     };

@@ -85,8 +85,11 @@ export function UserProfileClient({
 
   const { user, stats, sorters, rankings, userSince } = data;
 
+  // Prefer the API's isOwner (refreshes with the session) over the SSR prop,
+  // which can go stale if the session changes in another tab.
+  const ownerNow = data?.isOwner ?? isOwner;
   const hasNonPublic =
-    isOwner &&
+    ownerNow &&
     sorters.some((s: any) => s.visibility && s.visibility !== "public");
   const visibleSorters =
     visibilityFilter === "all"
