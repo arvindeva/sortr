@@ -5,23 +5,19 @@ import { CoverTile } from "@/components/ui/cover-tile";
 import { InfoPopover } from "@/components/ui/info-popover";
 import type { CommunityRankingPayload } from "@/lib/community-ranking-data";
 
-const MEDAL_VARS = [
-  "var(--medal-gold)",
-  "var(--medal-silver)",
-  "var(--medal-bronze)",
-];
-
-// Glow + border for the top-3 rows (gold / silver / bronze).
+// Glow + border for the top-3 podium tiles (gold / silver / bronze).
 const MEDAL_GLOW = [
   "0 0 28px rgba(255,210,63,.32)",
   "0 0 24px rgba(205,214,232,.28)",
   "0 0 24px rgba(214,138,78,.3)",
 ];
-const MEDAL_ROW_BORDER = [
-  "rgba(255,210,63,.5)",
-  "rgba(205,214,232,.45)",
-  "rgba(214,138,78,.48)",
+const MEDAL_BORDER = [
+  "rgba(255,210,63,.65)",
+  "rgba(205,214,232,.55)",
+  "rgba(214,138,78,.6)",
 ];
+// Badge fill + ink, matching the share image's medal badges.
+const MEDAL_BADGE = ["#ffd23f", "#cdd6e8", "#d68a4e"];
 
 const TOP_N = 10;
 
@@ -52,24 +48,55 @@ export function CommunityRanking({ data }: { data: CommunityRankingPayload }) {
         {totalRankings === 1 ? "" : "s"}
       </div>
 
+      {/* Top 3 — podium row of square tiles (cover fills, title on scrim). */}
+      {visible.length > 0 && (
+        <ol className="mb-2.5 grid grid-cols-3 gap-2.5">
+          {visible.slice(0, 3).map((row, i) => (
+            <li
+              key={row.itemId}
+              className="relative aspect-square overflow-hidden rounded-[12px] border-2"
+              style={{
+                borderColor: MEDAL_BORDER[i],
+                boxShadow: MEDAL_GLOW[i],
+              }}
+            >
+              <CoverTile
+                imageUrl={row.imageUrl}
+                name={row.title}
+                colorKey={row.itemId}
+                hideName
+                radius={0}
+                className="absolute inset-0"
+              />
+              {/* Rank badge */}
+              <span
+                className="display absolute top-1.5 left-1.5 flex h-6 min-w-6 items-center justify-center rounded-[7px] px-1 text-[15px] font-black"
+                style={{ background: MEDAL_BADGE[i], color: "rgba(0,0,0,.8)" }}
+              >
+                {i + 1}
+              </span>
+              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 pt-5">
+                <span className="display line-clamp-2 text-[12px] leading-tight font-bold text-white normal-case">
+                  {row.title}
+                </span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      {/* 4th place down — the compact list. */}
       <ol className="flex flex-col gap-2.5">
-        {visible.map((row, i) => {
-          const isTop3 = i < 3;
-          const numColor = isTop3
-            ? MEDAL_VARS[i]
-            : "var(--muted-foreground)";
+        {visible.slice(3).map((row, idx) => {
+          const i = idx + 3;
           return (
             <li
               key={row.itemId}
-              className="flex items-center gap-3.5 rounded-[11px] border bg-card px-3.5 py-2.5"
-              style={{
-                borderColor: isTop3 ? MEDAL_ROW_BORDER[i] : "var(--border)",
-                boxShadow: isTop3 ? MEDAL_GLOW[i] : undefined,
-              }}
+              className="flex items-center gap-3.5 rounded-[11px] border border-border bg-card px-3.5 py-2.5"
             >
               <span
                 className="display w-7 shrink-0 text-center text-[26px] font-black"
-                style={{ color: numColor }}
+                style={{ color: "var(--muted-foreground)" }}
               >
                 {i + 1}
               </span>

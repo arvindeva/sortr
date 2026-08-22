@@ -98,34 +98,46 @@ export function SorterPageClient({
       {items?.length === 0 ? (
         <EmptyState title="No items found for this sorter." />
       ) : (
-        <div className="flex flex-col gap-2.5">
+        // Square tiles (the canonical card treatment: cover fills the tile,
+        // title bottom-left over a black scrim) — shows the artwork instead of
+        // a 40px thumb. Grid lives inside the right column, so the community
+        // ranking keeps its slot.
+        <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-3 xl:grid-cols-4">
           {items?.map((item, i) => (
             <div
               key={item.id}
-              className="flex items-center gap-3 rounded-[10px] border border-border bg-card px-3.5 py-3"
+              className="relative aspect-square overflow-hidden rounded-[10px] border border-border"
+              style={
+                item.imageUrl ? undefined : { background: accentFor(item.id || i) }
+              }
             >
               {item.imageUrl ? (
-                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-[7px] border border-border bg-muted">
-                  <img
-                    src={getImageUrl(item.imageUrl, "thumbnail")}
-                    alt={item.title}
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      const t = e.target as HTMLImageElement;
-                      if (t.src.includes("-thumb"))
-                        t.src = getImageUrl(item.imageUrl, "full");
-                    }}
-                  />
-                </div>
+                <img
+                  src={getImageUrl(item.imageUrl, "thumbnail")}
+                  alt={item.title}
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  onError={(e) => {
+                    const t = e.target as HTMLImageElement;
+                    if (t.src.includes("-thumb"))
+                      t.src = getImageUrl(item.imageUrl, "full");
+                  }}
+                />
               ) : (
                 <span
-                  className="h-10 w-10 shrink-0 rounded-[7px]"
-                  style={{ background: accentFor(item.id || i) }}
+                  aria-hidden
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(45deg, rgba(0,0,0,.06) 0 10px, transparent 10px 20px)",
+                  }}
                 />
               )}
-              <span className="min-w-0 font-semibold break-words text-foreground">
-                {item.title}
-              </span>
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 pt-5">
+                <span className="display line-clamp-2 text-[12px] leading-tight font-bold text-white normal-case">
+                  {item.title}
+                </span>
+              </div>
             </div>
           ))}
         </div>
