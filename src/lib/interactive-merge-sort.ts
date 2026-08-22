@@ -175,22 +175,24 @@ export class InteractiveMergeSort {
       this.hasStarted = true;
       itemsToSort = this.shuffledOrder;
 
-      // Calculate total battles ONCE - NEVER changes (like charasort)
-      if (this.totalBattles === 0) {
-        this.totalBattles = this.calculateTotalBattles(items.length);
-      }
-
       // Save the new shuffled order immediately
       this.onSaveProgress?.();
     } else {
       // Already started (saved progress or undo) - use consistent order
       itemsToSort = this.shuffledOrder.length > 0 ? this.shuffledOrder : items;
-      
-      // If totalBattles wasn't saved (legacy save), recalculate it
-      if (this.totalBattles === 0) {
-        this.totalBattles = this.calculateTotalBattles(items.length);
-      }
     }
+
+    // Progress counters are DERIVED per drive, never trusted from saves or
+    // carried across restarts: totalBattles is a pure function of the current
+    // item count, and sortedNo recounts from zero as the replay re-places
+    // every item under the current choice set. The old approach persisted
+    // both and gated counting on !isReplaying — after removeItem() pruned
+    // choices, the restart replay re-counted placements that were already
+    // counted, sortedNo overshot totalBattles (sim: 1244/672 after one
+    // removal), and the bar pinned at 99% for the rest of a long sort
+    // (user report: "stuck at 99% the whole time" on an 870-item sorter).
+    this.totalBattles = this.calculateTotalBattles(itemsToSort.length);
+    this.sortedNo = 0;
 
     // Update progress display
     this.updateProgress();
@@ -246,11 +248,16 @@ export class InteractiveMergeSort {
       let winner = this.userChoices.get(key);
 
       if (!winner) {
+        // Reached the frontier of known choices — replay is over. Sync the
+        // bar BEFORE awaiting the user, so it shows the replayed progress
+        // while they look at their first duel of this drive.
+        if (this.isReplaying) {
+          this.isReplaying = false;
+          this.updateProgress();
+        }
+
         // Need user input for this comparison
         winner = await onNeedComparison(leftItem, rightItem);
-
-        // We've reached a new decision point; stop replay mode
-        this.isReplaying = false;
 
         // Save state snapshot AFTER the comparison is made
         this.saveStateSnapshot();
@@ -267,9 +274,12 @@ export class InteractiveMergeSort {
         rightIndex++;
       }
 
-      // Increment progress only when not replaying known decisions
+      // Count EVERY placement — including replayed ones (the per-drive reset
+      // in sort() makes the counter mean "placements under the current
+      // choice set"). Only skip the UI/save spam during replay: a long
+      // resume would otherwise fire hundreds of callbacks in one tick.
+      this.sortedNo++;
       if (!this.isReplaying) {
-        this.sortedNo++;
         this.updateProgress();
         this.onSaveProgress?.();
       }
@@ -279,16 +289,16 @@ export class InteractiveMergeSort {
     while (leftIndex < left.length) {
       result.push(left[leftIndex]);
       leftIndex++;
+      this.sortedNo++;
       if (!this.isReplaying) {
-        this.sortedNo++;
         this.updateProgress();
       }
     }
     while (rightIndex < right.length) {
       result.push(right[rightIndex]);
       rightIndex++;
+      this.sortedNo++;
       if (!this.isReplaying) {
-        this.sortedNo++;
         this.updateProgress();
       }
     }
