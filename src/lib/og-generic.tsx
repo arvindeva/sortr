@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { accentFor } from "@/lib/utils";
+import { computeCompetitionRanks } from "@/lib/ranking-utils";
 
 // Shared renderer for the generic "RANK ANYTHING" OG / share card. Used by the
 // root app/opengraph-image.tsx and re-exported by routes that define their own
@@ -377,6 +378,8 @@ export interface RankingOgItem {
   id: string;
   title: string;
   imageUrl?: string;
+  /** Tied with the previous item — shares its competition rank. */
+  tiedWithPrev?: boolean;
 }
 
 /**
@@ -396,6 +399,8 @@ export async function renderRankingOgImage({
 }) {
   const fonts = await ogFonts();
   const top = items.slice(0, 5);
+  // Competition ranks (1,2,2,4) — tie badges/medals match the ranking page.
+  const ranks = computeCompetitionRanks(top);
   const tileW = 200;
   const tileGap = 18;
 
@@ -516,7 +521,9 @@ export async function renderRankingOgImage({
             marginTop: "auto",
           }}
         >
-          {top.map((item, i) => (
+          {top.map((item, i) => {
+            const rank = ranks[i] ?? i + 1;
+            return (
             <div
               key={item.id}
               style={{
@@ -527,7 +534,10 @@ export async function renderRankingOgImage({
                 borderRadius: "16px",
                 overflow: "hidden",
                 background: item.imageUrl ? "#13102a" : accentFor(item.id),
-                border: i < 3 ? `3px solid ${MEDAL[i]}` : "3px solid transparent",
+                border:
+                  rank <= 3
+                    ? `3px solid ${MEDAL[rank - 1]}`
+                    : "3px solid transparent",
               }}
             >
               {item.imageUrl ? (
@@ -567,17 +577,18 @@ export async function renderRankingOgImage({
                   minWidth: "40px",
                   height: "40px",
                   borderRadius: "10px",
-                  background: i < 3 ? MEDAL[i] : "rgba(0,0,0,.6)",
-                  color: i < 3 ? "rgba(0,0,0,.78)" : "#fff",
+                  background: rank <= 3 ? MEDAL[rank - 1] : "rgba(0,0,0,.6)",
+                  color: rank <= 3 ? "rgba(0,0,0,.78)" : "#fff",
                   fontFamily: "Big Shoulders Display",
                   fontWeight: 900,
                   fontSize: "26px",
                 }}
               >
-                {i + 1}
+                {rank}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     ),

@@ -20,6 +20,7 @@ import { AnimatedRankings } from "@/components/animated-rankings";
 import { ResultShareImage } from "@/components/result-share-image";
 import { RankingOwnerActions } from "@/components/ranking-owner-actions";
 import { TrendingSortersSection } from "@/components/trending-sorters-section";
+import { computeCompetitionRanks } from "@/lib/ranking-utils";
 
 interface RankingsPageProps {
   params: Promise<{
@@ -41,6 +42,8 @@ interface RankedItem {
   id: string;
   title: string;
   imageUrl?: string;
+  /** Tied with the previous item (shared competition rank). */
+  tiedWithPrev?: boolean;
 }
 
 interface ResultData {
@@ -98,10 +101,11 @@ export async function generateMetadata({
     // Create content-first title: "Sorter Title Rankings by Username"
     const title = `${sorter.title} Rankings by ${result.username}`;
 
-    // Get top 3 items for description
+    // Get top 3 items for description (competition ranks — ties share a number)
     const top3 = result.rankings.slice(0, 3);
+    const top3Ranks = computeCompetitionRanks(top3);
     const top3Text = top3
-      .map((item, i) => `${i + 1}. ${item.title}`)
+      .map((item, i) => `${top3Ranks[i]}. ${item.title}`)
       .join(", ");
 
     const description = `See ${result.username}'s ranking of ${sorter.title}. Top 3: ${top3Text}. View the complete personalized ranking.`;

@@ -27,6 +27,7 @@ export default async function Image({
         id: r.id,
         title: r.title,
         imageUrl: r.imageUrl,
+        tiedWithPrev: r.tiedWithPrev,
       })),
     });
   } catch {
