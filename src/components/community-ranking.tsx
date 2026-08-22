@@ -39,11 +39,12 @@ export function CommunityRanking({ data }: { data: CommunityRankingPayload }) {
           Community ranking
         </h2>
         <InfoPopover label="How the community ranking works">
-          This ranking only counts results from the{" "}
-          <span className="text-foreground">current version</span> of the
-          sorter. If the creator edits it (adds or removes items), older results
-          from previous versions are no longer included — so a freshly edited
-          sorter may show fewer results until people rank the new version.
+          Counts rankings from{" "}
+          <span className="text-foreground">every version</span> of this
+          sorter, matched onto its current items. Rankings that no longer
+          match enough of the current items (after a big edit) are left out,
+          and each signed-in player counts once — only their latest ranking
+          is used.
         </InfoPopover>
       </div>
       <div className="mt-1.5 mb-5 font-mono text-xs tracking-wide text-muted-foreground">
