@@ -34,6 +34,7 @@ interface RankingPreview {
   top3: Array<{
     id: string;
     title: string;
+    tiedWithPrev?: boolean;
     imageUrl?: string;
   }>;
   createdAt: string;

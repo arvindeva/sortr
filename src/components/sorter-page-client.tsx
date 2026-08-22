@@ -10,6 +10,7 @@ import { CommunityRanking } from "@/components/community-ranking";
 import { CommunityRankingSkeleton } from "@/components/community-ranking-skeleton";
 import { accentFor } from "@/lib/utils";
 import { getImageUrl } from "@/lib/image-utils";
+import { computeCompetitionRanks, medalForRank } from "@/lib/ranking-utils";
 import type { CommunityRankingPayload } from "@/lib/community-ranking-data";
 import { MIN_RANKINGS } from "@/lib/community-ranking";
 
@@ -194,7 +195,9 @@ export function SorterPageClient({
                     </span>
                   </div>
                   <div className="flex flex-col gap-2">
-                    {result.top3.map((item: any, index: number) => (
+                    {result.top3.map((item: any, index: number) => {
+                      const rank = computeCompetitionRanks(result.top3)[index];
+                      return (
                       <div
                         key={item.id || index}
                         className="flex min-w-0 items-center gap-2"
@@ -203,14 +206,10 @@ export function SorterPageClient({
                           className="display w-[18px] text-lg font-black"
                           style={{
                             color:
-                              index === 0
-                                ? "var(--medal-gold)"
-                                : index === 1
-                                  ? "var(--medal-silver)"
-                                  : "var(--medal-bronze)",
+                              medalForRank(rank) ?? "var(--medal-bronze)",
                           }}
                         >
-                          {index + 1}
+                          {rank}
                         </span>
                         {item.imageUrl ? (
                           <div className="h-6 w-6 shrink-0 overflow-hidden rounded-[6px] border border-border bg-muted">
@@ -230,7 +229,7 @@ export function SorterPageClient({
                           {item.title}
                         </span>
                       </div>
-                    ))}
+                    );})}
                   </div>
                 </Link>
               );

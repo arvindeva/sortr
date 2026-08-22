@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import Link from "next/link";
 import { accentFor } from "@/lib/utils";
 import { getImageUrl } from "@/lib/image-utils";
+import { computeCompetitionRanks, medalForRank } from "@/lib/ranking-utils";
 
 interface UserProfileClientProps {
   username: string;
@@ -140,7 +141,9 @@ export function UserProfileClient({
 
                   {/* Top 3 preview */}
                   <div className="flex flex-col gap-2.5">
-                    {result.top3.map((item: any, index: number) => (
+                    {result.top3.map((item: any, index: number) => {
+                      const rank = computeCompetitionRanks(result.top3)[index];
+                      return (
                       <div
                         key={item.id || index}
                         className="flex items-center gap-3"
@@ -149,16 +152,10 @@ export function UserProfileClient({
                           className="display w-[22px] text-lg font-black"
                           style={{
                             color:
-                              index === 0
-                                ? "var(--medal-gold)"
-                                : index === 1
-                                  ? "var(--medal-silver)"
-                                  : index === 2
-                                    ? "var(--medal-bronze)"
-                                    : "var(--muted-foreground)",
+                              medalForRank(rank) ?? "var(--muted-foreground)",
                           }}
                         >
-                          {index + 1}
+                          {rank}
                         </span>
                         {item.imageUrl ? (
                           <div className="h-[26px] w-[26px] shrink-0 overflow-hidden rounded-[6px] border border-border bg-muted">
@@ -183,7 +180,7 @@ export function UserProfileClient({
                           {item.title}
                         </span>
                       </div>
-                    ))}
+                    );})}
                   </div>
                 </Link>
               ))}
