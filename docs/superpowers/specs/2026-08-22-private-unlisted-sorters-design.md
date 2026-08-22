@@ -67,7 +67,7 @@ encode visibility logic themselves.
 | Homepage | `src/app/page.tsx` | public only |
 | Sitemap | `src/app/sitemap.xml/route.ts` | public only (already excludes non-active) |
 | Profile, someone else viewing | `/api/user/[username]/route.ts` **and** the duplicated server query in `src/app/user/[username]/page.tsx` (react-query initialData — patch BOTH, known gotcha) | public only |
-| Profile, owner viewing own | same files | all visibilities, with a HUD-style `UNLISTED` / `PRIVATE` badge on non-public cards |
+| Profile, owner viewing own | same files | all visibilities, with a HUD-style `UNLISTED` / `PRIVATE` badge on non-public cards, plus a visibility filter (All / Public / Unlisted / Private, default All) above the list — client-side, since the owner's list already loads fully; the APIs just include each sorter's `visibility` |
 | Sorter page | `src/lib/sorter-data.ts`, `src/app/sorter/[slug]/page.tsx` | `viewableSorter(session user)`. Non-owner on private → a dedicated "This sorter is private" empty state (NOT a bare `notFound()` — the slug already contains the title, so a 404 hides nothing and is just unhelpful). Unlisted renders normally for everyone |
 | Sorter OG image | `src/app/sorter/[slug]/opengraph-image.tsx` | private → generic card (crawlers/embeds leak nothing); unlisted → real card (Discord sharing needs it) |
 | Sorter SEO meta | sorter page `generateMetadata` | `robots: noindex` when visibility ≠ public |
@@ -97,6 +97,10 @@ at birth). Consequences are all read-time — no cascades:
   design system, default Public. Validated server-side against the enum.
 - **Owner's profile cards + own sorter page header:** small HUD label
   (`UNLISTED` / `PRIVATE`) so owners always know a sorter's state.
+- **Owner's profile sorter list:** visibility filter dropdown (All / Public /
+  Unlisted / Private, default All), shown only to the owner viewing their own
+  profile. Filters the already-loaded list client-side; hidden when every
+  sorter is public (nothing to filter).
 
 ## Out of scope (explicitly)
 
