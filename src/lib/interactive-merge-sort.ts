@@ -1,5 +1,13 @@
 import { SortItem } from "@/lib/sorting";
 
+/**
+ * Sentinel "winner" recorded when the user calls a comparison a tie. Lives in
+ * the same choices map as real winner ids, which is what makes ties survive
+ * undo, save/resume, and replay with zero extra state: the map is already
+ * snapshotted and serialized everywhere it needs to be.
+ */
+export const TIE = "__tie__";
+
 // Fisher-Yates shuffle algorithm for randomizing array order
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
@@ -266,21 +274,25 @@ export class InteractiveMergeSort {
         this.userChoices.set(key, winner);
       }
 
-      if (winner === leftItem.id) {
-        result.push(leftItem);
-        leftIndex++;
+      if (winner === TIE) {
+        // Both advance as equals, adjacently. Place the left item with its
+        // consecutive tie-mates, bridge the chain to the right item with a
+        // synthetic tie record (keeps the "consecutive tied items always
+        // have a pairwise TIE record" invariant across group joins), then
+        // place the right item with its mates.
+        leftIndex = this.placeWithTieMates(left, leftIndex, result);
+        const lastPlaced = result[result.length - 1];
+        this.userChoices.set(getComparisonKey(lastPlaced, rightItem), TIE);
+        rightIndex = this.placeWithTieMates(right, rightIndex, result);
+      } else if (winner === leftItem.id) {
+        leftIndex = this.placeWithTieMates(left, leftIndex, result);
       } else {
-        result.push(rightItem);
-        rightIndex++;
+        rightIndex = this.placeWithTieMates(right, rightIndex, result);
       }
 
-      // Count EVERY placement — including replayed ones (the per-drive reset
-      // in sort() makes the counter mean "placements under the current
-      // choice set"). Only skip the UI/save spam during replay: a long
-      // resume would otherwise fire hundreds of callbacks in one tick.
-      this.sortedNo++;
+      // One save per resolved comparison (covering every placement it
+      // caused); progress updates happen per placement inside the helper.
       if (!this.isReplaying) {
-        this.updateProgress();
         this.onSaveProgress?.();
       }
     }
@@ -304,6 +316,49 @@ export class InteractiveMergeSort {
     }
 
     return result;
+  }
+
+  /**
+   * Place run[idx] into the result, then keep placing consecutive tie-mates
+   * behind it — items whose pairwise record with the previously placed one is
+   * TIE — with no comparison asked ("tie-mates travel together", charasort
+   * semantics: this is why ties SHORTEN a sort). Returns the new run index.
+   * Every placement counts toward progress.
+   */
+  private placeWithTieMates(
+    run: SortItem[],
+    idx: number,
+    result: SortItem[],
+  ): number {
+    let placed = run[idx];
+    result.push(placed);
+    this.sortedNo++;
+    if (!this.isReplaying) this.updateProgress();
+    idx++;
+    while (
+      idx < run.length &&
+      this.userChoices.get(getComparisonKey(placed, run[idx])) === TIE
+    ) {
+      placed = run[idx];
+      result.push(placed);
+      this.sortedNo++;
+      if (!this.isReplaying) this.updateProgress();
+      idx++;
+    }
+    return idx;
+  }
+
+  /**
+   * tiedWithPrev flag per index of a final result order — true when the item
+   * is tied with its predecessor. Consumed when building the stored ranking
+   * (competition ranks 1-2-2-4 derive from these downstream).
+   */
+  getTieFlags(result: SortItem[]): boolean[] {
+    return result.map((item, i) =>
+      i === 0
+        ? false
+        : this.userChoices.get(getComparisonKey(result[i - 1], item)) === TIE,
+    );
   }
 
   getComparisonCount(): number {
