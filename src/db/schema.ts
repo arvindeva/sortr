@@ -199,6 +199,21 @@ export const uploadBatches = pgTable("uploadBatches", {
   metadata: jsonb("metadata"),
 });
 
+// Uncaught server-side errors, captured by instrumentation.onRequestError.
+// `digest` is the same hash Next sends to the browser on production RSC
+// failures, so an anonymized client-side error report can be joined back to
+// its real message and stack. Expected volume: tiny (uncaught only).
+export const serverErrors = pgTable("serverErrors", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  digest: text("digest"),
+  message: text("message").notNull(),
+  stack: text("stack"),
+  method: text("method"),
+  path: text("path"),
+  routeType: text("routeType"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 // User-submitted feedback (anonymous-friendly). Read in the admin dashboard.
 export const feedback = pgTable("feedback", {
   id: uuid("id").defaultRandom().primaryKey(),
