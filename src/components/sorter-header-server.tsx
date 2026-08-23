@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { slugForCategory } from "@/lib/categories";
 import { Button } from "@/components/ui/button";
 import { CoverTile } from "@/components/ui/cover-tile";
 import { Play } from "lucide-react";
@@ -77,11 +78,21 @@ export function SorterHeaderServer({
 
         {/* Info */}
         <div className="min-w-0 flex-1">
-          {sorter.category && (
-            <div className="hud mb-2 text-xs text-cyan-ink">
-              {sorter.category}
-            </div>
-          )}
+          {sorter.category &&
+            (slugForCategory(sorter.category) ? (
+              <div className="hud mb-2 text-xs">
+                <Link
+                  href={`/sorters/${slugForCategory(sorter.category)}`}
+                  className="text-cyan-ink transition-colors hover:text-main-ink"
+                >
+                  {sorter.category}
+                </Link>
+              </div>
+            ) : (
+              <div className="hud mb-2 text-xs text-cyan-ink">
+                {sorter.category}
+              </div>
+            ))}
           <h1 className="display normal-case text-[clamp(2.25rem,6vw,3.875rem)] font-black text-foreground">
             {sorter.title}
             <SorterVisibilityBadge

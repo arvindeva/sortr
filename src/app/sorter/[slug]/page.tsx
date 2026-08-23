@@ -5,6 +5,7 @@ import { SorterPageClient } from "@/components/sorter-page-client";
 import { SorterOwnerControls } from "@/components/sorter-owner-controls";
 import { PrivateSorterView } from "@/components/private-sorter-view";
 import { getSorterDataCached } from "@/lib/sorter-data";
+import { slugForCategory } from "@/lib/categories";
 import { getCommunityRankingPoolCount } from "@/lib/community-ranking-data";
 import { TrendingSortersSection } from "@/components/trending-sorters-section";
 import { ContinueSortingBanner } from "@/components/continue-sorting-banner";
@@ -172,6 +173,31 @@ export default async function SorterPage({ params }: SorterPageProps) {
     version: data.sorter.version,
   };
 
+  // Breadcrumb trail into the category hub (Home > Category > Sorter) —
+  // only when the category has a hub (Other/none stay trail-less).
+  const hubSlug = slugForCategory(data.sorter.category);
+  const breadcrumbJsonLd = hubSlug
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "sortr", item: baseUrl },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: data.sorter.category,
+            item: `${baseUrl}/sorters/${hubSlug}`,
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: data.sorter.title,
+            item: `${baseUrl}/sorter/${data.sorter.slug}`,
+          },
+        ],
+      }
+    : null;
+
   // JSON-LD structured data for SEO (server-side)
   const jsonLd = {
     "@context": "https://schema.org",
@@ -205,6 +231,12 @@ export default async function SorterPage({ params }: SorterPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {breadcrumbJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        />
+      )}
       <main className="container mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-12">
         {/* Server-rendered Sorter Header */}
         <SorterHeaderServer

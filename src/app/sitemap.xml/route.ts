@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
 import { and, eq, isNotNull, desc } from "drizzle-orm";
 import { listableSorter } from "@/lib/sorter-visibility";
+import { CATEGORY_HUBS } from "@/lib/categories";
 
 export async function GET() {
   try {
@@ -50,6 +51,16 @@ export async function GET() {
     <priority>1.0</priority>
   </url>
   
+  <!-- Category hubs -->
+  ${CATEGORY_HUBS.map(
+    (hub) => `
+  <url>
+    <loc>${baseUrl}/sorters/${hub.slug}</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>`,
+  ).join("")}
+
   <!-- Character sorter landing page -->
   <url>
     <loc>${baseUrl}/character-sorter</loc>
