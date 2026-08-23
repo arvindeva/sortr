@@ -1,13 +1,13 @@
 import { db } from "@/db";
-import { sorters, user } from "@/db/schema";
+import { sorters, sortingResults, user } from "@/db/schema";
 import { previewItemsSql } from "@/lib/sorter-preview";
-import { eq, desc, sql, ilike, or, and, inArray, type SQL } from "drizzle-orm";
+import { eq, desc, sql, ilike, or, and, inArray, type SQL, gte } from "drizzle-orm";
 import { listableSorter } from "@/lib/sorter-visibility";
 
 export interface BrowseParams {
   query?: string;
   categories?: string[];
-  sort?: string; // "popular" | "recent"
+  sort?: string; // "popular" | "recent" | "trending"
   page?: number;
   limit?: number;
 }
@@ -87,13 +87,35 @@ export async function getBrowseSorters(
     .leftJoin(user, eq(sorters.userId, user.id))
     .$dynamic();
 
-  const finalQuery = baseQuery.where(and(...conditions));
   const finalCountQuery = countQueryBase.where(and(...conditions));
 
+  // "trending" = most played in the last 7 days: one aggregated subquery
+  // (same scan the trending sections run, proven cheap) joined only for this
+  // sort, ordered by coalesced weekly plays.
+  const weeklyPlays = db
+    .select({
+      sorterId: sortingResults.sorterId,
+      plays: sql<number>`count(*)`.as("weekly_plays"),
+    })
+    .from(sortingResults)
+    .where(gte(sortingResults.createdAt, sql`now() - interval '7 days'`))
+    .groupBy(sortingResults.sorterId)
+    .as("weekly");
+
   const sortedQuery =
-    sort === "recent"
-      ? finalQuery.orderBy(desc(sorters.createdAt))
-      : finalQuery.orderBy(desc(sorters.completionCount));
+    sort === "trending"
+      ? baseQuery
+          .leftJoin(weeklyPlays, eq(weeklyPlays.sorterId, sorters.id))
+          .where(and(...conditions))
+          .orderBy(
+            desc(sql`coalesce(${weeklyPlays.plays}, 0)`),
+            desc(sorters.completionCount),
+          )
+      : sort === "recent"
+        ? baseQuery.where(and(...conditions)).orderBy(desc(sorters.createdAt))
+        : baseQuery
+            .where(and(...conditions))
+            .orderBy(desc(sorters.completionCount));
 
   const [rows, countResult] = await Promise.all([
     sortedQuery.limit(limit).offset(offset),

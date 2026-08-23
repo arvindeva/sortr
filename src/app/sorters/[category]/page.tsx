@@ -113,9 +113,17 @@ export default async function CategoryHubPage({ params }: HubPageProps) {
 
         {trending.length > 0 && (
           <section className="w-full">
-            <h2 className="display text-foreground mb-6 text-3xl font-black md:text-[42px]">
-              Trending this week
-            </h2>
+            <div className="mb-6 flex items-end justify-between gap-3">
+              <h2 className="display text-foreground text-3xl font-black md:text-[42px]">
+                Trending this week
+              </h2>
+              <Link
+                href={`${browseHref}&sort=trending`}
+                className="shrink-0 font-mono text-[13px] text-muted-foreground transition-colors hover:text-main-ink"
+              >
+                view all →
+              </Link>
+            </div>
             <SorterGrid>
               {trending.map((sorter) => (
                 <SorterCard key={sorter.id} sorter={sorter} />
@@ -126,9 +134,17 @@ export default async function CategoryHubPage({ params }: HubPageProps) {
 
         {popularUnique.length > 0 && (
           <section className="w-full">
-            <h2 className="display text-foreground mb-6 text-3xl font-black md:text-[42px]">
-              Popular all time
-            </h2>
+            <div className="mb-6 flex items-end justify-between gap-3">
+              <h2 className="display text-foreground text-3xl font-black md:text-[42px]">
+                Popular all time
+              </h2>
+              <Link
+                href={`${browseHref}&sort=popular`}
+                className="shrink-0 font-mono text-[13px] text-muted-foreground transition-colors hover:text-cyan-ink"
+              >
+                view all →
+              </Link>
+            </div>
             <SorterGrid>
               {popularUnique.map((sorter) => (
                 <SorterCard key={sorter.id} sorter={sorter} />
