@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSorterPage, type SorterData } from "@/hooks/api/use-sorter";
 import { SorterContentSkeleton } from "@/components/skeletons/sorter-content-skeleton";
@@ -57,6 +58,7 @@ export function SorterPageClient({
 }: SorterPageClientProps) {
   const { sorterData, recentResults, isLoading, isError, error } =
     useSorterPage(slug, initialData, Date.now());
+  const [showAllItems, setShowAllItems] = useState(false);
 
   // Fetched separately so its heavy aggregate never blocks the page render.
   const { data: communityRanking, isPending: communityPending } = useQuery<
@@ -92,6 +94,9 @@ export function SorterPageClient({
 
   const { items } = sorterData;
 
+  // Tiles beyond the cap stay IN the DOM but hidden: item titles remain
+  // crawlable text, while hidden lazy images are never fetched.
+  const ITEMS_CAP = 24;
   const itemsSection = (
     <section>
       <SectionTitle count={items?.length || 0}>Items to rank</SectionTitle>
@@ -106,7 +111,9 @@ export function SorterPageClient({
           {items?.map((item, i) => (
             <div
               key={item.id}
-              className="relative aspect-square overflow-hidden rounded-[10px] border border-border"
+              className={`relative aspect-square overflow-hidden rounded-[10px] border border-border ${
+                !showAllItems && i >= ITEMS_CAP ? "hidden" : ""
+              }`}
               style={
                 item.imageUrl ? undefined : { background: accentFor(item.id || i) }
               }
@@ -137,6 +144,14 @@ export function SorterPageClient({
             </div>
           ))}
         </div>
+      )}
+      {(items?.length ?? 0) > ITEMS_CAP && (
+        <button
+          onClick={() => setShowAllItems((v) => !v)}
+          className="mt-4 w-full rounded-[10px] border border-border py-2.5 font-mono text-[13px] text-muted-foreground transition-colors hover:border-main/40 hover:text-main-ink"
+        >
+          {showAllItems ? "Show less ▴" : `Show all ${items?.length} ▾`}
+        </button>
       )}
     </section>
   );
