@@ -6,7 +6,7 @@ import { PageContainer } from "@/components/ui/page-container";
 import { ArcadePageHeader } from "@/components/ui/arcade-page-header";
 import { SorterGrid } from "@/components/ui/sorter-grid";
 import { SorterCard } from "@/components/ui/sorter-card";
-import { CATEGORY_HUBS, categoryBySlug } from "@/lib/categories";
+import { CATEGORY_HUBS, categoryBySlug, hubBlurb } from "@/lib/categories";
 import {
   getCategoryCount,
   getPopularInCategory,
@@ -37,7 +37,7 @@ export async function generateMetadata({
   if (!hub) return { title: "Not Found" };
 
   const title = `${hub.name} Sorters — Rank Your Favorites`;
-  const description = `${hub.blurb} Head-to-head ranking: pick a favorite, one matchup at a time. Free, no account needed.`;
+  const description = `${hubBlurb(hub.name)} Free — no account needed to play.`;
   const url = `https://sortr.io/sorters/${hub.slug}`;
   return {
     title,
@@ -107,7 +107,7 @@ export default async function CategoryHubPage({ params }: HubPageProps) {
             subtitle={`${total.toLocaleString()} sorters — pick one and start ranking.`}
           />
           <p className="text-muted-foreground mt-5 max-w-3xl text-[14px] leading-relaxed md:text-[15px]">
-            {hub.blurb}
+            {hubBlurb(hub.name)}
           </p>
         </div>
 
