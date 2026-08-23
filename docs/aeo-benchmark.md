@@ -97,3 +97,4 @@ keywords.
 | Date | Engine | A /10 | B /10 | C /10 | D /10 | E /10 | Total /50 | Notes |
 | ---- | ------ | ----- | ----- | ----- | ----- | ----- | --------- | ----- |
 | 2026-08-22 | ChatGPT | 0* | — | — | — | — | — | *Baseline #0: query A1 recommended Tier Flock/Bias Sorter, not sortr |
+| 2026-08-23 | Bing/Copilot | — | ✔ spot | — | — | ✔ spot | — | +1 day post-deploy: "character sorter" → Copilot lists Sortr FIRST, /character-sorter #2 organic w/ new copy as snippet, homepage #1 w/ new meta; "jujutsu kaisen sorter" → Copilot recommends Sortr by name, #1 organic. Bing moved first (direct sitemap feed); Google/ChatGPT pending. |
