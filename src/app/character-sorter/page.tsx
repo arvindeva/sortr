@@ -81,16 +81,16 @@ const STEPS: { title: string; body: string }[] = [
 ];
 
 export default async function CharacterSorterPage() {
-  // Live content: trending sorters, preferring the character-flavored ones —
-  // by category, or by title (many uncategorized sorters literally say
-  // "characters"/"bias" in their name).
-  const trending = await getTrendingSorters(30);
+  // Live content: character-flavored trending sorters ONLY — by category, or
+  // by title (many uncategorized sorters literally say "characters"/"bias"/
+  // "ship" in their name; ships rank character pairings, so they belong).
+  // No generic top-up: a short honest list beats padding the page with song
+  // sorters that dilute its topical focus.
+  const trending = await getTrendingSorters(50);
   const isCharacterFlavored = (s: { category?: string; title: string }) =>
     (s.category != null && CHARACTER_CATEGORIES.has(s.category)) ||
-    /character|bias/i.test(s.title);
-  const preferred = trending.filter(isCharacterFlavored);
-  const rest = trending.filter((s) => !isCharacterFlavored(s));
-  const live = [...preferred, ...rest].slice(0, 10);
+    /character|bias|ship/i.test(s.title);
+  const live = trending.filter(isCharacterFlavored).slice(0, 10);
 
   const faqJsonLd = {
     "@context": "https://schema.org",
