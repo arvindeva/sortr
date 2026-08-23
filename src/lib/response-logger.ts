@@ -46,11 +46,15 @@ export function setupResponseLogging() {
           const timestamp = getTimestamp();
           const logLine = `[${timestamp}] ${logInfo.method} ${logInfo.pathname} ${statusCode} | ${logInfo.ip} | ${logInfo.ua}`;
 
-          // Use console.error for 4xx and 5xx, console.log for others
-          if (statusCode >= 400) {
+          // Level = stream: Railway tags stderr as error, stdout as info
+          // (console.warn is stderr too). Only 5xx deserve the error
+          // channel — 4xx are routine (bot probes, slug typos, address-bar
+          // keystroke prefetch) and were drowning it. "4xx" stays in the
+          // line for grepping.
+          if (statusCode >= 500) {
             console.error(logLine);
           } else {
-            console.log(logLine);
+            console.log(statusCode >= 400 ? `4xx ${logLine}` : logLine);
           }
         }
 
