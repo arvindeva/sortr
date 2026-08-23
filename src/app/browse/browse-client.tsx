@@ -258,7 +258,7 @@ function BrowseContent({ initialData }: { initialData?: BrowseResult }) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="popular">Most played</SelectItem>
-              <SelectItem value="trending">Trending this week</SelectItem>
+              <SelectItem value="trending">Trending</SelectItem>
               <SelectItem value="recent">Most recent</SelectItem>
             </SelectContent>
           </Select>
