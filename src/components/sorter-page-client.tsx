@@ -56,8 +56,14 @@ export function SorterPageClient({
   communityRankingPool = 0,
   hideCommunity = false,
 }: SorterPageClientProps) {
-  const { sorterData, recentResults, isLoading, isError, error } =
-    useSorterPage(slug, initialData, Date.now());
+  const {
+    sorterData,
+    recentResults,
+    isLoading,
+    recentResultsPending,
+    isError,
+    error,
+  } = useSorterPage(slug, initialData, Date.now());
   const [showAllItems, setShowAllItems] = useState(false);
 
   // Fetched separately so its heavy aggregate never blocks the page render.
@@ -195,7 +201,16 @@ export function SorterPageClient({
           <SectionTitle count={recentResults.length}>
             Recent rankings
           </SectionTitle>
-        {recentResults.length === 0 ? (
+        {recentResultsPending ? (
+          <div className="flex flex-col gap-3">
+            {[0, 1].map((i) => (
+              <div
+                key={i}
+                className="h-28 animate-pulse rounded-xl border border-border bg-card"
+              />
+            ))}
+          </div>
+        ) : recentResults.length === 0 ? (
           <EmptyState
             title="No rankings yet."
             description="Be the first to complete this sorter."

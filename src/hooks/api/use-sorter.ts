@@ -160,7 +160,13 @@ export function useSorterPage(
   return {
     sorterData: sorterQuery.data,
     recentResults: recentResultsQuery.data || [],
-    isLoading: sorterQuery.isLoading || recentResultsQuery.isLoading,
+    // Page gate: the sorter query ONLY. With server-provided initialData it
+    // is ready during SSR, so items/community render into the HTML —
+    // coupling it to the results query (no initialData) made every sorter
+    // page SSR as a bare skeleton, invisible to non-JS crawlers.
+    isLoading: sorterQuery.isLoading,
+    /** Recent rankings load client-side; section shows its own placeholder. */
+    recentResultsPending: recentResultsQuery.isLoading,
     isError: sorterQuery.isError,
     error: sorterQuery.error,
     refetch: () => {
