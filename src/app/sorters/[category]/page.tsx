@@ -52,18 +52,13 @@ export default async function CategoryHubPage({ params }: HubPageProps) {
   const hub = categoryBySlug(category);
   if (!hub) notFound();
 
-  // Popular over-fetches so that deduping against Trending (evergreen hits
-  // are often in both) still leaves a full row of 10.
+  // No dedupe between the rows: appearing in Trending doesn't cost a sorter
+  // its earned all-time spot (user call — revisit only if overlap balloons).
   const [trending, popular, total] = await Promise.all([
     getTrendingInCategory(hub.name, 10),
-    getPopularInCategory(hub.name, 25),
+    getPopularInCategory(hub.name, 10),
     getCategoryCount(hub.name),
   ]);
-
-  const trendingIds = new Set(trending.map((s) => s.id));
-  const popularUnique = popular
-    .filter((s) => !trendingIds.has(s.id))
-    .slice(0, 10);
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -135,7 +130,7 @@ export default async function CategoryHubPage({ params }: HubPageProps) {
           </section>
         )}
 
-        {popularUnique.length > 0 && (
+        {popular.length > 0 && (
           <section className="w-full">
             <div className="mb-6 flex items-end justify-between gap-3">
               <h2 className="display text-foreground text-3xl font-black md:text-[42px]">
@@ -149,7 +144,7 @@ export default async function CategoryHubPage({ params }: HubPageProps) {
               </Link>
             </div>
             <SorterGrid>
-              {popularUnique.map((sorter) => (
+              {popular.map((sorter) => (
                 <SorterCard key={sorter.id} sorter={sorter} />
               ))}
             </SorterGrid>
