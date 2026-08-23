@@ -52,15 +52,18 @@ export default async function CategoryHubPage({ params }: HubPageProps) {
   const hub = categoryBySlug(category);
   if (!hub) notFound();
 
+  // Popular over-fetches so that deduping against Trending (evergreen hits
+  // are often in both) still leaves a full row of 10.
   const [trending, popular, total] = await Promise.all([
     getTrendingInCategory(hub.name, 10),
-    getPopularInCategory(hub.name, 10),
+    getPopularInCategory(hub.name, 25),
     getCategoryCount(hub.name),
   ]);
 
-  // Popular repeats trending on small categories — drop dupes from Popular.
   const trendingIds = new Set(trending.map((s) => s.id));
-  const popularUnique = popular.filter((s) => !trendingIds.has(s.id));
+  const popularUnique = popular
+    .filter((s) => !trendingIds.has(s.id))
+    .slice(0, 10);
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
