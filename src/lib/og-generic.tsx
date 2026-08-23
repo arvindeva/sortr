@@ -197,10 +197,13 @@ export async function renderSorterOgImage({
   title,
   itemCount,
   items,
+  subtitle,
 }: {
   title: string;
   itemCount: number;
   items: SorterOgItem[];
+  /** Cyan line under the logo; defaults to "N items · rank them". */
+  subtitle?: string;
 }) {
   const fonts = await ogFonts();
   const preview = items.filter((i) => i.imageUrl).slice(0, 5);
@@ -296,7 +299,7 @@ export async function renderSorterOgImage({
               letterSpacing: "0.04em",
             }}
           >
-            {itemCount} items · rank them
+            {subtitle ?? `${itemCount} items · rank them`}
           </span>
         </div>
 
