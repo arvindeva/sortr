@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { accentFor } from "@/lib/utils";
 import { computeCompetitionRanks } from "@/lib/ranking-utils";
+import { ogSafeImageDataUri } from "@/lib/og-safe-image";
 
 // Shared renderer for the generic "RANK ANYTHING" OG / share card. Used by the
 // root app/opengraph-image.tsx and re-exported by routes that define their own
@@ -209,7 +210,14 @@ export async function renderSorterOgImage({
   const preview = items.filter((i) => i.imageUrl).slice(0, 5);
   // If too few items have images, pad with the first text items so the strip
   // isn't empty (a strip of name-tiles still reads as "here are the items").
-  const tiles = preview.length >= 3 ? preview : items.slice(0, 5);
+  const chosen = preview.length >= 3 ? preview : items.slice(0, 5);
+  // Satori must only ever see sharp-sanitized data URIs, never raw R2 uploads.
+  const tiles = await Promise.all(
+    chosen.map(async (item) => ({
+      ...item,
+      imageUrl: await ogSafeImageDataUri(item.imageUrl),
+    })),
+  );
   const tileW = 200;
   const tileGap = 18;
 
@@ -401,7 +409,13 @@ export async function renderRankingOgImage({
   items: RankingOgItem[];
 }) {
   const fonts = await ogFonts();
-  const top = items.slice(0, 5);
+  // Satori must only ever see sharp-sanitized data URIs, never raw R2 uploads.
+  const top = await Promise.all(
+    items.slice(0, 5).map(async (item) => ({
+      ...item,
+      imageUrl: await ogSafeImageDataUri(item.imageUrl),
+    })),
+  );
   // Competition ranks (1,2,2,4) — tie badges/medals match the ranking page.
   const ranks = computeCompetitionRanks(top);
   const tileW = 200;
