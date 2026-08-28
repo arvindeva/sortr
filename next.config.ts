@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Drop the "x-powered-by: Next.js" response header — framework
+  // advertisement, nothing consumes it.
+  poweredByHeader: false,
   experimental: {
     // Self-hosted on Railway's ephemeral disk: the file-based ISR/data cache
     // grows without eviction (one file per ranking forever, ~3 per visited
