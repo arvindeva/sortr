@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { db } from "@/db";
 import { sorterItems, sortingResults } from "@/db/schema";
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import {
   computeCommunityRanking,
   mapRanking,
@@ -78,9 +78,13 @@ async function getCommunityRankingUncached(
         imageUrl: sorterItems.imageUrl,
       })
       .from(sorterItems)
-      .where(
-        and(eq(sorterItems.sorterId, sorterId), eq(sorterItems.version, version)),
-      ),
+      // Deliberately NOT filtered by version, matching the page/sort queries:
+      // edit/finalize rewrites every row to the new version, so all rows ARE
+      // the current set — except ~23 legacy sorters whose old edit flow left
+      // items fragmented across versions (12 of them with zero rows at the
+      // current version, which a version filter turns into a permanently-null
+      // community ranking despite hundreds of results).
+      .where(eq(sorterItems.sorterId, sorterId)),
   ]);
 
   if (items.length < 2) return null;
