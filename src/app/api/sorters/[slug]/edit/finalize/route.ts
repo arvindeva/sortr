@@ -7,6 +7,7 @@ import { and, eq } from "drizzle-orm";
 import { r2Client, getR2PublicUrl } from "@/lib/r2";
 import { HeadObjectCommand } from "@aws-sdk/client-s3";
 import { generateSorterItemSlug } from "@/lib/utils";
+import { resolveEditedItemImageUrl } from "@/lib/edit-item-image";
 import { revalidatePath } from "next/cache";
 
 export async function PUT(
@@ -44,7 +45,33 @@ export async function PUT(
       return Response.json({ error: "Upload batch not found" }, { status: 404 });
     }
 
+    // Already applied — a retried finalize (timeout, network blip, double
+    // click) must not run the item replacement again: the first run
+    // regenerated every item ID, so a second pass would match nothing.
+    if (batch.status === "active") {
+      return Response.json({ status: "active", missing: [] });
+    }
+
     const meta: any = batch.metadata;
+
+    // Stale-editor guard: the form sends the sorter version it was loaded
+    // with (init stores it in the batch). If the sorter moved on since —
+    // another tab, back-button restore of an old form, a save that committed
+    // after its response was lost — the form's item IDs are dead and applying
+    // this batch would strip images. Fail loud instead of losing data.
+    // Batches from clients predating this field skip the check.
+    if (
+      typeof meta.baseVersion === "number" &&
+      (sorterRow.version || 1) !== meta.baseVersion
+    ) {
+      return Response.json(
+        {
+          error:
+            "This sorter changed since you opened the editor (another tab or an earlier save). Reload the page to keep editing — nothing was lost.",
+        },
+        { status: 412 },
+      );
+    }
     const expected: { key: string; type: string; itemIndex?: number }[] =
       meta.expectedKeys || [];
 
@@ -73,7 +100,22 @@ export async function PUT(
 
     const newVersion = (sorterRow.version || 1) + 1;
 
+    const STALE_EDITOR = "STALE_EDITOR";
+    try {
     await db.transaction(async (trx) => {
+      // Re-check the version under the transaction: two finalizes racing
+      // (double click, retried request) both pass the checks above, but the
+      // second one lands here after the first committed its version bump.
+      if (typeof meta.baseVersion === "number") {
+        const [fresh] = await trx
+          .select({ version: sorters.version })
+          .from(sorters)
+          .where(eq(sorters.id, sorterRow.id));
+        if ((fresh?.version || 1) !== meta.baseVersion) {
+          throw new Error(STALE_EDITOR);
+        }
+      }
+
       // Archive current version to history if not already archived
       const historyExists = await trx
         .select({ id: sorterHistory.id })
@@ -149,13 +191,9 @@ export async function PUT(
         .map((item, index) => {
           const mainEntry = expected.find((e) => e.type === "item" && e.itemIndex === index);
 
-          // Use itemId to match existing images, fallback to title matching for backward compatibility
           const imageUrl = mainEntry
             ? getR2PublicUrl(mainEntry.key)
-            : (item.itemId
-                ? currentItems.find((ci) => ci.id === item.itemId)?.imageUrl || null
-                : currentItems.find((ci) => ci.title.toLowerCase() === item.title.toLowerCase())?.imageUrl || null
-              );
+            : resolveEditedItemImageUrl(item, currentItems);
 
           const tagSlugs = (item.tagNames || [])
             .map((name) => tagNameToSlug.get(name))
@@ -175,6 +213,18 @@ export async function PUT(
         await trx.insert(sorterItems).values(newItemsValues);
       }
     });
+    } catch (e: any) {
+      if (e?.message === STALE_EDITOR) {
+        return Response.json(
+          {
+            error:
+              "This sorter changed since you opened the editor (another tab or an earlier save). Reload the page to keep editing — nothing was lost.",
+          },
+          { status: 412 },
+        );
+      }
+      throw e;
+    }
 
     await db
       .update(uploadBatches)

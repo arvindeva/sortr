@@ -44,6 +44,7 @@ export default async function EditSorterPage({ params }: EditSorterPageProps) {
       coverImageUrl: sorters.coverImageUrl,
       userId: sorters.userId,
       visibility: sorters.visibility,
+      version: sorters.version,
     })
     .from(sorters)
     .where(and(eq(sorters.slug, slug), eq(sorters.deleted, false)))

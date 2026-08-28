@@ -50,6 +50,7 @@ interface EditSorterFormProps {
     slug: string;
     coverImageUrl: string | null;
     visibility?: string | null;
+    version: number;
   };
   tags: Array<{
     id: string;
@@ -305,6 +306,20 @@ export default function EditSorterForm({
     // Update the state once with all changes
     setItemImagesData(newItemImagesData);
 
+    // Keep itemIds aligned with the form's item list: bulk upload appends new
+    // form items above without touching itemIds, and once the arrays drift,
+    // every later add/remove splices at the wrong index — items end up
+    // claiming another row's ID (and its image) on save.
+    setItemIds((prev) => {
+      const formLength = form.getValues("items").length;
+      if (prev.length >= formLength) return prev;
+      const next = [...prev];
+      while (next.length < formLength) {
+        next.push(`new-${Date.now()}-${next.length}`);
+      }
+      return next;
+    });
+
     // Clear the input
     event.target.value = "";
   };
@@ -418,6 +433,11 @@ export default function EditSorterForm({
           items: itemsPayload,
           includeCover: !!coverImageFile,
           visibility,
+          // Version this form was loaded with. A stale form (back button,
+          // second tab, re-save after a committed save) carries item IDs that
+          // no longer exist — the server rejects it instead of dropping the
+          // images those IDs were meant to keep.
+          baseVersion: sorter.version,
         }),
       });
       if (!initRes.ok) {

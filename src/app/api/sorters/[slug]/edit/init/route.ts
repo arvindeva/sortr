@@ -23,6 +23,9 @@ type InitBody = {
   items: { title: string; tagNames?: string[]; hasImage?: boolean; itemId?: string }[];
   includeCover?: boolean;
   visibility?: SorterVisibility;
+  // Sorter version the edit form was loaded with — stale forms (back button,
+  // second tab, re-save after a committed save) carry dead item IDs.
+  baseVersion?: number;
 };
 
 export async function POST(
@@ -57,6 +60,21 @@ export async function POST(
     }
     if (sorterRow.userId !== (session.user as any).id) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Reject stale editors before presigning anything (finalize re-checks
+    // inside its transaction; this just fails earlier, before any uploads).
+    if (
+      typeof body.baseVersion === "number" &&
+      (sorterRow.version || 1) !== body.baseVersion
+    ) {
+      return Response.json(
+        {
+          error:
+            "This sorter changed since you opened the editor (another tab or an earlier save). Reload the page to keep editing — nothing was lost.",
+        },
+        { status: 412 },
+      );
     }
 
     const sorterId = sorterRow.id;
@@ -115,6 +133,7 @@ export async function POST(
           coverKey,
           expectedKeys,
           visibility: body.visibility,
+          baseVersion: body.baseVersion,
         },
       })
       .returning();
