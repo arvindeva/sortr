@@ -32,21 +32,29 @@ export interface CommunityRankingPayload {
 // wholesale, old rankings fall below the threshold and stay excluded.
 const OVERLAP_THRESHOLD = 0.6;
 
+// Identical anonymous rankings collapse into one voice only on sorters with at
+// least this many items — below it, identical orderings occur honestly.
+const BLOB_COLLAPSE_MIN_ITEMS = 8;
+
 /**
  * Cheap dedup-aware size of a sorter's ranking pool: each logged-in user
- * counts ONCE (their replays aggregate as a single voice — see the dedup in
- * the aggregate below), anonymous rankings count individually. A COUNT
- * (milliseconds) — unlike the full aggregate — so it's safe to await
- * server-side; drives the unlock gate and the "X of 3" locked-state copy.
- * Optimistic: the full compute can still return null if too few rankings
- * survive the overlap filter.
+ * counts ONCE, each anonymous browser (anonId) counts once, and legacy
+ * anonymous rankings (no anonId) count individually — mirroring the dedup in
+ * the aggregate below. A COUNT (milliseconds) — unlike the full aggregate —
+ * so it's safe to await server-side; drives the unlock gate and the "X of 3"
+ * locked-state copy. Optimistic: the full compute can still return null if
+ * too few rankings survive the overlap filter or the identical-blob collapse.
  */
 export async function getCommunityRankingPoolCount(
   sorterId: string,
 ): Promise<number> {
   const [row] = await db
     .select({
-      c: sql<number>`(count(distinct "userId") + count(*) filter (where "userId" is null))::int`,
+      c: sql<number>`(
+        count(distinct "userId")
+        + count(distinct "anonId") filter (where "userId" is null)
+        + count(*) filter (where "userId" is null and "anonId" is null)
+      )::int`,
     })
     .from(sortingResults)
     .where(eq(sortingResults.sorterId, sorterId));
@@ -67,6 +75,7 @@ async function getCommunityRankingUncached(
       .select({
         rankings: sortingResults.rankings,
         userId: sortingResults.userId,
+        anonId: sortingResults.anonId,
         createdAt: sortingResults.createdAt,
       })
       .from(sortingResults)
@@ -111,23 +120,48 @@ async function getCommunityRankingUncached(
     }
   }
 
-  // One voice per logged-in user: keep only their LATEST ranking (a user
-  // reported people replaying a sorter repeatedly to sway the community
-  // ranking — and at an unlock minimum of 3, replays weigh heavily).
-  // Anonymous rankings can't be attributed, so they all count as before.
+  // One voice per identity: keep only the LATEST ranking per logged-in user
+  // (userId) and per anonymous browser (anonId — localStorage id sent with the
+  // submission). Legacy anonymous rankings predate anonId and can't be
+  // attributed, so they count individually. Motivated by repeated reports of
+  // replaying a sorter to sway the community ranking.
   const latestByUser = new Map<string, (typeof rows)[number]>();
-  const pool: (typeof rows)[number][] = [];
+  const latestByAnon = new Map<string, (typeof rows)[number]>();
+  let anonRows: (typeof rows)[number][] = [];
   for (const row of rows) {
-    if (!row.userId) {
-      pool.push(row);
-      continue;
-    }
-    const prev = latestByUser.get(row.userId);
-    if (!prev || row.createdAt > prev.createdAt) {
-      latestByUser.set(row.userId, row);
+    if (row.userId) {
+      const prev = latestByUser.get(row.userId);
+      if (!prev || row.createdAt > prev.createdAt) {
+        latestByUser.set(row.userId, row);
+      }
+    } else if (row.anonId) {
+      const prev = latestByAnon.get(row.anonId);
+      if (!prev || row.createdAt > prev.createdAt) {
+        latestByAnon.set(row.anonId, row);
+      }
+    } else {
+      anonRows.push(row);
     }
   }
-  pool.push(...latestByUser.values());
+  anonRows.push(...latestByAnon.values());
+
+  // Identical-blob collapse: two anonymous submissions with the exact same
+  // rankings JSON are one person (or a bot), not two voices — an attacker who
+  // clears their anonId still submits the same ordering. Only applied when the
+  // sorter has enough items that an identical full ordering can't happen by
+  // honest coincidence (a 3-item sorter has just 6 possible orderings).
+  if (items.length >= BLOB_COLLAPSE_MIN_ITEMS) {
+    const latestByBlob = new Map<string, (typeof rows)[number]>();
+    for (const row of anonRows) {
+      const prev = latestByBlob.get(row.rankings);
+      if (!prev || row.createdAt > prev.createdAt) {
+        latestByBlob.set(row.rankings, row);
+      }
+    }
+    anonRows = [...latestByBlob.values()];
+  }
+
+  const pool = [...anonRows, ...latestByUser.values()];
 
   const lists: RankingList[] = [];
   for (const row of pool) {

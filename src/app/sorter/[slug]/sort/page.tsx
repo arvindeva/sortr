@@ -24,6 +24,7 @@ import {
 import { Undo2, RotateCcw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { SortItem } from "@/lib/sorting";
+import { getAnonId } from "@/lib/anon-id";
 import { InteractiveMergeSort, SortState, TIE } from "@/lib/interactive-merge-sort";
 import { generateProgressKey, serializeChoices, deserializeChoices } from "@/lib/sort-persistence";
 import LZString from "lz-string";
@@ -622,6 +623,9 @@ export default function SortPage() {
           // the result must reflect that (and so be excluded from the current
           // community ranking) rather than masquerade as the new version.
           version: sorterData.sorter.version,
+          // Per-browser id so anonymous replays count once in the community
+          // ranking. Ignored server-side for logged-in submissions.
+          anonId: getAnonId() ?? undefined,
         }),
       });
 

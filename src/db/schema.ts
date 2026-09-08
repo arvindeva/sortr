@@ -135,6 +135,7 @@ export const sortingResults = pgTable("sortingResults", {
     onDelete: "set null",
   }), // Rankings survive sorter deletion
   userId: uuid("userId").references(() => user.id, { onDelete: "set null" }), // optional - for anonymous users
+  anonId: text("anonId"), // per-browser id (localStorage) for anonymous dedup; null for logged-in and legacy rows
   rankings: text("rankings").notNull(), // JSON string of ranked items
   selectedTagSlugs: text("selectedTagSlugs").array(), // Array of tag slugs (null if no tags used)
   // Sorter-level snapshots for immutable rankings
