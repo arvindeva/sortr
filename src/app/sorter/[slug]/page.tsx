@@ -9,6 +9,7 @@ import { slugForCategory } from "@/lib/categories";
 import { getCommunityRankingPoolCount } from "@/lib/community-ranking-data";
 import { TrendingSortersSection } from "@/components/trending-sorters-section";
 import { ContinueSortingBanner } from "@/components/continue-sorting-banner";
+import { ReportSorterLink } from "@/components/report-sorter-modal";
 
 interface SorterPageProps {
   params: Promise<{
@@ -270,6 +271,9 @@ export default async function SorterPage({ params }: SorterPageProps) {
             data.sorter.id,
           )}
         />
+
+        {/* Quiet report entry point — every sorter has one. */}
+        <ReportSorterLink slug={data.sorter.slug} />
 
         {/* Pull viral visitors deeper: what else is hot right now. */}
         <TrendingSortersSection

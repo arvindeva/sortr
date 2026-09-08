@@ -2,27 +2,22 @@ import { notFound } from "next/navigation";
 import { VISIBILITIES } from "@/lib/sorter-visibility";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getAdminStats, getRecentFeedback } from "@/lib/admin-stats";
+import {
+  getAdminStats,
+  getOpenReports,
+  getRecentFeedback,
+} from "@/lib/admin-stats";
 import { getTrafficStats } from "@/lib/umami-stats";
 import { AdminCharts } from "@/components/admin-charts";
+import { AdminReports } from "@/components/admin-reports";
 import { AdminTraffic } from "@/components/admin-traffic";
 import { TopSortersCard } from "@/components/admin-top-sorters";
 import { formatCount } from "@/lib/utils";
+import { isAdmin } from "@/lib/admin";
 
 // Private — never index, always render fresh.
 export const dynamic = "force-dynamic";
 export const metadata = { robots: { index: false, follow: false } };
-
-// Admin user ids come from the ADMIN_USER_ID env var (comma-separated), set
-// per-environment so dev and prod use their own ids. No ids → no admins.
-function isAdmin(userId: string | undefined): boolean {
-  if (!userId) return false;
-  const allow = (process.env.ADMIN_USER_ID ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  return allow.includes(userId);
-}
 
 function StatCard({
   label,
@@ -75,9 +70,10 @@ export default async function AdminPage() {
     notFound();
   }
 
-  const [stats, feedbackRows, traffic] = await Promise.all([
+  const [stats, feedbackRows, reportRows, traffic] = await Promise.all([
     getAdminStats(),
     getRecentFeedback(),
+    getOpenReports(),
     getTrafficStats(),
   ]);
 
@@ -116,6 +112,12 @@ export default async function AdminPage() {
       {/* Traffic (Umami) — omitted entirely if the analytics DB is
           unreachable or UMAMI_DATABASE_URL is unset. */}
       {traffic && <AdminTraffic traffic={traffic} />}
+
+      {/* Moderation queue — first thing under the charts so open reports
+          are never scrolled past. */}
+      <div className="mt-5">
+        <AdminReports reports={reportRows} />
+      </div>
 
       {/* Top sorters + Feedback — auto-fit (side by side when there's room). */}
       <div className="mt-5 grid grid-cols-1 items-start gap-5 sm:grid-cols-[repeat(auto-fit,minmax(420px,1fr))]">

@@ -1,7 +1,39 @@
 import { unstable_cache } from "next/cache";
 import { db } from "@/db";
-import { sorters, sortingResults, user, feedback } from "@/db/schema";
+import { sorters, sortingResults, user, feedback, reports } from "@/db/schema";
 import { and, count, eq, gte, isNotNull, isNull, sql, desc } from "drizzle-orm";
+
+export interface ReportRow {
+  id: string;
+  sorterSlug: string;
+  sorterTitle: string | null; // null → the sorter is already gone/taken down
+  sorterDeleted: boolean;
+  reason: string;
+  details: string | null;
+  email: string | null;
+  createdAt: Date;
+}
+
+/** Open reports, oldest first (uncached — this is a moderation queue). */
+export async function getOpenReports(limit = 50): Promise<ReportRow[]> {
+  const rows = await db
+    .select({
+      id: reports.id,
+      sorterSlug: reports.sorterSlug,
+      sorterTitle: sorters.title,
+      sorterDeleted: sorters.deleted,
+      reason: reports.reason,
+      details: reports.details,
+      email: reports.email,
+      createdAt: reports.createdAt,
+    })
+    .from(reports)
+    .leftJoin(sorters, eq(sorters.id, reports.sorterId))
+    .where(eq(reports.status, "open"))
+    .orderBy(reports.createdAt)
+    .limit(limit);
+  return rows.map((r) => ({ ...r, sorterDeleted: r.sorterDeleted ?? true }));
+}
 
 export interface FeedbackRow {
   id: string;

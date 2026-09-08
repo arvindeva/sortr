@@ -226,6 +226,35 @@ export const feedback = pgTable("feedback", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+// User reports against sorters (content policy violations). Anonymous-friendly
+// like feedback; reason is a category slug validated in the API. sorterSlug is
+// a snapshot so the report record survives a takedown/deletion of the sorter.
+export const reports = pgTable(
+  "reports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sorterId: uuid("sorterId").references(() => sorters.id, {
+      onDelete: "set null",
+    }),
+    sorterSlug: text("sorterSlug").notNull(),
+    reason: text("reason").notNull(),
+    details: text("details"),
+    email: text("email"), // optional — only if the reporter wants a reply
+    reporterUserId: uuid("reporterUserId").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    status: text("status").notNull().default("open"), // open | resolved
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    resolvedAt: timestamp("resolvedAt"),
+  },
+  (table) => ({
+    statusIdx: index("reports_status_createdAt_idx").on(
+      table.status,
+      table.createdAt,
+    ),
+  }),
+);
+
 // In-progress sort state for logged-in users (cloud durability). One active
 // sort per user per sorter (UNIQUE). `state` is the same LZString-compressed
 // blob localStorage uses; deleted when the sort completes. TTL-cleaned when
