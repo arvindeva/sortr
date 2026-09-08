@@ -2,8 +2,9 @@ import Link from "next/link";
 import { slugForCategory } from "@/lib/categories";
 import { Button } from "@/components/ui/button";
 import { CoverTile } from "@/components/ui/cover-tile";
-import { Play } from "lucide-react";
+import { Flag, Play } from "lucide-react";
 import { SorterVisibilityBadge } from "@/components/sorter-visibility-badge";
+import { ReportSorterModal } from "@/components/report-sorter-modal";
 
 interface SorterHeaderServerProps {
   sorter: {
@@ -139,6 +140,17 @@ export function SorterHeaderServer({
             </Button>
             {/* Client-injected owner controls slot */}
             {children}
+            {/* Report entry point — quiet ghost icon, but in the action row
+                where it can actually be found. */}
+            <ReportSorterModal slug={sorter.slug}>
+              <button
+                aria-label="Report this sorter"
+                title="Report this sorter"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-main/50 hover:text-main-ink"
+              >
+                <Flag size={18} />
+              </button>
+            </ReportSorterModal>
           </div>
         </div>
       </div>
