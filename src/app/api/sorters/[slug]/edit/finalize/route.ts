@@ -206,6 +206,7 @@ export async function PUT(
             imageUrl,
             tagSlugs,
             version: newVersion,
+            sortOrder: index,
           };
         });
 

@@ -167,7 +167,7 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
 
       // Create items with tag assignments
       if (validatedData.items && validatedData.items.length > 0) {
-        for (const item of validatedData.items) {
+        for (const [itemIndex, item] of validatedData.items.entries()) {
           // Generate item slug
           const itemSlug = generateSorterItemSlug(item.title);
           
@@ -215,6 +215,7 @@ async function handleTagBasedSorterCreation(body: any, userData: any) {
             imageUrl: finalImageUrl || null,
             tagSlugs: actualTagSlugs, // Array of tag slugs
             version: 1,
+            sortOrder: itemIndex,
           });
         }
       }
@@ -547,7 +548,7 @@ export async function POST(request: NextRequest) {
       {
         // Create sorter items without groups (flat mode)
         let imageIndex = 0;
-        for (const item of allProcessedItems) {
+        for (const [itemIndex, item] of allProcessedItems.entries()) {
           let finalImageUrl = item.imageUrl || null;
           let itemSlug = null;
 
@@ -574,6 +575,7 @@ export async function POST(request: NextRequest) {
             title: item.title,
             slug: itemSlug,
             imageUrl: finalImageUrl,
+            sortOrder: itemIndex,
           });
         }
       }

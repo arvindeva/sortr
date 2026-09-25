@@ -111,6 +111,7 @@ export async function PUT(
           imageUrl,
           tagSlugs,
           version,
+          sortOrder: i,
         });
       }
 

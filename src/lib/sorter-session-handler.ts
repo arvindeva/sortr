@@ -395,6 +395,7 @@ export async function handleSorterWithUploadSession(
           imageUrl: itemImageUrl,
           tagSlugs: itemTagSlugs,
           version: finalVersion,
+          sortOrder: itemIndex,
         });
       }
 

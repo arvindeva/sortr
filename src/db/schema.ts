@@ -119,12 +119,19 @@ export const sorterItems = pgTable(
     imageUrl: text("imageUrl"),
     tagSlugs: text("tagSlugs").array().default([]).notNull(), // Array of tag slugs for fast filtering
     version: integer("version").default(1).notNull(),
+    // Creator's item order. Without it, display order was heap order — stable
+    // for fresh sorters, scrambled a bit more by every edit's delete+reinsert.
+    sortOrder: integer("sortOrder").default(0).notNull(),
   },
   (table) => ({
     // GIN index for fast array overlap queries
     tagSlugsIdx: index("sorter_items_tag_slugs_idx").using(
       "gin",
       table.tagSlugs,
+    ),
+    sortOrderIdx: index("sorter_items_sort_order_idx").on(
+      table.sorterId,
+      table.sortOrder,
     ),
   }),
 );

@@ -129,7 +129,10 @@ async function getCoreSorterDataUncached(
       tagSlugs: sorterItems.tagSlugs,
     })
     .from(sorterItems)
-    .where(eq(sorterItems.sorterId, sorterId));
+    .where(eq(sorterItems.sorterId, sorterId))
+    // Creator's order; title tiebreak keeps rows written before the sortOrder
+    // column existed (all 0) in a stable order.
+    .orderBy(sorterItems.sortOrder, sorterItems.title);
 
   if (tags.length > 0) {
     const tagsWithItems = tags.map((tag) => ({
