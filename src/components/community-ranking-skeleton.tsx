@@ -13,7 +13,7 @@ export function CommunityRankingSkeleton({ rows = 5 }: { rows?: number }) {
       {/* Real heading (instant) so the user knows what's loading; only the meta
           line and rows are skeletons. Matches CommunityRanking's heading. */}
       <TeamHeading size="md">Community ranking</TeamHeading>
-      <div className="mt-1.5 mb-5">
+      <div className="mt-3.5 mb-5">
         <Skeleton className="h-3 w-40" />
       </div>
 

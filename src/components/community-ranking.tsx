@@ -43,7 +43,7 @@ export function CommunityRanking({ data }: { data: CommunityRankingPayload }) {
           is used.
         </InfoPopover>
       </div>
-      <div className="mt-1.5 mb-5 font-mono text-xs tracking-wide text-muted-foreground">
+      <div className="mt-3.5 mb-5 font-mono text-xs tracking-wide text-muted-foreground">
         aggregated from {totalRankings.toLocaleString()} ranking
         {totalRankings === 1 ? "" : "s"}
       </div>
