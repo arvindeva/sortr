@@ -9,7 +9,6 @@ import { listableSorter } from "@/lib/sorter-visibility";
 import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
 import { Hero } from "@/components/hero";
-import { HomeBackdrop } from "@/components/home-backdrop";
 import { TrendingSortersSection } from "@/components/trending-sorters-section";
 import { HomeExplainer } from "@/components/home-explainer";
 import { PageContainer } from "@/components/ui/page-container";
@@ -197,7 +196,6 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <HomeBackdrop />
       <PageContainer className="flex flex-col gap-10 md:gap-12">
         {/* Hero — centered headline + CTAs */}
         <Hero />
