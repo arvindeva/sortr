@@ -118,7 +118,7 @@ export function SorterCard({ sorter, className }: SorterCardProps) {
       href={`/sorter/${sorter.slug}`}
       className={cn("group block h-full w-full", className)}
     >
-      <div className="relative aspect-square overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 group-hover:-translate-y-1 group-hover:border-main/50 group-hover:shadow-[0_0_32px_rgba(255,46,126,.28)]">
+      <div className="relative aspect-square overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 group-hover:-translate-y-1 group-hover:border-[var(--card-accent,color-mix(in_srgb,var(--main)_50%,transparent))] group-hover:shadow-[0_0_32px_var(--card-accent-glow,rgba(255,46,126,.28))]">
         {cover}
 
         {/* Bottom scrim keeps the title legible over any cover. */}

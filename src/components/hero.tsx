@@ -18,10 +18,10 @@ const TYPEWRITER_WORDS = [
 ];
 
 /**
- * The cycling second line of the hero headline: types a word out, pauses,
- * deletes it, moves to the next — with a glowing block cursor. The line is
- * centered, so it re-centers as it types (only this line moves; nothing below
- * shifts). Respects prefers-reduced-motion by holding a single word.
+ * The cycling word of the hero headline: types a word out, pauses, deletes it,
+ * moves to the next — with a block cursor. It sits on the hero's cyan
+ * "selected fighter" block, so text and cursor are fixed midnight in both
+ * themes. Respects prefers-reduced-motion by holding a single word.
  */
 function TypewriterWord() {
   const [text, setText] = useState(TYPEWRITER_WORDS[0]);
@@ -71,7 +71,7 @@ function TypewriterWord() {
     // layout.tsx) — and a half-translated typewriter looked broken anyway.
     <span
       translate="no"
-      className="text-main inline-flex items-baseline whitespace-nowrap"
+      className="inline-flex items-baseline whitespace-nowrap text-[#0b0918]"
     >
       {/* Zero-width space keeps full text metrics on the line even when the
           word is fully deleted — otherwise the line collapses to the .display
@@ -81,41 +81,50 @@ function TypewriterWord() {
       {text}
       <span
         aria-hidden
-        className="bg-main ml-[0.06em] inline-block w-[0.5em] self-stretch shadow-[0_0_18px] shadow-main/70 motion-safe:animate-[hero-caret_1.1s_linear_infinite]"
+        className="ml-[0.06em] inline-block w-[0.5em] self-stretch bg-[#0b0918] motion-safe:animate-[hero-caret_1.1s_linear_infinite]"
       />
     </span>
   );
 }
 
 /**
- * The homepage hero, compact-masthead edition: the content rows below are the
- * heart of the page, so this is a single-line typewriter headline, one-line
- * tagline, and the two CTAs — Create (magenta primary) and Browse (neutral).
- * Stacked full-width buttons on mobile, side by side from sm up. Left-aligned:
- * the word types rightward from a fixed edge, so "Rank" never shifts.
+ * The homepage hero, character-select edition: "Rank" plus the cycling word
+ * set in a tilted cyan block, like a highlighted pick on a select screen, a
+ * one-line tagline, and the two CTAs — Create (magenta primary) and Browse
+ * (neutral). Stacked full-width buttons on mobile, side by side from sm up.
+ * Left-aligned: the word types rightward from a fixed edge, so "Rank" never
+ * shifts.
  */
 export function Hero() {
   return (
-    <section className="flex flex-col items-start py-8 text-left md:py-10">
-      <h1 className="display text-foreground text-[clamp(2.25rem,6.5vw,3.5rem)] font-black whitespace-nowrap">
-        Rank <TypewriterWord />
+    <section className="flex flex-col items-start py-9">
+      <h1 className="display text-foreground flex items-center gap-[0.22em] text-[clamp(2.1rem,8.5vw,4.25rem)] font-black whitespace-nowrap">
+        Rank
+        <span className="bg-cyan inline-flex -rotate-2 rounded-md px-[0.16em] pt-[0.05em] pb-[0.01em]">
+          <TypewriterWord />
+        </span>
       </h1>
-      <p className="text-muted-foreground mt-2 text-[14px] leading-relaxed md:text-base">
+      <p className="text-muted-foreground mt-3.5 text-[clamp(14px,4.2vw,17px)] whitespace-nowrap md:text-lg">
         Pick a favorite, one matchup at a time.
       </p>
 
-      <div className="mt-5 flex w-full max-w-md flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:justify-start">
-        <Button asChild size="lg" arcade className="group">
+      <div className="mt-[1.6rem] flex w-full max-w-md flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row">
+        <Button
+          asChild
+          arcade
+          className="group text-[19px] [&_svg]:size-[18px]"
+        >
           <Link href="/create">
             <Plus
               className="transition-transform duration-200 group-hover:rotate-90"
               size={18}
+              strokeWidth={3}
             />
-            Create a sorter
+            Create
           </Link>
         </Button>
-        <Button asChild size="lg" variant="neutral" arcade>
-          <Link href="/browse">Browse sorters</Link>
+        <Button asChild variant="neutral" arcade className="text-[19px]">
+          <Link href="/browse">Browse</Link>
         </Button>
       </div>
     </section>

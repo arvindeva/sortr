@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { db } from "@/db";
 import { sorters, user } from "@/db/schema";
 import { previewItemsSql } from "@/lib/sorter-preview";
@@ -13,6 +12,9 @@ import { TrendingSortersSection } from "@/components/trending-sorters-section";
 import { HomeExplainer } from "@/components/home-explainer";
 import { PageContainer } from "@/components/ui/page-container";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ViewAllLink } from "@/components/ui/view-all-link";
+import { teamColorStyle } from "@/lib/team-colors";
+import { TeamHeading } from "@/components/ui/team-heading";
 
 // Server-side data fetching for popular sorters
 async function getPopularSorters() {
@@ -196,28 +198,22 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {/* Each section owns a "team color" (heading block + tile hover glow),
+          carrying the hero's cyan word block down the page. */}
       <PageContainer className="flex flex-col gap-10 md:gap-12">
-        {/* Hero — centered headline + CTAs */}
         <Hero />
 
         {/* Hot sorters — most played in the last 24 hours */}
-        <TrendingSortersSection window="day" className="w-full" />
+        <TrendingSortersSection window="day" color="yellow" className="w-full" />
 
         {/* Trending this week — the 7-day view */}
-        <TrendingSortersSection className="w-full" />
+        <TrendingSortersSection color="violet" className="w-full" />
 
         {/* Fresh sorters */}
-        <section className="w-full">
+        <section className="w-full" style={teamColorStyle("magenta")}>
           <div className="mb-6 flex items-end justify-between gap-3">
-            <h2 className="display text-3xl font-black text-foreground md:text-[42px]">
-              Fresh sorters
-            </h2>
-            <Link
-              href="/browse?sort=recent"
-              className="shrink-0 font-mono text-[13px] text-muted-foreground transition-colors hover:text-cyan-ink"
-            >
-              view all →
-            </Link>
+            <TeamHeading>Fresh sorters</TeamHeading>
+            <ViewAllLink href="/browse?sort=recent" />
           </div>
           {hadRecentError ? (
             <EmptyState
@@ -240,17 +236,10 @@ export default async function Home() {
         </section>
 
         {/* Popular sorters (by all-time completions) */}
-        <section className="w-full">
+        <section className="w-full" style={teamColorStyle("coral")}>
           <div className="mb-6 flex items-end justify-between gap-3">
-            <h2 className="display text-3xl font-black text-foreground md:text-[42px]">
-              Popular sorters
-            </h2>
-            <Link
-              href="/browse?sort=popular"
-              className="shrink-0 font-mono text-[13px] text-muted-foreground transition-colors hover:text-main-ink"
-            >
-              view all →
-            </Link>
+            <TeamHeading>Popular sorters</TeamHeading>
+            <ViewAllLink href="/browse?sort=popular" />
           </div>
           {hadPopularError ? (
             <EmptyState

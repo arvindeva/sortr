@@ -7,14 +7,14 @@ export function Footer() {
     <footer className="relative z-10 mt-auto border-t border-border">
       <div className="container mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-7 sm:flex-row md:px-6">
         <Wordmark size={22} withPeriod />
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:flex-nowrap sm:gap-4">
           <Link
             href="/character-sorter"
             className="font-mono text-[13px] font-bold text-cyan-ink underline decoration-cyan-ink/40 underline-offset-4 transition-colors hover:text-main-ink hover:decoration-main-ink/50"
           >
             Character sorter
           </Link>
-          <span aria-hidden className="text-muted-foreground/40">
+          <span aria-hidden className="text-muted-foreground/40 hidden sm:inline">
             |
           </span>
           <FeedbackModal>
@@ -22,7 +22,7 @@ export function Footer() {
               Feedback
             </button>
           </FeedbackModal>
-          <span aria-hidden className="text-muted-foreground/40">
+          <span aria-hidden className="text-muted-foreground/40 hidden sm:inline">
             |
           </span>
           <Link
@@ -31,7 +31,7 @@ export function Footer() {
           >
             Privacy
           </Link>
-          <span aria-hidden className="text-muted-foreground/40">
+          <span aria-hidden className="text-muted-foreground/40 hidden sm:inline">
             |
           </span>
           <Link
@@ -40,10 +40,10 @@ export function Footer() {
           >
             Rules
           </Link>
-          <span aria-hidden className="text-muted-foreground/40">
+          <span aria-hidden className="text-muted-foreground/40 hidden sm:inline">
             |
           </span>
-          <p className="font-mono text-[13px] text-muted-foreground">
+          <p className="font-mono text-[13px] text-muted-foreground basis-full text-center sm:basis-auto">
             Rank anything ·{" "}
             <span className="inline-block text-[1.25em] leading-none align-[-0.18em]">
               ©

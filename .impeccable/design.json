@@ -1,0 +1,328 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-01T09:10:05.439729+00:00",
+  "title": "Design System: sortr",
+  "extensions": {
+    "colorMeta": {
+      "magenta": {
+        "role": "primary",
+        "displayName": "Arcade Magenta",
+        "canonical": "#ff2e7e",
+        "tonalRamp": [
+          "#4c001d",
+          "#800031",
+          "#b20044",
+          "#e60058",
+          "#ff1a71",
+          "#ff5c9a",
+          "#ffa3c6",
+          "#ffe5ef"
+        ]
+      },
+      "cyan": {
+        "role": "secondary",
+        "displayName": "Arcade Cyan",
+        "canonical": "#19e3df",
+        "tonalRamp": [
+          "#084544",
+          "#0d7371",
+          "#12a19e",
+          "#17cfcb",
+          "#30e8e5",
+          "#6cefec",
+          "#acf6f4",
+          "#e8fcfc"
+        ]
+      },
+      "yellow": {
+        "role": "tertiary",
+        "displayName": "Coin Yellow",
+        "canonical": "#ffd23f",
+        "tonalRamp": [
+          "#4c3b00",
+          "#806200",
+          "#b28900",
+          "#e6b000",
+          "#ffc91a",
+          "#ffd95c",
+          "#ffe9a3",
+          "#fff9e5"
+        ]
+      },
+      "violet": {
+        "role": "tertiary",
+        "displayName": "Roster Violet",
+        "canonical": "#9b6bff",
+        "tonalRamp": [
+          "#19004c",
+          "#290080",
+          "#3a00b2",
+          "#4a00e6",
+          "#641aff",
+          "#915cff",
+          "#c1a3ff",
+          "#eee5ff"
+        ]
+      },
+      "coral": {
+        "role": "tertiary",
+        "displayName": "Roster Coral",
+        "canonical": "#ff7a59",
+        "tonalRamp": [
+          "#4c0f00",
+          "#801900",
+          "#b22300",
+          "#e62e00",
+          "#ff471a",
+          "#ff7c5c",
+          "#ffb5a3",
+          "#ffebe5"
+        ]
+      },
+      "midnight": {
+        "role": "neutral",
+        "displayName": "Midnight",
+        "canonical": "#0b0918",
+        "tonalRamp": [
+          "#191538",
+          "#2a235d",
+          "#3b3182",
+          "#4c3fa7",
+          "#6658c0",
+          "#9288d2",
+          "#c2bce6",
+          "#eeecf8"
+        ]
+      },
+      "deep-panel": {
+        "role": "neutral",
+        "displayName": "Deep Panel",
+        "canonical": "#13102a",
+        "tonalRamp": [
+          "#191537",
+          "#2a235c",
+          "#3a3181",
+          "#4b3fa6",
+          "#6559c0",
+          "#9189d2",
+          "#c1bde6",
+          "#eeedf8"
+        ]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Starlight",
+        "canonical": "#f3f0ff",
+        "tonalRamp": [
+          "#0f004c",
+          "#190080",
+          "#2400b2",
+          "#2e00e6",
+          "#471aff",
+          "#7c5cff",
+          "#b6a3ff",
+          "#ebe5ff"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Lavender Muted",
+        "canonical": "#a39ec2",
+        "tonalRamp": [
+          "#201e2f",
+          "#35314e",
+          "#4b456e",
+          "#60598d",
+          "#7972a6",
+          "#a09bc0",
+          "#cac7dc",
+          "#f0eff5"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero lines, section titles, arcade CTAs, cover-tile names; uppercase for UI copy."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page and card headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Descriptions, explanatory copy, forms."
+      },
+      "label": {
+        "displayName": "HUD Label",
+        "purpose": "Meta, counters, eyebrows, scoreboard read; uppercase, wide tracking."
+      }
+    },
+    "shadows": [
+      {
+        "name": "vs-pulse",
+        "value": "0 0 46px 6px rgba(255,46,126,.55)",
+        "purpose": "Peak of the VS marker pulse (dark)."
+      },
+      {
+        "name": "vs-pulse-light",
+        "value": "0 8px 22px rgba(255,46,126,.35)",
+        "purpose": "VS pulse in light mode — crisp colored shadow, no blur ring."
+      },
+      {
+        "name": "card-light",
+        "value": "0 6px 16px rgba(22,16,52,.06)",
+        "purpose": "Soft lift for light-mode cards."
+      }
+    ],
+    "motion": [
+      {
+        "name": "sortrPulse",
+        "value": "VS marker halo pulse",
+        "purpose": "Head-to-head moments."
+      },
+      {
+        "name": "sortrGlow",
+        "value": "1.6s logo dot glow",
+        "purpose": "Logo filled square."
+      },
+      {
+        "name": "press",
+        "value": "scale(.98), ~100ms",
+        "purpose": "Button press feedback."
+      },
+      {
+        "name": "tile-lift",
+        "value": "translateY(-4/-5px), ~200ms",
+        "purpose": "Cover tile hover."
+      },
+      {
+        "name": "menu-sheet",
+        "value": "fade + translateY(-10px→0), ~220ms",
+        "purpose": "Mobile menu open."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one primary action per screen; magenta gradient, flat.",
+      "html": "<button class=\"ds-btn-primary\">Create a sorter</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:8px 16px;border:none;border-radius:6px;background:linear-gradient(180deg,#ff2e7e,#e01e65);color:#fff;font-family:var(--font-mona-sans),system-ui,sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:filter .15s,transform .1s}.ds-btn-primary:hover{filter:brightness(1.1)}.ds-btn-primary:active{transform:scale(.98)}.ds-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 2px #0b0918,0 0 0 4px #ff2e7e}"
+    },
+    {
+      "name": "Arcade CTA",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Hero and sorter CTAs: display face, uppercase, extra-bold.",
+      "html": "<button class=\"ds-btn-arcade\">&#9654; Sort now</button>",
+      "css": ".ds-btn-arcade{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 32px;border:none;border-radius:6px;background:linear-gradient(180deg,#ff2e7e,#e01e65);color:#fff;font-family:var(--font-anybody),system-ui,sans-serif;font-stretch:75%;font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:17px;cursor:pointer;transition:filter .15s,transform .1s}.ds-btn-arcade:hover{filter:brightness(1.1)}.ds-btn-arcade:active{transform:scale(.98)}.ds-btn-arcade:focus-visible{outline:none;box-shadow:0 0 0 2px #0b0918,0 0 0 4px #ff2e7e}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined secondary action.",
+      "html": "<button class=\"ds-btn-secondary\">Browse</button>",
+      "css": ".ds-btn-secondary{height:40px;padding:8px 16px;border:1px solid rgba(243,240,255,.2);border-radius:6px;background:transparent;color:#f3f0ff;font-family:var(--font-mona-sans),system-ui,sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:background .15s,transform .1s}.ds-btn-secondary:hover{background:rgba(243,240,255,.05)}.ds-btn-secondary:active{transform:scale(.98)}.ds-btn-secondary:focus-visible{outline:none;box-shadow:0 0 0 2px #0b0918,0 0 0 4px #ff2e7e}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "Nav search with HUD placeholder and / hint chip.",
+      "html": "<label class=\"ds-search\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/></svg><input placeholder=\"Search sorters...\"/><kbd>/</kbd></label>",
+      "css": ".ds-search{display:flex;align-items:center;gap:10px;width:260px;height:40px;padding:0 12px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#a39ec2;transition:border-color .15s}.ds-search:focus-within{border-color:#ff2e7e}.ds-search input{flex:1;background:none;border:none;outline:none;color:#f3f0ff;font-family:var(--font-mona-sans),system-ui,sans-serif;font-size:14px}.ds-search input::placeholder{color:#6f6a86}.ds-search kbd{border:1px solid rgba(255,255,255,.16);border-radius:4px;padding:0 6px;font-size:12px;color:#6f6a86;font-family:inherit}"
+    },
+    {
+      "name": "Cover Tile",
+      "kind": "card",
+      "refersTo": "cover-tile",
+      "description": "The roster tile: square, accent or art, title bottom-left over a black scrim. Nothing else.",
+      "html": "<a class=\"ds-tile\" href=\"#\"><span class=\"ds-tile-title\">Stray Kids Ships</span></a>",
+      "css": ".ds-tile{position:relative;display:block;width:180px;aspect-ratio:1;border-radius:14px;border:1px solid rgba(255,255,255,.08);overflow:hidden;background:#ff2e7e repeating-linear-gradient(45deg,rgba(0,0,0,.06) 0 10px,transparent 10px 20px);text-decoration:none;transition:transform .2s,box-shadow .2s,border-color .2s}.ds-tile::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.82))}.ds-tile:hover{transform:translateY(-5px);border-color:#ff2e7e;box-shadow:0 10px 30px rgba(255,46,126,.35)}.ds-tile:focus-visible{outline:2px solid #ff2e7e;outline-offset:3px}.ds-tile-title{position:absolute;left:12px;right:12px;bottom:10px;z-index:1;color:#fff;font-family:var(--font-anybody),system-ui,sans-serif;font-stretch:75%;font-weight:800;font-size:20px;line-height:.95;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}"
+    },
+    {
+      "name": "HUD Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Filter/tag chip in HUD text; hover goes to accent.",
+      "html": "<button class=\"ds-chip\">K-pop</button>",
+      "css": ".ds-chip{height:32px;padding:0 14px;border-radius:9999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#a39ec2;font-family:var(--font-mona-sans),system-ui,sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;cursor:pointer;transition:color .15s,border-color .15s}.ds-chip:hover{color:#ff2e7e;border-color:#ff2e7e}.ds-chip:focus-visible{outline:2px solid #ff2e7e;outline-offset:2px}"
+    },
+    {
+      "name": "VS Marker",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "The signature head-to-head mark: rotated square, magenta border, pulsing.",
+      "html": "<div class=\"ds-vs\"><span>VS</span></div>",
+      "css": "@keyframes ds-vs-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,46,126,.55)}50%{box-shadow:0 0 46px 6px rgba(255,46,126,.55)}}.ds-vs{width:56px;height:56px;transform:rotate(45deg);background:#0b0918;border:2px solid #ff2e7e;display:grid;place-items:center;animation:ds-vs-pulse 2s infinite}.ds-vs span{transform:rotate(-45deg);color:#ff2e7e;font-family:var(--font-anybody),system-ui,sans-serif;font-stretch:75%;font-weight:900;font-size:22px}@media (prefers-reduced-motion:reduce){.ds-vs{animation:none}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Character Select Screen",
+    "overview": "sortr looks like the moment before a fight: a dark cabinet, a roster of big colored tiles with condensed names, and two sides squaring off under a pulsing VS. The interface is the arena; the fandom's characters, albums, and ships are the fighters. Every screen should feel like picking a side.\n\nThe world is dark, flat, and electric. A midnight indigo canvas carries five bright accents that do the shouting: magenta leads, cyan answers, and yellow, violet and coral fill out the roster. Display type is condensed, heavy, and uppercase, HUD labels read like a scoreboard, and body copy stays plain and quiet so the loud parts land. Components are punchy and tactile — buttons press, tiles lift — but buttons stay flat; glow is reserved for the signature VS and logo moments.\n\nThe same identity ships in a light theme: the canvas flips light, accent fills stay just as bright, glows become crisp colored shadows, and accent *text* deepens to stay legible on white.",
+    "keyCharacteristics": [
+      "Midnight canvas with five rotating accent fills; magenta is the one primary.",
+      "Condensed, heavy, uppercase display type (Anybody at 75% width) against plain Mona Sans body.",
+      "HUD/scoreboard labels: uppercase, widely tracked.",
+      "Square cover tiles with the name bottom-left over a black scrim — the roster.",
+      "The VS diamond and the two-squares logo as the brand's signature marks.",
+      "Punchy, tactile, flat: press and lift feedback, no glow shadows on buttons."
+    ],
+    "rules": [
+      {
+        "name": "The Roster Rule",
+        "section": "colors",
+        "body": "Cover tiles cycle magenta → cyan → yellow → violet → coral via `accentFor()`, a stable color per entity. Accents are fills first; when an accent is used as text, use its `-ink` variant so it passes contrast in both themes."
+      },
+      {
+        "name": "The Fill vs Ink Rule",
+        "section": "colors",
+        "body": "Accent *fills* are identical in both themes. Accent *text* deepens in light mode (`text-main-ink`, `text-cyan-ink`, `text-yellow-ink`). Never put raw cyan or yellow text on a light surface."
+      },
+      {
+        "name": "The Scoreboard Rule",
+        "section": "typography",
+        "body": "Meta information (counts, dates, round numbers, eyebrows) is HUD text — uppercase and widely tracked — never a second body style."
+      },
+      {
+        "name": "The Glow Is a Signature Rule",
+        "section": "elevation",
+        "body": "Glow belongs to the VS marker, the logo, and card hover accents. Buttons and containers never glow."
+      },
+      {
+        "name": "The Clear Air Rule",
+        "section": "elevation",
+        "body": "Nothing animated, transformed, or GPU-promoted sits behind the frosted nav. On Android Chrome, animated layers under a backdrop blur make it draw over its own contents (it hid the route loading bar until the homepage backdrop was removed, Oct 2026)."
+      }
+    ],
+    "dos": [
+      "**Do** use Arcade Magenta (#ff2e7e) as the single primary action color per screen.",
+      "**Do** cycle cover-tile colors with `accentFor()` so each entity keeps a stable color.",
+      "**Do** use the `-ink` text variants for accent-colored text so it stays legible in light mode.",
+      "**Do** set UI display copy in uppercase Anybody; keep user-content titles in their own casing.",
+      "**Do** design for the phone first; most sorting happens there.",
+      "**Do** honor `prefers-reduced-motion` for every loop and parallax."
+    ],
+    "donts": [
+      "**Don't** use Inter, Arial, Roboto, Space Grotesk, Space Mono, or Big Shoulders, and don't drift into soft, rounded, generic SaaS cards.",
+      "**Don't** put author, play counts, category chips, rank or NEW badges on cover tiles — title over scrim only.",
+      "**Don't** give buttons or containers glow shadows; glow is reserved for the VS marker, logo, and tile hover.",
+      "**Don't** place animated, transformed, or `will-change` layers behind the frosted nav.",
+      "**Don't** put raw cyan or yellow text on a light surface."
+    ]
+  }
+}

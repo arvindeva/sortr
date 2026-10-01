@@ -1,7 +1,6 @@
 "use client";
 import { useSession, signOut, signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { LoginButton } from "@/components/login-button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { SortrLogo } from "@/components/ui/sortr-mark";
 import Link from "next/link";
@@ -185,101 +184,81 @@ export function Navbar() {
       </Link>
 
       {/* Desktop Navigation */}
-      <div className="hidden items-center gap-6 lg:flex">
-        {/* Search Bar */}
-        <form onSubmit={handleSearch} className="relative">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-          <Input
+      <div className="hidden items-center gap-7 lg:flex">
+        <form
+          onSubmit={handleSearch}
+          role="search"
+          className="group/s border-foreground/15 focus-within:border-main flex items-center gap-2 border-b-2 transition-colors"
+        >
+          <Search
+            aria-hidden
+            className="text-muted-foreground group-focus-within/s:text-main-ink size-4 shrink-0 transition-colors"
+          />
+          <input
             ref={desktopSearchInputRef}
-            placeholder="Search sorters..."
+            type="search"
+            aria-label="Search sorters"
+            placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-64 pr-9 pl-9"
+            className="font-heading text-foreground placeholder:text-muted-foreground/70 w-40 bg-transparent py-1 text-[19px] font-extrabold tracking-[0.04em] uppercase outline-none [&::-webkit-search-cancel-button]:hidden"
           />
-          <kbd className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 select-none items-center rounded border border-border bg-muted px-1.5 font-mono text-xs text-muted-foreground xl:inline-flex">
+          <kbd className="border-foreground/20 text-muted-foreground pointer-events-none hidden size-5 shrink-0 place-items-center rounded-[3px] border font-mono text-[11px] xl:grid">
             /
           </kbd>
         </form>
-
-        {/* Create button - always visible */}
-        {status === "loading" ? (
-          <Button variant="default" disabled>
-            <Plus size={16} />
-            Create a Sorter
-          </Button>
-        ) : session ? (
-          <Button asChild variant="default" className="group">
-            <Link href="/create">
-              <Plus
-                className="transition-transform duration-200 group-hover:rotate-90"
-                size={16}
-              />
-              Create a Sorter
-            </Link>
-          </Button>
-        ) : (
-          <Button asChild variant="default" className="group">
-            <Link href="/auth/signin">
-              <Plus
-                className="transition-transform duration-200 group-hover:rotate-90"
-                size={16}
-              />
-              Create a Sorter
-            </Link>
-          </Button>
-        )}
-
-        {/* Browse link */}
-        <Link
-          href="/browse"
-          className="group relative font-medium text-foreground transition-colors hover:text-main-ink"
-        >
+        <Link href="/browse" className="font-heading text-[19px] font-extrabold tracking-[0.04em] text-foreground uppercase transition-colors hover:text-main-ink focus-visible:text-main-ink focus-visible:outline-none">
           Browse
-          <span className="absolute -bottom-1 left-0 h-0.5 w-full origin-left scale-x-0 bg-main transition-transform duration-200 ease-out group-hover:scale-x-100" />
         </Link>
-
         {status === "loading" ? (
-          <Button variant="default" disabled>
-            Loading...
-          </Button>
+          <span className="font-heading text-muted-foreground text-[19px] font-extrabold uppercase">Loading</span>
         ) : session ? (
-          <div className="flex items-center gap-6">
+          <>
             {userData?.username ? (
-              <Link
-                href={`/user/${userData.username}`}
-                className="group relative font-medium text-foreground transition-colors hover:text-main-ink"
-              >
+              <Link href={`/user/${userData.username}`} className="font-heading text-[19px] font-extrabold tracking-[0.04em] text-foreground uppercase transition-colors hover:text-main-ink focus-visible:text-main-ink focus-visible:outline-none">
                 Profile
-                <span className="absolute -bottom-1 left-0 h-0.5 w-full origin-left scale-x-0 bg-main transition-transform duration-200 ease-out group-hover:scale-x-100" />
               </Link>
             ) : (
-              <span className="font-medium text-muted-foreground">Profile</span>
+              <span className="font-heading text-[19px] font-extrabold tracking-[0.04em] text-foreground uppercase transition-colors hover:text-main-ink focus-visible:text-main-ink focus-visible:outline-none pointer-events-none opacity-50">Profile</span>
             )}
-            <Link
-              href="/settings"
-              className="group relative font-medium text-foreground transition-colors hover:text-main-ink"
-            >
-              Settings
-              <span className="absolute -bottom-1 left-0 h-0.5 w-full origin-left scale-x-0 bg-main transition-transform duration-200 ease-out group-hover:scale-x-100" />
-            </Link>
-            <Button
-              variant="neutral"
+            <Link href={"/settings"} className="font-heading text-[19px] font-extrabold tracking-[0.04em] text-foreground uppercase transition-colors hover:text-main-ink focus-visible:text-main-ink focus-visible:outline-none">
+                Settings
+              </Link>
+            <button
+              type="button"
               onClick={() => signOut({ callbackUrl: "/" })}
+              className="font-heading text-[19px] font-extrabold tracking-[0.04em] text-foreground uppercase transition-colors hover:text-main-ink focus-visible:text-main-ink focus-visible:outline-none text-muted-foreground"
             >
               Sign out
-            </Button>
-            <ModeToggle />
-          </div>
-        ) : (
-          <>
-            <LoginButton />
-            <ModeToggle />
+            </button>
           </>
+        ) : (
+          <button type="button" onClick={() => signIn()} className="font-heading text-[19px] font-extrabold tracking-[0.04em] text-foreground uppercase transition-colors hover:text-main-ink focus-visible:text-main-ink focus-visible:outline-none">
+            Sign in
+          </button>
         )}
+        {status === "loading" ? (
+          <Button variant="default" arcade disabled className="text-[19px] [&_svg]:size-[18px]">
+            <Plus size={18} strokeWidth={3} />
+            Create
+          </Button>
+        ) : (
+          <Button asChild variant="default" arcade className="group text-[19px] [&_svg]:size-[18px]">
+            <Link href={session ? "/create" : "/auth/signin"}>
+              <Plus
+                className="transition-transform duration-200 group-hover:rotate-90"
+                size={18}
+                strokeWidth={3}
+              />
+              Create
+            </Link>
+          </Button>
+        )}
+        <ModeToggle variant="bare" />
       </div>
 
-      {/* Mobile bar: just two 42px buttons — ghost search + menu toggle */}
-      <div className="flex items-center gap-2.5 lg:hidden">
+      {/* Mobile bar: bare icons (42px tap targets) — search + menu */}
+      <div className="-mr-2 flex items-center gap-0.5 lg:hidden">
         <button
           type="button"
           onClick={() => {
@@ -287,9 +266,9 @@ export function Navbar() {
             setMobileMenuOpen(false);
           }}
           aria-label="Search"
-          className="flex h-[42px] w-[42px] items-center justify-center rounded-[10px] border border-foreground/[0.16] text-foreground transition-colors hover:bg-foreground/5"
+          className="text-foreground hover:text-main-ink focus-visible:ring-ring flex h-[42px] w-[42px] items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
-          <Search size={18} />
+          <Search size={20} />
         </button>
         <button
           type="button"
@@ -299,9 +278,11 @@ export function Navbar() {
           }}
           aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileMenuOpen}
-          className="flex h-[42px] w-[42px] items-center justify-center rounded-[10px] bg-[image:var(--main-gradient)] text-main-foreground transition-[filter] hover:brightness-110"
+          className={`hover:text-main-ink focus-visible:ring-ring flex h-[42px] w-[42px] items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none ${
+            mobileMenuOpen ? "text-main-ink" : "text-foreground"
+          }`}
         >
-          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
@@ -418,10 +399,11 @@ export function Navbar() {
           </Button>
 
           {/* Theme toggle pinned at the bottom */}
-          <div className="flex items-center justify-between border-t border-border pt-4">
+          <div className="flex items-center justify-between border-t border-border pt-3">
             <span className="hud text-xs text-muted-foreground">Theme</span>
-            <ModeToggle />
+            <ModeToggle variant="bare" />
           </div>
+
         </div>
       </div>
 

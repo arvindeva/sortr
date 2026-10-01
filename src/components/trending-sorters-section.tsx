@@ -1,6 +1,12 @@
 import { getHotSorters, getTrendingSorters } from "@/lib/trending-sorters";
 import { SorterGrid } from "@/components/ui/sorter-grid";
 import { SorterCard } from "@/components/ui/sorter-card";
+import {
+  SECTION_HEADING_CLASS,
+  teamColorStyle,
+  type TeamColor,
+} from "@/lib/team-colors";
+import { TeamHeading } from "@/components/ui/team-heading";
 
 interface TrendingSortersSectionProps {
   /** Omit the current sorter (when shown on its own sorter/ranking page). */
@@ -11,6 +17,8 @@ interface TrendingSortersSectionProps {
   title?: string;
   /** Play-count window: "week" (7 days, default) or "day" (24h, "Hot sorters"). */
   window?: "week" | "day";
+  /** Homepage "team color" for the heading block and tile hover glow. */
+  color?: TeamColor;
   className?: string;
 }
 
@@ -26,6 +34,7 @@ export async function TrendingSortersSection({
   limit = 10,
   window = "week",
   title = window === "day" ? "Hot sorters" : "Trending this week",
+  color,
   className,
 }: TrendingSortersSectionProps) {
   const trending =
@@ -36,11 +45,16 @@ export async function TrendingSortersSection({
   if (trending.length === 0) return null;
 
   return (
-    <section className={className}>
+    <section
+      className={className}
+      style={color ? teamColorStyle(color) : undefined}
+    >
       <div className="mb-6 flex items-end justify-between gap-3">
-        <h2 className="display text-3xl font-black text-foreground md:text-[42px]">
-          {title}
-        </h2>
+        {color ? (
+          <TeamHeading>{title}</TeamHeading>
+        ) : (
+          <h2 className={SECTION_HEADING_CLASS}>{title}</h2>
+        )}
       </div>
       <SorterGrid>
         {trending.map((sorter) => (

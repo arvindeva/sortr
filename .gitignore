@@ -49,3 +49,7 @@ PLAN.md
 
 # Database backup files
 *_migration_backup_*.sql
+# impeccable live-mode runtime state (config.json + design.json are kept)
+.impeccable/hook.cache.json
+.impeccable/live/*
+!.impeccable/live/config.json
