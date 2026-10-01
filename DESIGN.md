@@ -130,7 +130,7 @@ A dark, saturated roster palette: one midnight ground, one magenta lead, and fou
 ### Named Rules
 **The Roster Rule.** Cover tiles cycle magenta → cyan → yellow → violet → coral via `accentFor()`, a stable color per entity. Accents are fills first; when an accent is used as text, use its `-ink` variant so it passes contrast in both themes.
 
-**The Team Color Rule.** On the homepage each section owns one roster accent (Hot = yellow, This week = violet, Fresh = magenta, Popular = coral; the hero word block is cyan). Its heading sits in a tilted block of that accent (−1.5°, midnight text) and its tiles glow in that accent on hover. Use `teamColorStyle()` from `src/lib/team-colors.ts` with the `<TeamHeading>` component (each wrapped line gets its own block); never two adjacent sections in the same accent.
+**The Team Color Rule.** On the homepage each section owns one roster accent (Hot = yellow, This week = violet, Fresh = magenta, Popular = coral; the hero keeps its magenta typewriter word). Its heading sits in a tilted block of that accent (−1.5°, midnight text) and its tiles glow in that accent on hover. Use `teamColorStyle()` from `src/lib/team-colors.ts` with the `<TeamHeading>` component (each wrapped line gets its own block); never two adjacent sections in the same accent.
 
 **The Fill vs Ink Rule.** Accent *fills* are identical in both themes. Accent *text* deepens in light mode (`text-main-ink`, `text-cyan-ink`, `text-yellow-ink`). Never put raw cyan or yellow text on a light surface.
 

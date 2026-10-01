@@ -19,9 +19,9 @@ const TYPEWRITER_WORDS = [
 
 /**
  * The cycling word of the hero headline: types a word out, pauses, deletes it,
- * moves to the next — with a block cursor. It sits on the hero's cyan
- * "selected fighter" block, so text and cursor are fixed midnight in both
- * themes. Respects prefers-reduced-motion by holding a single word.
+ * moves to the next — with a glowing block cursor. The headline is
+ * left-aligned, so the word types rightward from a fixed edge and nothing
+ * below shifts. Respects prefers-reduced-motion by holding a single word.
  */
 function TypewriterWord() {
   const [text, setText] = useState(TYPEWRITER_WORDS[0]);
@@ -71,7 +71,7 @@ function TypewriterWord() {
     // layout.tsx) — and a half-translated typewriter looked broken anyway.
     <span
       translate="no"
-      className="inline-flex items-baseline whitespace-nowrap text-[#0b0918]"
+      className="text-main inline-flex items-baseline whitespace-nowrap"
     >
       {/* Zero-width space keeps full text metrics on the line even when the
           word is fully deleted — otherwise the line collapses to the .display
@@ -81,28 +81,24 @@ function TypewriterWord() {
       {text}
       <span
         aria-hidden
-        className="ml-[0.06em] inline-block w-[0.5em] self-stretch bg-[#0b0918] motion-safe:animate-[hero-caret_1.1s_linear_infinite]"
+        className="bg-main ml-[0.06em] inline-block w-[0.5em] self-stretch shadow-[0_0_18px] shadow-main/70 motion-safe:animate-[hero-caret_1.1s_linear_infinite]"
       />
     </span>
   );
 }
 
 /**
- * The homepage hero, character-select edition: "Rank" plus the cycling word
- * set in a tilted cyan block, like a highlighted pick on a select screen, a
- * one-line tagline, and the two CTAs — Create (magenta primary) and Browse
- * (neutral). Stacked full-width buttons on mobile, side by side from sm up.
- * Left-aligned: the word types rightward from a fixed edge, so "Rank" never
- * shifts.
+ * The homepage hero: a single-line typewriter headline ("Rank" + the cycling
+ * word in magenta), a one-line tagline, and the two CTAs — Create (magenta
+ * primary) and Browse (neutral). Stacked full-width buttons on mobile, side
+ * by side from sm up. Left-aligned: the word types rightward from a fixed
+ * edge, so "Rank" never shifts.
  */
 export function Hero() {
   return (
     <section className="flex flex-col items-start py-9">
-      <h1 className="display text-foreground flex items-center gap-[0.22em] text-[clamp(2.1rem,8.5vw,4.25rem)] font-black whitespace-nowrap">
-        Rank
-        <span className="bg-cyan inline-flex -rotate-2 rounded-md px-[0.16em] pt-[0.05em] pb-[0.01em]">
-          <TypewriterWord />
-        </span>
+      <h1 className="display text-foreground text-[clamp(1.9rem,9.6vw,3.5rem)] font-black whitespace-nowrap">
+        Rank <TypewriterWord />
       </h1>
       <p className="text-muted-foreground mt-3.5 text-[clamp(14px,4.2vw,17px)] whitespace-nowrap md:text-lg">
         Pick a favorite, one matchup at a time.

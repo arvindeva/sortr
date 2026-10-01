@@ -390,11 +390,12 @@ export function Navbar() {
             asChild
             arcade
             size="lg"
-            className="w-full"
+            className="w-full [&_svg]:size-[18px]"
             onClick={() => setMobileMenuOpen(false)}
           >
             <Link href={session ? "/create" : "/auth/signin"}>
-              + Create a sorter
+              <Plus size={18} strokeWidth={3} aria-hidden />
+              Create a sorter
             </Link>
           </Button>
 

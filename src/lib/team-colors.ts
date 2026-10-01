@@ -2,8 +2,8 @@ import type { CSSProperties } from "react";
 
 /**
  * "Team colors" for homepage sections: each section owns one roster accent.
- * Its heading sits in a tilted block of that color (echoing the hero's cyan
- * word block), and its cover tiles glow in that color on hover via the
+ * Its heading sits in a tilted block of that color, and its cover tiles
+ * glow in that color on hover via the
  * --card-accent / --card-accent-glow variables SorterCard reads.
  */
 export const TEAM_COLORS = {

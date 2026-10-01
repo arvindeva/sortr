@@ -198,8 +198,7 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Each section owns a "team color" (heading block + tile hover glow),
-          carrying the hero's cyan word block down the page. */}
+      {/* Each section owns a "team color" (heading block + tile hover glow). */}
       <PageContainer className="flex flex-col gap-10 md:gap-12">
         <Hero />
 
