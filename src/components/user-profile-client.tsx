@@ -4,13 +4,13 @@ import { useState } from "react";
 import { useUserProfile } from "@/hooks/api";
 import { UserProfileContentSkeleton } from "@/components/skeletons/user-profile-content-skeleton";
 import { SorterCard } from "@/components/ui/sorter-card";
+import { RankingPodium } from "@/components/ui/ranking-podium";
+import { TeamHeading } from "@/components/ui/team-heading";
+import { teamColorStyle, type TeamColor } from "@/lib/team-colors";
 import { InProgressSorters } from "@/components/in-progress-sorters";
 import { SorterGrid } from "@/components/ui/sorter-grid";
 import { EmptyState } from "@/components/ui/empty-state";
 import Link from "next/link";
-import { accentFor } from "@/lib/utils";
-import { getImageUrl } from "@/lib/image-utils";
-import { computeCompetitionRanks, medalForRank } from "@/lib/ranking-utils";
 import {
   Select,
   SelectContent,
@@ -27,22 +27,24 @@ interface UserProfileClientProps {
   initialData?: any; // Will use the same type as useUserProfile returns
 }
 
-// Display-font section title with an optional count, matching the arcade
-// section headings used across the app.
+// Team-color section heading with an optional count — the tilted block used
+// on the homepage and sorter pages.
 function SectionTitle({
   children,
   count,
+  color,
 }: {
   children: React.ReactNode;
   count?: number;
+  color: TeamColor;
 }) {
   return (
-    <h2 className="display text-[clamp(1.75rem,5vw,2.125rem)] font-black text-foreground">
-      {children}
-      {count != null && (
-        <span className="font-bold text-muted-foreground"> ({count})</span>
-      )}
-    </h2>
+    <div style={teamColorStyle(color)}>
+      <TeamHeading size="lg">
+        {children}
+        {count != null && <span className="opacity-60"> ({count})</span>}
+      </TeamHeading>
+    </div>
   );
 }
 
@@ -105,8 +107,10 @@ export function UserProfileClient({
 
       {/* Sorters Section */}
       <section className="mb-10">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <SectionTitle count={sorters.length}>Sorters</SectionTitle>
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <SectionTitle color="magenta" count={sorters.length}>
+            Sorters
+          </SectionTitle>
           {hasNonPublic && (
             <Select value={visibilityFilter} onValueChange={setVisibilityFilter}>
               <SelectTrigger className="w-[140px]">
@@ -139,8 +143,10 @@ export function UserProfileClient({
 
       {/* Rankings Section */}
       <section>
-        <div className="mb-4">
-          <SectionTitle count={rankings.length}>Rankings</SectionTitle>
+        <div className="mb-6 md:mb-9">
+          <SectionTitle color="cyan" count={rankings.length}>
+            Rankings
+          </SectionTitle>
         </div>
         <div>
           {rankings.length === 0 ? (
@@ -162,7 +168,7 @@ export function UserProfileClient({
                     <h3 className="display normal-case text-[22px] leading-tight font-extrabold text-foreground">
                       {result.sorterTitle}
                     </h3>
-                    <span className="mt-1 shrink-0 font-mono text-[11px] text-muted-foreground">
+                    <span className="hud mt-1 shrink-0 text-[11px] font-bold text-muted-foreground">
                       {new Date(result.createdAt).toLocaleDateString("en-US", {
                         day: "numeric",
                         month: "short",
@@ -171,56 +177,8 @@ export function UserProfileClient({
                     </span>
                   </div>
 
-                  {/* Category chip */}
-                  {result.sorterCategory && (
-                    <span className="mb-3.5 inline-block rounded-full border border-main/40 bg-accent px-2.5 py-1 font-mono text-[11px] text-main-ink">
-                      {result.sorterCategory}
-                    </span>
-                  )}
-
                   {/* Top 3 preview */}
-                  <div className="flex flex-col gap-2.5">
-                    {result.top3.map((item: any, index: number) => {
-                      const rank = computeCompetitionRanks(result.top3)[index];
-                      return (
-                      <div
-                        key={item.id || index}
-                        className="flex items-center gap-3"
-                      >
-                        <span
-                          className="display w-[22px] text-lg font-black"
-                          style={{
-                            color:
-                              medalForRank(rank) ?? "var(--muted-foreground)",
-                          }}
-                        >
-                          {rank}
-                        </span>
-                        {item.imageUrl ? (
-                          <div className="h-[26px] w-[26px] shrink-0 overflow-hidden rounded-[6px] border border-border bg-muted">
-                            <img
-                              src={getImageUrl(item.imageUrl, "thumbnail")}
-                              alt={item.title}
-                              className="h-full w-full object-cover"
-                              onError={(e) => {
-                                const t = e.target as HTMLImageElement;
-                                if (t.src.includes("-thumb"))
-                                  t.src = getImageUrl(item.imageUrl, "full");
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <span
-                            className="h-[26px] w-[26px] shrink-0 rounded-[6px]"
-                            style={{ background: accentFor(item.id || index) }}
-                          />
-                        )}
-                        <span className="min-w-0 font-medium break-words text-foreground">
-                          {item.title}
-                        </span>
-                      </div>
-                    );})}
-                  </div>
+                  <RankingPodium items={result.top3} />
                 </Link>
               ))}
             </div>

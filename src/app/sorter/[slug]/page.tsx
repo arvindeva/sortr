@@ -278,10 +278,12 @@ export default async function SorterPage({ params }: SorterPageProps) {
         {/* Pull viral visitors deeper: what else is hot right now. */}
         <TrendingSortersSection
           excludeSorterId={data.sorter.id}
+          color="violet"
           className="mt-16 border-t border-border pt-12"
         />
         <TrendingSortersSection
           window="day"
+          color="yellow"
           excludeSorterId={data.sorter.id}
           className="mt-12"
         />

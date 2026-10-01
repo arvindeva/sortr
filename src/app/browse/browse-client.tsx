@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { PageContainer } from "@/components/ui/page-container";
 import { ArcadePageHeader } from "@/components/ui/arcade-page-header";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -30,6 +29,8 @@ import { SorterCard } from "@/components/ui/sorter-card";
 import { SorterGrid } from "@/components/ui/sorter-grid";
 
 import type { BrowseResult } from "@/lib/browse";
+import { teamColorStyle } from "@/lib/team-colors";
+import { accentFor } from "@/lib/utils";
 
 // Static categories from create sorter form
 const CATEGORIES = [
@@ -169,34 +170,38 @@ function BrowseContent({ initialData }: { initialData?: BrowseResult }) {
 
   return (
     <PageContainer>
-      {/* Page Header */}
-      <ArcadePageHeader className="mb-7" title="Browse sorters" />
-
-      {/* Search Bar */}
-      <div className="mb-5">
-        <div className="relative">
-          <Search className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search sorters by title or creator…"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="h-[52px] rounded-[10px] pr-11 pl-12 text-base"
-          />
-          {searchInput && (
-            <button
-              onClick={() => setSearchInput("")}
-              className="absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
-        </div>
+      {/* Page header — team-color title block, like the homepage sections */}
+      <div className="mb-7" style={teamColorStyle("magenta")}>
+        <h1 className="display min-w-0 -rotate-[1.5deg] text-[clamp(2.25rem,7vw,3.75rem)] leading-[1.18] font-black">
+          <span className="bg-(--team) box-decoration-clone rounded-md px-[0.18em] pt-[0.06em] pb-[0.01em] text-[#0b0918]">
+            Browse sorters
+          </span>
+        </h1>
       </div>
-
-      {/* Category Filter Chips */}
+      <div className="group/s border-foreground/15 focus-within:border-main mb-6 flex items-center gap-3 border-b-2 transition-colors">
+        <Search
+          aria-hidden
+          className="text-muted-foreground group-focus-within/s:text-main-ink size-5 shrink-0 transition-colors"
+        />
+        <input
+          type="search"
+          aria-label="Search sorters"
+          placeholder="Search by title or creator"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="font-heading text-foreground placeholder:text-muted-foreground/60 min-w-0 flex-1 bg-transparent py-2 text-[clamp(18px,4.5vw,24px)] font-extrabold tracking-[0.02em] uppercase outline-none [&::-webkit-search-cancel-button]:hidden"
+        />
+        {searchInput && (
+          <button
+            onClick={() => setSearchInput("")}
+            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded-md p-1 focus-visible:ring-2 focus-visible:outline-none"
+            aria-label="Clear search"
+          >
+            <X className="size-5" />
+          </button>
+        )}
+      </div>
       <div className="mb-6">
-        {/* Mobile toggle — chips collapse by default to save space */}
         <Button
           variant="neutral"
           size="sm"
@@ -216,9 +221,8 @@ function BrowseContent({ initialData }: { initialData?: BrowseResult }) {
             className={`h-4 w-4 transition-transform ${showFilters ? "rotate-180" : ""}`}
           />
         </Button>
-
-        {/* Chips: collapsible on mobile, always shown on desktop. Mono pills;
-            active = magenta fill, idle = bordered surface. */}
+        {/* Original pills, recolored: each category owns a roster accent
+            (accentFor) — idle shows it on hover, active fills with it. */}
         <div
           className={`${showFilters ? "flex" : "hidden"} flex-wrap gap-2 lg:flex`}
         >
@@ -234,11 +238,13 @@ function BrowseContent({ initialData }: { initialData?: BrowseResult }) {
             return (
               <button
                 key={category}
+                aria-pressed={active}
                 onClick={() => toggleCategory(category)}
-                className={`rounded-full border px-3.5 py-1.5 font-mono text-[13px] transition-colors ${
+                style={{ "--chip": accentFor(category) } as React.CSSProperties}
+                className={`rounded-full border px-3.5 py-1.5 font-mono text-[13px] font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-(--chip) focus-visible:outline-none ${
                   active
-                    ? "border-main bg-main text-main-foreground"
-                    : "border-border bg-muted text-foreground hover:border-main/50 hover:text-main-ink"
+                    ? "border-(--chip) bg-(--chip) text-[#0b0918]"
+                    : "border-border bg-muted text-foreground hover:border-(--chip) hover:text-foreground"
                 }`}
               >
                 {category}
@@ -247,9 +253,7 @@ function BrowseContent({ initialData }: { initialData?: BrowseResult }) {
           })}
         </div>
       </div>
-
-      {/* Sort and Results Info */}
-      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <span className="hud text-xs text-muted-foreground">Sort by</span>
           <Select value={sort} onValueChange={handleSortChange}>
@@ -263,7 +267,6 @@ function BrowseContent({ initialData }: { initialData?: BrowseResult }) {
             </SelectContent>
           </Select>
         </div>
-
         {data && (
           <span className="font-mono text-[13px] text-muted-foreground">
             Showing {Math.min((page - 1) * 20 + 1, data.totalCount)}–
@@ -272,8 +275,6 @@ function BrowseContent({ initialData }: { initialData?: BrowseResult }) {
           </span>
         )}
       </div>
-
-      <div className="mb-7 h-px bg-border" />
 
       {/* Results */}
       <section>

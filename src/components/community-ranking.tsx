@@ -1,5 +1,7 @@
 "use client";
 
+import { TeamHeading } from "@/components/ui/team-heading";
+import { teamColorStyle } from "@/lib/team-colors";
 import { useState } from "react";
 import { CoverTile } from "@/components/ui/cover-tile";
 import { InfoPopover } from "@/components/ui/info-popover";
@@ -29,11 +31,9 @@ export function CommunityRanking({ data }: { data: CommunityRankingPayload }) {
   const hasMore = rows.length > TOP_N;
 
   return (
-    <section>
+    <section style={teamColorStyle("magenta")}>
       <div className="flex items-center gap-2">
-        <h2 className="display text-[30px] font-black text-foreground">
-          Community ranking
-        </h2>
+        <TeamHeading size="md">Community ranking</TeamHeading>
         <InfoPopover label="How the community ranking works">
           Counts rankings from{" "}
           <span className="text-foreground">every version</span> of this

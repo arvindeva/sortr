@@ -1,5 +1,8 @@
 "use client";
 
+import { TeamHeading } from "@/components/ui/team-heading";
+import { RankingPodium } from "@/components/ui/ranking-podium";
+import { teamColorStyle, type TeamColor } from "@/lib/team-colors";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSorterPage, type SorterData } from "@/hooks/api/use-sorter";
@@ -11,7 +14,6 @@ import { CommunityRanking } from "@/components/community-ranking";
 import { CommunityRankingSkeleton } from "@/components/community-ranking-skeleton";
 import { accentFor } from "@/lib/utils";
 import { getImageUrl } from "@/lib/image-utils";
-import { computeCompetitionRanks, medalForRank } from "@/lib/ranking-utils";
 import type { CommunityRankingPayload } from "@/lib/community-ranking-data";
 import { MIN_RANKINGS } from "@/lib/community-ranking";
 
@@ -36,17 +38,19 @@ interface SorterPageClientProps {
 function SectionTitle({
   children,
   count,
+  color,
 }: {
   children: React.ReactNode;
   count?: number;
+  color: TeamColor;
 }) {
   return (
-    <h2 className="display mb-4 text-[30px] font-black text-foreground">
-      {children}
-      {count != null && (
-        <span className="font-bold text-muted-foreground"> ({count})</span>
-      )}
-    </h2>
+    <div className="mb-4" style={teamColorStyle(color)}>
+      <TeamHeading size="md">
+        {children}
+        {count != null && <span className="opacity-60"> ({count})</span>}
+      </TeamHeading>
+    </div>
   );
 }
 
@@ -105,7 +109,9 @@ export function SorterPageClient({
   const ITEMS_CAP = 24;
   const itemsSection = (
     <section>
-      <SectionTitle count={items?.length || 0}>Items to rank</SectionTitle>
+      <SectionTitle color="yellow" count={items?.length || 0}>
+        Items to rank
+      </SectionTitle>
       {items?.length === 0 ? (
         <EmptyState title="No items found for this sorter." />
       ) : (
@@ -177,7 +183,7 @@ export function SorterPageClient({
         {!hideCommunity && (
           communityRankingPool < MIN_RANKINGS ? (
             <section className="order-1 md:order-none">
-              <SectionTitle>Community ranking</SectionTitle>
+              <SectionTitle color="magenta">Community ranking</SectionTitle>
               <EmptyState
                 title={`Unlocks at ${MIN_RANKINGS} rankings`}
                 description={`${communityRankingPool} of ${MIN_RANKINGS} so far — share this sorter to get there.`}
@@ -198,7 +204,7 @@ export function SorterPageClient({
 
         {/* Recent rankings */}
         <section className="order-3 md:order-none">
-          <SectionTitle count={recentResults.length}>
+          <SectionTitle color="cyan" count={recentResults.length}>
             Recent rankings
           </SectionTitle>
         {recentResultsPending ? (
@@ -226,13 +232,13 @@ export function SorterPageClient({
                   prefetch={false}
                   className="group block rounded-xl border border-border bg-card p-4 transition-colors hover:border-main/40"
                 >
-                  <div className="mb-3 flex items-center justify-between">
+                  <div className="mb-3 flex items-center justify-between gap-3">
                     <span
-                      className={`text-sm font-bold ${anon ? "text-muted-foreground" : "text-cyan-ink"}`}
+                      className={`truncate text-sm font-bold ${anon ? "text-muted-foreground" : "text-cyan-ink"}`}
                     >
                       {anon ? "Anonymous" : `@${result.username}`}
                     </span>
-                    <span className="font-mono text-[11px] text-muted-foreground">
+                    <span className="hud shrink-0 text-[11px] font-bold text-muted-foreground">
                       {new Date(result.createdAt).toLocaleDateString("en-US", {
                         day: "numeric",
                         month: "short",
@@ -240,43 +246,7 @@ export function SorterPageClient({
                       })}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    {result.top3.map((item: any, index: number) => {
-                      const rank = computeCompetitionRanks(result.top3)[index];
-                      return (
-                      <div
-                        key={item.id || index}
-                        className="flex min-w-0 items-center gap-2"
-                      >
-                        <span
-                          className="display w-[18px] text-lg font-black"
-                          style={{
-                            color:
-                              medalForRank(rank) ?? "var(--medal-bronze)",
-                          }}
-                        >
-                          {rank}
-                        </span>
-                        {item.imageUrl ? (
-                          <div className="h-6 w-6 shrink-0 overflow-hidden rounded-[6px] border border-border bg-muted">
-                            <img
-                              src={getImageUrl(item.imageUrl, "thumbnail")}
-                              alt={item.title}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <span
-                            className="h-6 w-6 shrink-0 rounded-[6px]"
-                            style={{ background: accentFor(item.id || index) }}
-                          />
-                        )}
-                        <span className="truncate text-[13px] font-semibold text-foreground">
-                          {item.title}
-                        </span>
-                      </div>
-                    );})}
-                  </div>
+                  <RankingPodium items={result.top3} />
                 </Link>
               );
             })}

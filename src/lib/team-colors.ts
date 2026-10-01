@@ -8,6 +8,7 @@ import type { CSSProperties } from "react";
  */
 export const TEAM_COLORS = {
   yellow: "var(--yellow)",
+  cyan: "var(--cyan)",
   violet: "var(--violet)",
   magenta: "var(--main)",
   coral: "var(--coral)",
