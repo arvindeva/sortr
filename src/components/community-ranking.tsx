@@ -38,8 +38,8 @@ export function CommunityRanking({ data }: { data: CommunityRankingPayload }) {
           Counts rankings from{" "}
           <span className="text-foreground">every version</span> of this
           sorter, matched onto its current items. Rankings that no longer
-          match enough of the current items (after a big edit) are left out,
-          and each signed-in player counts once — only their latest ranking
+          match enough of the current items (after a big edit) are left out.
+          Each player counts once, signed in or not: only their latest ranking
           is used.
         </InfoPopover>
       </div>
