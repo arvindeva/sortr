@@ -45,9 +45,11 @@ Accents are exposed as utilities: `bg-cyan`, `text-yellow`, `border-violet`,
 
 **Background** is the flat canvas color (`--background`) — no atmosphere layer.
 The former radial magenta/cyan glows and the `<ArcadeBackground>` component were
-removed; the page reads clean behind the content. The homepage alone layers
-`<HomeBackdrop>` (`src/components/home-backdrop.tsx`): three giant faint
-rounded-square outlines echoing the logo's two-squares geometry.
+removed; the page reads clean behind the content. The homepage's
+`<HomeBackdrop>` (parallax rounded-square outlines) was removed too: its
+GPU-animated layers sitting under the nav's backdrop-blur made Android Chrome
+fail to draw the route loading bar. Avoid animated/transformed layers behind
+the frosted nav.
 
 **Cover tiles** cycle magenta → cyan → yellow → violet → coral. Use `accentFor(key)`
 from `src/lib/utils.ts` for a stable per-entity color, or the `<CoverTile>`
