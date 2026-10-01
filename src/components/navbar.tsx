@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { FeedbackModal } from "@/components/feedback-modal";
+import NProgress from "nprogress";
 
 export function Navbar() {
   const { data: session, status } = useSession();
@@ -130,6 +131,16 @@ export function Navbar() {
   // Close mobile menu when clicking outside (handled by overlay click)
   // No need for document click listener since overlay handles it
 
+  // Draw the route loading bar (nextjs-toploader → nprogress) INSIDE the nav
+  // rather than as a separate fixed layer on <body>. As a separate layer,
+  // Android Chrome intermittently composited it beneath the nav's
+  // backdrop-blur despite its higher z-index; as a child of the nav it paints
+  // after the nav's backdrop on the same layer. Runs after NextTopLoader's own
+  // configure() (an earlier sibling), so this parent setting sticks.
+  useEffect(() => {
+    NProgress.configure({ parent: "#nav-progress" });
+  }, []);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -147,6 +158,22 @@ export function Navbar() {
           : "border-transparent bg-transparent"
       }`}
     >
+      {/* Route loading bar slot (see the NProgress effect above). Inline
+          position wins over nprogress's .nprogress-custom-parent
+          {position:relative}, which would otherwise shove it into flow. */}
+      <div
+        id="nav-progress"
+        aria-hidden
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 3,
+          zIndex: 50,
+          pointerEvents: "none",
+        }}
+      />
       <Link
         href="/"
         prefetch={false}
