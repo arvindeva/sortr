@@ -220,7 +220,7 @@
       "refersTo": "button-primary",
       "description": "The one primary action per screen; magenta gradient, flat.",
       "html": "<button class=\"ds-btn-primary\">Create a sorter</button>",
-      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:8px 16px;border:none;border-radius:6px;background:linear-gradient(180deg,#ff2e7e,#e01e65);color:#fff;font-family:var(--font-mona-sans),system-ui,sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:filter .15s,transform .1s}.ds-btn-primary:hover{filter:brightness(1.1)}.ds-btn-primary:active{transform:scale(.98)}.ds-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 2px #0b0918,0 0 0 4px #ff2e7e}"
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:8px 16px;border:none;border-radius:6px;background:linear-gradient(180deg,#ff2e7e,#e01e65);color:#fff;font-family:var(--font-body),system-ui,sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:filter .15s,transform .1s}.ds-btn-primary:hover{filter:brightness(1.1)}.ds-btn-primary:active{transform:scale(.98)}.ds-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 2px #0b0918,0 0 0 4px #ff2e7e}"
     },
     {
       "name": "Arcade CTA",
@@ -236,7 +236,7 @@
       "refersTo": "button-secondary",
       "description": "Outlined secondary action.",
       "html": "<button class=\"ds-btn-secondary\">Browse</button>",
-      "css": ".ds-btn-secondary{height:40px;padding:8px 16px;border:1px solid rgba(243,240,255,.2);border-radius:6px;background:transparent;color:#f3f0ff;font-family:var(--font-mona-sans),system-ui,sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:background .15s,transform .1s}.ds-btn-secondary:hover{background:rgba(243,240,255,.05)}.ds-btn-secondary:active{transform:scale(.98)}.ds-btn-secondary:focus-visible{outline:none;box-shadow:0 0 0 2px #0b0918,0 0 0 4px #ff2e7e}"
+      "css": ".ds-btn-secondary{height:40px;padding:8px 16px;border:1px solid rgba(243,240,255,.2);border-radius:6px;background:transparent;color:#f3f0ff;font-family:var(--font-body),system-ui,sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:background .15s,transform .1s}.ds-btn-secondary:hover{background:rgba(243,240,255,.05)}.ds-btn-secondary:active{transform:scale(.98)}.ds-btn-secondary:focus-visible{outline:none;box-shadow:0 0 0 2px #0b0918,0 0 0 4px #ff2e7e}"
     },
     {
       "name": "Search Field",
@@ -244,7 +244,7 @@
       "refersTo": "search-field",
       "description": "Nav search with HUD placeholder and / hint chip.",
       "html": "<label class=\"ds-search\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/></svg><input placeholder=\"Search sorters...\"/><kbd>/</kbd></label>",
-      "css": ".ds-search{display:flex;align-items:center;gap:10px;width:260px;height:40px;padding:0 12px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#a39ec2;transition:border-color .15s}.ds-search:focus-within{border-color:#ff2e7e}.ds-search input{flex:1;background:none;border:none;outline:none;color:#f3f0ff;font-family:var(--font-mona-sans),system-ui,sans-serif;font-size:14px}.ds-search input::placeholder{color:#6f6a86}.ds-search kbd{border:1px solid rgba(255,255,255,.16);border-radius:4px;padding:0 6px;font-size:12px;color:#6f6a86;font-family:inherit}"
+      "css": ".ds-search{display:flex;align-items:center;gap:10px;width:260px;height:40px;padding:0 12px;border:1px solid rgba(255,255,255,.1);border-radius:6px;background:rgba(255,255,255,.05);color:#a39ec2;transition:border-color .15s}.ds-search:focus-within{border-color:#ff2e7e}.ds-search input{flex:1;background:none;border:none;outline:none;color:#f3f0ff;font-family:var(--font-body),system-ui,sans-serif;font-size:14px}.ds-search input::placeholder{color:#6f6a86}.ds-search kbd{border:1px solid rgba(255,255,255,.16);border-radius:4px;padding:0 6px;font-size:12px;color:#6f6a86;font-family:inherit}"
     },
     {
       "name": "Cover Tile",
@@ -260,7 +260,7 @@
       "refersTo": "chip",
       "description": "Filter/tag chip in HUD text; hover goes to accent.",
       "html": "<button class=\"ds-chip\">K-pop</button>",
-      "css": ".ds-chip{height:32px;padding:0 14px;border-radius:9999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#a39ec2;font-family:var(--font-mona-sans),system-ui,sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;cursor:pointer;transition:color .15s,border-color .15s}.ds-chip:hover{color:#ff2e7e;border-color:#ff2e7e}.ds-chip:focus-visible{outline:2px solid #ff2e7e;outline-offset:2px}"
+      "css": ".ds-chip{height:32px;padding:0 14px;border-radius:9999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#a39ec2;font-family:var(--font-body),system-ui,sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;cursor:pointer;transition:color .15s,border-color .15s}.ds-chip:hover{color:#ff2e7e;border-color:#ff2e7e}.ds-chip:focus-visible{outline:2px solid #ff2e7e;outline-offset:2px}"
     },
     {
       "name": "VS Marker",
@@ -276,7 +276,7 @@
     "overview": "sortr looks like the moment before a fight: a dark cabinet, a roster of big colored tiles with condensed names, and two sides squaring off under a pulsing VS. The interface is the arena; the fandom's characters, albums, and ships are the fighters. Every screen should feel like picking a side.\n\nThe world is dark, flat, and electric. A midnight indigo canvas carries five bright accents that do the shouting: magenta leads, cyan answers, and yellow, violet and coral fill out the roster. Display type is condensed, heavy, and uppercase, HUD labels read like a scoreboard, and body copy stays plain and quiet so the loud parts land. Components are punchy and tactile — buttons press, tiles lift — but buttons stay flat; glow is reserved for the signature VS and logo moments.\n\nThe same identity ships in a light theme: the canvas flips light, accent fills stay just as bright, glows become crisp colored shadows, and accent *text* deepens to stay legible on white.",
     "keyCharacteristics": [
       "Midnight canvas with five rotating accent fills; magenta is the one primary.",
-      "Condensed, heavy, uppercase display type (Anybody at 75% width) against plain Mona Sans body.",
+      "Condensed, heavy, uppercase display type (Anybody at 75% width) against plain Saira body.",
       "HUD/scoreboard labels: uppercase, widely tracked.",
       "Square cover tiles with the name bottom-left over a black scrim — the roster.",
       "The VS diamond and the two-squares logo as the brand's signature marks.",

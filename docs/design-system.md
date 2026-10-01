@@ -60,14 +60,18 @@ is `rgba(0,0,0,.74)`.
 
 - **Display / headings / wordmark / numbers:** Anybody (`font-heading`),
   variable on weight (100–900) AND width (50–150%). The condensed look comes
-  from `font-stretch: 75%` set on `html` (inherited; Mona Sans has no width
+  from `font-stretch: 75%` set on `html` (inherited; the body face ships with no width
   axis, so only the display face responds). Display weights are real — heading
   text runs 800–900. Use the `.display` utility for the loud treatment; UI
   copy is uppercase, user-content titles keep their own casing.
-- **HUD / labels / meta / counters:** Mona Sans (`font-mono` maps to the body
+- **HUD / labels / meta / counters:** Saira (`font-mono` maps to the body
   face — there is no separate monospace). Use the `.hud` utility for uppercase
   + wide tracking; that's what gives meta rows the scoreboard read now.
-- **Body / UI:** Mona Sans, variable 200–900 (`font-base`, the body default).
+- **Body / UI:** Saira, variable weight 100–900 (`font-base`, the body default;
+  CSS variable `--font-body`). `SairaVF.woff2` is instanced from Google's
+  `Saira[wdth,wght].ttf` at width 100, dropping the width axis, so the
+  page-wide `font-stretch: 75%` can't condense body text. Re-instance with
+  fontTools (`instancer.instantiateVariableFont(f, {"wdth": 100})`) if updating.
 - Both faces are self-hosted woff2 (SIL OFL) in `src/app/fonts/`, loaded via
   `next/font/local` in `src/app/layout.tsx` (Anybody converted from the
   google/fonts variable TTF; see fonts/LICENSES.md).

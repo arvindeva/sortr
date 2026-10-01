@@ -20,8 +20,8 @@ Item/sorter cover tiles cycle through these accents; cover text is `rgba(0,0,0,.
 
 ## Type (self-hosted woff2 via next/font/local — files in src/app/fonts/)
 - Display / headings / wordmark: **Anybody** (variable: weight 100–900, width 50–150%), squared-geometric, rendered condensed via `font-stretch: 75%` set globally on `html`. Display text runs heavy (800–900 — real weights). UI display copy is uppercase; user-content titles keep their own casing.
-- HUD / labels / meta / numbers / placeholders: **Mona Sans** (the body face — no separate monospace), uppercase, `letter-spacing:.08–.16em` via the `.hud` utility
-- Body / UI: **Mona Sans** (variable 200–900)
+- HUD / labels / meta / numbers / placeholders: **Saira** (the body face — no separate monospace), uppercase, `letter-spacing:.08–.16em` via the `.hud` utility
+- Body / UI: **Saira** (variable weight 100–900, shipped instanced at normal width so the page-wide `font-stretch:75%` never condenses it). Chosen Oct 2026 over Mona Sans, which read too SaaS-neutral next to Anybody; Saira's squared curves echo Anybody's geometry.
 Never use generic Inter/Arial/Roboto — and never the former AI-default trio (Big Shoulders, Space Mono, Space Grotesk).
 
 ## Components
@@ -30,7 +30,7 @@ Never use generic Inter/Arial/Roboto — and never the former AI-default trio (B
 - **Nav:** top bar, `max-width:1280` centered, padding `22px 32px`, border-bottom `rgba(255,255,255,.08)`. Items: search field, Browse, Create (primary), then Profile/Settings/Sign out (logged-in) or Sign in (anon).
   - **Mobile nav:** transparent at the top; on scroll it frosts (`background:rgba(11,9,24,.85)` + `backdrop-filter:blur(8px)`, border-bottom fades in). Bar shows only two 42px buttons — a ghost search (border `rgba(255,255,255,.16)`, radius 10) and a magenta-gradient menu toggle that swaps ☰↔✕. The menu sheet opens below the bar (fade + translateY −10→0, ~.22s) over a dimmed page; panel `linear-gradient(180deg,#120f24,#0b0918)`; contents top→bottom: a search field, a vertical nav list (Browse / Profile / Settings / Sign out as Anybody 26px uppercase rows with a ▸ and a bottom hairline, Sign out muted; logged-out shows Sign in instead), one magenta "+ Create a sorter" pill, and the theme toggle pinned at the bottom.
 - **Search field:** `rgba(255,255,255,.05)`, border `rgba(255,255,255,.1)`, radius 6, mono placeholder, `/` hint chip.
-- **Primary button:** magenta gradient, white, Anybody uppercase (or Mona Sans 700 for small), radius 6–8, flat (no glow shadow).
+- **Primary button:** magenta gradient, white, Anybody uppercase (or Saira 700 for small), radius 6–8, flat (no glow shadow).
 - **Secondary button:** border `rgba(255,255,255,.18)`, text primary.
 - **Card:** a **square** tile (radius 12–14, `aspect-square`, border `rgba(255,255,255,.08)`). The cover — uploaded art, or the accent color fallback (subtle 45° stripe texture) — fills the whole square. The item TITLE sits **bottom-left in Anybody over a black bottom scrim** (`linear-gradient(180deg, transparent, rgba(0,0,0,.82))`) so it's legible over any image; clamped to 3 lines. No footer meta (author/plays), no rank/NEW badge, no category chip — this mirrors the item squares in the shareable ranking image. (The cover-less fallback shows the title on the accent tile the same way, never a single letter.)
 - **Progress:** thin pips (filled = accent, empty `rgba(255,255,255,.12)`) or a continuous track with magenta-gradient fill.

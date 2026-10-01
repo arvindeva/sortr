@@ -23,13 +23,14 @@ const anybody = localFont({
   fallback: ["Arial Narrow", "Helvetica Neue", "Arial", "sans-serif"],
 });
 
-// Body / UI — variable 200–900. Also drives the HUD/meta text (the .hud
-// utility) now that the monospace face is retired from the UI.
-const monaSans = localFont({
-  src: "./fonts/MonaSansVF.woff2",
-  variable: "--font-mona-sans",
+// Body / UI — Saira, weight-variable 100–900. Also drives the HUD/meta text
+// (the .hud utility). The file is instanced at width 100 (no wdth axis), so
+// the page-wide font-stretch: 75% that condenses Anybody can't condense it.
+const saira = localFont({
+  src: "./fonts/SairaVF.woff2",
+  variable: "--font-body",
   display: "swap",
-  weight: "200 900",
+  weight: "100 900",
   adjustFontFallback: false,
   fallback: ["system-ui", "Segoe UI", "Arial", "sans-serif"],
 });
@@ -114,8 +115,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${anybody.variable} ${monaSans.variable} flex min-h-screen flex-col antialiased`}
-        style={{ fontFamily: "var(--font-mona-sans)" }}
+        className={`${anybody.variable} ${saira.variable} flex min-h-screen flex-col antialiased`}
+        style={{ fontFamily: "var(--font-body)" }}
       >
         <script dangerouslySetInnerHTML={{ __html: TRANSLATOR_DOM_PATCH }} />
         {isProd &&

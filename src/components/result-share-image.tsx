@@ -276,7 +276,7 @@ export function ResultShareImage({
         position: "relative",
         overflow: "hidden",
         background: "#0b0918",
-        fontFamily: "var(--font-mona-sans), sans-serif",
+        fontFamily: "var(--font-body), sans-serif",
         flexShrink: 0,
         // Flex column: the grid centers in the space the header actually
         // leaves, so a 2-line title pushes the tiles down instead of
@@ -379,7 +379,7 @@ export function ResultShareImage({
         </span>
         <span
           style={{
-            fontFamily: "var(--font-mona-sans), sans-serif",
+            fontFamily: "var(--font-body), sans-serif",
             fontSize: "18px",
             letterSpacing: "0.16em",
             color: "#19e3df",
@@ -595,7 +595,7 @@ export function ResultShareImageFull({
         position: "relative",
         overflow: "hidden",
         background: "#0b0918",
-        fontFamily: "var(--font-mona-sans), sans-serif",
+        fontFamily: "var(--font-body), sans-serif",
         flexShrink: 0,
       }}
     >
@@ -664,7 +664,7 @@ export function ResultShareImageFull({
           </span>
           <span
             style={{
-              fontFamily: "var(--font-mona-sans), sans-serif",
+              fontFamily: "var(--font-body), sans-serif",
               fontSize: "16px",
               letterSpacing: "0.14em",
               color: "#19e3df",
@@ -762,7 +762,7 @@ export function ResultShareImageFull({
                 )}
                 <span
                   style={{
-                    fontFamily: "var(--font-mona-sans), sans-serif",
+                    fontFamily: "var(--font-body), sans-serif",
                     fontWeight: 700,
                     fontSize: `${sz.name}px`,
                     lineHeight: 1.06,
@@ -785,7 +785,7 @@ export function ResultShareImageFull({
             style={{
               marginTop: "18px",
               textAlign: "center",
-              fontFamily: "var(--font-mona-sans), sans-serif",
+              fontFamily: "var(--font-body), sans-serif",
               fontSize: "15px",
               letterSpacing: "0.06em",
               color: "#8c87a6",

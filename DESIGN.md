@@ -38,11 +38,11 @@ typography:
     lineHeight: 1
     letterSpacing: "0.01em"
   body:
-    fontFamily: "Mona Sans, system-ui, sans-serif"
+    fontFamily: "Saira, system-ui, sans-serif"
     fontWeight: 400
     lineHeight: 1.5
   label:
-    fontFamily: "Mona Sans, system-ui, sans-serif"
+    fontFamily: "Saira, system-ui, sans-serif"
     fontWeight: 600
     letterSpacing: "0.12em"
 rounded:
@@ -100,7 +100,7 @@ The same identity ships in a light theme: the canvas flips light, accent fills s
 
 **Key Characteristics:**
 - Midnight canvas with five rotating accent fills; magenta is the one primary.
-- Condensed, heavy, uppercase display type (Anybody at 75% width) against plain Mona Sans body.
+- Condensed, heavy, uppercase display type (Anybody at 75% width) against Saira body text, whose squared curves echo it.
 - HUD/scoreboard labels: uppercase, widely tracked.
 - Square cover tiles with the name bottom-left over a black scrim — the roster.
 - The VS diamond and the two-squares logo as the brand's signature marks.
@@ -137,10 +137,10 @@ A dark, saturated roster palette: one midnight ground, one magenta lead, and fou
 ## Typography
 
 **Display Font:** Anybody (variable weight 100–900, width axis; system-ui fallback), rendered condensed at 75% width globally
-**Body Font:** Mona Sans (variable 200–900; system-ui fallback)
-**Label/Mono Font:** Mona Sans in the HUD treatment — there is no separate monospace
+**Body Font:** Saira (variable weight 100–900, instanced at normal width; system-ui fallback)
+**Label/Mono Font:** Saira in the HUD treatment — there is no separate monospace
 
-**Character:** a squared, condensed fighting-game display face that runs heavy and loud, paired with a plain, modern body face that gets out of the way.
+**Character:** a squared, condensed fighting-game display face that runs heavy and loud, paired with Saira, a squared-curve sans that shares its geometry but stays calm and readable in paragraphs.
 
 ### Hierarchy
 - **Display** (800–900, clamp-sized, line-height 0.9, uppercase): hero lines, section titles, CTA labels in arcade buttons, cover-tile names. UI copy is uppercase; user-content titles (sorter names) keep their own casing.

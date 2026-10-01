@@ -199,14 +199,14 @@
   --font-weight-base: 400;
   /* Anybody is variable 100–900, so display weights are real again. */
   --font-weight-heading: 800;
-  /* font-base = body (Mona Sans), font-heading = display (Anybody),
+  /* font-base = body (Saira), font-heading = display (Anybody),
      font-mono = HUD. NOTE: must be the --font-* namespace, not --font-family-*,
      or the font-* utilities silently no-op in Tailwind v4.
-     HUD/meta uses Mona Sans too (no separate monospace) — the .hud utility
+     HUD/meta uses Saira too (no separate monospace) — the .hud utility
      keeps the uppercase + wide tracking for the scoreboard read. */
-  --font-base: var(--font-mona-sans);
+  --font-base: var(--font-body);
   --font-heading: var(--font-anybody);
-  --font-mono: var(--font-mona-sans);
+  --font-mono: var(--font-body);
 }
 
 @layer base {
@@ -218,7 +218,7 @@
        variable with real weight ranges, so this only guards edge cases). */
     font-synthesis-weight: none;
     /* Anybody's condensed look: 75% on its variable width axis. Inherited
-       everywhere; Mona Sans has no width axis, so only the display face
+       everywhere; the body face (Saira) ships instanced with no width axis, so only the display face
        responds (browsers don't synthesize stretch). */
     font-stretch: 75%;
   }
@@ -254,7 +254,7 @@
     letter-spacing: 0.01em;
   }
 
-  /* HUD / scoreboard text: Mona Sans, uppercase, wide tracking. */
+  /* HUD / scoreboard text: Saira, uppercase, wide tracking. */
   .hud {
     @apply font-mono;
     text-transform: uppercase;
