@@ -420,13 +420,3 @@
     font-size: var(--font-size-base) !important;
   }
 }
-
-/* Route loading bar (nextjs-toploader). Android Chrome intermittently
-   composites it beneath the frosted nav on the homepage, where the parallax
-   backdrop squares create extra GPU layers — the bar then renders blurred
-   behind the nav despite its higher z-index. Giving it its own compositing
-   layer keeps it out of that layer squashing. */
-#nprogress .bar {
-  transform: translateZ(0);
-  will-change: transform;
-}
